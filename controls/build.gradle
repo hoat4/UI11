@@ -1,0 +1,11 @@
+dependencies  {
+    api project(":core:widgettree")
+    api project(":layout-model")
+    api project(":graphics")
+    api project(":input")
+    api project(":text")
+    implementation project(":animation") // MenuOverlayben lévő hack miatt
+
+    testImplementation project(":platform:awt")
+    testImplementation project(":controls-defaultlook")
+}

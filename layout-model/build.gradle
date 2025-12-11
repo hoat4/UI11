@@ -1,0 +1,6 @@
+dependencies {
+    api project(":graphics")
+
+    testImplementation project(":layout-constraint")
+    testImplementation project(":platform:awt")
+}

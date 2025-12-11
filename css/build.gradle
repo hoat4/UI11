@@ -1,0 +1,6 @@
+dependencies {
+    api project(":core:widgettree")
+    implementation project(":graphics") // Empty miatt
+
+    testImplementation project(":desktop")
+}

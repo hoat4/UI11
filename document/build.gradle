@@ -1,0 +1,7 @@
+dependencies {
+    api project(":core:widgettree")
+    implementation project(":graphics")
+
+    implementation "org.teavm:teavm-interop:${teavmVersion}" // hogy DefaultURLImageView-t letilthassuk
+    implementation "org.teavm:teavm-metaprogramming-api:${teavmVersion}" // ImageResourceAnnotationHandler miatt
+}

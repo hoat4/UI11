@@ -1,0 +1,7 @@
+dependencies {
+    api project(":core:widgettree")
+    api project(":geom")
+
+    testImplementation project(":platform:awt")
+    testImplementation project(":layout-constraint")
+}

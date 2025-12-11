@@ -1,7 +1,0 @@
-dependencies {
-    api project(":ui-base")
-    api project(":ui-geom")
-
-    testImplementation project(":ui-platform-awt")
-    testImplementation project(":ui-layout-constraint")
-}

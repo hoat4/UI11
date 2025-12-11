@@ -1,0 +1,7 @@
+dependencies {
+    // pl. Color miatt api dependencynek kell lennie
+    api project(":graphics")
+
+    // TextDecorator.verticalAlign miatt. majd ezt valahogy meg kell szüntetni.
+    implementation project(":layout-model")
+}

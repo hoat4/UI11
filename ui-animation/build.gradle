@@ -1,6 +1,0 @@
-dependencies {
-    api project(":ui-base")
-    api project(":ui-geom") // Interpolator miatt
-    implementation project(":ui-graphics") // Faded miatt
-    implementation project(":ui-input") // Faded miatt
-}
