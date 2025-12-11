@@ -1,0 +1,55 @@
+allprojects {
+    group = "com.flyordie.ui11"
+
+    apply plugin: "java-library"
+
+    javadoc.options.encoding = "UTF-8"
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    // át kéne állni újabb nyelv verzióra, és akkor nem kéne --enable-preview
+    afterEvaluate {
+        tasks.withType(JavaCompile) {
+            options.encoding = "UTF-8"
+            options.compilerArgs << "--enable-preview"
+            //options.compilerArgs << "--release" << "21"
+            options.compilerArgs << "-parameters"
+//            options.compilerArgs << "--add-modules"
+//            options.compilerArgs << "jdk.incubator.vector"
+        }
+        tasks.withType(Test) {
+            jvmArgs "--enable-preview"
+        }
+        tasks.withType(JavaExec).configureEach {
+            jvmArgs += "--enable-preview"
+        }
+        tasks.withType(Javadoc) {
+            var javadocOptions = options as CoreJavadocOptions
+
+            javadocOptions.addStringOption("source", "21")
+            javadocOptions.addBooleanOption("-enable-preview", true)
+        }
+    }
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation 'com.google.code.findbugs:jsr305:3.0.2'
+        implementation 'org.slf4j:slf4j-api:2.0.12'
+
+        testImplementation 'junit:junit:4.12'
+        testRuntimeOnly "org.slf4j:slf4j-simple:2.0.12"
+    }
+
+    ext {
+        teavmVersion = '0.11.0'
+    }
+}

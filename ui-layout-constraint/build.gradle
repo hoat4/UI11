@@ -1,0 +1,7 @@
+dependencies {
+    api project(":ui-layout-model")
+    implementation project(":ui-text") // TODO em-ek resolveolása miatt kell ez most
+
+    testImplementation project(":ui-desktop")
+    testImplementation project(":ui-platform-awt")
+}

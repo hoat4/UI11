@@ -1,0 +1,77 @@
+package ui11.control;
+
+import ui11.SubstitutedWidget;
+import ui11.Widget;
+import ui11.text.Text;
+
+import javax.annotation.Nullable;
+
+/**
+ *
+ */
+public final class Button extends SubstitutedWidget {
+
+    private final Widget content;
+    @Listener @Nullable private final Runnable actionHandler;
+
+    /**
+     * @param actionHandler ha ez null, akkor disablednek számít a gomb
+     */
+    public Button(Widget content, @Nullable Runnable actionHandler) {
+        this.content = content;
+        this.actionHandler = actionHandler;
+    }
+
+    /**
+     * @param actionHandler ha ez null, akkor disablednek számít a gomb
+     */
+    public Button(String caption, @Nullable Runnable actionHandler) {
+        this(new Text(caption), actionHandler);
+    }
+
+    public boolean enabled() {
+        return actionHandler != null;
+    }
+
+    public Widget content() {
+        return content;
+    }
+
+    @Nullable
+    public Runnable actionHandler() {
+        return actionHandler;
+    }
+
+    @Override
+    public String toString() {
+        return "Button[" +
+                "content=" + content + ", " +
+                "actionHandler=" + actionHandler + ']';
+    }
+
+    public static final class ButtonState extends SubstitutedWidget {
+
+        private final Button button;
+        private final boolean pressed;
+
+        public ButtonState(Button button, boolean pressed) {
+            this.button = button;
+            this.pressed = pressed;
+        }
+
+        public Button button() {
+            return button;
+        }
+
+        public boolean pressed() {
+            return pressed;
+        }
+
+        @Override
+        public String toString() {
+            return "ButtonState[" +
+                    "button=" + button + ", " +
+                    "pressed=" + pressed + ']';
+        }
+    }
+}

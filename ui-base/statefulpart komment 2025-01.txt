@@ -1,0 +1,38 @@
+használat 2025-01-11 játékban:
+
+- paraméter nélküli:
+  - BowlingLoadWrapper
+  - RankingsTab
+  - ReceivedMessageBubble
+  - RunningMatchesTab
+  - UnconnectedDialog
+- paraméteres, de átalakítható inheriteddé:
+  - GameResultsDialog
+  - MobileHUD
+  - SendMessageField
+  - ScoreTable (lehetne PlayerListItemen belül)
+
+- paraméteres, nem átalakítható inheriteddé:
+  - mert adatsor-függő:
+    - RegularChatMessageView
+    - RunningMatchRow
+  - általános control:
+    - TabContentSwitcher
+    - MenuOverlay
+  - app-specifikus általános control:
+    - MobilePracticeHUD.CircleButton
+  - app-specifikus nem általános control:
+    - ExperienceSlider
+    - RatingIntervalSlider
+- nem egyértelmű:
+  - StandingPinsView
+  - ChatView (active bekavar)
+  - MessagesPane
+  - ChallengePlayerSummary.MenuButton
+  - FilterPlayersDialogImpl (onClose)
+
+- ED is stateful:
+  - TutorialGUI
+
+stateless meglepően elterjedt, 44 + 24 = 68
+(@Content + @DefaultViewCreator) helyen van használva (fentiek csak 22)

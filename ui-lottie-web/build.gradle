@@ -1,0 +1,6 @@
+dependencies {
+    api project(":ui-lottie")
+    api project(":ui-platform-dom")
+
+    implementation "org.teavm:teavm-metaprogramming-api:${teavmVersion}"
+}

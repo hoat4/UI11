@@ -1,0 +1,13 @@
+package ui11;
+
+import ui11.graphics.fill.Color;
+import ui11.graphics.fill.ColorFill;
+import ui11.window.Desktop;
+
+import static ui11.graphics.effect.Overlay.overlay;
+
+public class NestedOverlaysTest {
+    public static void main(String[] args) {
+        Desktop.getDesktop().openWindow(overlay(overlay(new ColorFill(Color.GREEN))));
+    }
+}

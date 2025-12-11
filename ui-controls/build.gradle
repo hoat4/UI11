@@ -1,0 +1,11 @@
+dependencies  {
+    api project(":ui-base")
+    api project(":ui-layout-model")
+    api project(":ui-graphics")
+    api project(":ui-input")
+    api project(":ui-text")
+    implementation project(":ui-animation") // MenuOverlayben lévő hack miatt
+
+    testImplementation project(":ui-platform-awt")
+    testImplementation project(":ui-controls-defaultlook")
+}

@@ -1,0 +1,10 @@
+dependencies {
+    api project(":ui-base")
+    api project(":ui-desktop")
+    implementation project(":ui-layout-constraint") // azért hogy TextPeer tudjon preferredsizeot megadni
+
+    //implementation project(":ui-renderer-common")
+    api project(":ui-graphics")
+    api project(":ui-input")
+    api project(":ui-text")
+}

@@ -1,0 +1,6 @@
+dependencies {
+    api project(":ui-base")
+    implementation project(":ui-graphics") // Empty miatt
+
+    testImplementation project(":ui-desktop")
+}

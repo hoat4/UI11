@@ -1,0 +1,7 @@
+SubstitutedElement:
+ /**
+   * Olyan Elementet jelöl, mely nem saját maga határozza meg hogy mi legyen benne, hanem egy ViewProvider.
+   * <p>
+   * Ha az örökölt ViewProvider tudja hogy milyen view kell ehhez az elemhez, akkor az lesz a view. Ez jellemző a
+   * beépített Elementeknél.
+   */

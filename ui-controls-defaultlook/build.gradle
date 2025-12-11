@@ -1,0 +1,9 @@
+dependencies {
+    api project(":ui-controls")
+    api project(":ui-css")
+    implementation project(":ui-desktop") // link megnyitás miatt
+    implementation project(":ui-input")
+
+    testImplementation project(":ui-platform-awt")
+    testImplementation project(":ui-layout-constraint")
+}

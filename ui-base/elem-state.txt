@@ -1,0 +1,136 @@
+I. Nagyjából "deklaratív" megoldás:
+
+private static final Color DEFAULT_BACKGROUND = Color.parse("#F9F986");
+private static final Color PRESSED_BACKGROUND = Color.parse("#E9E974");
+
+private final ScalarProp<Boolean> pressed = new OVal<>(false);
+
+@Override
+protected Element build() {
+    return withBackground(pressed.get() ? PRESSED_BACKGROUND : DEFAULT_BACKGROUND, //
+            new Padding(Insets.all(em(.5)), //
+                    row( //
+                            new TextElement("Teammate and Opponent Preferences"), //
+                            Align.right(new TextElement(isOpen.get() ? "\u2191" : "\u2193"))
+                    ) //
+            ) //
+    );
+}
+
+ez itt még pont jó lenne, de stateful elementek esetén könnyű megfeledkezni a cache-elésről
+
+II. Imperatív létrehozása:
+
+private static final Color DEFAULT_BACKGROUND = Color.parse("#F9F986");
+private static final Color PRESSED_BACKGROUND = Color.parse("#E9E974");
+
+private final ScalarProp<Boolean> pressed = new OVal<>(false);
+
+@Content private final Box box = new Box(
+        new Padding(Insets.all(em(.5)), //
+                row( //
+                        new TextElement("Teammate and Opponent Preferences"), //
+                        Align.right(arrow)
+                ) //
+        ) //
+);
+
+@RepeatedInit
+void updateArrow() {
+    arrow.text.set(isOpen.get() ? "\u2191" : "\u2193");
+    box.background(pressed.get() ? PRESSED_BACKGROUND : DEFAULT_BACKGROUND);
+}
+
+ezt @RepeatedInit nélkül megoldani kétféleképpen lehet:
+ - ha buildereket generálunk amik fogadnak ReadableScalarPropt, de ahhoz meg annotation processor kéne
+ - implementáljuk TextElementDesc és BoxDesc interface-eket, ami egész értelmes megoldás
+   lenne, de Javában borzalmas sok kód kell anonymous inner classhoz
+
+III. Külsőleg megadott layouttal:
+
+final ScalarProp<Boolean> pressed = new OVal<>(false);
+
+boolean isOpen() {
+    return isOpen.get();
+}
+
++ JSON
+{
+  TYPE: "ui11.decoration.Box",
+  background: {
+    SWITCH: "pressed",
+    "true": "#F9F986",
+    "false": "#E9E974"
+  },
+  content: {
+    TYPE: "ui11.layout.singlechild.Padding",
+    insets: {
+      left: ".5em",
+      right: ".5em",
+      top: ".5em",
+      bottom: ".5em"
+    },
+    content: {
+      TYPE: "ui11.layout.multichild.LinearLayout",
+      axis: "HORIZONTAL",
+      items: [
+        {
+          weight: 1,
+          element: {
+            I18N: "Teammate and Opponent Preferences",
+            name: "opponentPreferencesTitle"
+          }
+        },
+        {
+          weight: 0,
+          element: {
+            TYPE: "ui11.layout.singlechild.Align",
+            alignment: "RIGHT",
+            element: {
+              TYPE: "ui11.graphics.TextElement",
+              text: {
+                SWITCH: "isOpen",
+                "true": "↑",
+                "false": "↓"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
+------------ MÁSIK -------------
+FilterV:
+
+        final OVal<Boolean> isOpen = new OVal<>(false);
+
+        @Override
+        protected Element build() {
+            Element details = detailV();
+            return new Border(new Color(0xCC / 255.0, 0xCC / 255.0, 0x66 / 255.0), 1,
+                    column(
+                            new TitleBar(),
+                            isOpen.get() ? details : null
+                    )
+            );
+itt detailV újraépítése már nem jó, cache-elni kéne a benne lévő textfieldeket
+
+következő:
+
+        final OVal<Boolean> isOpen = new OVal<>(false);
+        final Slot<Element> detailsSlot = slot();
+        final Element detailV = detailV();
+        @Content final Box box = new Box(
+                column().
+                        add(new TitleBar(), 0).
+                        add(detailsSlot, 1)).
+                border(px(1), new Color(0xCC / 255.0, 0xCC / 255.0, 0x66 / 255.0))
+
+        @RepeatedInit
+        void updateDetailsVisibility() {
+            detailsSlot.set(isOpen.get() ? detailV() : null);
+        }

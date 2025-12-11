@@ -1,0 +1,12 @@
+repositories {
+    /* glm */
+    maven { url "https://jitpack.io" }
+    maven { url "https://raw.githubusercontent.com/kotlin-graphics/mary/master" }
+}
+
+dependencies {
+    implementation "com.fasterxml.jackson.core:jackson-annotations:2.13.0"
+
+    testImplementation "kotlin.graphics:unsigned:3.3.32"
+    testImplementation "kotlin.graphics:glm:0.9.9.1-7"
+}
