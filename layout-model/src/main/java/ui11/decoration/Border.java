@@ -1,14 +1,15 @@
 package ui11.decoration;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box.BorderSpec;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 import ui11.layout.Insets;
 import ui11.geom.Length;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
+
 import java.util.Objects;
 
 import static ui11.geom.Length.px;
@@ -18,25 +19,33 @@ import static ui11.geom.Length.px;
 
 public final class Border extends SubstitutedWidget {
 
-    @Nonnull private final Insets thicknesses;
-    @Nonnull private final Widget stroke;
-    @Nonnull private final Widget content;
+    private final @NonNull Insets thicknesses;
+    private final @NonNull Widget stroke;
+    private final @NonNull Widget content;
 
-    public Border(@Nonnull Insets thicknesses, @Nonnull Widget stroke, @Nonnull Widget content) {
+    public Border(@NonNull Insets thicknesses, @NonNull Widget stroke, @NonNull Widget content) {
         this.thicknesses = Objects.requireNonNull(thicknesses);
         this.stroke = Objects.requireNonNull(stroke);
         this.content = Objects.requireNonNull(content);
     }
 
-    public Border(Length thickness, Color stroke, Widget content) {
+    public Border(@NonNull Length thickness, @NonNull Color stroke, @NonNull Widget content) {
         this(thickness, new ColorFill(stroke), content);
     }
 
-    public Border(Insets thicknesses, Color stroke, Widget content) {
+    public Border(@NonNull Insets thicknesses, @NonNull Color stroke, @NonNull Widget content) {
         this(thicknesses, new ColorFill(stroke), content);
     }
 
-    public Border(Length thickness, Widget stroke, Widget content) {
+    /**
+     * Creates a {@linkplain Border} instance where the {@linkplain #thicknesses() thickness} is
+     * {@link Length#px(double) 1px} on each side.
+     */
+    public Border(@NonNull Color stroke, @NonNull Widget content) {
+        this(px(1), new ColorFill(stroke), content);
+    }
+
+    public Border(@NonNull Length thickness, @NonNull Widget stroke, @NonNull Widget content) {
         this(Insets.all(thickness), stroke, content);
     }
 
@@ -52,9 +61,8 @@ public final class Border extends SubstitutedWidget {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         // TODO ezeket a widget instanceof ...-okat meg kéne szüntetni,
         //      mert ha egy lényegtelen Tag az értékük, akkor azokat nem kell nézni
 

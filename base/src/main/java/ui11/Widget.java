@@ -1,18 +1,36 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ui11.observable.ObservableBase;
 import ui11.observable.Scope;
+import ui11.provide.Provider;
+import ui11.resolution.PeerCreationRequest;
+import ui11.resolution.SubstitutedWidget;
 
-import javax.annotation.Nonnull;
-import java.io.Serializable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static java.util.stream.Collectors.joining;
 
-// TODO nem-statikus inner class support?
+// TODO most nem adható meg Provider-nek egy használatban lévő Widget, mert ha lecseréljük egy másik példányra
+//      azonos input mező értékekkel, akkor előfordulhat, hogy beragad az IV-kben a régi, míg a hozzá
+//      tartozó Elementben már az új lesz. Ilyen volt például CommonWidgetsBetweenLobbyTabs interface,
+//      amit PregameView implementált, és a lobbi tabok megkapták volna IV-ben. Bár hogy hogyan ragadt be az IV-be
+//      a régi példány, azt nem tudom.
+//      Ezt vagy el kéne fogadni és dokumentálni, vagy meg kéne oldani.
+//      De utóbbit nem látom, hogy hogyan lehetne. Esetleg ha megakadályoznánk az IV-be beragadást az alapján,
+//      hogy ki lett szedve a fából.
+//      Ráadásul r28077-ben írtak szerint amúgy sem jó ötlet:
+//      "konstruktor legyen widgetekben az egyedüli publikus API, meg statikus factory methodok.
+//       Ha hivatkoztott valahol a kód ancestor widgetekre, akkor az általában rosszul sült el. Helyette bővíteni
+//       kell ilyenkor a property-k listáját, hogy ne kelljen az ancestor widgetre hivatkozni."
 
 // TODO lehetne warningolni, ha egyszer már felhasznált RSW-t egy másik helyen használjuk
 
@@ -20,7 +38,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 // bele fog számítani. ez akkor nem nyilvánvaló, ha van öröklődési hierarchia, lásd pl. DOMLayoutPeerBase és ott a két
 // boolean mezőt.
 
-// ez a serializable-s hack lehet hogy mégsem volt jó ötlet, mert a javadocot teleszemeteli "Serialized Form"-mal
+// TODO talán mégis meg kéne próbálni cloneozást, mert így nem lehet pl. Collections.nCopiest se használni
+//      (GameClock timeUpMark)
+//      meg Adorján is nemrég elrakott volna egy ikont egy lokális változóba, amit két helyet akart kijelezni.
+//      A klónozás legutolsó revertjekor valami olyasmi volt írva, hogy azért lett, mert nehéz átlátni hogy
+//      kétféle szerepben vannak a widgetek. De azóta eltelt sok idő, és most már megszoktam hogy nincs
+//      létrehozás utáni API-juk a widgeteknek.
 
 /**
  * This class represents the basic building block for user interface components. A widget can be for example a simple
@@ -28,30 +51,48 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * A widget describes part of the user interface by building a constellation of other widgets that describe the user
  * interface more concretely. The building process continues recursively until the description of the user interface is
- * fully concrete (i.e. only consists of {@linkplain ui11.provide.UpValueWrapper} with no next).
+ * fully concrete (i.e. only consists of {@linkplain ui11.EndingWidget EndingWidgets}).
  * <p>
  * Every non-static fields of the subtypes of this subclass must be either {@code final} or annotated with
- * {@linkplain Inject @Inject} or {@linkplain State @State}.
- * <p>
- * This class implements {@link java.io.Serializable java.io.Serializable}, but is not really serializable, the reason
- * for implementing it is to allow {@link Listener @Listener} to work in future JDK versions (see <a
- * href="https://openjdk.org/jeps/500">JEP 500</a>)
+ * {@linkplain Inject @Inject} or {@linkplain Remember @Remember}.
  */
 // TODO írni terminológiáról (hagyományos értelemben Widget csak a controlokat jelenti)
-public abstract class Widget implements Serializable {
+public abstract class Widget implements Cloneable {
+
+    private static final Logger logger = LoggerFactory.getLogger(Widget.class);
 
     /**
-     * Ha ez null vagy {@linkplain WidgetAccessor} van benne, akkor nincs attacholva {@linkplain RSWStateHolder}.
-     * Különben van.
+     * Ennek lehetséges értékei:
+     * <ul>
+     *     <li>{@code null} vagy {@linkplain WidgetAccessor} detached marker nélkül: nincs attacholva
+     *     {@linkplain Element}hez, és
+     *     nem is volt még</li>
+     *     <li>{@linkplain Element}: attacholva van</li>
+     *     <li>{@linkplain WidgetAccessor} detached markerrel: volt attacholva, de már nincs</li>
+     * </ul>
      */
     private Object stateHolderOrDef;
-    boolean injectFieldsInitialized;
+    // TODO detached markeres izé valszeg törölhető, mert az új klónozásos logikában már nem
+    //      lesz egy detached state role-ú widget példány újra attached, ezért egyszerűbb
+    //      egy érvénytelen értékre állítani e mezőt
+
     /**
-     * nem olyan értelemben vett "state" mint a StateHoldernél, hanem inkább status
+     * elvileg csak model szerepű widgetekben lehetne nemnull ez, de mivel egy widget példány lehet egyszerre state és
+     * model szerepű is, ezért mindkettőben lehet nemnull ez
      */
-    private WidgetState state = WidgetState.INITIAL;
+    ListenerProxyBase.LPModelData lpModelData;
+    // mivel a widgetek többségében nincs listener proxy, ezért lehet hogy jobban megéri külön mező helyett
+    // inkább úgy tárolni, hogy stateHolderOrDef értéke lenne egy objektum ami tartalmazza
+    // LPModelData-t és hivatkozik az accessorra is.
 
     // lehet hogy kéne egy explicit üres protected konstruktor javadoc miatt
+
+    // TODO valamit csinálni kéne, hogy jobban felhívjuk a figyelmet arra hogy initState-ben hibás
+    //      @Inject mezőket olvasni (kivéve ha initial value-ként akarjuk használni).
+    //      pl. meg lehetne szüntetni initState-et, és helyette initialValue(Supplier<T>)-et csinálni, mint
+    //      a remember() volt r28918-ban.
+    //      vagy lehetne hogy initState-ben még null legyen minden, de akkor meg initial value-s felhasználásra
+    //      ez nem jó.
 
     /**
      * Called when the widget is added to the tree and no previous state is available.
@@ -101,7 +142,7 @@ public abstract class Widget implements Serializable {
      */
     // TODO ellenőrizni kéne hogy ez nem ad-e vissza thist, vagy egyéb módon okoz-e rekurziót
     // TODO a side effect szövegrészlet nem feltétlen releváns
-    // @Nonnull ha ezt ideírom, akkor minden implementációnál warningolni fog. nem tudom, mi legyen vele.
+    // @NonNull ha ezt ideírom, akkor minden implementációnál warningolni fog. nem tudom, mi legyen vele.
     protected abstract Widget build();
 
     // onPause nem feltétlen kell, mert ott va rá untilPause().onClose
@@ -112,7 +153,7 @@ public abstract class Widget implements Serializable {
      * This method can be only called from {@linkplain #build()}.
      * <p>
      * At the moment when this scope is closed, the inherited value observables obtained via {@linkplain Inject @Inject}
-     * can still be seen, but their values might be obsolete.
+     * will be the same in the last build.
      *
      * @throws IllegalStateException if called not in {@linkplain #build()}
      */
@@ -120,7 +161,7 @@ public abstract class Widget implements Serializable {
     // TODO pontosítsuk, hogy mikor záródik be
     // TODO nézzük meg, hogy tényleg csak buildből hívható-e
     protected final Scope untilNextRebuild() throws IllegalStateException {
-        return stateHolder().untilNextRebuild();
+        return element().untilWidgetStateNextRebuild(this);
     }
 
     /**
@@ -136,56 +177,128 @@ public abstract class Widget implements Serializable {
      */
     // init()-ben lehetne engedni, de nem tudok rá use-caset
     protected final Scope untilPause() throws IllegalStateException {
-        return stateHolder().untilUnmount();
+        return element().untilWidgetStatePause(this);
     }
 
-    protected final WidgetInstantiation instantiate(KeyWrapper widget) {
-        Objects.requireNonNull(widget);
+    // @Listenernél volt egy komment:
+    //     alternatív nevek: @Callback, @InterfaceProxy, @EventListener
 
-        RSWStateHolder<?> stateHolder = stateHolderOrNull();
-        if (stateHolder == null || stateHolder.refreshState == null)
-            // TODO így initStateből is lehet hívni
-            throw new IllegalStateException(Widget.class.getSimpleName() +
-                    ".instantiate can only be called inside " + Widget.class.getSimpleName() + ".build()");
+    // TODO anonymous vagy local classoknál hogy lehessen listenerproxy-t használni?
+    //      mindenképp generál javac egy másik synthetic fieldet a captureölt változónak,
+    //      hiába nem használjuk a field initializer blokkon kívül sehol
 
-        @SuppressWarnings("unchecked") final WidgetAccessor<Widget> castedAccessor =
-                (WidgetAccessor<Widget>) stateHolder.accessor;
-        Widget decoratedWidget = castedAccessor.decorate(this, widget, false);
-        if (decoratedWidget == null)
-            throw new RuntimeException("decorator returned null on " + this + " for " +
-                    widget + " (slot: " + this + ")");
-
-        return stateHolder.refreshState.instantiate(
-                new Object(), // mivel widget instanceof KeyWrapper, ezért mindegy hogy mit adunk itt meg
-                decoratedWidget);
+    /**
+     * The specified object will be replaced by a proxy object, which implements the interface, and forwards all method
+     * calls to the element's current widget's value of the annotated field. This allows to change event listener
+     * implementations without rebuilding the widgets.
+     * <p>
+     * If the listener argument is {@code null}, then it won't be replaced by a proxy object.
+     *
+     * @see #listenerProxy(Consumer)
+     */
+    protected final Runnable listenerProxy(Runnable listener) {
+        if (roleIsState())
+            // TODO exception üzenet
+            throw new IllegalStateException("lp on state widget (R): " + this); // vagy UOE?
+        if (listener == null)
+            return null;
+        return new ListenerProxyBase.RunnableListenerProxy(this, listener);
     }
 
     /**
-     * Starts a {@linkplain Component} as a child of this widget, if it hasn't already been started. If in the next
-     * rebuild this method won't be called with the same argument, the specified component will be stopped.
-     * <p>
-     * Can be used only inside {@linkplain #build()}.
+     * @see #listenerProxy(Runnable)
      */
-    // TODO erre milyen API legyen?
-    protected final void useComponent(Component component) {
-        Objects.requireNonNull(component);
+    protected final <T> Consumer<T> listenerProxy(Consumer<T> listener) {
+        if (roleIsState())
+            throw new IllegalStateException("lp on state widget (C): " + this);
+        if (listener == null)
+            return null;
+        return new ListenerProxyBase.ConsumerListenerProxy<>(this, listener);
+    }
 
-        RSWStateHolder<Widget> stateHolder = stateHolder();
-        if (stateHolder.refreshState == null)
+    // régi komment listener proxy-kkal kapcsolatban, ElementDefReflectorból:
+    //     eredetileg úgy volt, hogy tetszőleges interface-ek lehetnek event listenerek.
+    //     de lehet hogy jobb így, hogy csak Runnable meg egy-két másik lehet, mert így biztosítani lehet,
+    //     hogy csak void return type-ú SAM-ok.
+    //     2025-12-06:
+    //     majd lehet hogy ki kell terjeszteni tetszőleges interfacere (pl. mouseeventek esetén a tipikus a
+    //     sok függvényes interface, vagy lehet hogy kell visszaadni értéket), de egyelőre elég ez a kettő.
+
+    public final Widget withSlot(Slot slot) {
+        // TODO ha ez egy KeyWrapper, akkor elég lenne csak this-t visszaadni
+        //      de akkor végig lehetne menni Provide-okon is végülis
+        // régen (Slot.use-ban) ellenőriztük, hogy a slot owner widgetje még aktív volt-e.
+        // de mivel key-ek már megszűntek, ezért végülis nem is kell.
+        return new KeyWrapper(slot, this);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected final <R> R useComponent(Slot slot, Component<R> component) {
+        return (R) useWidget(slot, component, Component.ComponentResultUpValue.class).result;
+    }
+
+    /**
+     * A delegate láncon végighaladva keres egy olyan UpValuet, mely típusa a megadott típus vagy annak egy altípusa, és
+     * visszaadja azt. Ha több ilyen is van, akkor a legelsőt.
+     *
+     * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő UpValuet
+     */
+    <U extends EndingWidget> U useWidget(Slot defaultSlot, Widget widget, Class<U> upValueType) {
+        Objects.requireNonNull(widget);
+
+        Element element = element();
+        if (element == null || element.refreshID == null)
             // TODO így initStateből is lehet hívni
-            throw new IllegalStateException(Widget.class.getSimpleName() +
-                    ".useComponent can only be called inside build()");
+            throw new IllegalStateException(Slot.class.getSimpleName() +
+                    ".instantiate can only be called inside " + Widget.class.getSimpleName() + ".build()");
 
-        // TODO duplicate component detektálása
+        Widget decoratedWidget = accessor().decorate(this, widget);
+        if (decoratedWidget == null)
+            throw new RuntimeException("decorator returned null on " + this + " for " + widget
+                    + " (default slot: " + defaultSlot + ")");
 
-        // TODO kéne folytatni az átállást a nem-identitásos component modellre
-        record ComponentIdentityKey(Component c) {
-            @Override
-            public boolean equals(Object obj) {
-                return obj instanceof ComponentIdentityKey k && c == k.c;
-            }
-        }
-        stateHolder.refreshState.instantiate(new ComponentIdentityKey(component), component).ensureFresh();
+        if (Element.TRACE_REFRESH)
+            Element.TraceRefresh.TL.get().print("useWidget " + upValueType.getSimpleName() + ": " + decoratedWidget);
+
+        WidgetInstantiation widgetInstantiation = element.instantiate(defaultSlot, decoratedWidget, element.refreshID);
+
+        if (Element.TRACE_REFRESH)
+            Element.TraceRefresh.TL.get().print("lookup " + upValueType.getSimpleName() + ": " + decoratedWidget);
+
+        return widgetInstantiation.lookup(upValueType);
+    }
+
+    protected final <U extends EndingWidget> U makePeer(
+            Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
+
+        // egyelőre így adjuk át, majd kéne valami hatékonyabb megoldás
+        widget = new Provider<>(PeerCreationRequest.class, request, widget);
+
+        return useWidget(defaultSlot, widget, request.peerType());
+    }
+
+    protected final <U extends EndingWidget> Stream<U> useWidgets(MultiSlot<Integer> slots,
+                                                             List<? extends Widget> widgets,
+                                                             PeerCreationRequest<U> request) {
+        return instantiateMultiple(slots, widgets.toArray(), request);
+    }
+
+    protected final <U extends EndingWidget> Stream<U> useWidgets(MultiSlot<Integer> slots,
+                                                             Stream<? extends Widget> widgets,
+                                                             PeerCreationRequest<U> request) {
+        return instantiateMultiple(slots, widgets.toArray(), request);
+    }
+
+    private <U extends EndingWidget> @NonNull Stream<U> instantiateMultiple(
+            MultiSlot<Integer> slots, Object[] array,
+            PeerCreationRequest<U> request) {
+
+        for (int i = 0; i < array.length; i++)
+            array[i] = makePeer(slots.get(i), (Widget) array[i], request);
+
+        @SuppressWarnings("unchecked")
+        Stream<U> castedStream = (Stream<U>) (Stream<?>) Stream.of(array);
+        return castedStream;
     }
 
     // equals/hashCodera final kell?
@@ -202,13 +315,13 @@ public abstract class Widget implements Serializable {
 
     /**
      * Compares the input fields of the other widget. Input field means a final non-static field of a
-     * {@linkplain Widget} subtype, which is not annotated with {@linkplain Inject} or {@linkplain State}. This also
-     * includes non-static final fields annotated with {@link Listener @Listener}.
+     * {@linkplain Widget} subtype, which is not annotated with {@linkplain Inject} or {@linkplain Remember}. This also
+     * includes non-static final fields annotated with containing a {@link #listenerProxy(Runnable) listener proxy}.
      * <p>
      * Note that this method is not used for determining that a widget needs {@link #build() rebuild}. Instead, for
-     * determining that a that a widget needs rebuild or not a slightly different approach used which differs only in
-     * the treatment of {@linkplain Listener @Listener} fields: they are not compared by value (or the delegate of the
-     * proxy object in them), but only the nullness is compared to the same field of the other object.
+     * determining that a widget needs rebuild or not a slightly different approach used which differs only in the
+     * treatment of {@linkplain #listenerProxy(Runnable) listener proxy} fields: they are not compared by value (or the
+     * delegate of the proxy object in them), but only the nullness is compared to the same field of the other object.
      *
      * @return true of the specified object is the same class as this object and the values of all non-listener input
      * fields are equal (according to {@link Objects#equals(Object, Object) Objects.equals}) to the same fields of this
@@ -216,23 +329,96 @@ public abstract class Widget implements Serializable {
      */
     @Override
     public boolean equals(Object obj) {
+        // TODO ha ez state role-ú, akkor equals/hashCode identity equals/hashCode legyen.
+        //      de az se jó, mert lehet hogy egyszerre próbálja state és model role-ban is használni.
+
+        // TODO a listenereket miért hasonlítjuk itt össze?
+
         if (obj == null || obj.getClass() != getClass())
             return false;
 
         // TODO ha identity equals, akkor lehetne egyből true-t visszaadni.
         //      ha felülírják az equalst, akkor ezt a tulajdonságot lehet hogy verifikálni kéne.
 
-        return accessor().inputFieldsEquals(this, (Widget) obj);
+        WidgetAccessor<Widget> accessor;
+        try {
+            accessor = accessor();
+        } catch (InvalidWidgetDefinitionException e) {
+            logger.error("Can't calculate equals, because because the widget definition of " +
+                    getClass().getName() + " is invalid", e);
+            return this == obj;
+        }
+
+        return accessor.inputFieldsEquals(this, (Widget) obj);
     }
 
     /**
      * Creates a hash code of the input fields of this widget. Input field means a final non-static field of a
-     * {@linkplain Widget} subtype, which is not annotated with {@linkplain Inject} or {@linkplain State}. This also
-     * includes non-static final fields annotated with {@link Listener @Listener}.
+     * {@linkplain Widget} subtype, which is not annotated with {@linkplain Inject} or {@linkplain Remember}. This also
+     * includes non-static final fields containing {@link #listenerProxy(Runnable) listener proxies}.
      */
     @Override
     public int hashCode() {
-        return accessor().inputFieldsHashCode(this);
+        WidgetAccessor<Widget> accessor;
+        try {
+            accessor = accessor();
+        } catch (InvalidWidgetDefinitionException e) {
+            logger.error("Can't calculate hashCode, because because the widget definition of " +
+                    getClass().getName() + " is invalid", e);
+            // mivel úgyse lesz használható a widget, ezért nem baj ha hülyeség a hashcode
+            return System.identityHashCode(e);
+        }
+        return accessor.inputFieldsHashCode(this);
+    }
+
+    @Override
+    public String toString() {
+        if (!(this instanceof SubstitutedWidget))
+            // TODO ide lehetve valami infót berakni, pl. role
+            return super.toString();
+
+        // azért csak SubstitutedWidgetnél vannak a mezők kiírva, mert itt kisebb eséllyel "szenzitív adat" az input
+        // mezők tartalma
+        StringBuilder sb = new StringBuilder();
+        Object[] props = accessor().inputFieldsToString(this);
+        sb.append(getClass().getSimpleName()).append(" (");
+        if (stateHolderOrNull() == null)
+            sb.append("no state holder");
+        else
+            sb.append(element().elementState);
+        sb.append(") {");
+        if (props.length == 0)
+            sb.append("}");
+        else {
+            sb.append("\n");
+            for (int i = 0; i < props.length; i += 2) {
+                sb.append("  ").append(props[i]);
+                Object val = props[i + 1];
+                if (val == null)
+                    // nem ugyanaz a karakter ilyenkor, mint a valós érték előtt, mert akkor nem lehetne
+                    // megkülönböztetni nullt a "null" stringtől
+                    sb.append(": null");
+                else {
+                    sb.append(" = ");
+                    String valStr = switch (val) {
+                        case Collection<?> coll -> coll.isEmpty() ? "[]" : coll.stream().
+                                map(String::valueOf).collect(joining(", \n  ", "[\n  ", "\n]"));
+                        case Map<?, ?> map -> map.isEmpty() ? "{}" : map.entrySet().stream().
+                                map(String::valueOf).collect(joining(", \n  ", "{\n  ", "\n}"));
+                        default -> val.toString();
+                    };
+                    int firstNewline = valStr.indexOf('\n');
+                    if (firstNewline == -1)
+                        sb.append(valStr);
+                    else if (firstNewline > 0 && valStr.charAt(firstNewline - 1) == '{' && valStr.endsWith("}"))
+                        sb.append(valStr.replace("\n", "\n  "));
+                    else // pl. Mat4
+                        sb.append("\n    ").append(valStr.replace("\n", "\n    "));
+                }
+                sb.append(i == props.length - 2 ? "\n}" : ", \n");
+            }
+        }
+        return sb.toString();
     }
 
     WidgetAccessor<Widget> accessor() {
@@ -240,10 +426,13 @@ public abstract class Widget implements Serializable {
         if (stateHolderOrDef == null) {
             result = ElementAccessorFactory.accessorFor(getClass());
             stateHolderOrDef = result;
-        } else if (stateHolderOrDef instanceof RSWStateHolder<?> sh) {
-            result = sh.accessor;
+            Objects.requireNonNull(result);
+        } else if (stateHolderOrDef instanceof Element e) {
+            result = e.accessor(this);
+            Objects.requireNonNull(result);
         } else {
             result = (WidgetAccessor<?>) stateHolderOrDef;
+            Objects.requireNonNull(result);
         }
 
         @SuppressWarnings("unchecked")
@@ -252,101 +441,94 @@ public abstract class Widget implements Serializable {
         return casted;
     }
 
-    @SuppressWarnings("unchecked")
-    RSWStateHolder<Widget> stateHolder() {
-        if (!(stateHolderOrDef instanceof RSWStateHolder<?> sh))
-            throw new IllegalStateException("RSW no SH: " + this + ", " + state + ", " + stateHolderOrDef);
-        return (RSWStateHolder<Widget>) sh;
+    Element element() {
+        if (!(stateHolderOrDef instanceof Element sh))
+            // toStringet lehet hogy felülírják egy olyannal ami inherited valuet olvasna (pl. MultiChildLayout)
+            // ami nem fog működni ha element() exceptiont dob
+            throw new IllegalStateException("RSW no SH: " + super.toString() + ", " + stateHolderOrDef);
+        return sh;
     }
 
     @SuppressWarnings("unchecked")
-    RSWStateHolder<Widget> stateHolderOrNull() {
-        if (stateHolderOrDef instanceof RSWStateHolder<?> sh)
-            return (RSWStateHolder<Widget>) sh;
+    Element stateHolderOrNull() {
+        if (stateHolderOrDef instanceof Element sh)
+            return sh;
         else
             return null;
     }
 
-    Object getInheritedValueByIndex(int ivIndex) {
-        return stateHolder().observedInheritedValues[ivIndex].get();
-    }
-
     /**
-     * ez nem hív olyan kódot, ami observable-kre feliratkozna
+     * Lecserélődik az adott {@linkplain Element}ben lévő widget state, ezért ez az objektum nem lesz használva
+     * többé.
      */
-    @SuppressWarnings("unchecked")
-    final <W extends Widget /* this */> void attachStateHolder(RSWStateHolder<W> stateHolder, W copyStateFrom) throws DuplicateRSWInstantiationException {
-        if (this.stateHolderOrDef != null) {
-            WidgetAccessor<Widget> oldAccessor = accessor();
-            if (!oldAccessor.equals(stateHolder.accessor))
-                throw new RuntimeException("different RSW accessors: \n" +
-                        "Old accesor: " + oldAccessor + "\n" +
-                        "New accessor: " + stateHolder.accessor + "\n" +
-                        "Widget: " + this);
-            if (this.stateHolderOrDef == stateHolder)
-                throw new IllegalStateException("already has same state holder: " + this +
-                        ", state holder: " + stateHolder);
-            else if (this.stateHolderOrDef instanceof RSWStateHolder<?> prevStateHolder)
-                ((RSWStateHolder<W>) prevStateHolder).forcedDetachWidget((W) this);
-        }
-
-        this.stateHolderOrDef = stateHolder;
-
-        // TODO ellenőrizni kéne, hogy a @Inject-es mezők üresek-e
-        // TODO ha ez failol, akkor nem kéne kiszedni a stateHoldert a mezőből?
-        stateHolder.accessor.initAndCopyState(copyStateFrom, (W) this);
-
-        this.state = WidgetState.ATTACHED;
-
-        // TODO gondoljuk végig, hogy mi történik, ha initAndCopyState-ben valamelyik meghívott equals-nek
-        //      side-effectje van, pl. attacholja ezt a widgetet máshova
-    }
-
-    /**
-     * Ha kikerül az elem a fából, akkor ez nem fog meghívódni.
-     * <p>
-     * Ez nem hív olyan kódot, ami observable-kre feliratkozna.
-     */
-    final void detachStateHolder(RSWStateHolder<?> stateHolder) {
-        if (this.stateHolderOrDef == null || !(this.stateHolderOrDef instanceof RSWStateHolder<?> prevHolder))
+    final void disposeFromStateRole(Element stateHolder) {
+        if (!(this.stateHolderOrDef instanceof Element prevHolder))
             throw new IllegalStateException("not has state holder: " + this + ", expected: " + stateHolder);
         if (prevHolder != stateHolder)
             throw new IllegalStateException("has different state holder: " + this + ", expected: " + stateHolder + ", " +
                     "actual: " + prevHolder);
 
-        this.stateHolderOrDef = stateHolder.accessor;
-        this.state = WidgetState.DETACHED;
+        this.stateHolderOrDef = stateHolder.currentState.accessor.asDetachedMarker(true);
+
+        // TODO ilyenkor a state/inject fieldeket ki lehetne nullozni, mert pl. MultiChildLayout toStringje az
+        //      inject fieldet akar olvasni ha nem null, így IllegalStateExceptionre lyukad
     }
 
     /*protected*/ String debug_getRefreshStack() {
-        return stateHolder().refreshStackToString(Map.of());
+        return element().refreshStackToString(Map.of());
+    }
+
+    boolean roleIsState() {
+        return stateHolderOrDef instanceof Element ||
+                stateHolderOrDef instanceof WidgetAccessor<?> acc &&
+                        acc == acc.asDetachedMarker(true);
+    }
+
+    Widget makeCloneToBeStateRole(Element e) {
+        Widget clone = makeClone();
+        clone.stateHolderOrDef = e;
+        return clone;
+    }
+
+    private Widget makeClone() {
+        try {
+            return (Widget) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    void initListenerProxyData() {
+        if (lpModelData == null && accessor().prepareListenerProxies(this))
+            lpModelData = new ListenerProxyBase.LPModelData(this);
     }
 
     // "rebuilding" vagy "recomposition"-nak nevezzük?
 
-    /**
-     * If a field in a {@linkplain Widget} annotated with this annotation, its value will be replaced with an interface
-     * proxy before adding to the widget to a parent, which allows to replace the value without rebuilding the widget.
-     * <p>
-     * The specified object will be replaced by a proxy object, which implements the interface, and forwards all method
-     * calls to the element's current widget's value of the annotated field.
-     * <p>
-     * If the listener argument is {@code null}, then it won't be replaced by a proxy object.
-     * <p>
-     * The type of field must be {@linkplain java.lang.Runnable} or {@linkplain java.util.function.Consumer}.
-     */
-    // alternatív nevek: @Callback, @InterfaceProxy, @EventListener
-    @Target(FIELD)
-    @Retention(RUNTIME)
-    protected @interface Listener {
-    }
+    // TODO lehetne figyelmeztetést kiírni, ha egy input mezőben egy ismert mutable osztály (pl. ArrayList)
+    //      van az egyikben és megváltozott a tartalma (ehhez nyilván kell akkor csinálni minden ilyen típushoz
+    //      kézzel egy deep clone supportot).
+
+    // Jó lenne Observable<...>-séget törölni @Inject-ből.
+    // Azonban ekkor ha egy inner class widgetben hivatkozunk rá (lásd még: r24586), akkor
+    // az nem fog refreshelődni. Ez input mezőknél nem probléma, mivel Widget::equals false-t ad vissza, ha
+    // megváltoztak az input mezők, és mivel a this$0 is input field, ezért lesz refreshSelf a belső widgeten.
+    // Mivel @Inject-es mezők nem finalok, ezért nem is lehet úgy megbuherálni equalst, hogy false-t adjon vissza a
+    // megváltozásukkor, mivel lehet hogy a widget ugyanaz az objektum maradt és úgy változtak meg.
+    // Esetleg egy threadlocalba elmenteni minden widgetet, ami equals által érintett volt az input mezők
+    // összehasonlításakor, majd utána figyelni hogy melyiknél változtak az inputmezők, az talán működhet.
+    // Object.equals javadocja ugyan konzisztenciáról igen, de side-effectekről nem ír, ezért még az is
+    // lehet hogy szabályos is.
+
+    // TODO nem kéne mindenképp kikeresni az illető inherited valuet, csak ha meghívjuk
+    //      Observable::get-et. bár akkor meg nem derül ki, ha hiányzik.
 
     /**
      * Az ezzel annotált mezők típusa csak interface lehet, és a mezőknek nem szabad finalnak lenniük. Ha egy
      * {@linkplain ui11.observable.Observable Observable} típusú mezőt annotálunk ezzel, akkor az Observable
      * típusváltozójában megadott típusú inherited valuet fogjuk keresni.
      * <p>
-     * Ha annotálva van ezzel, akkor {@linkplain State} annotációval már nem lehet.
+     * Ha annotálva van ezzel, akkor {@linkplain Remember} annotációval már nem lehet.
      */
     @Target(FIELD)
     @Retention(RUNTIME)
@@ -357,7 +539,18 @@ public abstract class Widget implements Serializable {
         boolean required() default true;
 
         // TODO mit jelent required=false, ha a típus Slot vagy MultiSlot vagy interfaceproxy?
+
+        // TODO lehetne olyan változat, ami felteszi hogy nem fog változni, és akkor nem kell Observable-be wrappelni
+        //      akkor se ha nem interface (és ha mégis változik, akkor nem engedi a widgetet buildelni / exceptiont dob)
+        //      ld. például LottieWebAnimationPeerban DOMEnvironment
     }
+
+    // Eredetileg Remember-nek State volt a neve. de Adorján r29407-ben input mezőként deklarált egy mezőt
+    // (azaz annotáció nélkül), ami state mező lett volna valójában. Mivel egy annotáció nélküli mező deklarálása
+    // kisebb erőfeszítés mintha annotálnia kéne, ezért valszeg nagyobb aránnyal próbálkozik valaki input mezőként
+    // definiálással, aki még bizonytalan az input/inject/state fogalmakban. Ezért megpróbálkozunk
+    // ezzel a Remember névvel, ami a semleges State szónál pozitívabb, és amúgyis gyakran szeretnek az
+    // emberek beállítani olyan dolgokat, amik valamiféle cache-elésre vagy perzisztenciára utalnak.
 
     /**
      * Az ezzel annotált mezőknek nem szabad {@code final}-nak lenniük, és az {@linkplain #initState()} meghívásáig nem
@@ -365,18 +558,12 @@ public abstract class Widget implements Serializable {
      * felvenniük.
      * <p>
      * Ha annotálva van ezzel, akkor {@linkplain Inject} annotációval már nem lehet.
+     * <p>
+     * This is similar to the
+     * <a href="https://developer.android.com/develop/ui/compose/state#state-in-composables">{@code remember} function
+     * </a> in Jetpack Compose.
      */
     @Target(FIELD)
     @Retention(RUNTIME)
-    protected @interface State {}
-
-    static class DuplicateRSWInstantiationException extends Exception {
-        public DuplicateRSWInstantiationException(String message) {
-            super(message);
-        }
-    }
-
-    private enum WidgetState {
-        INITIAL, ATTACHED, DETACHED
-    }
+    protected @interface Remember {}
 }

@@ -1,17 +1,17 @@
 package ui11.css;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 public final class WrapWithCSSClassTag extends SubstitutedWidget {
 
     private final String className;
-    @Nonnull private final Widget content;
+    private final @NonNull Widget content;
 
-    public WrapWithCSSClassTag(String className, @Nonnull Widget content) {
+    public WrapWithCSSClassTag(String className, @NonNull Widget content) {
         Objects.requireNonNull(className);
         this.className = className;
         this.content = content;
@@ -34,14 +34,12 @@ public final class WrapWithCSSClassTag extends SubstitutedWidget {
         return className;
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 }

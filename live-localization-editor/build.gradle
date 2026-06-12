@@ -1,0 +1,7 @@
+dependencies {
+    implementation project(":graphics")
+    implementation project(":layout-model")
+    api project(":i18n")
+    implementation project(":controls")
+    implementation project(":text")
+}

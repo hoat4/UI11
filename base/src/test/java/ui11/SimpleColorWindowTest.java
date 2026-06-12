@@ -1,12 +1,12 @@
 package ui11;
 
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 public class SimpleColorWindowTest {
 
     public static void main(String[] args) {
-        Desktop.getDesktop().openWindow(new ColorFill(Color.YELLOW));
+        Window.open(new ColorFill(Color.YELLOW));
     }
 }

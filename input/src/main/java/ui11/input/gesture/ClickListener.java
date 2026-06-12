@@ -1,11 +1,12 @@
 package ui11.input.gesture;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
-import ui11.resolution.DefaultPeer;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import ui11.input.pointer.PointerOpaque;
+
 import java.util.Objects;
 
 // TODO ki kéne találni, hogy milyen területet akarunk érzékelni rákattintásnak.
@@ -15,31 +16,32 @@ import java.util.Objects;
 // azért nem pointer package-ben van, mert enter lenyomás is kiválthatná
 public final class ClickListener extends SubstitutedWidget {
 
-    @Nonnull private final Widget content;
-    @Nonnull @Listener private final Runnable handler;
+    private final @NonNull Widget content;
+    private final @NonNull Runnable handler;
 
-    public ClickListener(@Nonnull Widget content, @Nullable Runnable handler) {
+    public ClickListener(@Nullable Runnable handler) {
+        this(PointerOpaque.pointerOpaque(), handler);
+    }
+
+    public ClickListener(@NonNull Widget content, @Nullable Runnable handler) {
         Objects.requireNonNull(content);
         if (handler == null)
             handler = () -> {
             };
         this.content = content;
-        this.handler = handler;
+        this.handler = listenerProxy(handler);
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    @Nonnull
-    public Runnable handler() {
+    public @NonNull Runnable handler() {
         return handler;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return new ClickListenerImpl(this);
     }
 }

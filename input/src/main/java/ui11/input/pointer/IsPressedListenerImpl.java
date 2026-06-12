@@ -7,14 +7,10 @@ public class IsPressedListenerImpl extends Widget {
 
     private final IsPressedListener isPressedListener;
 
-    @State private boolean pressed;
+    @Remember private boolean pressed;
 
     public IsPressedListenerImpl(IsPressedListener isPressedListener) {
         this.isPressedListener = isPressedListener;
-    }
-
-    @Override
-    protected void initState() {
     }
 
     @Override

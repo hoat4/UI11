@@ -3,4 +3,6 @@ dependencies {
     api project(":geom") // Interpolator miatt
     implementation project(":graphics") // Faded miatt
     implementation project(":input") // Faded miatt
+
+    testImplementation project(":platform-awt")
 }

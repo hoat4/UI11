@@ -1,6 +1,6 @@
 package ui11;
 
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.input.gesture.ClickListener;
 import ui11.layout.Gap;
 import ui11.layout.singlechild.Align;
@@ -9,7 +9,7 @@ import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
 import ui11.provide.Provider;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 import static ui11.decoration.Background.withBackground;
 import static ui11.geom.Length.em;
@@ -33,20 +33,23 @@ public class ReactiveStatefulWidgetTest {
         @Inject private Observable<Integer> i1;
         @Inject private IntSupplier i2;
 
-        @State private MutableObservable<Integer> j;
+        @Remember private MutableObservable<Integer> j;
 
         public RSW1(int i) {
+            System.out.println("CREATE " + Integer.toUnsignedString(System.identityHashCode(this), 16));
             this.i = i;
         }
 
         @Override
         protected void initState() {
+            System.out.println("INIT " + Integer.toUnsignedString(System.identityHashCode(this), 16));
             j = MutableObservable.withInitial(1);
         }
 
         @Override
         protected Widget build() {
             String identity = Integer.toUnsignedString(System.identityHashCode(this), 16);
+            System.out.println("BUILD " + Integer.toUnsignedString(System.identityHashCode(this), 16));
             return Align.center(
                     new ClickListener(
                             withBackground(Color.YELLOW,
@@ -62,7 +65,10 @@ public class ReactiveStatefulWidgetTest {
                                             )
                                     )
                             ),
-                            () -> j.set(j.get() + 1)
+                            () -> {
+                                j.set(j.get() + 1);
+                                System.out.println("INCREMENT");
+                            }
                     )
             );
         }
@@ -96,7 +102,7 @@ public class ReactiveStatefulWidgetTest {
         MutableObservable<Widget> slot = MutableObservable.withInitial(empty());
         MutableObservable<Integer> inheritedInt = MutableObservable.withInitial(0);
         MutableObservable<Integer> inheritedInt2 = MutableObservable.withInitial(0);
-        Desktop.getDesktop().openWindow(new W(slot, inheritedInt, inheritedInt2));
+        Window.open(new W(slot, inheritedInt, inheritedInt2));
 
         for (int i = 0; ; i++) {
             Thread.sleep(1000);

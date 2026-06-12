@@ -1,7 +1,8 @@
 dependencies {
     api project(":base")
     api project(":geom")
+    api project(":color")
 
-    testImplementation project(":platform:awt")
+    testImplementation project(":platform-awt")
     testImplementation project(":layout-constraint")
 }

@@ -25,12 +25,13 @@ public class Element4Test {
     public void testStartSimpleRoot() {
         int[] a = {0};
 
-        new RootElement(new Component() {
+        WidgetTree.create(new Component<>() {
             @Override
-            protected void update() {
+            protected Void update() {
                 a[0]++;
+                return null;
             }
-        }, executor).start();
+        }, executor);
 
         assertEquals(1, a[0]);
     }
@@ -43,23 +44,24 @@ public class Element4Test {
             @Inject private Observable<Integer> i;
 
             @Override
-            protected void update() {
+            protected Void update() {
                 a[0]++;
                 a[1] = i.get();
+                return null;
             }
         }
 
-        new RootElement(new Component() {
+        WidgetTree.create(new Component<>() {
 
             @Inject private Slot slot;
 
             @Override
-            protected void update() {
-                slot.instantiate(new Provider<>(Integer.class, 1347,
-                        new E()
-                ));
+            protected Void update() {
+                useWidget(slot, new Provider<>(Integer.class, 1347,
+                        new E()), ComponentResultUpValue.class);
+                return null;
             }
-        }, executor).start();
+        }, executor);
 
         assertEquals(1, a[0]);
         assertEquals(1347, a[1]);

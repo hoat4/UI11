@@ -1,10 +1,10 @@
 package ui11.input.gesture;
 
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 /**
@@ -12,27 +12,24 @@ import java.util.Objects;
  */
 public final class CloseRequestListener extends SubstitutedWidget {
 
-    @Listener @Nonnull private final Runnable onClose;
-    @Nonnull private final Widget content;
+    private final @NonNull Runnable onClose;
+    private final @NonNull Widget content;
 
-    public CloseRequestListener(@Nonnull Runnable onClose, @Nonnull Widget content) {
-        this.onClose = Objects.requireNonNull(onClose);
+    public CloseRequestListener(@NonNull Runnable onClose, @NonNull Widget content) {
+        this.onClose = listenerProxy(Objects.requireNonNull(onClose));
         this.content = Objects.requireNonNull(content);
     }
 
-    @Nonnull
-    public Runnable onClose() {
+    public @NonNull Runnable onClose() {
         return onClose;
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 }

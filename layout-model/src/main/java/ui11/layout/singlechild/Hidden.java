@@ -1,9 +1,10 @@
 package ui11.layout.singlechild;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
+
 import java.util.Objects;
 
 /**
@@ -13,18 +14,16 @@ import java.util.Objects;
 // TODO leírni hogy mi a különbség Gone-hoz képest
 public final class Hidden extends SubstitutedWidget {
 
-    @Nonnull private final Widget content;
+    private final @NonNull Widget content;
 
     // egyelőre csak abban különbözik attól ha csak child lenne de widget fában nem szerepl, hogy
     // scroll pozíció megőrződik.
 
-    public Hidden(@Nonnull Widget content)  {
-        this.content = content;
-        Objects.requireNonNull(content);
+    public Hidden(@NonNull Widget content)  {
+        this.content = Objects.requireNonNull(content);
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 }

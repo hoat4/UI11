@@ -1,0 +1,5 @@
+dependencies {
+    api project(":media")
+    implementation project(":graphics")
+    implementation project(":desktop") // URLResolver
+}

@@ -16,17 +16,39 @@ public final class Provider<T> extends Widget {
     private final T value;
     private final Widget content;
 
+    /**
+     * ideiglenesen publikus
+     */
+    @Deprecated
+    public final boolean ignoreMergeableType;
+
     public Provider(Class<T> type, T value,
                     Widget content /* ez lehet null? */) {
         this.type = type;
         this.value = value;
         this.content = content;
+        this.ignoreMergeableType = false;
+
+        if (content != null && !Widget.class.isInstance(content)) // TeaVM-es kód bugjakor előjött egy ilyen
+            throw new RuntimeException("not a widget (P): " + content);
+    }
+
+    /**
+     * ideiglenesen publikus
+     */
+    @Deprecated
+    public Provider(Class<T> type, T value, Widget content, boolean ignoreMergeableType) {
+        this.type = type;
+        this.value = value;
+        this.content = content;
+        this.ignoreMergeableType = ignoreMergeableType;
     }
 
     public Class<T> type() {
         return type;
     }
 
+    // ha ennek a nevét vagy signaturejét megváltoztatjuk, írjuk át TeaVMWidgetAccessorban is
     public T value() {
         return value;
     }

@@ -2,7 +2,7 @@ package ui11;
 
 import ui11.observable.InvalidationPoint;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 import java.awt.*;
 
@@ -12,7 +12,7 @@ public class ImplicitViewKeyTest {
 
         private static int counter;
 
-        @State private int identity;
+        @Remember private int identity;
 
         @Override
         protected void initState() {
@@ -38,7 +38,7 @@ public class ImplicitViewKeyTest {
 
     public static void main(String[] args) throws InterruptedException {
         C c = new C();
-        Desktop.getDesktop().openWindow(c);
+        Window.open(c);
         while (true) {
             EventQueue.invokeLater(() -> c.ip.invalidate()); // TODO AWT mellőzése
             Thread.sleep(1000);

@@ -1,8 +1,6 @@
 package ui11.graphics.effect;
 
-import ui11.KeyWrapper;
-import ui11.MultiSlot;
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
 import java.util.ArrayList;
@@ -10,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
 import static ui11.graphics.Empty.empty;
@@ -31,8 +28,6 @@ public final class Overlay extends SubstitutedWidget {
 
     private final List<? extends Widget> items;
 
-    @Inject private MultiSlot<Integer> slots;
-
     public Overlay(List<? extends Widget> items) {
         // TODO items = items.stream().map(Gone::goneIfNull).toList();
         this.items = items.stream().
@@ -50,10 +45,8 @@ public final class Overlay extends SubstitutedWidget {
         return new Overlay(w);
     }
 
-    public List<? extends KeyWrapper> items() {
-        return IntStream.range(0, items.size()).
-                mapToObj(i -> slots.use(i, items.get(i))).
-                collect(Collectors.toUnmodifiableList());
+    public List<? extends Widget> items() {
+        return items;
     }
 
     @Override

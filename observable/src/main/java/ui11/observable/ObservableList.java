@@ -172,14 +172,15 @@ public class ObservableList<E> extends ObservableBase implements List<E> {
 
     @Override
     public void add(int index, E element) {
-        onWrite();
         delegate.add(index, element);
+        onWrite();
     }
 
     @Override
     public E remove(int index) {
+        E result = delegate.remove(index);
         onWrite();
-        return delegate.remove(index);
+        return result;
     }
 
     @Override
@@ -196,12 +197,62 @@ public class ObservableList<E> extends ObservableBase implements List<E> {
 
     @Override
     public ListIterator<E> listIterator() {
-        throw new UnsupportedOperationException("TODO");
+        return listIterator(0);
     }
 
     @Override
     public ListIterator<E> listIterator(int index) {
-        throw new UnsupportedOperationException("TODO");
+        onRead();
+        ListIterator<E> iterator = delegate.listIterator(index);
+        return new ListIterator<E>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public E next() {
+                return iterator.next();
+            }
+
+            @Override
+            public boolean hasPrevious() {
+                return iterator.hasPrevious();
+            }
+
+            @Override
+            public E previous() {
+                return iterator.previous();
+            }
+
+            @Override
+            public int nextIndex() {
+                return iterator.nextIndex();
+            }
+
+            @Override
+            public int previousIndex() {
+                return iterator.previousIndex();
+            }
+
+            @Override
+            public void remove() {
+                iterator.remove();
+                onWrite();
+            }
+
+            @Override
+            public void set(E e) {
+                iterator.set(e);
+                onWrite();
+            }
+
+            @Override
+            public void add(E e) {
+                iterator.add(e);
+                onWrite();
+            }
+        };
     }
 
     @Override

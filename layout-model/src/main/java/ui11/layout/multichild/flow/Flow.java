@@ -1,10 +1,11 @@
 package ui11.layout.multichild.flow;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.Nullable;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.layout.Gone;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,22 +22,22 @@ import static java.util.stream.Collectors.joining;
 
 public final class Flow extends SubstitutedWidget {
 
-    private final List<? extends Widget> items;
+    private final @NonNull List<? extends Widget> items;
 
-    public Flow(@Nonnull List<? extends Widget> items) {
+    public Flow(@NonNull List<? extends Widget> items) {
         Objects.requireNonNull(items);
         this.items = items.stream().map(Gone::goneIfNull).collect(Collectors.toUnmodifiableList());
     }
 
-    public List<? extends Widget> items() {
+    public @NonNull List<? extends Widget> items() {
         return items;
     }
 
-    public static Flow flow(Widget... elements) {
+    public static Flow flow(@Nullable Widget @NonNull... elements) {
         return new Flow(Arrays.asList(elements));
     }
 
-    public static Flow flow(Consumer<Consumer<Widget>> elements) {
+    public static Flow flow(@NonNull Consumer<@NonNull Consumer<@Nullable Widget>> elements) {
         List<Widget> l = new ArrayList<>();
         elements.accept(l::add);
         return new Flow(l);

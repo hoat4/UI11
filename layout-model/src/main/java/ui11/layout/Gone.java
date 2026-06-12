@@ -1,30 +1,26 @@
 package ui11.layout;
 
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
-import ui11.provide.UpValue;
-import ui11.provide.UpValueWrapper;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-import static ui11.graphics.Empty.empty;
+public class Gone extends SubstitutedWidget {
 
-public class Gone extends Widget implements UpValue {
+    private static final Gone INSTANCE = new Gone();
 
     private Gone() {
+        if (INSTANCE != null)
+            throw new Error();
     }
 
     public static Gone gone() {
-        return new Gone();
+        return INSTANCE;
     }
 
-    public static @Nonnull Widget goneIfNull(@Nullable Widget w) {
+    public static @NonNull Widget goneIfNull(@Nullable Widget w) {
         return w == null ? gone() : w;
-    }
-
-    @Override
-    protected Widget build() {
-        return new UpValueWrapper(this, empty());
     }
 
     @Override

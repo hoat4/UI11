@@ -1,14 +1,14 @@
 package ui11.layout.multichild;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Axis;
 import ui11.geom.Length;
 import ui11.layout.singlechild.Align;
 import ui11.layout.singlechild.Alignment;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -103,7 +103,7 @@ public class Grid extends SubstitutedWidget {
         return items;
     }
 
-    public Map<Integer, TrackSettings> tracks(@Nonnull Axis axis) {
+    public Map<Integer, TrackSettings> tracks(@NonNull Axis axis) {
         return switch (axis) {
             case HORIZONTAL -> columnSettings;
             case VERTICAL -> rowSettings;
@@ -122,13 +122,11 @@ public class Grid extends SubstitutedWidget {
         return ignorePrefSizes;
     }
 
-    @Nonnull
-    public TrackSettings column(int i) {
+    public @NonNull TrackSettings column(int i) {
         return columnSettings.getOrDefault(i, TrackSettings.DEFAULT);
     }
 
-    @Nonnull
-    public TrackSettings row(int i) {
+    public @NonNull TrackSettings row(int i) {
         return rowSettings.getOrDefault(i, TrackSettings.DEFAULT);
     }
 
@@ -144,7 +142,7 @@ public class Grid extends SubstitutedWidget {
                 + "\n}");
     }
 
-    public static final record Item(@Nonnull Widget widget, int col, int row,
+    public static final record Item(@NonNull Widget widget, int col, int row,
                                     int colspan, int rowspan) {
 
         public Item {
@@ -204,7 +202,7 @@ public class Grid extends SubstitutedWidget {
 
         public int cursorX, cursorY;
         private final int autoWrap;
-        @Nonnull private Length gap = zero();
+        private @NonNull Length gap = zero();
 
         private final Map<Integer, TrackSettings> columnSettings = new HashMap<>();
         private final Map<Integer, TrackSettings> rowSettings = new HashMap<>();
@@ -212,7 +210,7 @@ public class Grid extends SubstitutedWidget {
         private boolean ignorePrefSizes;
 
         // TODO ki kéne találni, hogy hogyan lehet enélkül passiveHeight-ot megcsinálni
-        @Nonnull private Axis orientationBias = Axis.HORIZONTAL;
+        private @NonNull Axis orientationBias = Axis.HORIZONTAL;
 
         private boolean finished;
 
@@ -222,7 +220,7 @@ public class Grid extends SubstitutedWidget {
             this.autoWrap = autoWrap;
         }
 
-        public Builder setGap(@Nonnull Length gap) {
+        public Builder setGap(@NonNull Length gap) {
             Objects.requireNonNull(gap);
             ensureNotFinished();
             this.gap = gap;
@@ -402,14 +400,14 @@ public class Grid extends SubstitutedWidget {
                 this.rowspan = rowspan;
             }
 
-            public GridArea background(@Nonnull Widget elem) {
+            public GridArea background(@NonNull Widget elem) {
                 Item ge = new Item(elem, col, row, colspan, rowspan);
                 // ge.z = -1;
                 items.add(ge);
                 return this;
             }
 
-            public GridArea add(@Nonnull Widget elem) {
+            public GridArea add(@NonNull Widget elem) {
                 if (alignment != null)
                     elem = Align.align(alignment, elem);
                 Item e = new Item(elem, col, row, colspan, rowspan);

@@ -2,6 +2,7 @@ package ui11.geom;
 
 public record Vec4(double x, double y, double z, double w) implements Lerpable<Vec4> {
     public final static Vec4 UNIT = new Vec4(1);
+    public final static Vec4 ZERO = new Vec4(0);
 
     public Vec4(double xyzw) {
         this(xyzw, xyzw, xyzw, xyzw);
@@ -47,6 +48,10 @@ public record Vec4(double x, double y, double z, double w) implements Lerpable<V
         return new Vec4(x, y, z, w);
     }
 
+    public Vec4 mulW(double mw) {
+        return new Vec4(x, y, z, w * mw);
+    }
+
     public double dot(Vec4 v) {
         return x * v.x + y * v.y + z * v.z + w * v.w;
     }
@@ -76,5 +81,9 @@ public record Vec4(double x, double y, double z, double w) implements Lerpable<V
 
     public Vec2 zw() {
         return new Vec2(z, w);
+    }
+
+    public Vec3 xyz() {
+        return new Vec3(x, y, z);
     }
 }

@@ -9,6 +9,10 @@ public record Vec2(double x, double y) implements Lerpable<Vec2> {
     public static final Vec2 ZERO = new Vec2(0);
     public static final Vec2 UNIT = new Vec2(1);
 
+    public Vec2() {
+        this(0, 0);
+    }
+
     public Vec2(double xy) {
         this(xy, xy);
     }
@@ -157,6 +161,10 @@ public record Vec2(double x, double y) implements Lerpable<Vec2> {
         return mul(length / length());
     }
 
+    public Vec4 withZW(double z, double w) {
+        return new Vec4(x, y, z, w);
+    }
+
     @FunctionalInterface
     public interface LanewiseOp {
         double applyOnVectorComponent(double val, int i);
@@ -213,6 +221,14 @@ public record Vec2(double x, double y) implements Lerpable<Vec2> {
                 Math.abs(x),
                 Math.abs(y)
         );
+    }
+
+    public Vec2 xx() {
+        return new Vec2(x, x);
+    }
+
+    public Vec2 yy() {
+        return new Vec2(y, y);
     }
 
     @Override

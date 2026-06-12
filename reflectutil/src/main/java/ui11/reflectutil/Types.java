@@ -1,6 +1,7 @@
 package ui11.reflectutil;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -455,7 +456,7 @@ public class Types {
         private final Class<?> rawType;
 
         public AnnotatedParameterizedTypeImpl(AnnotatedType ownerType, Class<?> rawType,
-                                              @Nonnull AnnotatedType[] typeArgs, @Nonnull Annotation[] annotations) {
+                                              AnnotatedType @NonNull [] typeArgs, Annotation @NonNull [] annotations) {
             super(annotations);
 
             Objects.requireNonNull(typeArgs);
@@ -1110,7 +1111,6 @@ public class Types {
                 return false;
             }
 
-            @Nonnull
             private boolean arrayEquals(AnnotatedType[] a1, AnnotatedType[] a2, AnnotatedType a, AnnotatedType b) {
                 if (a1.length != a2.length)
                     throw new RuntimeException("different type argument count: " + typeToString(a) + ", " + typeToString(b));

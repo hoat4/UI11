@@ -40,8 +40,10 @@ public record Length(double em, double px, double rel) {
         return relative(1);
     }
 
-    public static Length px(double pixels) {
-        return new Length(0, pixels, 0);
+    // paraméternév azért nem "pixels" hanem px, mert akkor így IntelliJ nem rak inlay hintet,
+    // mert ugyanaz mint a metódusnév
+    public static Length px(double px) {
+        return new Length(0, px, 0);
     }
 
     public static Length min() {

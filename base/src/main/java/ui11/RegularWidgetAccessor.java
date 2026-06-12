@@ -1,84 +1,74 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.ElementDefReflector.DecoratorMetadata;
-import ui11.ElementDefReflector.InjectionFieldInfo;
-import ui11.ElementDefReflector.InputFieldInfo;
-import ui11.meta.DecoratorAnnotation.DecoratorAnnotationHandler.Decorator;
-import ui11.observable.Observable;
+import ui11.WidgetDefinitionParser.InjectionFieldInfo;
+import ui11.WidgetDefinitionParser.StateFieldInfo;
+import ui11.WidgetState.InheritedPropBase;
+import ui11.observable.MutableObservable;
 import ui11.reflectutil.ReflectionUtil;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.RecordComponent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.*;
 
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodType.methodType;
 
-// ha ezt módosítjuk, módosítsuk TeaVMElementAccessorFactory-ban is
-class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T> {
+// ha ezt módosítjuk, módosítsuk TeaVMWidgetAccessor-ban is
+final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(RegularWidgetAccessor.class);
 
-    private static final MethodHandle NULL_FROM_Object_Element = MethodHandles.dropArguments(
-            MethodHandles.zero(Object.class), 0, Object.class,
-            Element.class);
-    private static final MethodHandle Objects_isNull;
-
-    static {
-        try {
-            Objects_isNull = MethodHandles.lookup().findStatic(Objects.class, "isNull",
-                    methodType(boolean.class, Object.class));
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw new RuntimeException("should not happen", e);
-        }
-    }
-
-    protected final AnnotatedElement elementDefinition; // exception message-ekhez. bár jelenleg nincs használva
+    private final AnnotatedElement elementDefinition; // exception message-ekhez. bár jelenleg nincs használva
     private final Class<T> clazz;
-    private final List<InputFieldInfo> inputFields;
+    private final List<Field> inputFields;
     private final List<InjectionFieldInfo> injectFields;
-    private final List<Field> stateFields;
-    private final List<Decorator<T>> delegateDecorators;
-    private final List<Decorator<T>> allChildDecorators;
+    private final List<StateFieldInfo> stateFields;
+    private final List<ProviderMethodDecorator<T, ?>> decorators;
+
+    // detachedmarkeres kavarás
+    private final RegularWidgetAccessor<T> other;
+    private final boolean isDetachedMarker;
 
     @SuppressWarnings("unchecked")
-    public RegularWidgetAccessor(ElementDefReflector reflector) {
+    public RegularWidgetAccessor(WidgetDefinitionParser reflector) {
         this.elementDefinition = reflector.clazz;
 
-        List<Decorator<T>> delegateDecorators1 = new ArrayList<>();
-        List<Decorator<T>> allChildDecorators1 = new ArrayList<>();
-        for (DecoratorMetadata decoratorMetadata : reflector.decorators) {
-            Decorator<T> decorator = (Decorator<T>) decoratorMetadata.decoratorReflector().makeDecorator();
-            delegateDecorators1.add(decorator);
-            if (decoratorMetadata.decoratorReflector().neededForAllChildren())
-                allChildDecorators1.add(decorator);
+        List<ProviderMethodDecorator<T, ?>> decorators2 = new ArrayList<>();
+        for (WidgetDefinitionParser.ProviderMethodInfo<?> providerMethodInfo : reflector.providers) {
+            decorators2.add(new ProviderMethodDecorator<>(providerMethodInfo));
         }
-        this.delegateDecorators = delegateDecorators1;
-        this.allChildDecorators = allChildDecorators1;
+        this.decorators = decorators2;
 
         clazz = (Class<T>) reflector.clazz;
+        // előre vesszük a final fieldeket, hogy ne maradjon egy state role-ú widget olyan állapotban,
+        // hogy az input mezők értékeinek egy részét már lecserélték, a maradékot viszont skippelték mert final mező
+        // változott
         inputFields = reflector.inputFields;
         injectFields = reflector.injectFields;
         stateFields = reflector.stateFields;
+
+        this.isDetachedMarker = false;
+        this.other = new RegularWidgetAccessor<>(this);
     }
 
     /**
-     * (Ljava/lang/Object;LElement;)Ljava/lang/Object;
+     * detached markert hoz létre, csak a másik konstruktorból van hívva
      */
-    private static MethodHandle makeListenerProxy(RecordComponent recordComponent) {
-        MethodHandle mh = MethodHandles.dropArguments(ListenerProxyGenerator.makeProxyFactory(recordComponent),
-                0, Object.class);
-        return MethodHandles.guardWithTest(Objects_isNull, NULL_FROM_Object_Element, mh);
+    private RegularWidgetAccessor(RegularWidgetAccessor<T> other) {
+        this.elementDefinition = other.elementDefinition;
+        this.clazz = other.clazz;
+        this.inputFields = other.inputFields;
+        this.injectFields = other.injectFields;
+        this.stateFields = other.stateFields;
+        this.decorators = other.decorators;
+        this.isDetachedMarker = true;
+        this.other = other;
     }
 
     @Override
@@ -87,97 +77,166 @@ class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T> {
     }
 
     @Override
-    public void initAndCopyState(@Nullable T oldWidget, @Nonnull T newWidget) {
-        for (Field f : stateFields) {
-            Object newValue = fieldGet(newWidget, f);
-            if (!Objects.equals(ReflectionUtil.defaultValue(f.getType()), newValue))
-                throw new RuntimeException("The value of field " + ReflectionUtil.memberToShortString(f) +
-                        " was modified before " + clazz.getSimpleName() + ".init() of " + newWidget + "\n" +
-                        "Refresh stack: \n" + newWidget.debug_getRefreshStack());
+    public boolean prepareListenerProxies(T modelWidget) {
+        boolean haveListenerProxies = false;
+        for (int i = 0; i < inputFields.size(); i++) {
+            Field f = inputFields.get(i);
+            Object value = fieldGet(modelWidget, f);
+            if (value instanceof ListenerProxyBase<?> proxy)
+                haveListenerProxies |= proxy.init(modelWidget, i);
+        }
+        return haveListenerProxies;
+    }
 
-            if (oldWidget != null) {
-                Object oldValue = fieldGet(oldWidget, f);
-                fieldSet(newWidget, f, oldValue);
+    @Override
+    public void checkStateEmptyAndPrepareState(T newState, WidgetState<T> widgetState, T model) {
+        for (StateFieldInfo f : stateFields) {
+            Object value = fieldGet(newState, f.field());
+            if (!Objects.equals(f.zeroValue(), value))
+                throw new RuntimeException("The value of field " + ReflectionUtil.memberToShortString(f.field()) +
+                        " was modified before " + clazz.getSimpleName() + ".initState() of " + newState + "\n" +
+                        "Refresh stack: \n" + newState.debug_getRefreshStack());
+
+            if (f.isObservable())
+                fieldSet(newState, f.field(), MutableObservable.ofNullable(f.zeroValueOfObservable()));
+        }
+        // lehetne úgy is hogy egy külön ciklusban megyünk végig az observable-kön, és
+        // akkor nem fordul elő hogy néhány state fieldnek már értékül adtunk MutableObservable-ket amikor
+        // exceptiont dobtunk, de úgy a TeaVM-es implementációt bonyolítaná.
+        // esetleg lehet csinálni rollbacket (tehát kinullázzuk a már beírt observable-ket).
+
+        for (InjectionFieldInfo f : injectFields) {
+            // primitív típus nem lehet egy @Inject mező típusa
+            if (fieldGet(newState, f.field()) != null)
+                throw new RuntimeException("The value of field " + ReflectionUtil.memberToShortString(f.field()) +
+                        " was modified instead of leaving it as null in " + newState + "\n" +
+                        "Refresh stack: \n" + newState.debug_getRefreshStack());
+
+            Object wrapper = switch (f.kind()) {
+                case NORMAL -> null;
+                case INTERFACE_PROXY -> {
+                    MethodHandle mh = INTERFACE_PROXY_FACTORY_CV.get(f.type());
+                    try {
+                        yield mh.invokeExact(widgetState, f.type(), f.optional());
+                    } catch (RuntimeException | Error e) {
+                        throw e;
+                    } catch (Throwable e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                case SLOT_OR_MULTI_SLOT -> {
+                    if (f.type() == Slot.class)
+                        yield new Slot(widgetState);
+                    else if (f.type() == MultiSlot.class)
+                        yield new MultiSlot<>(widgetState);
+                    else
+                        throw new RuntimeException("unknown field type if kind is " +
+                                InjectionFieldInfo.InjectedFieldKind.SLOT_OR_MULTI_SLOT);
+                }
+                case OBSERVABLE -> new WidgetState.InheritedProp<>(
+                        widgetState, f.type(), f.optional(), f.debugName());
+            };
+
+            fieldSet(newState, f.field(), wrapper);
+        }
+    }
+
+    /**
+     * @param oldModel az, amelyre a {@link ListenerProxyBase#isOwnedBy(Widget)} {@code oldState}-en meghívva true-t ad
+     *                 vissza
+     */
+    @Override
+    public InputFieldChangeDetectionResult areInputFieldsChanged(T oldModel, T newModel) {
+        for (Field f : inputFields) {
+            Object a = fieldGet(oldModel, f);
+            Object b = fieldGet(newModel, f);
+            if (a instanceof ListenerProxyBase<?> aProxy && aProxy.isOwnedBy(oldModel) &&
+                    b instanceof ListenerProxyBase<?> bProxy && bProxy.isOwnedBy(newModel)) {
+                continue;
+            }
+
+            if (!Objects.equals(a, b))
+                return InputFieldChangeDetectionResult.NEEDS_UPDATE;
+        }
+
+        for (Field f : inputFields) {
+            Object a = fieldGet(oldModel, f);
+            Object b = fieldGet(newModel, f);
+            if (a instanceof ListenerProxyBase<?> aProxy && aProxy.isOwnedBy(oldModel) &&
+                    b instanceof ListenerProxyBase<?> bProxy && bProxy.isOwnedBy(newModel)) {
+
+                if (aProxy.hasSameValue(bProxy))
+                    // nem fogjuk változtatni az értékét, ezért nem baj ha tovább használjuk aProxy-t
+                    continue;
+
+                return InputFieldChangeDetectionResult.NEEDS_LISTENER_PROXY_BACKPROPAGATION;
             }
         }
 
-        // lehetne ellenőrizni itt is, hogy volt-e módosítva a field értéke
-        if (!newWidget.injectFieldsInitialized) {
-            for (int i = 0; i < injectFields.size(); i++) {
-                int ivIndex = i;
-                InjectionFieldInfo f = injectFields.get(i);
-                Object wrapper;
-                if (f.interfaceProxy())
-                    wrapper = Proxy.newProxyInstance(f.type().getClassLoader() /* ??? */, new Class[]{f.type()},
-                            (proxy, m, args) -> {
-                                // TODO Object.equals?
-                                Object value = newWidget.getInheritedValueByIndex(ivIndex);
-                                return m.invoke(value, args);
-                            });
-                else if (f.type() == Slot.class)
-                    wrapper = new Slot(newWidget, f); // InjectionFieldInfo kommentje szerint lehet key-nek használni
-                else if (f.type() == MultiSlot.class)
-                    wrapper = new MultiSlot<>(new Slot(newWidget, f)); // InjectionFieldInfo kommentje szerint lehet key-nek használni
-                else
-                    wrapper = Observable.of(() -> newWidget.getInheritedValueByIndex(ivIndex));
-                fieldSet(newWidget, f.field(), wrapper);
-            }
-            newWidget.injectFieldsInitialized = true;
+        return InputFieldChangeDetectionResult.NOT_NEEDS_UPDATE;
+    }
+
+    @Override
+    public void transferState(T fromState, T toState) {
+        for (StateFieldInfo f : stateFields) {
+            Object aValue = fieldGet(fromState, f.field());
+            // TODO nem tudjuk ellenőrizni hogy volt-e módosítva, mert lehet hogy már
+            //      MutableObservable-t létrehozott a checkStateEmptyAndPrepareState ha az a field típusa
+            /*
+            Object bValue = fieldGet(toState, f.field());
+            if (!Objects.equals(f.zeroValue(), bValue))
+                // TODO exception message jobb TeaVMWidgetAccessorban
+                throw new RuntimeException("The value of field " + ReflectionUtil.memberToShortString(f.field()) +
+                        " has been tampered in " + bValue + "\n" +
+                        "Refresh stack: \n" + toState.debug_getRefreshStack());
+             */
+            fieldSet(toState, f.field(), aValue);
         }
 
-        for (InputFieldInfo f : inputFields) {
-            if (!f.interfaceProxy())
-                continue;
-
-            Object newValue = fieldGet(newWidget, f.field());
-            if (newValue == null)
-                continue;
-
-            Object oldValue = oldWidget == null ? null : fieldGet(oldWidget, f.field());
-            if (oldValue != null) {
-                ListenerProxyBase2<?> l = (ListenerProxyBase2<?>) oldValue;
-                l.repurposeForNewWidget(oldWidget, newWidget, newValue);
-                newValue = l;
-            } else {
-                if (f.field().getType() == Runnable.class)
-                    newValue = new RunnableProxy(newWidget, (Runnable) newValue);
-                else if (f.field().getType() == Consumer.class)
-                    newValue = new ConsumerProxy<>(newWidget, (Consumer<?>) newValue);
-                else
-                    throw new RuntimeException("unknown listener type on " +
-                            ReflectionUtil.memberToShortString(f.field()));
-            }
-            // többször is felülírhatjuk a mezőt (ha különböző RSWStateHolderek között rángatják a Widgetet)
-            fieldSet(newWidget, f.field(), newValue);
+        // TODO inject fieldeknél lehetne ellenőrizni, hogy nem lettek-e átállítva
+        for (InjectionFieldInfo f : injectFields) {
+            Object aValue = fieldGet(fromState, f.field());
+            Object bValue = fieldGet(toState, f.field());
+            if (!Objects.equals(null, bValue))
+                throw new RuntimeException("The value of field " + ReflectionUtil.memberToShortString(f.field()) +
+                        " has been tampered in " + bValue + "\n" +
+                        "Refresh stack: \n" + toState.debug_getRefreshStack());
+            fieldSet(toState, f.field(), aValue);
         }
     }
 
     @Override
-    public Observable<?>[] observeInheritedValues(RSWStateHolder<T> stateHolder) {
-        Observable<?>[] ivObsList = new Observable[injectFields.size()];
-        for (int i = 0; i < injectFields.size(); i++) {
-            InjectionFieldInfo f = injectFields.get(i);
-            if (f.isNotInherited())
-                continue;
-            ivObsList[i] = stateHolder.inherited(f.type(), f.optional());
+    public void retrieveInheritedValues(T t) {
+        for (InjectionFieldInfo f : injectFields) {
+            switch (f.kind()) {
+                case NORMAL -> {
+                    Object value = t.element().findInheritedValueForInjection(f.type(), f.optional(), f.debugName());
+                    fieldSet(t, f.field(), value);
+                }
+                case OBSERVABLE, INTERFACE_PROXY -> {
+                    Object fieldValue = fieldGet(t, f.field());
+                    InheritedPropBase<?> inheritedProp = (InheritedPropBase<?>) fieldValue;
+                    inheritedProp.update();
+                }
+                case SLOT_OR_MULTI_SLOT -> {
+                    // nop
+                }
+                default -> {
+                    throw new RuntimeException("unknown injection field kind: " + f);
+                }
+            }
         }
-        return ivObsList;
     }
 
     @Override
-    public void checkStateEmpty(T w) {
-        for (Field f : stateFields) {
-            Object value = fieldGet(w, f);
-            if (!Objects.equals(ReflectionUtil.defaultValue(f.getType()), value))
-                throw new RuntimeException("The value of field " + ReflectionUtil.memberToShortString(f) +
-                        " was modified before " + clazz.getSimpleName() + ".init() of " + w);
-        }
+    public Object readNonPrimitiveInputField(T t, int inputField) {
+        return fieldGet(t, inputFields.get(inputField));
     }
 
     @Override
     public boolean inputFieldsEquals(T a, T b) {
-        for (InputFieldInfo f : inputFields) {
-            Object aValue = fieldGet(a, f.field()), bValue = fieldGet(b, f.field());
+        for (Field f : inputFields) {
+            Object aValue = fieldGet(a, f), bValue = fieldGet(b, f);
             if (!Objects.equals(aValue, bValue))
                 return false;
         }
@@ -185,46 +244,22 @@ class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T> {
     }
 
     @Override
-    public boolean inputFieldsEqualsAndTransferListeners(T a, T b) {
-        for (InputFieldInfo f : inputFields) {
-            Object aValue = fieldGet(a, f.field()), bValue = fieldGet(b, f.field());
-            if (f.interfaceProxy()) {
-                if ((aValue == null) != (bValue == null))
-                    return false;
-            } else {
-                if (!Objects.equals(aValue, bValue))
-                    return false;
-            }
-        }
-
-        for (InputFieldInfo f : inputFields) {
-            if (!f.interfaceProxy())
-                continue;
-            Object aValue = fieldGet(a, f.field()), bValue = fieldGet(b, f.field());
-            if (aValue == null)
-                continue;
-            ((ListenerProxyBase2<?>) aValue).propagateChangeToOldWidget(a, b, bValue);
-        }
-        return true;
-    }
-
-    @Override
     public int inputFieldsHashCode(T w) {
         int h = hashCode();
-        for (InputFieldInfo f : inputFields) {
-            Object fieldValue = fieldGet(w, f.field());
+        for (Field f : inputFields) {
+            Object fieldValue = fieldGet(w, f);
             h = h * 23 + Objects.hashCode(fieldValue);
         }
         return h;
     }
 
     @Override
-    public Object[] inputFieldsToString(T t) {
+    public Object[] inputFieldsToString(T w) {
         Object[] a = new Object[inputFields.size() * 2];
         int i = 0;
-        for (InputFieldInfo f : inputFields) {
-            a[i++] = f.field().getName();
-            a[i++] = fieldGet(t, f.field());
+        for (Field f : inputFields) {
+            a[i++] = f.getName();
+            a[i++] = fieldGet(w, f);
         }
         return a;
     }
@@ -241,7 +276,7 @@ class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T> {
         try {
             return f.get(widget);
         } catch (IllegalAccessException e) {
-            // nem lehetséges, mert ElementDefReflector setAccessible(true)-t hívott meg minden fieldre
+            // nem lehetséges, mert WidgetDefinitionParser setAccessible(true)-t hívott meg minden fieldre
             throw new RuntimeException(e);
         }
     }
@@ -250,18 +285,65 @@ class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T> {
         try {
             f.set(widget, value);
         } catch (IllegalAccessException e) {
-            // nem lehetséges, mert ElementDefReflector setAccessible(true)-t hívott meg minden fieldre
+            // nem lehetséges, mert WidgetDefinitionParser setAccessible(true)-t hívott meg minden fieldre
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Widget decorate(T e, @Nonnull Widget content, boolean isDelegate) {
-        for (Decorator<T> decorator : isDelegate ? delegateDecorators : allChildDecorators) {
-            if (decorator.applies(e)) {
-                content = decorator.decorate(e, content);
-            }
-        }
+    public Widget decorate(T w, @NonNull Widget content) {
+        for (ProviderMethodDecorator<T, ?> decorator : decorators)
+            content = decorator.decorate(w, content);
         return content;
     }
+
+    @Override
+    public WidgetAccessor<T> asDetachedMarker(boolean detached) {
+        if (detached == this.isDetachedMarker)
+            return this;
+        else
+            return other;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof RegularWidgetAccessor<?> a && asDetachedMarker(false) == a.asDetachedMarker(false);
+    }
+
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(asDetachedMarker(false));
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + " " + clazz.getName() + " detached=" + isDetachedMarker;
+    }
+
+    private static final ClassValue<MethodHandle> INTERFACE_PROXY_FACTORY_CV = new ClassValue<MethodHandle>() {
+        @Override
+        protected MethodHandle computeValue(Class<?> interfaceType) {
+            InheritedInterfaceProxyGenerator g = new InheritedInterfaceProxyGenerator(interfaceType);
+            byte[] classfile = g.toClassfile();
+
+            // TODO privateLookupIn-nek target classnak nem az interface-t, hanem a widget osztáláyt kéne
+            //      megadnunk, mert a interface moduljához nem biztos hogy van private accessünk
+            Lookup proxyClassLookup;
+            try {
+                proxyClassLookup = MethodHandles.privateLookupIn(interfaceType, lookup()).
+                        defineHiddenClass(classfile, true);
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException("can't define proxy class for interface " + interfaceType.getName() + ": " + e, e);
+            }
+            MethodHandle mh; // (LWidgetState;LClass;Z)LinterfaceType;
+            try {
+                // TODO hidden class miatt valszeg nem működik a DirectMethodHandleDesc
+                mh = g.factoryMethod().resolveConstantDesc(proxyClassLookup);
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException("can't access factory method of proxy class for " +
+                        "interface " + interfaceType.getName() + ": " + e, e);
+            }
+            return mh.asType(methodType(Object.class, WidgetState.class, Class.class, boolean.class, String.class));
+        }
+    };
 }

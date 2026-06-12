@@ -11,21 +11,16 @@ import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback;
 import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback.Placeable;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.singlechild.Padding;
-import ui11.observable.Observable;
 import ui11.text.TextStyle;
 
 public class DefaultPaddingImpl extends Widget {
 
     private final Padding padding;
 
-    @Inject private Observable<TextStyle> ts;
+    @Inject private TextStyle ts;
 
     public DefaultPaddingImpl(Padding padding) {
         this.padding = padding;
-    }
-
-    @Override
-    protected void initState() {
     }
 
     @Override
@@ -60,6 +55,6 @@ public class DefaultPaddingImpl extends Widget {
     private double evalLen(Length l) {
         if (l.rel() != 0)
             throw new UnsupportedOperationException("TODO");
-        return l.px() + l.em() * ts.get().size();
+        return l.px() + l.em() * ts.size();
     }
 }

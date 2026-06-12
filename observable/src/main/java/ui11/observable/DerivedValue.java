@@ -7,6 +7,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
+// ha ennek az osztálynak a nevét  megváltoztatjuk, akkor változtassuk meg TeaVMWidgetAccessorban
+// a propagateType-nak átadott classnevet is!
+
 class DerivedValue<T> implements Observable<T> {
 
     private final Supplier<T> supplier;

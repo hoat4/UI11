@@ -1,10 +1,9 @@
 package ui11.resolution;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import ui11.Widget;
-import ui11.provide.UpValue;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,11 +28,10 @@ public class GlobalViewProviders implements WidgetResolver {
         return INSTANCE;
     }
 
-    @Nullable
     @Override
-    public Widget resolveOrNull(Widget widget, ResolutionContext resolutionContext) {
+    public @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull PeerCreationRequest<?> peerCreationRequest) {
         for (WidgetResolver vp : PROVIDERS) {
-            Widget e = vp.resolveOrNull(widget, resolutionContext);
+            Widget e = vp.resolveOrNull(widget, peerCreationRequest);
             if (e != null)
                 return e;
         }
@@ -42,8 +40,7 @@ public class GlobalViewProviders implements WidgetResolver {
     }
 
     @Override
-    @Nonnull
-    public Widget resolveAdditional(@Nonnull Widget widget, @Nonnull Widget content) {
+    public @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content) {
         Objects.requireNonNull(widget);
         Objects.requireNonNull(content);
 

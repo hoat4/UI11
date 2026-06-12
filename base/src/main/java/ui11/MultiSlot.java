@@ -1,5 +1,9 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 // TODO duplicate-ek detektálása
@@ -14,29 +18,33 @@ import java.util.Objects;
  */
 public final class MultiSlot<K> {
 
-    private final Slot base;
+    /**
+     * csak scope ellenőrzéshez kell
+     */
+    private final WidgetState<?> ownerWidgetState;
 
-    MultiSlot(Slot base) {
-        Objects.requireNonNull(base);
-        this.base = base;
+    // TODO ez így mem leak. mikor kéne törölni az elemeket belőle?
+    private final Map<K, Slot> slots = new HashMap<>();
+
+    MultiSlot(@NonNull WidgetState<?> ownerWidgetState) {
+        this.ownerWidgetState = Objects.requireNonNull(ownerWidgetState);
     }
 
     // item nullable legyen?
-    public Slot of(K item) {
+
+    // 2025-11-08-ból megjegyzés keyekről (akkor még Elemenben voltak):
+    //      withKey dobjon exceptiont ha duplicate
+    //      De ez nem olyan egyszerű. Mit tekintünk duplicate-nek?
+    //      - ha többször hívják meg ugyanazzal a kulccsal. De mi van, ha refreshSelf-en kívül van meghívva?
+    //      - többször van felhasználva a KeyWrapper. Ez se jó, mert ez lehet legális is:
+    //        pl. MultiChildLayoutImpl első alkalommal instantiateeli mérésre, második alkalommal meg berakja
+    //        Overlay/Transform-ba childnak.
+
+    public Slot get(K item) {
         Objects.requireNonNull(item);
-        return new Slot(base.slotContainerWidget, new MultiKeyItem(base.key, item));
+        Slot result = slots.get(item);
+        if (result == null)
+            slots.put(item, result = new Slot(ownerWidgetState));
+        return result;
     }
-
-    public KeyWrapper use(K item, Widget widget) {
-        // TODO ha widgetben már van KeyWrapper, akkor nem csak térjen vissza vele.
-        //      mondjuk ha a KeyWrapper előtt van egy Provider, akkor bonyolultabb a helyzet.
-        return of(item).use(widget);
-    }
-
-    public WidgetInstantiation instantiate(K item, Widget widget) {
-        Objects.requireNonNull(item);
-        return of(item).instantiate(widget);
-    }
-
-    private record MultiKeyItem(Object baseIdentifier, Object item) {}
 }

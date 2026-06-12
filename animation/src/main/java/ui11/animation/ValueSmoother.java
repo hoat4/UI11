@@ -13,18 +13,20 @@ import java.util.Objects;
 /**
  * Olyan animáció, aminek nem egy előre kitalált kezdete és vége van, hanem egy érték változását próbáljuk elsimítani.
  */
-public final class ValueSmoother<T> extends Component {
+public final class ValueSmoother<T> extends Component<T> {
 
+    private final T targetValue;
     private final Duration duration;
     private final Tween<T> tween;
 
-    @Inject private Observable<Scheduler> scheduler;
+    @Inject private Scheduler scheduler;
 
-    @State private List<Transition<T>> transitions;
-    @State private T value;
-    @State private boolean notFirst;
+    @Remember private List<Transition<T>> transitions;
+    @Remember private T value;
+    @Remember private boolean notFirst;
 
-    public ValueSmoother(Duration duration, Tween<T> tween) {
+    public ValueSmoother(T targetValue, Duration duration, Tween<T> tween) {
+        this.targetValue = targetValue;
         this.duration = duration;
         this.tween = tween;
     }
@@ -34,12 +36,15 @@ public final class ValueSmoother<T> extends Component {
         transitions = new ObservableList<>();
     }
 
-    public T value(T newValue) {
-        set(newValue);
+    @Override
+    protected T update() {
+        // TODO duration és tween menet közbeni valszeg nem supportáljuk
+
+        set(targetValue);
         T t = get();
 
         if (!transitions.isEmpty()) {
-            scheduler.get().requestAnimationFrame();
+            scheduler.requestAnimationFrame();
         }
         return t;
     }

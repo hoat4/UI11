@@ -1,0 +1,215 @@
+*{box-sizing:border-box}
+html,body {height:100%;}
+body {
+    margin: 0;
+}
+
+style, script {display: none !important} /* .v>* meg hasonlók felülírnák, ha nem lenne !important */
+
+table {margin-top:0px;margin-bottom:0px;border-spacing:0px}
+table,tr,td,div {padding:0}
+
+FIELDSET { border: 1px solid silver; padding: 8px;   border-radius: 4px; }
+LEGEND { padding: 2px; font-weight: bold}
+canvas {display: inline-block}
+
+fieldset>.fillHeight {height: calc(100% - 1em - 12px)} /* legend ne számítson bele */
+.fieldsetContainer::after{content:"";height: 1em} /* margin nem jó fieldset-nél: https://stackoverflow.com/questions/10792791/fieldset-height-100-of-its-parent */
+
+/* ha csinálunk egy olyan class-t, ami beállít display:inline-block-ot egy tetszőleges elemnek,
+   akkor azt vezessük át a lenti flexbox classokba is (.Fh/.Fv) */
+
+.hm {white-space: nowrap}  /* minimális szélességű hbox */
+.hm>*{white-space:normal}
+.Hm {display:inline-block; vertical-align: middle; height: 100%; } /* minimális szélességű hbox-ban lévő nem alignolt elem */
+.hv:before {content:" ";display:inline-block;vertical-align: middle; width: 0px;min-height:100%; } /* min hbox, alignChildren = vcenter */
+.hV:before {content:" ";display:inline-block;vertical-align: bottom; width: 0px;min-height:100%;} /* min hbox, alignChildren = vbottom */
+
+.H {display:table-cell;vertical-align: middle;} /* nem-minimális szélességű hboxban element */
+.Ho {display:table-cell;vertical-align:unset;}
+
+.h>*{height:100%} /* FF bug, enélkül headerben signin gomb felcsúszik, ha nincs mellette más gomb */
+
+img.F{height:auto}
+.W{width:100%}
+.f, .fp > * {width:100%;height:100%} /* fp: full size elem parentje, DOMEnv.show használja */
+.F {height:100%}
+/* minden inline-block-hoz beírtam vertical-align:middle-t, mert különben descendernek helyet hagyna ki alul*/
+/* 2022-01-25: átírtam middle-ről top-ra, mert searchresult progressbarnak kicsúszott vmiért a middle-től */
+.fi {width:100%;height:100%;display:inline-block;vertical-align:top}
+.Fi {height:100%;display:inline-block;vertical-align:top}
+.i {display:inline} .B {display:block} .b{display:inline-block;vertical-align:middle}
+table {border-collapse: collapse}
+.T {display:table; border-spacing: 0px} /* ha nem lenne itt a border-spacing, öröklődne ha egy táblázatba van berakva valami */
+.t, .E>* {display:table-row}
+.t1 {display:table-row; height: 1em; }
+.t>*, .E>*>*, .e{display:table-cell; }
+.V:before {
+  content: "";
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+form {height:100%}
+.w, .l, .c, .r {white-space:nowrap}
+pre.w, pre.l, pre.c, pre.r {white-space:pre}
+.l, .L {text-align:left}
+.c, .C {text-align:center}
+.r, .R {text-align:right}
+.position-absolute{position:absolute}
+.p, .position-relative, .O, .O:not(.WH) > *:not(.P):not(.overlay-passive):not(.Pv) {position:relative} /* "O": overlay container */
+.P, .overlay-passive, .PS > * {position:absolute;left:0px;right:0px;top:0px;bottom:0px;width:100%;height:100%}
+.Pz { z-index: 0; } /* hogy lehessen P classt használni háttérhez */
+*:not(.PS) > .PS { position: relative; } /* PS: PassiveSize container */
+*:not(.FG) > .xo { min-width: -webkit-max-content; min-width: max-content;  } /* .xo: Expand Outside konténer */
+.FG > .xo, .Fs > .xo, .Fc > .xo, .Fe > .xo { min-height: -webkit-max-content; min-height: max-content; }
+.Pv {position:absolute;left:0px;right:0px;width:100%}
+.fl > * { display: inline-block }
+.fl > .fl, .fl > .Ta { display: inline }
+.gP, .gQ { display: grid } /* symmetric overlay parent vagy tényleges grid. gQ csak symmetric overlay parent lehet */
+.gP { align-items: stretch; justify-items: stretch; }
+.gQ:not(.oS) { grid-template-columns: 100%; grid-template-rows: 100%; } /* különben a child mérete túlcsordulhat */
+/* .oS-nél túlcsordulhat, mert annak épp az a lényege hogy túlcsordul a tartalom.
+   de majd meg kell csinálni hogy csak egyik irányban csordulhasson túl, ha csak egyik irányban van scrollozhatónak
+   szánva a tartalom. */
+.fl > .gQ { display: inline-grid}
+.gO, .gQ>* { grid-column: 1; grid-row: 1; } /* symmetric overlay element */
+.gQ > * { z-index: 0; /* nem a konkrét érték a lényeg, hanem csak hogy ne auto legyen, mert akkor elkavarodik */ }
+/* .gO elavult, valszeg ki lehetne törölni */
+.oH { overflow: hidden }
+.oS { overflow: auto }
+.tw { word-wrap: break-word; }
+a {text-decoration:none} /* leszármazottak nem tudnák törölni */
+.vt, .Vt {vertical-align:top} /* .Vt, .Vm, .Vb-re csak azért kell beállítani, mert időnként nem megy ha valignolt vboxot rakunk a hboxba, de nem értem hogy miért */
+.vm, .Vm {vertical-align:middle}
+.vb, .Vb {vertical-align:bottom}
+/* .Vt és .Vb nem biztos h kell, meg kell nézni h anélkül is megy-e valign. ha megy, ki kell szedni kódból is */
+.Vt:before{content:"";display:inline-block;height:100%;width:0px;vertical-align: top}
+.Vm:before{content:"";display:inline-block;height:100%;width:0px;vertical-align: middle}
+.Vb:before{content:"";display:inline-block;height:100%;width:0px;vertical-align: bottom}
+.mL{margin-right:auto}
+.mC{margin-left:auto;margin-right:auto}
+.mR{margin-left:auto}
+.mt,.mm{margin-bottom:auto}
+.mb,.mm{margin-top:auto}
+.gf {font-family:gf}
+.pt {pointer-events: none}
+.PT {pointer-events: all}
+.pE:not(.PT) {pointer-events: none} /* lehet hogy korlátozni kéne hogy csak a nem-pseudo elemekre vonatkozik */
+.pE>*:not(.pE):not(.pt) {pointer-events: all}
+.Pt, .Pt * { /* pointer transparent, user által kérve */
+    pointer-events: none !important; /* .pE>*:not(.pE):not(.pt) felülírná, ezért kellett !important */
+}
+.px {image-rendering: pixelated}
+.wh{width:auto;height:100%;display:inline-block} /* same width as height */
+.WH{position:relative; width: auto}
+.Wh:not(.wh):not(.Pv){position:absolute;left:0px;right:0px;top:0px;bottom:0px;width:100%;height:100%} /* passive width child */
+.PH {
+    /* mint .WH, csak kevésbé bonyolult. .gQ használandó a parenten. */
+    width: 100%;
+    height: auto;
+}
+.pc{position:relative}
+.pL,.pH,.pR{position:absolute;top:0px;width:auto;height:auto}
+.pL{left:0px}
+.pH{left:50%;transform:translateX(-50%)}
+.pR{right:0px}
+.ms:hover>.m1, .ms:active>.m1,
+.ms:not(:hover)>.m2, .ms:active>.m2,
+.ms:not(:active)>.m3 {display:none}
+.cN {cursor:default}
+.cL {cursor:pointer}
+.cT {cursor:text}
+.cO {cursor:not-allowed}
+.el {max-width: 100%; text-overflow: ellipsis; white-space: nowrap; overflow-x: hidden }
+.lf {table-layout:fixed}
+.ro { /* Responsive layout egy elemjének Outer divje */
+    /* Chrome-ban nem kell ez a height:100%, de FF-ben középre igazodik időnként a tartalom (pl. új játéklapon az oszlopok),
+       ezért beraktam, remélem hogy mást nem ront el. meg kéne nézni majd egyszer, hogy melyik a szabványos működik.  */
+    height:100%;
+}
+
+/* flexbox */
+.Fh {display:flex;flex-direction:row}
+.Fv {display:flex;flex-direction:column}
+.Fr {display:flex}
+.Fv, .Fh {align-items: stretch}
+.Hm.Fh, .Hm.Fv, .fi.Fh, .fi.Fv, .Fi.Fh, .Fi.Fv, .b.Fh, .b.Fv,
+.fl > .Fh, .fl > .Fv, .fl > .Fr {display:inline-flex}
+.Fg, .FG>* {flex-grow:1}
+.F0 {flex:0}
+.FR {flex:10000 1 auto}
+.Fv>.mC {margin-left:unset;margin-right:unset;align-self: center}
+.Fh>*, .Fv>*, .Fr>* { flex-shrink: 1 }
+.fs {justify-content: flex-start}
+.fc {justify-content: center}
+.fe {justify-content: flex-end} /* ha ez flex-end helyett end, akkor pl. playerinfón popupmenu gomb balra igazítódik jobbra helyett */
+.Fs {align-items: start}
+.Fc {align-items: center}
+.Fe {align-items: end}
+.FS {align-content: start}
+.FC {align-content: center}
+.FE {align-content: end}
+.g1 {gap: 1em}
+.we:not(td) {display: flex;} /* wrapper element */
+.we:not(td)>*{flex-grow:1;}
+td.we>*, .wI, foreignObject.we>* {width:100%;height:100%;}
+/* .wI = img in wrapper element. arra jó hogy lehessen Box-szal állítani kép szélességét/magasságát.
+   .we>*-t próbáltam, de Align-t elrontja. .wi>img-nek meg túl nagy a specificitása.
+   :where selector kéne, de az néhány régi böngészőn nincs.
+   .wi már foglalt newFrame.css-ben, valszeg István-féle dialógusoknak valamelyik része, majd törölni kell. */
+
+/* UA stylesheet valamiért overflow:hiddent állítbe */
+foreignObject { overflow: visible }
+
+.Fa>*{flex-grow:1;} /* "a" = "all grow 1" */
+.sm > * {max-width: 100%; max-height: 100%; }
+
+.Hm.gP, .fi.gP, .Fi.gP, .b.gP, .b.gP, .fl > .gP {display:inline-grid}
+
+button.hb, input.hb {  /* hidden button vagy input type=file, ld. LayoutElement::onClickFormAction */
+	background-color: transparent;
+	position: absolute;
+	left: -10000px; /* -1000px nem elég, mert lehet hogy position:relative-ban vagyunk */
+	height: 1px;
+	width: 1px;
+	overflow: hidden;
+}
+
+
+input.et {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+
+    /* különben erőszakkal kiszélesíti a parentet, pl. csetben send-message-fieldben */
+    min-width: 0;
+}
+textarea:not(.b):not(.fi):not(.Fi) { width:100% /* textarea hiába block, még nem tölti ki a sort */}
+
+.o {max-height:0px;overflow-y:hidden;transition:max-height .3s ease} /* c_o_llapsed */
+.s {max-width:100%;max-height:100%;overflow:auto} /* scrollable */
+.S, .gf {
+  -webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+}
+
+
+.a, style {display:none}
+
+/* ideiglenesen van itt, lásd ResidBubble */
+.resid-label {
+    font-family: sans-serif;
+    font-size: 10px;
+    line-height: 10px;
+    color: black;
+    font-weight: bold;
+    letter-spacing: none;
+    white-space: nowrap;
+    font-style: normal;
+}

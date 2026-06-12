@@ -1,0 +1,19 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+dependencies {
+    implementation gradleApi()
+
+    implementation "tools.jackson.core:jackson-core:3.1.1"
+}
+
+
+gradlePlugin {
+    plugins {
+        simplePlugin {
+            id = 'ui11.asset.generateAssetReferences'
+            implementationClass = 'ui11.asset.GenerateAssetReferencesPlugin'
+        }
+    }
+}

@@ -1,21 +1,20 @@
 package ui11.layout.impl;
 
 import ui11.Widget;
+import ui11.color.Color;
 import ui11.decoration.Box;
 import ui11.decoration.Box.BorderSpec;
 import ui11.decoration.Box.BoxShadow;
 import ui11.geom.*;
-import ui11.graphics.effect.RoundedCorners;
-import ui11.graphics.effect.Stroke;
-import ui11.graphics.fill.Color;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
+import ui11.graphics.shaper.RoundedCorners;
+import ui11.graphics.shaper.Stroke;
 import ui11.layout.LayoutSize;
 import ui11.layout.helper.MultiChildLayout;
 import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback;
 import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback.Placeable;
 import ui11.layout.protocol.BoxConstraints;
-import ui11.observable.Observable;
 import ui11.text.TextStyle;
 
 import java.util.ArrayList;
@@ -28,14 +27,10 @@ public class DefaultBoxImpl extends Widget {
 
     private final Box box;
 
-    @Inject private Observable<TextStyle> ts;
+    @Inject private TextStyle ts;
 
     public DefaultBoxImpl(Box box) {
         this.box = box;
-    }
-
-    @Override
-    protected void initState() {
     }
 
     @Override
@@ -84,6 +79,11 @@ public class DefaultBoxImpl extends Widget {
         }
         containerSize = constraints.clamp(containerSize);
 
+        // pixelhatárokat preferáljuk, ha elfér a konténerben.
+        // kisebbíteni nem lehet, mert nem férünk el, ezért csak ceil-lel próbálkozunk.
+        if (constraints.isSatisfiedBy(containerSize.ceil()))
+            containerSize = containerSize.ceil();
+
         Rect outerBounds = Rect.of(containerSize);
         Widget borderShape;
         Rect contentBounds;
@@ -127,7 +127,7 @@ public class DefaultBoxImpl extends Widget {
         if (box.border() == null)
             return 0;
 
-        double em = ts.get().size();
+        double em = ts.size();
         Length l = box.border().thickness().sum(axis);
         if (l.rel() != 0)
             throw new UnsupportedOperationException("TODO");
@@ -138,12 +138,12 @@ public class DefaultBoxImpl extends Widget {
     private double evalLen(Length l) {
         if (l.rel() != 0)
             throw new UnsupportedOperationException("TODO");
-        return l.px() + l.em() * ts.get().size();
+        return l.px() + l.em() * ts.size();
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
     private BorderInfo computeBorderShape(Rect bounds, Widget borderFill) {
-        double em = ts.get().size();
+        double em = ts.size();
         Length topL = box.border().thickness().top();
         Length rightL = box.border().thickness().right();
         Length bottomL = box.border().thickness().bottom();
@@ -168,7 +168,7 @@ public class DefaultBoxImpl extends Widget {
     private record BorderInfo(Widget borderStroke, Rect contentShape) {}
 
     private void makeBoxShadow(Size s, BoxShadow m, MultiChildLayoutCallback callback) {
-        double emSize = ts.get().size();
+        double emSize = ts.size();
         Length len = m.blur();
         if (len.rel() != 0)
             throw new RuntimeException("box shadow doesn't support sizes that are relative to parent");

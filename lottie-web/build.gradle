@@ -1,0 +1,6 @@
+dependencies {
+    api project(":media")
+    api project(":platform-dom")
+
+    implementation "org.teavm:teavm-metaprogramming-api:${teavmVersion}"
+}

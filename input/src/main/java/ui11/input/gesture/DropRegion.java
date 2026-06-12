@@ -1,31 +1,29 @@
 package ui11.input.gesture;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Location;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.awt.datatransfer.Transferable;
 import java.util.Objects;
 
 // TODO implementáljuk ezt néhány platformon
 public final class DropRegion extends SubstitutedWidget {
 
-    @Nonnull private final DropListener listener;
-    @Nonnull private final Widget content;
+    private final @NonNull DropListener listener;
+    private final @NonNull Widget content;
 
-    public DropRegion(@Nonnull DropListener listener, @Nonnull Widget content) {
+    public DropRegion(@NonNull DropListener listener, @NonNull Widget content) {
         this.listener = Objects.requireNonNull(listener); // TODO eventListener proxy
         this.content = Objects.requireNonNull(content);
     }
 
-    @Nonnull
-    public DropListener listener() {
+    public @NonNull DropListener listener() {
         return listener;
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 

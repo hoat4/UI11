@@ -4,7 +4,7 @@ import ui11.MultiSlot;
 import ui11.Widget;
 import ui11.control.Table;
 import ui11.control.Table.Column;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 import ui11.input.gesture.ClickListener;
 import ui11.input.pointer.PointerStateDependent;
@@ -30,8 +30,8 @@ public class DefaultTableImpl<T> extends Widget {
 
     @Override
     protected Widget build() {
-        Collection<? extends Column<? super T>> cols = table.columns;
-        Collection<? extends T> rows = table.rows;
+        Collection<? extends Column<? super T>> cols = table.columns();
+        Collection<? extends T> rows = table.rows();
 
         return Align.top(grid(cols.size(), g -> {
             for (Column<? super T> col : cols) {
@@ -46,9 +46,10 @@ public class DefaultTableImpl<T> extends Widget {
                     // TODO horizontalAlignment?
                     g.add(c);
                 }
-                if (table.clickHandler != null) {
+                if (table.clickHandler() != null) {
                     g.cursorY--;
-                    g.add(rowClickHandlerSlots.use(row, new TableClickHandler<>(table, row)), cols.size(), 1);
+                    g.add(new TableClickHandler<>(table, row).
+                            withSlot(rowClickHandlerSlots.get(row)), cols.size(), 1);
                 }
             }
         }));
@@ -72,7 +73,7 @@ public class DefaultTableImpl<T> extends Widget {
                     new ColorFill(Color.of("#fee5"))
             );
             return new ClickListener(content,
-                    () -> table.clickHandler.accept(row));
+                    () -> table.clickHandler().accept(row));
         }
     }
 }

@@ -56,6 +56,10 @@ public record Size(double width, double height) {
         return new Size(width, h);
     }
 
+    public static Size of(Vec2 widthAndHeight) {
+        return new Size(widthAndHeight.x(), widthAndHeight.y());
+    }
+
     public static Size of(Vec2 topLeft, Vec2 bottomRight) {
         return new Size(bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y());
     }
@@ -91,5 +95,17 @@ public record Size(double width, double height) {
 
     public double shorter() {
         return Math.min(width, height);
+    }
+
+    public Size round() {
+        return new Size(Math.round(width), Math.round(height));
+    }
+
+    public Size ceil() {
+        return new Size(Math.ceil(width), Math.ceil(height));
+    }
+
+    public Vec2 asVec2() {
+        return new Vec2(width, height);
     }
 }

@@ -1,9 +1,5 @@
 /**
- * Felhasználói felület library legfelsőbb szintű csomagja, benne az elemfával.
-
- * A library alapvető osztályait tartalmazza. Az element fát alkotó {@link ui11.RootElement} és
- * {@link ui11.Element}.
- *
- * @see ui11.observable
+ * Defines the core APIs for building and maintaining widget trees.
  */
+// TODO részletesebb javadoc
 package ui11;

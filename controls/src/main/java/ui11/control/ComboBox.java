@@ -1,11 +1,11 @@
 package ui11.control;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
 import ui11.text.Text;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.*;
 import java.util.function.Function;
 
@@ -28,9 +28,8 @@ public final class ComboBox<T> extends SubstitutedWidget {
         return displayNames;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return new Text(String.valueOf(model.selectedValue.get()));
     }
 

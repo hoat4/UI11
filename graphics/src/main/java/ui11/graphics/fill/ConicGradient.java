@@ -1,6 +1,7 @@
 package ui11.graphics.fill;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
+import ui11.color.Color;
 
 import java.util.List;
 

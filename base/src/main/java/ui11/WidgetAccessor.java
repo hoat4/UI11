@@ -1,41 +1,45 @@
 package ui11;
 
-import ui11.observable.Observable;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
 
 /**
- * equals/hashCode-ot implementálniuk kell subclassoknak
+ * equals/hashCode-ot implementálniuk kell subclassoknak (pl. Widget.attachStateHolder használja)
  */
 @org.teavm.metaprogramming.CompileTime
-interface WidgetAccessor<T extends Widget> {
+interface WidgetAccessor<W extends Widget> {
+
+    Class<W> clazz();
+
+    boolean prepareListenerProxies(W modelWidget);
+
+    InputFieldChangeDetectionResult areInputFieldsChanged(W oldModel, W newModel);
+
+    void checkStateEmptyAndPrepareState(W newState, WidgetState<W> widgetState, W model);
+
+    void transferState(W fromState, W toState);
+
+    void retrieveInheritedValues(W w);
 
     /**
-     * ennek csak {@linkplain Element} és {@linkplain Widget RSW} esetén kell működnie, sima {@linkplain Widget} esetén
-     * nem
+     * Listener proxy-khoz van használva, azért tudjuk hogy nem primitív.
      */
-    Widget decorate(T e, @Nonnull Widget content, boolean isDelegate);
-
-    Class<T> clazz();
-
-    void initAndCopyState(@Nullable T oldWidget, @Nonnull T newWidget);
-
-    Observable<?>[] observeInheritedValues(RSWStateHolder<T> stateHolder);
-
-    void checkStateEmpty(T w);
+    Object readNonPrimitiveInputField(W w, int inputField);
 
     /**
-     * ez {@linkplain ui11.Widget.Listener}-rel annotált mezőket is néz
+     * ez listener proxykat tartalmazó mezőket is néz
      */
-    boolean inputFieldsEquals(T a, T b);
+    boolean inputFieldsEquals(W a, W b);
 
-    /**
-     * ez nem néz {@linkplain ui11.Widget.Listener}-rel annotált mezőket
-     */
-    boolean inputFieldsEqualsAndTransferListeners(T a, T b);
+    int inputFieldsHashCode(W w);
 
-    int inputFieldsHashCode(T w);
+    Object[] inputFieldsToString(W w);
 
-    Object[] inputFieldsToString(T t);
+    Widget decorate(W w, @NonNull Widget content);
+
+    WidgetAccessor<W> asDetachedMarker(boolean detached);
+
+    enum InputFieldChangeDetectionResult {
+
+        NEEDS_UPDATE, NOT_NEEDS_UPDATE, NEEDS_LISTENER_PROXY_BACKPROPAGATION
+    }
 }

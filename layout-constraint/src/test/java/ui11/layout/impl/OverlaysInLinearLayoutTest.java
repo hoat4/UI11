@@ -1,7 +1,8 @@
 package ui11.layout.impl;
 
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
+import ui11.window.Window;
 
 import static ui11.graphics.effect.Overlay.overlay;
 import static ui11.layout.multichild.LinearLayout.row;
@@ -12,7 +13,7 @@ import static ui11.layout.multichild.LinearLayout.row;
 public class OverlaysInLinearLayoutTest {
 
     public void main() {
-        ui11.window.Desktop.getDesktop().openWindow(row(
+        Window.open(row(
                 overlay(
                         new ColorFill(Color.RED),
                         new ColorFill(Color.GREEN)

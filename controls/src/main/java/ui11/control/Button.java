@@ -1,10 +1,10 @@
 package ui11.control;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.text.Text;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  *
@@ -12,14 +12,14 @@ import javax.annotation.Nullable;
 public final class Button extends SubstitutedWidget {
 
     private final Widget content;
-    @Listener @Nullable private final Runnable actionHandler;
+    @Nullable private final Runnable actionHandler;
 
     /**
      * @param actionHandler ha ez null, akkor disablednek számít a gomb
      */
     public Button(Widget content, @Nullable Runnable actionHandler) {
         this.content = content;
-        this.actionHandler = actionHandler;
+        this.actionHandler = listenerProxy(actionHandler);
     }
 
     /**

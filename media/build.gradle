@@ -1,3 +1,6 @@
 dependencies {
     api project(":base")
+    api project(":animation") // PlaybackController
+
+    implementation "org.teavm:teavm-core:${teavmVersion}" // ClasspathResourceImageTeaVMPlugin
 }

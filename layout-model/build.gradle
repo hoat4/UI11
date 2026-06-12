@@ -2,5 +2,16 @@ dependencies {
     api project(":graphics")
 
     testImplementation project(":layout-constraint")
-    testImplementation project(":platform:awt")
+    testImplementation project(":platform-awt")
+}
+
+// évek óta bug, és nem javítják ki: https://github.com/gradle/gradle/issues/4046
+tasks.register('copyJavadocResources', Copy) {
+    from('src/main/java')
+    include '**/doc-files/**'
+    into(tasks.javadoc.destinationDir)
+}
+
+tasks.named('javadoc') {
+    finalizedBy tasks.copyJavadocResources
 }

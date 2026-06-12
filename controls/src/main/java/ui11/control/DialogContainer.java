@@ -25,15 +25,11 @@ public class DialogContainer extends Widget {
     }
 
     @Override
-    protected void initState() {
-    }
-
-    @Override
     protected Widget build() {
         return overlay(overlay -> {
             overlay.accept(content);
             state.overlays.forEach((key, dialog) -> {
-                overlay.accept(overlaySlots.use(key, dialog));
+                overlay.accept(dialog.withSlot(overlaySlots.get(key)));
             });
         });
     }

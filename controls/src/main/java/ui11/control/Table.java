@@ -1,11 +1,11 @@
 package ui11.control;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.layout.HorizontalAlignment;
 import ui11.text.Text;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,9 +17,9 @@ import static ui11.text.TextModifiers.withLineWrapping;
 
 public class Table<T> extends SubstitutedWidget {
 
-    public final List<? extends T> rows;
-    public final List<? extends Column<? super T>> columns;
-    @Listener public final Consumer<T> clickHandler;
+    private final List<? extends T> rows;
+    private final List<? extends Column<? super T>> columns;
+    private final Consumer<T> clickHandler;
 
     public Table(List<? extends Column<? super T>> columns, List<? extends T> rows) {
         this(columns, rows, null);
@@ -28,12 +28,24 @@ public class Table<T> extends SubstitutedWidget {
     public Table(List<? extends Column<? super T>> columns, List<? extends T> rows, Consumer<T> clickHandler) {
         this.rows = rows;
         this.columns = columns;
-        this.clickHandler = clickHandler;
+        this.clickHandler = listenerProxy(clickHandler);
+    }
+
+    public List<? extends T> rows() {
+        return rows;
+    }
+
+    public List<? extends Column<? super T>> columns() {
+        return columns;
+    }
+
+    public Consumer<T> clickHandler() {
+        return clickHandler;
     }
 
     // cellContentFunction jelenleg nem adhat vissza nullt
-    public record Column<T>(@Nonnull String title, @Nonnull HorizontalAlignment horizontalAlignment,
-                            @Nonnull Function<T, Widget> cellContentFunction) {
+    public record Column<T>(@NonNull String title, @NonNull HorizontalAlignment horizontalAlignment,
+                            @NonNull Function<T, Widget> cellContentFunction) {
 
         public Column {
             Objects.requireNonNull(title);

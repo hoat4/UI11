@@ -1,11 +1,11 @@
 package ui11.decoration;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.geom.Length;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 public final class BoxShadow extends SubstitutedWidget {
 
@@ -50,9 +50,8 @@ public final class BoxShadow extends SubstitutedWidget {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return new Box(content).withBoxShadow(new Box.BoxShadow(color, blur, xOffset, yOffset, spread));
     }
 }

@@ -85,6 +85,30 @@ public record Vec3(double x, double y, double z) implements Lerpable<Vec3> {
         return new Vec3(xz.x(), y, xz.y());
     }
 
+    public Vec3 plusX(double px) {
+        return new Vec3(x + px, y, z);
+    }
+
+    public Vec3 plusY(double py) {
+        return new Vec3(x, y + py, z);
+    }
+
+    public Vec3 plusZ(double pz) {
+        return new Vec3(x, y, z + pz);
+    }
+
+    public Vec3 minusX(double mx) {
+        return new Vec3(x - mx, y, z);
+    }
+
+    public Vec3 minusY(double my) {
+        return new Vec3(x, y - my, z);
+    }
+
+    public Vec3 minusZ(double mz) {
+        return new Vec3(x, y, z - mz);
+    }
+
     public static Vec3 min(Vec3 a, Vec3 b) {
         return new Vec3(
                 Math.min(a.x, b.x),

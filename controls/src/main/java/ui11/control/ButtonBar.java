@@ -1,11 +1,11 @@
 package ui11.control;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.layout.multichild.LinearLayout;
 import ui11.control.ComboBox.ComboBoxModel;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 public final class ButtonBar<T> extends SubstitutedWidget {
 
@@ -19,9 +19,8 @@ public final class ButtonBar<T> extends SubstitutedWidget {
         return model;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return model.possibleValues.stream().
                 map(t -> new Button(String.valueOf(t), () -> model.selectedValue.set(t))).
                 collect(LinearLayout.toRow());

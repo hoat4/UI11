@@ -1,8 +1,5 @@
 package ui11;
 
-import ui11.provide.UpValue;
-import ui11.provide.UpValueWrapper;
-
 public class TestStealDelegate {
     public void main() {
         // azt az esetet teszteljük, ha elvesszük egy W2 widgetnek a delegatejét (W1), majd újra refresheljük W2-t.
@@ -14,7 +11,7 @@ public class TestStealDelegate {
         // a parent layout először adott neki constraintset, majd nem.
         // majd ablakátméretezéskor újra adott neki constraintset.
 
-        new RootElement(new Component() {
+        WidgetTree.create(new Component<>() {
 
             @Inject private Slot outerSlot1;
             @Inject private Slot outerSlot2;
@@ -24,17 +21,18 @@ public class TestStealDelegate {
             @Inject private Slot w2Slot;
 
             @Override
-            protected void update() {
-                Widget w1 = innerSlot.use(new W1());
-                Widget w2 = w2Slot.use(new W2(w1));
-                outerSlot1.instantiate(new T(w2));
-                outerSlot2.instantiate(new T(w1));
-                outerSlot3.instantiate(new T(w2));
+            protected Void update() {
+                Widget w1 = new W1().withSlot(innerSlot);
+                Widget w2 = new W2(w1).withSlot(w2Slot);
+                useComponent(outerSlot1, new T(w2));
+                useComponent(outerSlot2, new T(w1));
+                useComponent(outerSlot3, new T(w2));
+                return null;
             }
-        }, Runnable::run).start();
+        }, Runnable::run);
     }
 
-    private static class T extends Component {
+    private static class T extends Component<Void> {
 
         private final Widget w;
 
@@ -45,8 +43,9 @@ public class TestStealDelegate {
         }
 
         @Override
-        protected void update() {
-            System.out.println(slot.instantiate(w).lookup(UV.class));
+        protected Void update() {
+            System.out.println(useWidget(slot, w, UV.class));
+            return null;
         }
     }
 
@@ -67,9 +66,10 @@ public class TestStealDelegate {
     private static class W1 extends Widget {
         @Override
         protected Widget build() {
-            return new UpValueWrapper(UV.X);
+            return new UV();
         }
     }
 
-    static enum UV implements UpValue {X, Y}
+    private static class UV extends EndingWidget {
+    }
 }

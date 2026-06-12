@@ -1,20 +1,22 @@
 package ui11.decoration;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 import ui11.layout.Insets;
 import ui11.layout.LayoutSize;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 import static ui11.geom.Length.px;
 
 // TODO cornerRadiusból 4 kéne
 // mi van akkor ha van minSize és fixedSize is?
+@Deprecated
 public final class Box extends SubstitutedWidget {
 
     private final Widget content;
@@ -135,10 +137,6 @@ public final class Box extends SubstitutedWidget {
         return new Box(content, background, border, boxShadow, minSize, fixedSize, cornerRadius);
     }
 
-    public static Widget withBorder(Color color, Widget widget) {
-        return new Box(widget).withBorder(px(1), new ColorFill(color));
-    }
-
     public static Widget withRoundedBorder(Color color, Length cornerRadius, Widget widget) {
         return new Box(widget).withBorder(px(1), new ColorFill(color)).withCornerRadius(cornerRadius);
     }
@@ -153,26 +151,6 @@ public final class Box extends SubstitutedWidget {
 
     public static Widget withMinSize(Length minWidth, Length minHeight, Widget widget) {
         return new Box(widget).withMinSize(minWidth, minHeight);
-    }
-
-    public static Widget withWidth(Length width, Widget widget) {
-        return new Box(widget).withFixedSize(width, null);
-    }
-
-    public static Widget withHeight(Length height, Widget widget) {
-        return new Box(widget).withFixedSize(null, height);
-    }
-
-    public static Widget withSize(Length width, Length height, Widget widget) {
-        return new Box(widget).withFixedSize(width, height);
-    }
-
-    public static Widget withSize(Length widthAndHeight, Widget widget) {
-        return new Box(widget).withFixedSize(widthAndHeight, widthAndHeight);
-    }
-
-    public static Widget withSize(LayoutSize size, Widget widget) {
-        return new Box(widget).withFixedSize(size);
     }
 
     public static Widget withSizeAndRoundedCorners(LayoutSize size, Length cornerRadius, Widget widget) {

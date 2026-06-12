@@ -1,21 +1,21 @@
 package ui11.graphics.fill;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
+import ui11.color.Color;
 import ui11.geom.Length;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.List;
 import java.util.Objects;
 
 import static ui11.graphics.fill.LinearGradient.Stop.uniformStops;
-import static java.util.Arrays.stream;
 
 public final class LinearGradient extends SubstitutedWidget {
 
     private final double angleDeg;
-    @Nonnull private final List<Stop> stops;
+    private final @NonNull List<@NonNull Stop> stops;
 
-    public LinearGradient(double angleDeg, List<Stop> stops) {
+    public LinearGradient(double angleDeg, @NonNull List<@NonNull Stop> stops) {
         stops = List.copyOf(stops);
         this.angleDeg = angleDeg;
         this.stops = stops;
@@ -57,12 +57,11 @@ public final class LinearGradient extends SubstitutedWidget {
         return angleDeg;
     }
 
-    @Nonnull
-    public List<Stop> stops() {
+    public @NonNull List<@NonNull Stop> stops() {
         return stops;
     }
 
-    public record Stop(@Nonnull Color color, @Nonnull Length pos) {
+    public record Stop(@NonNull Color color, @NonNull Length pos) {
 
         public Stop {
             Objects.requireNonNull(color);

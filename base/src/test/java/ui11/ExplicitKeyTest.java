@@ -3,7 +3,7 @@ package ui11;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 import static ui11.layout.multichild.LinearLayout.column;
 
@@ -20,11 +20,8 @@ public class ExplicitKeyTest {
         }
 
         @Override
-        protected void initState() {
-        }
-
-        @Override
         protected Widget build() {
+            System.out.println("reverse.get() = " + reverse.get());
             if (reverse.get())
                 return column(fb(), fa());
             else
@@ -32,11 +29,11 @@ public class ExplicitKeyTest {
         }
 
         private Widget fa() {
-            return fa.use(new ElementIdentityPrintingWidget());
+            return new ElementIdentityPrintingWidget().withSlot(fa);
         }
 
         private Widget fb() {
-            return fb.use(new ElementIdentityPrintingWidget());
+            return new ElementIdentityPrintingWidget().withSlot(fb);
         }
     }
 
@@ -54,7 +51,7 @@ public class ExplicitKeyTest {
         // 1 és alatta 2 jelenik meg, majd 5 másodperc múlva 2 és alatta 1-nek kell megjelennie
 
         MutableObservable<Boolean> reverse = MutableObservable.withInitial(false);
-        Desktop.getDesktop().openWindow(new W(reverse));
+        Window.open(new W(reverse));
         Thread.sleep(5000);
         reverse.set(!reverse.get());
     }

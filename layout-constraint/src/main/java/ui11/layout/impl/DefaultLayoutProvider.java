@@ -1,5 +1,7 @@
 package ui11.layout.impl;
 
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box;
 import ui11.graphics.Empty;
@@ -7,19 +9,15 @@ import ui11.graphics.effect.Overlay;
 import ui11.graphics.fill.ColorFill;
 import ui11.layout.singlechild.Align;
 import ui11.layout.multichild.LinearLayout;
-import ui11.layout.protocol.BoxConstraints;
-import ui11.layout.protocol.BoxLayoutProtocol;
 import ui11.layout.singlechild.Padding;
-import ui11.provide.UpValueWrapper;
+import ui11.resolution.PeerCreationRequest;
 import ui11.resolution.WidgetResolver;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class DefaultLayoutProvider implements WidgetResolver {
-    @Nullable
     @Override
-    public Widget resolveOrNull(Widget widget, ResolutionContext resolutionContext) {
+    public @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull PeerCreationRequest<?> peerCreationRequest) {
         return switch (widget) {
             case Align align -> new DefaultAlignImpl(align);
             case Box box -> new DefaultBoxImpl(box);
@@ -32,11 +30,10 @@ public class DefaultLayoutProvider implements WidgetResolver {
         };
     }
 
-    @Nonnull
     @Override
-    public Widget resolveAdditional(@Nonnull Widget widget, @Nonnull Widget content) {
+    public @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content) {
         if (widget instanceof ColorFill || widget instanceof Empty)
-            return new UpValueWrapper((BoxLayoutProtocol) BoxConstraints::min, content);
+            return new PreferredSizeIsMinimal(content);
         if (widget instanceof Overlay overlay)
             return new DefaultOverlayLayoutImpl(overlay, content);
 

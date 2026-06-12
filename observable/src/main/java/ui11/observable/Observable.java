@@ -1,8 +1,8 @@
 package ui11.observable;
 
+import org.jspecify.annotations.NonNull;
 import ui11.observable.MutableObservable.ChangeEvent;
 
-import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -41,9 +41,9 @@ public interface Observable<T> {
         return ObserverHolder.withoutObserver(this::get);
     }
 
-    static <T> Observable<T> constant(@Nonnull T value) {
+    static <T> Observable<T> constant(@NonNull T value) {
         Objects.requireNonNull(value);
-        return new Observable<T>() {
+        return new Observable<>() {
             @Override
             public T get() {
                 return value;

@@ -1,23 +1,25 @@
 package ui11;
 
-import ui11.provide.UpValue;
-import ui11.provide.UpValueWrapper;
-
 // TODO javadoc frissítése
+
 /**
  * Egy szülő Element életciklusához kapcsolódik, de saját maga nem tartalmaz widgetet.
  */
-public abstract class Component extends Widget {
+public abstract class Component<R> extends Widget {
 
-    private static final UpValue CHAIN_END = new UpValue() {
-    };
+    protected abstract R update();
 
     @Override
     protected final Widget build() {
-        update();
-        return new UpValueWrapper(CHAIN_END);
+        return new ComponentResultUpValue<>(update());
     }
 
-    protected void update() {
+    static class ComponentResultUpValue<R> extends EndingWidget {
+
+        final R result;
+
+        ComponentResultUpValue(R result) {
+            this.result = result;
+        }
     }
 }

@@ -1,12 +1,13 @@
 package ui11.window;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 public final class Window extends SubstitutedWidget {
+
     private final String title;
     private final Widget content;
 
@@ -25,9 +26,13 @@ public final class Window extends SubstitutedWidget {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
+    }
+
+    // TODO return type pl. WidgetInstantiation?
+    public static void open(Widget content) {
+        Desktop.systemDesktop().openWindow(content);
     }
 }

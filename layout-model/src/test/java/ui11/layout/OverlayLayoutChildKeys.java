@@ -1,15 +1,14 @@
 package ui11.layout;
 
 import ui11.Widget;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.layout.singlechild.Alignment;
 import ui11.observable.MutableObservable;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 import static ui11.decoration.Background.withBackground;
 import static ui11.graphics.Empty.empty;
-import static ui11.layout.multichild.LinearLayout.row;
 import static ui11.graphics.effect.Overlay.overlay;
 import static ui11.layout.singlechild.Align.align;
 
@@ -19,7 +18,7 @@ public class OverlayLayoutChildKeys {
     // a középső tartalma változhat, de nem tudom hogy specifikált lesz-e, hogy változzon.
     public void main() throws InterruptedException {
         MutableObservable<Widget> o = MutableObservable.withInitial(empty());
-        Desktop.getDesktop().openWindow(withBackground(Color.WHITE, new Slot(o)));
+        Window.open(withBackground(Color.WHITE, new Slot(o)));
         while (true) {
             Thread.sleep(1000);
             System.out.println();

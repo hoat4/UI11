@@ -1,5 +1,7 @@
 package ui11.geom;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * az mezőnevekben első számjegy az oszlop, a második számjegy a sor
  *
@@ -338,6 +340,9 @@ public record Mat4(double m00, double m10, double m20, double m30,
         );
     }
 
+    /**
+     * @return ebben infinity-k lesznek, ha nem invertálható
+     */
     public Mat4 inverse() {
         double a = m00 * m11 - m01 * m10;
         double b = m00 * m12 - m02 * m10;
@@ -352,6 +357,48 @@ public record Mat4(double m00, double m10, double m20, double m30,
         double k = m21 * m33 - m23 * m31;
         double l = m22 * m33 - m23 * m32;
         double det = a * l - b * k + c * j + d * i - e * h + f * g;
+        // JOML valamiért így csinálta, nem osztással
+        det = 1.0 / det;
+
+        return new Mat4(
+                (m11 * l - m12 * k + m13 * j) * det,
+                (-m10 * l + m12 * i - m13 * h) * det,
+                (m10 * k - m11 * i + m13 * g) * det,
+                (-m10 * j + m11 * h - m12 * g) * det,
+                (-m01 * l + m02 * k - m03 * j) * det,
+                (m00 * l - m02 * i + m03 * h) * det,
+                (-m00 * k + m01 * i - m03 * g) * det,
+                (m00 * j - m01 * h + m02 * g) * det,
+                (m31 * f - m32 * e + m33 * d) * det,
+                (-m30 * f + m32 * c - m33 * b) * det,
+                (m30 * e - m31 * c + m33 * a) * det,
+                (-m30 * d + m31 * b - m32 * a) * det,
+                (-m21 * f + m22 * e - m23 * d) * det,
+                (m20 * f - m22 * c + m23 * b) * det,
+                (-m20 * e + m21 * c - m23 * a) * det,
+                (m20 * d - m21 * b + m22 * a) * det
+        );
+    }
+
+    @Nullable
+    public Mat4 inverseOrNull() {
+        double a = m00 * m11 - m01 * m10;
+        double b = m00 * m12 - m02 * m10;
+        double c = m00 * m13 - m03 * m10;
+        double d = m01 * m12 - m02 * m11;
+        double e = m01 * m13 - m03 * m11;
+        double f = m02 * m13 - m03 * m12;
+        double g = m20 * m31 - m21 * m30;
+        double h = m20 * m32 - m22 * m30;
+        double i = m20 * m33 - m23 * m30;
+        double j = m21 * m32 - m22 * m31;
+        double k = m21 * m33 - m23 * m31;
+        double l = m22 * m33 - m23 * m32;
+        double det = a * l - b * k + c * j + d * i - e * h + f * g;
+
+        if (Math.abs(det) <= Double.MIN_VALUE)
+            return null;
+
         // JOML valamiért így csinálta, nem osztással
         det = 1.0 / det;
 
@@ -580,6 +627,14 @@ public record Mat4(double m00, double m10, double m20, double m30,
 
     public boolean isIdentity() {
         return equals(Mat4.IDENTITY); // TODO equals helyett majdnem-equals kéne
+    }
+
+    public boolean isAtMost2DTranslation() {
+        // ld. komment isIdentity-ben
+        return m00 == 1 && m10 == 0 && m20 == 0 &&
+                m01 == 0 && m11 == 1 && m21 == 0 &&
+                m02 == 0 && m12 == 0 && m22 == 1 && m32 == 0 &&
+                m03 == 0 && m13 == 0 && m23 == 0 && m33 == 1;
     }
 
     public static class NonInvertibleMatrixException extends RuntimeException {

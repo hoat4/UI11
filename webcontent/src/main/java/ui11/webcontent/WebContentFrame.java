@@ -1,21 +1,20 @@
 package ui11.webcontent;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
 
-import javax.annotation.Nonnull;
 import java.net.URI;
 import java.util.Objects;
 
 public final class WebContentFrame extends SubstitutedWidget {
 
-    @Nonnull private final URI url;
+    private final @NonNull URI url;
 
-    public WebContentFrame(@Nonnull URI url) {
+    public WebContentFrame(@NonNull URI url) {
         this.url = Objects.requireNonNull(url);
     }
 
-    @Nonnull
-    public URI url() {
+    public @NonNull URI url() {
         return url;
     }
 

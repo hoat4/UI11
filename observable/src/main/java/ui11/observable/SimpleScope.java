@@ -27,7 +27,7 @@ public final class SimpleScope implements Scope {
     @Override
     public void onClose(Runnable closeListener) {
         if (onClose == null)
-            throw new IllegalStateException("scope already closed");
+            throw new ScopeAlreadyClosedException();
         else
             this.onClose.add(closeListener);
     }

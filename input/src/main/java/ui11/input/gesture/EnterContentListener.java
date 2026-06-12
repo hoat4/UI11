@@ -1,47 +1,43 @@
 package ui11.input.gesture;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.input.focus.FocusHolder;
 import ui11.input.keyboard.KeyCombination;
 
-import javax.annotation.Nonnull;
 import java.awt.datatransfer.Transferable;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class EnterContentListener extends SubstitutedWidget {
 
-    @Listener @Nonnull private final Consumer<EnterContent> enterContentHandler;
-    @Nonnull private final FocusHolder focusHolder;
-    @Nonnull private final Widget content;
+    private final @NonNull Consumer<EnterContent> enterContentHandler;
+    private final @NonNull FocusHolder focusHolder;
+    private final @NonNull Widget content;
 
-    public EnterContentListener(@Nonnull Consumer<EnterContent> enterContentHandler,
-                                @Nonnull FocusHolder focusHolder,
-                                @Nonnull Widget content) {
-        this.enterContentHandler = Objects.requireNonNull(enterContentHandler);
+    public EnterContentListener(@NonNull Consumer<EnterContent> enterContentHandler,
+                                @NonNull FocusHolder focusHolder,
+                                @NonNull Widget content) {
+        this.enterContentHandler = listenerProxy(Objects.requireNonNull(enterContentHandler));
         this.focusHolder = Objects.requireNonNull(focusHolder);
         this.content = Objects.requireNonNull(content);
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    @Nonnull
-    public Consumer<EnterContent> enterContentHandler() {
+    public @NonNull Consumer<EnterContent> enterContentHandler() {
         return enterContentHandler;
     }
 
-    @Nonnull
-    public FocusHolder focusHolder() {
+    public @NonNull FocusHolder focusHolder() {
         return focusHolder;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 

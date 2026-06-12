@@ -1,34 +1,34 @@
 package ui11.input.pointer;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.Nullable;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class IsPressedListener extends SubstitutedWidget {
 
-    private final Widget content;
-    @Listener private final Consumer<Boolean> consumer;
+    private final @NonNull Widget content;
+    private final @Nullable Consumer<Boolean> consumer;
 
-    public IsPressedListener(Widget content, Consumer<Boolean> consumer) {
+    public IsPressedListener(@NonNull Widget content, @Nullable Consumer<Boolean> consumer) {
         Objects.requireNonNull(content);
         this.content = content;
-        this.consumer = consumer;
+        this.consumer = listenerProxy(consumer);
     }
 
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    public Consumer<Boolean> consumer() {
+    public @Nullable Consumer<Boolean> consumer() {
         return consumer;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return new IsPressedListenerImpl(this);
     }
 }

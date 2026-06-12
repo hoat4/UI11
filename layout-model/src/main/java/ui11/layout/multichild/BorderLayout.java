@@ -1,11 +1,11 @@
 package ui11.layout.multichild;
 
 import ui11.Slot;
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import static ui11.graphics.Empty.empty;
 
@@ -87,9 +87,8 @@ public final class BorderLayout extends SubstitutedWidget {
         return left;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return new DefaultBorderLayoutImpl(this);
     }
 
@@ -124,10 +123,6 @@ class DefaultBorderLayoutImpl extends Widget {
     }
 
     @Override
-    protected void initState() {
-    }
-
-    @Override
     protected Widget build() {
         // TODO ha megcserélem erre, akkor Grid.add belezavarodik:
         //      add(left == null ? empty() : left, 1, 3).
@@ -136,11 +131,11 @@ class DefaultBorderLayoutImpl extends Widget {
         //      add(center == null ? empty() : center).
         //      add(bottom == null ? empty() : bottom).
         return Grid.builder(3).
-                add(l.top() == null ? empty() : topSlot.use(l.top()), 3, 1).
-                add(l.left() == null ? empty() : leftSlot.use(l.left())).
-                add(l.center() == null ? empty() : centerSlot.use(l.center())).
-                add(l.right() == null ? empty() : rightSlot.use(l.right())).
-                add(l.bottom() == null ? empty() : bottomSlot.use(l.bottom()), 3, 1).
+                add(l.top() == null ? empty() : l.top().withSlot(topSlot), 3, 1).
+                add(l.left() == null ? empty() : l.left().withSlot(leftSlot)).
+                add(l.center() == null ? empty() : l.center().withSlot(centerSlot)).
+                add(l.right() == null ? empty() : l.right().withSlot(rightSlot)).
+                add(l.bottom() == null ? empty() : l.bottom().withSlot(bottomSlot), 3, 1).
                 rowWeights(0, 1, 0).
                 columnWeights(0, 1, 0).
                 build();

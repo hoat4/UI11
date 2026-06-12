@@ -1,59 +1,54 @@
 package ui11.layout.helper;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.*;
-import ui11.layout.Gone;
-import ui11.observable.MutableObservable;
-import ui11.observable.Observable;
+import ui11.color.Color;
+import ui11.graphics.fill.ColorFill;
+import ui11.layout.protocol.BoxLayoutResult;
 import ui11.geom.Mat4;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.graphics.Surface;
-import ui11.graphics.effect.ClipRect;
+import ui11.graphics.shaper.RectangleShaped;
 import ui11.graphics.effect.Overlay;
 import ui11.graphics.effect.Transform;
 import ui11.layout.protocol.BoxConstraints;
-import ui11.layout.protocol.BoxLayoutProtocol;
 import ui11.provide.Provider;
-import ui11.provide.UpValueWrapper;
+import ui11.resolution.PeerCreationRequest;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 // TODO most az ide-oda rángatás miatt kétszer buildelődnek a childek
 
-public class MultiChildLayout extends Widget implements BoxLayoutProtocol {
+public class MultiChildLayout extends Widget {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiChildLayout.class);
 
     private final MultiChildLayoutDelegate delegate;
 
-    @Inject(required = false) private Observable<BoxConstraints> constraints;
-    @Inject(required = false) private Observable<Surface> surface;
+    @Inject private PeerCreationRequest<?> peerCreationRequest;
+    @Inject(required = false) private Surface surface;
     @Inject private MultiSlot<Object> childSlots;
     @Inject private MultiSlot<Object> childTransformSlots;
 
-    @State private MutableObservable<Size> determinedSize; // TODO ezt nem kéne törölni valamikor?
-    @State private List<Widget> elements; // TODO ez valójában nem @State, csak build közben van használva
-    @State private MultiChildLayoutCallback currentCallback;
+    @Remember private List<Widget> elements; // TODO ez valójában nem @Remember, csak build közben van használva
+    @Remember private MultiChildLayoutCallback currentCallback;
 
     public MultiChildLayout(MultiChildLayoutDelegate delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    protected void initState() {
-        determinedSize = MutableObservable.ofNullable();
-    }
-
-    @Override
     protected Widget build() {
-        BoxConstraints constraints = this.constraints.get();
-        Surface surface = this.surface.get();
+        boolean hasBoxConstraintsPeerCreationRequest =
+                peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest;
+        BoxConstraints constraints = hasBoxConstraintsPeerCreationRequest ?
+                ((BoxLayoutResult.BoxConstraintsPeerCreationRequest) peerCreationRequest).constraints() : null;
 
         boolean fromConstraints = constraints != null;
         if (constraints == null) {
@@ -76,36 +71,37 @@ public class MultiChildLayout extends Widget implements BoxLayoutProtocol {
                 currentCallback = null;
             }
 
-            if (!constraints.isSatisfiedBy(s))
-                throw new RuntimeException(constraints + " is not satisfied by " + s + " (returned by " + this + ")");
+            if (!constraints.isSatisfiedBy(s)) {
+                logger.error(constraints + " is not satisfied by " + s + " (returned by " + delegate + ")");
+                return new ColorFill(Color.CYAN);
+            }
+
+            if (hasBoxConstraintsPeerCreationRequest)
+                if (fromConstraints)
+                    return new BoxLayoutResult.OfChosenSize(s);
+                else
+                    return new BoxLayoutResult.OfNoConstraints();
+
             result = new Overlay(elements);
         } finally {
             elements = null;
         }
 
-        if (fromConstraints)
-            // ez meghívhat más kódot, ezért ne fent hívjuk, amíg buildContext nincs nullra visszaállítva
-            determinedSize.set(s);
-
         // hogy DefaultOverlayLayoutImpl ne kezdjen méretet számolni, mert egyrészt felesleges,
         // másrészt mert még nem is tud, mert Transform, Clip, stb. nem forwardolja a BoxLayoutProtocolt
         result = new Provider<>(BoxConstraints.class, null, result);
-        return new UpValueWrapper(this, result);
-    }
 
-    @Override
-    public Size preferredSize(BoxConstraints constraints) {
-        Size s = determinedSize.get();
-        if (s == null)
-            throw new IllegalStateException();
-        return s;
+        return result;
     }
 
     @Override
     public String toString() {
-        if (constraints == null)
+        if (peerCreationRequest == null) // observable inicializáltságát nézzük
             return super.toString();
-        return super.toString() + "{constraints=" + constraints.snoop() + ", determinedSize=" + determinedSize.snoop() + ", " +
+        BoxConstraints constraints =
+                peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest req ?
+                        req.constraints() : null;
+        return super.toString() + "{constraints=" + constraints + ", " +
                 "currentCallback " + (currentCallback == null ? "==" : "!=") + " null}";
     }
 
@@ -130,11 +126,15 @@ public class MultiChildLayout extends Widget implements BoxLayoutProtocol {
                         MultiChildLayoutDelegate.class.getSimpleName() + ".delegate (" + this + ")");
 
             // azért kell két slot, mert különben a cachedPeer egyszer Transform lenne, egyszer meg a rendes widget
-            elements.add(childTransformSlots.use(key,
-                    new Provider<>(BoxConstraints.class, constraints,
-                            new Transform(
-                                    new ClipRect(childSlots.use(key, w), rect.size()),
-                                    Mat4.ofTranslation(rect.topLeft())))));
+            elements.add(new Provider<>(BoxConstraints.class, constraints,
+                    new Transform(
+                            new RectangleShaped(
+                                    w.withSlot(childSlots.get(key)),
+                                    rect.size()
+                            ),
+                            Mat4.ofTranslation(rect.topLeft())
+                    )
+            ).withSlot(childTransformSlots.get(key)));
         }
 
         public void placeOverlay(Object key, Widget w) {
@@ -147,22 +147,26 @@ public class MultiChildLayout extends Widget implements BoxLayoutProtocol {
                         MultiChildLayoutDelegate.class.getSimpleName() + ".delegate (" + this + ")");
 
             elements.add(new Provider<>(BoxConstraints.class, constraints,
-                    childSlots.use(key, w)));
+                    w.withSlot(childSlots.get(key))));
         }
 
-        private Size measure(Object key, Widget widget, @Nonnull BoxConstraints constraints) {
+        private Size measure(Object key, Widget widget, @NonNull BoxConstraints constraints) {
             if (currentCallback != this)
                 throw new IllegalStateException("measure() called while not in " +
                         MultiChildLayoutDelegate.class.getSimpleName() + ".delegate (" + this + ")");
 
-            WidgetInstantiation h = childSlots.instantiate(key,
-                    new Provider<>(BoxConstraints.class, constraints, widget));
-            if (h.lookupOptional(Gone.class).isPresent()) {
-                logger.error("Gone in measure: " + key + ", " + widget + ", " + constraints);
-                return constraints.min();
-            }
-            BoxLayoutProtocol p = h.lookup(BoxLayoutProtocol.class);
-            return p.preferredSize(constraints);
+            BoxLayoutResult layoutResult = makePeer(childSlots.get(key), widget,
+                    new BoxLayoutResult.BoxConstraintsPeerCreationRequest(constraints));
+            return switch (layoutResult) {
+                case BoxLayoutResult.OfGone _ -> {
+                    logger.error("Gone in measure: " + key + ", " + widget + ", " + constraints);
+                    yield constraints.min();
+                }
+                case BoxLayoutResult.OfChosenSize r -> r.size();
+                case BoxLayoutResult.OfNoConstraints _ -> {
+                    throw new RuntimeException("null layout result: " + widget + ", " + constraints + ", " + layoutResult);
+                }
+            };
         }
 
         public Placeable asPlaceable(Object key, Widget widget) {
@@ -170,8 +174,7 @@ public class MultiChildLayout extends Widget implements BoxLayoutProtocol {
             return p == null ? new Placeable(null, null) : p;
         }
 
-        @Nullable
-        public Placeable asPlaceableOrNull(Object key, Widget widget) {
+        public @Nullable Placeable asPlaceableOrNull(Object key, Widget widget) {
             Objects.requireNonNull(key, "key");
             Objects.requireNonNull(widget, "widget");
 
@@ -179,8 +182,10 @@ public class MultiChildLayout extends Widget implements BoxLayoutProtocol {
                 throw new IllegalStateException("asPlaceableOrNull() called while not in " +
                         MultiChildLayoutDelegate.class.getSimpleName() + ".delegate (" + this + ")");
 
-            WidgetInstantiation h = childSlots.instantiate(key, widget);
-            if (h.lookupOptional(Gone.class).isPresent())
+            // TODO ilyenkor még nem kéne megadni nekik Surface-t, mert rossz méret van benne
+            BoxLayoutResult r = makePeer(childSlots.get(key), widget,
+                    new BoxLayoutResult.BoxConstraintsPeerCreationRequest(null));
+            if (r instanceof BoxLayoutResult.OfGone)
                 return null;
 
             return new Placeable(key, widget);
@@ -211,7 +216,7 @@ public class MultiChildLayout extends Widget implements BoxLayoutProtocol {
                     throw new IllegalStateException("Placeable.widget() called while not in " +
                             MultiChildLayoutDelegate.class.getSimpleName() + ".delegate (" +
                             MultiChildLayoutCallback.this + ")");
-                return childSlots.use(key, w);
+                return w.withSlot(childSlots.get(key));
             }
 
             public void placeAsOverlay() {
@@ -235,7 +240,7 @@ public class MultiChildLayout extends Widget implements BoxLayoutProtocol {
                     place(key, w, rect, lastConstraints);
             }
 
-            public Size measure(@Nonnull BoxConstraints constraints) {
+            public Size measure(@NonNull BoxConstraints constraints) {
                 Objects.requireNonNull(constraints);
 
                 if (w == null)

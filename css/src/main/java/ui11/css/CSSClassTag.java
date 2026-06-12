@@ -1,10 +1,10 @@
 package ui11.css;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.graphics.Empty;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,9 +38,8 @@ public final class CSSClassTag extends SubstitutedWidget {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 

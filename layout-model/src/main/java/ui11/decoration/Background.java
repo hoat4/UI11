@@ -1,13 +1,12 @@
 package ui11.decoration;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 import ui11.layout.Gone;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 // TODO nullság ellenőrzése
 public final class Background extends SubstitutedWidget {
@@ -37,7 +36,6 @@ public final class Background extends SubstitutedWidget {
         return new Background(bg == null ? null : new ColorFill(bg), e);
     }
 
-    @Nonnull
     @Override
     protected Widget fallbackContent() {
         return new Box(content).withBackground(background);

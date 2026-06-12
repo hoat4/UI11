@@ -21,7 +21,7 @@ public class DefaultTabbedPaneLook extends Widget {
 
     private final TabbedPane tabbedPane;
 
-    @State private MutableObservable<Integer> selectedTabIndex;
+    @Remember private MutableObservable<Integer> selectedTabIndex;
 
     public DefaultTabbedPaneLook(TabbedPane tabbedPane) {
         this.tabbedPane = tabbedPane;

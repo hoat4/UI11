@@ -1,22 +1,20 @@
 package ui11.layout.singlechild;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
 import java.util.Objects;
 
 public final class PassiveSize extends SubstitutedWidget {
 
-    @Nonnull
-    private final Widget content;
+    private final @NonNull Widget content;
 
-    public PassiveSize(@Nonnull Widget content) {
+    public PassiveSize(@NonNull Widget content) {
         this.content = Objects.requireNonNull(content);
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 }

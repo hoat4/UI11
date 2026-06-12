@@ -1,13 +1,14 @@
 package ui11.input.focus;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
 
-import javax.annotation.Nonnull;
 import java.util.Objects;
 
 public final class FocusListener extends SubstitutedWidget {
+
     private final Widget content;
     private final Runnable onFocused;
     private final Runnable onFocusLost;
@@ -23,21 +24,20 @@ public final class FocusListener extends SubstitutedWidget {
         // TODO ez nem jó, mert ha új képződik, akkor nem állítja vissza false-ra
     }
 
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    public Runnable onFocused() {
+    public @NonNull Runnable onFocused() {
         return onFocused;
     }
 
-    public Runnable onFocusLost() {
+    public @NonNull Runnable onFocusLost() {
         return onFocusLost;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 }

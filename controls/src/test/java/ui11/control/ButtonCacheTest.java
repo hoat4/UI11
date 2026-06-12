@@ -4,7 +4,7 @@ import ui11.Widget;
 import ui11.layout.singlechild.Align;
 import ui11.observable.MutableObservable;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 import static ui11.layout.multichild.LinearLayout.column;
 
@@ -29,7 +29,7 @@ public class ButtonCacheTest extends Widget {
 
     public static void main(String[] args) throws InterruptedException {
         ButtonCacheTest t = new ButtonCacheTest(MutableObservable.withInitial(1));
-        Desktop.getDesktop().openWindow(t);
+        Window.open(t);
         while (true) {
             t.i.set(t.i.get() + 1);
             Thread.sleep(1000);

@@ -1,12 +1,11 @@
 package ui11.geom;
 
+import org.jspecify.annotations.Nullable;
 import ui11.geom.Path.Close;
 import ui11.geom.Path.LineTo;
 import ui11.geom.Path.MoveTo;
 import ui11.geom.Path.PathElement;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -63,6 +62,7 @@ public record Rect(Vec2 origin, Size size) {
         return of(new Vec2(minX, minY), new Vec2(maxX, maxY));
     }
 
+    // TODO ez dob exceptiont, ha negatív méretű téglalap lenne az eredmény?
     public Rect inset(double top, double right, double bottom, double left) {
         return new Rect(origin.plus(left, top), size.subtractOrZero(left + right, top + bottom));
     }
@@ -174,8 +174,7 @@ public record Rect(Vec2 origin, Size size) {
         return new Vec2(origin.x() + size.width() / 2, origin.y() + size.height() / 2);
     }
 
-    @Nullable
-    public Rect intersect(Rect newRect) {
+    public @Nullable Rect intersect(Rect newRect) {
         double left = Math.max(left(), newRect.left());
         double right = Math.min(right(), newRect.right());
         double top = Math.max(top(), newRect.top());
@@ -184,6 +183,10 @@ public record Rect(Vec2 origin, Size size) {
             return null;
         else
             return new Rect(left, top, right - left, bottom - top);
+    }
+
+    public Rect translate(Vec2 v) {
+        return new Rect(origin.plus(v), size);
     }
 
     @Override

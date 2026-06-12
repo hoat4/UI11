@@ -5,36 +5,37 @@ import ui11.geom.Location;
 import ui11.input.pointer.Pointer.Button;
 import ui11.input.pointer.PointerRegion.PointerListener;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
+
 import java.util.Objects;
 
 public final class MouseRegion extends SubstitutedWidget {
 
-    @Nonnull private final Widget content;
-    @Nonnull private final Button acceptedButton;
-    @Nonnull private final MouseListener listener;
+    private final @NonNull Widget content;
+    private final @NonNull Button acceptedButton;
+    private final @NonNull MouseListener listener;
 
-    public MouseRegion(@Nonnull Widget content, @Nonnull Button acceptedButton, @Nonnull MouseListener listener) {
+    public MouseRegion(@NonNull Widget content, @NonNull Button acceptedButton, @NonNull MouseListener listener) {
         this.content = Objects.requireNonNull(content);
         this.acceptedButton = Objects.requireNonNull(acceptedButton);
-        this.listener = Objects.requireNonNull(listener);
+        this.listener = Objects.requireNonNull(listener); // TODO listenerProxy
     }
 
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    public Button acceptedButton() {
+    public @NonNull Button acceptedButton() {
         return acceptedButton;
     }
 
-    public MouseListener listener() {
+    public @NonNull MouseListener listener() {
         return listener;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return new MouseRegionImpl(this);
     }
 
@@ -66,7 +67,7 @@ class MouseRegionImpl extends Widget {
 
     private final MouseRegion mouseRegion;
 
-    @State private MouseRegionImplState state;
+    @Remember private MouseRegionImplState state;
 
     // TODO lehet hogy el kéne tárolni egy hover pointert is, hogy ne kavarodjon össze
     //      ha két pointer két helyen vannak és akkor össze-vissza ugrál.

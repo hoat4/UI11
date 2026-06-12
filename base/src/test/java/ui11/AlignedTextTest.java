@@ -2,11 +2,11 @@ package ui11;
 
 import ui11.layout.singlechild.Align;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 public class AlignedTextTest {
     public static void main(String[] args) {
         // megnézi, hogy Text peer implementálja-e BoxLayoutProtocolt
-        Desktop.getDesktop().openWindow(Align.center(new Text("középre")));
+        Window.open(Align.center(new Text("középre")));
     }
 }

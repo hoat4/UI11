@@ -13,7 +13,7 @@ public class PeriodicallyRefreshed extends Widget {
 
     @Inject private Scheduler scheduler;
 
-    @State private InvalidationPoint ip;
+    @Remember private InvalidationPoint ip;
 
     public PeriodicallyRefreshed(Duration interval, Supplier<Widget> contentSupplier) {
         this.interval = interval;

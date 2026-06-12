@@ -2,7 +2,7 @@ package ui11.control.defaultlook;
 
 import ui11.Widget;
 import ui11.control.CheckBox;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 import ui11.input.gesture.ClickListener;
 import ui11.input.pointer.PointerStateDependent;

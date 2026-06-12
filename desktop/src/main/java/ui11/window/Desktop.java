@@ -11,7 +11,7 @@ public interface Desktop {
 
     // Desktop withScope(Scope scope);
 
-    static Desktop getDesktop() {
+    static Desktop systemDesktop() {
         // TODO mi legyen ha több provider elérhető?
         for (Iterator<DesktopProvider> iterator = ServiceLoader.load(DesktopProvider.class).iterator();
              iterator.hasNext(); ) {

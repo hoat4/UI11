@@ -1,7 +1,7 @@
 package ui11.decoration;
 
 import ui11.Widget;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 
 import static ui11.geom.Length.px;

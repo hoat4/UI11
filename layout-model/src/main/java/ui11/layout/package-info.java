@@ -1,5 +1,5 @@
 /**
- * UI elemek csoportjának elrendezésére szolgáló konténerek, más nével layoutok. Ezek is {@link ui11.Node}
+ * UI elemek csoportjának elrendezésére szolgáló konténerek, más nével layoutok. Ezek is {@link ui11.Widget}
  * leszármazottak. Elrendezik a kapott elemeket, saját maguk nem adnak hozzá látható grafikát. A gyereket a felhasználói
  * program adja hozzá a layout konténerhez.
  * <p>

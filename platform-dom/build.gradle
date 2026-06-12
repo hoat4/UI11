@@ -1,0 +1,19 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies  {
+    // TODO api project(":ui")
+    api "org.teavm:teavm-jso-apis:${teavmVersion}"
+
+    api project(":base")
+    implementation project(":audio") // ez lehetne külön modulba
+    implementation project(":controls")
+    implementation project(":css")
+    api project(":desktop") // DOMEnvironment implements Shell, ezért muszáj API dependencynek lennie
+    implementation project(":text")
+    implementation project(":webcontent")
+    implementation project(":media")
+    //implementation project(":css-inline")
+    api project(":animation") // DOMEnvironment implements Scheduler, ezért muszáj API dependencynek lennie
+}

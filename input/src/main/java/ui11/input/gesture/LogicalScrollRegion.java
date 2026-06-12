@@ -1,35 +1,36 @@
 package ui11.input.gesture;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.Nullable;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
+
+import java.util.Objects;
 import java.util.function.Consumer;
 
 // vízszintes is kéne?
 // TODO ez nincs használva
 public final class LogicalScrollRegion extends SubstitutedWidget {
 
-    @Listener private final Consumer<LogicalScroll> consumer; // ez lehetne nemnull
-    @Nonnull private final Widget content;
+    private final @Nullable Consumer<LogicalScroll> consumer; // ez lehetne nemnull
+    private final @NonNull Widget content;
 
-    public LogicalScrollRegion(Consumer<LogicalScroll> consumer, @Nonnull Widget content) {
-        this.consumer = consumer;
-        this.content = content;
+    public LogicalScrollRegion(Consumer<LogicalScroll> consumer, @NonNull Widget content) {
+        this.consumer = listenerProxy(consumer);
+        this.content = Objects.requireNonNull(content);
     }
 
-    public Consumer<LogicalScroll> consumer() {
+    public @Nullable Consumer<LogicalScroll> consumer() {
         return consumer;
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 

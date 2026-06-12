@@ -7,7 +7,7 @@ class ElementAccessorFactory {
     @SuppressWarnings("unchecked")
     public static <T extends Widget> WidgetAccessor<T> accessorFor(Class<T> c) {
         if (isTeaVM())
-            return TeaVMElementAccessorFactory.getElementAccessor_TeaVM(c);
+            return TeaVMWidgetAccessor.accessorFor(c);
         else
             return (WidgetAccessor<T>) CV.get(c);
     }
@@ -21,8 +21,8 @@ class ElementAccessorFactory {
     private static final ClassValue<WidgetAccessor<?>> CV = new ClassValue<>() {
         @Override
         protected WidgetAccessor<?> computeValue(Class<?> type) {
-            ElementDefReflector reflector = new ElementDefReflector(
-                    type.asSubclass(Widget.class), false);
+            WidgetDefinitionParser reflector = new WidgetDefinitionParser(
+                    type.asSubclass(Widget.class));
             reflector.reflect();
             return new RegularWidgetAccessor<>(reflector);
         }

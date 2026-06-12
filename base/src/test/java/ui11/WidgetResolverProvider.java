@@ -11,7 +11,7 @@ final class WidgetResolverProvider extends Widget {
     private final Widget content;
     private final WidgetResolver resolver;
 
-    @Inject private Observable<WidgetResolver> prev;
+    @Inject private WidgetResolver prev;
 
     WidgetResolverProvider(Widget content, WidgetResolver resolver) {
         this.content = Objects.requireNonNull(content);
@@ -20,6 +20,6 @@ final class WidgetResolverProvider extends Widget {
 
     @Override
     protected Widget build() {
-        return new Provider<>(WidgetResolver.class, WidgetResolver.composite(prev.get(), resolver), content);
+        return new Provider<>(WidgetResolver.class, WidgetResolver.composite(prev, resolver), content);
     }
 }

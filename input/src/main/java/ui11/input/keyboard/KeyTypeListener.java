@@ -1,9 +1,10 @@
 package ui11.input.keyboard;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -13,22 +14,24 @@ import java.util.function.Consumer;
 // TODO ez nincs még egy platformon se támogatva
 public final class KeyTypeListener extends SubstitutedWidget {
 
-    @Listener private final Consumer<KeyCombination> consumer;
+    private final Consumer<KeyCombination> consumer;
     private final Widget content;
 
-    public KeyTypeListener(Consumer<KeyCombination> consumer, Widget content) {
-        // a consumer lehetne nemnull, mert különben nincs értelme
-        this.consumer = consumer;
-        this.content = content;
+    public KeyTypeListener(@NonNull Consumer<KeyCombination> consumer, @NonNull Widget content) {
+        this.consumer = listenerProxy(Objects.requireNonNull(consumer));
+        this.content = Objects.requireNonNull(content);
     }
 
-    public Consumer<KeyCombination> consumer() {
+    public @NonNull Consumer<KeyCombination> consumer() {
         return consumer;
     }
 
-    @Nonnull
+    public @NonNull Widget content() {
+        return content;
+    }
+
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 }

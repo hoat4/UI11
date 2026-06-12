@@ -1,13 +1,12 @@
 package ui11.control.menu;
 
 import ui11.*;
-import ui11.observable.Observable;
 import ui11.geom.Vec2;
 import ui11.observable.MutableObservable;
 import ui11.animation.Scheduler;
 import ui11.geom.Location;
 import ui11.geom.Size;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 import ui11.graphics.Surface;
 import ui11.input.gesture.ClickListener;
@@ -20,37 +19,32 @@ import static ui11.geom.Length.px;
 public class MenuOverlay extends Widget {
 
     private final Location location;
-    @Listener private final Runnable close;
+    private final Runnable close;
     private final Widget menu;
 
-    @Inject private Observable<Surface> surface;
-    @Inject private Observable<Scheduler> scheduler;
+    @Inject private Surface surface;
+    @Inject private Scheduler scheduler;
 
-    @State private MutableObservable<Boolean> hasSurface;
-    @State private Vec2 p;
-    @State private Size surfaceSizeAtOpen;
+    @Remember private MutableObservable<Boolean> hasSurface;
+    @Remember private Vec2 p;
+    @Remember private Size surfaceSizeAtOpen;
 
     public MenuOverlay(Location location, Runnable onClose, Widget menu) {
         this.location = location;
-        this.close = onClose;
+        this.close = listenerProxy(onClose);
         this.menu = menu;
-    }
-
-    @Override
-    protected void initState() {
-        hasSurface = MutableObservable.withInitial(false);
     }
 
     @Override
     protected Widget build() {
         if (!hasSurface.get()) {
             // TODO ezt nem ilyen rondán. miért nem jó ha csak surface.get() == null-t nézünk?
-            scheduler.get().runLater(() -> {
-                p = location.in(surface.get().coordinateSpace());
-                surfaceSizeAtOpen = surface.get().size();
+            scheduler.runLater(() -> {
+                p = location.in(surface.coordinateSpace());
+                surfaceSizeAtOpen = surface.size();
                 hasSurface.set(true);
             });
-            return new ColorFill(Color.TRANSPARENT);
+            return new ColorFill(Color.TRANSPARENT); // TODO itt empty() vagy pointerOpaque() kéne?
         }
 
         Widget xAlignedMenu = p.x() < surfaceSizeAtOpen.width() / 2 ?

@@ -1,13 +1,13 @@
 package ui11;
 
-import ui11.graphics.effect.Overlay;
-import ui11.observable.MutableObservable;
+import ui11.color.Color;
 import ui11.decoration.Box;
-import ui11.graphics.fill.Color;
+import ui11.graphics.effect.Overlay;
 import ui11.graphics.fill.ColorFill;
-import ui11.layout.singlechild.Align;
 import ui11.layout.multichild.LinearLayout;
-import ui11.window.Desktop;
+import ui11.layout.singlechild.Align;
+import ui11.observable.MutableObservable;
+import ui11.window.Window;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ public class UITest4 extends Widget {
 
     public static void main(String[] args) throws InterruptedException {
         UITest4 e = new UITest4();
-        Desktop.getDesktop().openWindow(e);
+        Window.open(e);
 
         int i = 0;
         while (true) {

@@ -1,10 +1,10 @@
 package ui11.layout;
 
 import ui11.Widget;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.observable.MutableObservable;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 import static ui11.decoration.Background.withBackground;
 import static ui11.graphics.Empty.empty;
@@ -16,7 +16,7 @@ public class LinearLayoutChildKeys {
     // a középsőváltozhat, de nem tudom hogy specifikált lesz-e, hogy változzon.
     public void main() throws InterruptedException {
         MutableObservable<Widget> o = MutableObservable.withInitial(empty());
-        Desktop.getDesktop().openWindow(withBackground(Color.WHITE, new Slot(o)));
+        Window.open(withBackground(Color.WHITE, new Slot(o)));
         while (true) {
             Thread.sleep(1000);
             o.set(row(

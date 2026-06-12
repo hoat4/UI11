@@ -1,36 +1,39 @@
 package ui11.control;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.input.focus.FocusHolder;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 public final class PlainTextEditor extends SubstitutedWidget {
 
-    private final EditablePlainText editablePlainText;
-    @Nullable @Listener private final Runnable onAction;
-    @Nonnull private final FocusHolder focusHolder;
+    private final @NonNull EditablePlainText editablePlainText;
+    private final @Nullable Runnable onAction;
+    private final @Nullable FocusHolder focusHolder;
 
-    public PlainTextEditor(EditablePlainText editablePlainText,
-                           @Nullable Runnable onAction,
-                           @Nonnull FocusHolder focusHolder) {
-        this.editablePlainText = Objects.requireNonNull(editablePlainText);
-        this.onAction = onAction;
-        this.focusHolder = Objects.requireNonNull(focusHolder);
+    public PlainTextEditor(@NonNull EditablePlainText editablePlainText) {
+        this(editablePlainText, null, null);
     }
 
-    public EditablePlainText editablePlainText() {
+    public PlainTextEditor(@NonNull EditablePlainText editablePlainText,
+                           @Nullable Runnable onAction,
+                           @Nullable FocusHolder focusHolder) {
+        this.editablePlainText = Objects.requireNonNull(editablePlainText);
+        this.onAction = listenerProxy(onAction);
+        this.focusHolder = focusHolder;
+    }
+
+    public @NonNull EditablePlainText editablePlainText() {
         return editablePlainText;
     }
 
-    @Nullable
-    public Runnable onAction() {
+    public @Nullable Runnable onAction() {
         return onAction;
     }
 
-    public FocusHolder focusHolder() {
+    public @Nullable FocusHolder focusHolder() {
         return focusHolder;
     }
 }

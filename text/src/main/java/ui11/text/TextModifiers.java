@@ -2,7 +2,7 @@ package ui11.text;
 
 import ui11.Widget;
 import ui11.geom.Length;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.provide.Provider;
 import ui11.text.TextStyle.FontStyle;
 import ui11.text.TextStyle.FontWeight;
@@ -107,7 +107,7 @@ public class TextModifiers {
     // TODO milyen sortörési módok vannak? CSS white-space meg hasonló property-k specjét el kéne olvasni.
     //      majd dokumentálni hogy milyen karakterek esetén törik a sor.
     public static Widget withLineWrapping(Widget content) {
-        return withTextStyle(TextStyle.NULL.withWrapIfNeeded(true), content);
+        return withTextStyle(TextStyle.NULL.withWrapping(TextStyle.Wrapping.EVERYWHERE), content);
     }
 
     /**
@@ -117,6 +117,6 @@ public class TextModifiers {
     // TODO dokumentálni, hogy milyen karaktereket tekintünk newlinenak,
     //      és hogy mi történik, ha kilóg a szöveg
     public static Widget withNoLineWrapping(Widget content) {
-        return withTextStyle(TextStyle.NULL.withWrapIfNeeded(false), content);
+        return withTextStyle(TextStyle.NULL.withWrapping(TextStyle.Wrapping.NEVER), content);
     }
 }

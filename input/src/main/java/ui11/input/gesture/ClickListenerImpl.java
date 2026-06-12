@@ -9,14 +9,10 @@ public class ClickListenerImpl extends Widget {
 
     private final ClickListener clickListener;
 
-    @State private boolean pressed;
+    @Remember private boolean pressed;
 
     public ClickListenerImpl(ClickListener clickListener) {
         this.clickListener = clickListener;
-    }
-
-    @Override
-    protected void initState() {
     }
 
     @Override

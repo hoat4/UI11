@@ -1,34 +1,31 @@
 package ui11.input.pointer;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
 import java.util.Objects;
 
 public final class WithCursor extends SubstitutedWidget {
 
-    @Nonnull private final Cursor cursor;
-    @Nonnull private final Widget content;
+    private final @NonNull Cursor cursor;
+    private final @NonNull Widget content;
 
     public WithCursor(Cursor cursor, Widget content) {
         this.cursor = Objects.requireNonNull(cursor);
         this.content = Objects.requireNonNull(content);
     }
 
-    @Nonnull
-    public Cursor cursor() {
+    public @NonNull Cursor cursor() {
         return cursor;
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 

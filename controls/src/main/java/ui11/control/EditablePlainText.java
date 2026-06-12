@@ -3,7 +3,9 @@ package ui11.control;
 import ui11.observable.MutableObservable;
 import ui11.observable.Scope;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public class EditablePlainText implements MutableObservable<String> {
@@ -22,7 +24,7 @@ public class EditablePlainText implements MutableObservable<String> {
     }
 
     public EditablePlainText(MutableObservable<String> delegate) {
-        this.delegate = delegate;
+        this.delegate = Objects.requireNonNull(delegate);
         this.maxLength = null;
     }
 
@@ -52,5 +54,20 @@ public class EditablePlainText implements MutableObservable<String> {
     @Override
     public void bindTo(Supplier<String> valueSupplier, Scope scope) {
         delegate.bindTo(valueSupplier, scope);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EditablePlainText that = (EditablePlainText) o;
+        return delegate.equals(that.delegate) && Objects.equals(maxLength, that.maxLength);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = delegate.hashCode();
+        result = 31 * result + Objects.hashCode(maxLength);
+        return result;
     }
 }

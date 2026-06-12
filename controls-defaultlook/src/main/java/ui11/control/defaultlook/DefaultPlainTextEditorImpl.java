@@ -4,6 +4,7 @@ import ui11.Widget;
 import ui11.control.EditablePlainText;
 import ui11.control.PlainTextEditor;
 import ui11.geom.Location;
+import ui11.input.focus.FocusHolder;
 import ui11.input.focus.FocusRoot;
 import ui11.input.gesture.EnterContentListener;
 import ui11.input.gesture.EnterContentListener.EnterContent;
@@ -24,7 +25,10 @@ public class DefaultPlainTextEditorImpl extends Widget {
 
     private final PlainTextEditor plainTextEditor;
 
-    @Inject private Observable<FocusRoot> focusRoot;
+    @Inject private FocusRoot focusRoot;
+
+    @Remember private FocusHolder defaultFocusHolder;
+    @Remember private FocusHolder focusHolder;
 
     public DefaultPlainTextEditorImpl(PlainTextEditor plainTextEditor) {
         this.plainTextEditor = plainTextEditor;
@@ -32,11 +36,18 @@ public class DefaultPlainTextEditorImpl extends Widget {
 
     @Override
     protected Widget build() {
+        if (plainTextEditor.focusHolder() == null) {
+            if (defaultFocusHolder == null)
+                defaultFocusHolder = new FocusHolder();
+            focusHolder = defaultFocusHolder;
+        } else
+            focusHolder = plainTextEditor.focusHolder();
+
         return new KeyTypeListener(
                 this::keyTyped,
                 new EnterContentListener(
                         this::textEntered,
-                        plainTextEditor.focusHolder(),
+                        focusHolder,
                         new MouseRegion(
                                 new Text(text().get()),
                                 StandardMouseButton.PRIMARY, // TODO
@@ -83,7 +94,7 @@ public class DefaultPlainTextEditorImpl extends Widget {
 
         @Override
         public void down(Location location) {
-            focusRoot.get().requestFocus(plainTextEditor.focusHolder());
+            focusRoot.requestFocus(focusHolder);
         }
 
         @Override

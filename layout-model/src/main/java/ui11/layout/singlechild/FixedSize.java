@@ -1,12 +1,12 @@
 package ui11.layout.singlechild;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box;
 import ui11.layout.LayoutSize;
 import ui11.geom.Length;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 // vagy inkább PreferredSize?
@@ -30,8 +30,20 @@ public final class FixedSize extends SubstitutedWidget {
         this(new LayoutSize(widthAndHeight, widthAndHeight), content);
     }
 
-    public static FixedSize withPreferredSize(Length prefWidth, Length prefHeight, Widget content) {
+    public static FixedSize withSize(Length prefWidthAndHeight, Widget content) {
+        return new FixedSize(prefWidthAndHeight, content);
+    }
+
+    public static FixedSize withSize(Length prefWidth, Length prefHeight, Widget content) {
         return new FixedSize(prefWidth, prefHeight, content);
+    }
+
+    public static FixedSize withWidth(Length prefWidth, Widget content) {
+        return withSize(prefWidth, null, content);
+    }
+
+    public static FixedSize withHeight(Length prefHeight, Widget content) {
+        return withSize(null, prefHeight, content);
     }
 
     public LayoutSize size() {
@@ -42,9 +54,8 @@ public final class FixedSize extends SubstitutedWidget {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return new Box(content).withFixedSize(size);
     }
 

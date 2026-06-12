@@ -1,36 +1,24 @@
 package ui11;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
+import ui11.reflectutil.ReflectionUtil;
+
 import java.util.Objects;
 
-// TODO név
-public final class KeyWrapper extends Widget /*ProxyWidget*/ {
+final class KeyWrapper extends Widget /*ProxyWidget*/ {
 
-    @Nonnull final Element container;
-    @Nonnull final Object key;
-    @Nonnull final Widget content;
+    final @NonNull Slot slot;
+    final @NonNull Widget content;
 
-    KeyWrapper(@Nonnull Element container, @Nonnull Object key, @Nonnull Widget content) {
-        Objects.requireNonNull(container);
-        Objects.requireNonNull(key);
-        Objects.requireNonNull(content);
-        this.container = container;
-        this.key = key;
-        this.content = content;
+    KeyWrapper(@NonNull Slot slot, @NonNull Widget content) {
+        this.slot = Objects.requireNonNull(slot);
+        this.content = Objects.requireNonNull(content);
     }
 
     @Override
     public String toString() {
-        // container toStringjét nem hívjuk meg, mert nagy eséllyel rekurzió lenne,
-        // pl. WidgetState.toString kiírja a hozzá tartozó widgetet
-        // TODO WidgetState már nincs. ez a komment még mindig érvényes?
-        return "KeyWrapper[container=" + container.getClass().getSimpleName() + "@" +
-                Integer.toHexString(container.hashCode()) +
-                (container instanceof RSWStateHolder<?> re ? " for " +
-                        (re.modelType().getSimpleName().isEmpty() ? re.modelType().getName() :
-                                re.modelType().getSimpleName()) : "") +
-                ", " +
-                "key=" + key + ", content=" + content + "]";
+        // TODO Slot.toString nem okozhat rekurziót?
+        return "KeyWrapper[slot="+slot+", content=" + content + "]";
     }
 
     @Override

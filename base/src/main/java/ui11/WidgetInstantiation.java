@@ -1,51 +1,33 @@
 package ui11;
 
 import ui11.observable.ObserverHolder;
-import ui11.provide.UpValue;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.util.*;
-
-// TODO zavaros, hogy implements Widget.
-// két dologra van/volt használva widgetként:
-// - ha build()-ből returnöljük (pl. J2DPointerRegionPeer): egy (vagy több, de statikusan felsorolható) capability-t
-//   (pl. rendering node) selfből exposeolunk, míg minden más capability-t az illető childből.
-//   Ennek a kiváltására kéne csinálni egy capability routing API-t, ami alaposabb annál ami most van,
-//   hogy csak végigmegyünk a delegate láncon.
-// - ha megadjuk egy másik widgetnek (pl. ui-layout-constraint, bár onnan épp ki lett szedve): nem akarjuk
-//   újra instantiálni a widgetet, de valszeg csak sebesség miatt. ilyenkor ha WidgetInstantiationt adunk át,
-//   az azért problémás, mert elvesznek az IV-k (akár azok a Provider objektumokban megadottak, akár a
-//   leszármazott Element által örököltek).
 
 /**
  * A reference to instantiation of a {@linkplain Widget}.
  */
-public final class WidgetInstantiation {
+final class WidgetInstantiation {
 
     private final Element container;
-    private final BuildContext refresh;
+    final Element.RefreshID refresh;
 
     /**
-     * akkor null, ha a lánc végén nem Element van, hanem UpValue null next-tel (pl. J2DColorPrimitive)
+     * akkor null, ha a lánc végén nem Element van, hanem {@link EndingWidget} (pl. J2DColorPrimitive)
      */
     @Nullable final Element element;
 
-    final List<? extends UpValue> upValues;
+    final List<? extends EndingWidget> upValues;
 
-    // delegate visszarakáshoz kellő dolgok.
-    // ha nem delegate-et képzünk vagy nem Element lett belőle, akkor mindegy, hogy mit rakunk beléjük.
-    final KeyWrapper key;
-    final Map<Class<?>, Object> ivs;
-
-    WidgetInstantiation(Element container, BuildContext refresh, @Nullable Element element,
-                        List<? extends UpValue> upValues, KeyWrapper kw, Map<Class<?>, Object> ivs) {
+    WidgetInstantiation(Element container, Element.RefreshID refresh, @Nullable Element element,
+                        List<? extends EndingWidget> upValues) {
         this.container = container;
         this.refresh = refresh;
         this.element = element;
         this.upValues = upValues;
-        this.key = kw;
-        this.ivs = ivs;
     }
 
     // és meddig maradjon aktív a megadott elem?
@@ -78,18 +60,17 @@ public final class WidgetInstantiation {
      * A delegate láncon végighaladva keres egy olyan Widgetet vagy Elementet, mely implementálja a megadott osztályt
      * vagy interface-t, és visszaadja azt. Ha több ilyen is van, akkor a legelsőt.
      *
-     * @throws IllegalStateException  ha már vége lett annak a {@link Element#build() buildnek}, mely során
-     *                                ez az WidgetInstantiation keletkezett, vagy ha időközben az ezt a widgetet
+     * @throws IllegalStateException  ha már vége lett annak a {@linkplain ui11.Element.RefreshID refreshSelfnek}, mely
+     *                                során ez az WidgetInstantiation keletkezett, vagy ha időközben az ezt a widgetet
      *                                példányosító Element egy leszármazottja is példányosított és ugyanaz az Element
      *                                keletkezett
      * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő Widgetet vagy Elementet a
      *                                delegate láncban
      */
-    @Nonnull
-    public <U extends UpValue> U lookup(Class<U> type) {
+    public <U extends EndingWidget> @NonNull U lookup(Class<U> type) {
         Objects.requireNonNull(type);
-        if (type == UpValue.class || !UpValue.class.isAssignableFrom(type))
-            throw new IllegalArgumentException("not an " + UpValue.class.getSimpleName() + " subtype: " + type.getName());
+        if (type == EndingWidget.class || !EndingWidget.class.isAssignableFrom(type))
+            throw new IllegalArgumentException("not an " + EndingWidget.class.getSimpleName() + " subtype: " + type.getName());
 
         return doLookup(type, false);
     }
@@ -100,28 +81,36 @@ public final class WidgetInstantiation {
      *
      * @return {@linkplain Optional#empty()}, ha nem találtunk a keresési feltételnek megfelelő Widgetet vagy Elementet
      * a delegate láncban
-     * @throws IllegalStateException ha már vége lett annak a {@link Element#build() buildnek}, mely során
-     *                               ez az WidgetInstantiation keletkezett, vagy ha időközben az ezt a widgetet
+     * @throws IllegalStateException ha már vége lett annak a {@linkplain ui11.Element.RefreshID refreshSelfnek}, mely
+     *                               során ez az WidgetInstantiation keletkezett, vagy ha időközben az ezt a widgetet
      *                               példányosító Element egy leszármazottja is példányosított és ugyanaz az Element
      *                               keletkezett
      */
-    public <U extends UpValue> Optional<U> lookupOptional(Class<U> type) {
+    public <U extends EndingWidget> Optional<U> lookupOptional(Class<U> type) {
         return Optional.ofNullable(doLookup(type, true));
     }
 
-    private <U extends UpValue> U doLookup(Class<U> type, boolean optional) {
+    private <U extends EndingWidget> U doLookup(Class<U> type, boolean optional) {
         checkIsValid();
-        if (element != null)
+        if (element != null) {
+            // mivel épp most frissítjük a parentet, ezért nem kell külön értesíteni próbálni őt a változásokról,
+            // mert értesülni fog róluk az e függvény által visszaadott értékből
+            element.parentInterestedUpValues.clear();
+
             ensureFresh();
+        }
 
         container.upValuesIP.subscribe();
+        U t = Element.findInUpValueList(type, upValues);
+        if (t != null)
+            // ha nem a child provideolta ezt az upValuet, akkor ne rakjuk be parentInterestedUpValuesba
+            return t;
         if (element == null) {
-            U t = Element.findInUpValueList(type, upValues);
-            if (t == null && !optional)
+            if (!optional)
                 throw new NoSuchElementException(type.getName() + " not found in delegate chain of " + this +
                         "\nDirect up values: " + upValues);
             else
-                return t;
+                return null;
         } else {
             U value = element.lookupImpl(type, false, optional);
             element.parentInterestedUpValues.put(type, value);
@@ -130,7 +119,7 @@ public final class WidgetInstantiation {
     }
 
     private void checkIsValid() {
-        if (refresh != container.refreshState) // ellenőrzi, hogy REFRESH_SELF-e
+        if (refresh != container.refreshID) // ellenőrzi, hogy REFRESH_SELF-e
             throw new IllegalStateException();
         if (element != null && element.parent != container)
             throw new IllegalStateException();

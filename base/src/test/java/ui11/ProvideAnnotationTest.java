@@ -3,13 +3,13 @@ package ui11;
 import ui11.observable.Observable;
 import ui11.provide.Provide;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 public class ProvideAnnotationTest {
 
     public static void main(String[] args) {
         // a teszt sikeres, ha a megjelenő ablakban az látszik, hogy "value: 5894"
-        Desktop.getDesktop().openWindow(new Outer());
+        Window.open(new Outer());
     }
 
     private static class Outer extends Widget {

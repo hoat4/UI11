@@ -1,5 +1,7 @@
 package ui11.reflectutil;
 
+import org.jspecify.annotations.NonNull;
+
 import java.lang.StackWalker.Option;
 import java.lang.annotation.Annotation;
 import java.lang.constant.ClassDesc;
@@ -15,14 +17,11 @@ import static java.util.Arrays.asList;
 import static java.util.function.Predicate.not;
 
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 /**
  *
  */
 public class ReflectionUtil {
-
-    public static final StackWalker STACK_WALKER = StackWalker.getInstance(Option.RETAIN_CLASS_REFERENCE);
 
     private ReflectionUtil() {
         throw new AssertionError();
@@ -81,8 +80,7 @@ public class ReflectionUtil {
         return result;
     }
 
-    public static @Nonnull
-    Class<?> rawType(AnnotatedType type) {
+    public static @NonNull Class<?> rawType(AnnotatedType type) {
         java.lang.reflect.Type genericType = type.getType();
         return rawType(genericType);
     }
@@ -321,8 +319,7 @@ public class ReflectionUtil {
         };
     }
 
-    @Nonnull
-    public static List<MethodHandle> annotatedMethods(Class<?> type, Class<? extends Annotation> annType) {
+    public static @NonNull List<MethodHandle> annotatedMethods(Class<?> type, Class<? extends Annotation> annType) {
         return methodsIn(type).stream().
                 filter(m -> m.isAnnotationPresent(annType)).
                 map(m -> {
@@ -353,7 +350,7 @@ public class ReflectionUtil {
                 toList();
     }
 
-    private static <A extends Annotation> @Nonnull AnnotatedMethod<A> unreflect(Class<?> type, Class<A> annType, Method m) {
+    private static <A extends Annotation> @NonNull AnnotatedMethod<A> unreflect(Class<?> type, Class<A> annType, Method m) {
         m.setAccessible(true);
         try {
             MethodHandle mh = lookup().unreflect(m);
@@ -404,6 +401,16 @@ public class ReflectionUtil {
             return null;
     }
 
+    public static String internalNameToNormalName(String name) {
+        if (name.contains("."))
+            // JVMS 4.2.1 utal rá hogy nem lehet benne pont, de MethodHandles.Lookup.defineHiddenClass
+            // javadocjában már egyértelműbben fogalmaznak:
+            // "a name that includes a single "." character [...] is not a valid binary class or interface name in internal form."
+            throw new IllegalArgumentException("not a valid internal name: "+name);
+
+        return name.replace('/', '.');
+    }
+
     public record AnnotatedMethod<ANN extends Annotation>(MethodHandle mh, Method method, ANN annotation) {}
 
     public record AnnotatedMember<ANN extends Annotation>(MethodHandle mh, Member member, ANN annotation) {}
@@ -412,8 +419,7 @@ public class ReflectionUtil {
      * @return először a superclass, utána a subclass. Ha statikus mező van annotálva, akkor paraméterek nélküli MH-t ad
      * vissza.
      */
-    @Nonnull
-    public static <ANN extends Annotation> Stream<AnnotatedMember<ANN>> annotatedMethodsAndFieldGetters(
+    public static <ANN extends Annotation> @NonNull Stream<AnnotatedMember<ANN>> annotatedMethodsAndFieldGetters(
             Class<?> type, Class<ANN> annType) {
         return Stream.concat(
                 // ha record, akkor csak a metódusokat nézzük, különben duplán lennének a rekordcomponentek
@@ -554,8 +560,15 @@ public class ReflectionUtil {
 
     @SuppressWarnings("unchecked")
     public static <I> I proxy(Class<I> interfaceType, InvocationHandler invocationHandler) {
-        return (I) Proxy.newProxyInstance(STACK_WALKER.getCallerClass().getClassLoader(),
+        Class<?> callerClass = StackWalkerHolderForProxy.STACK_WALKER.getCallerClass();
+        return (I) Proxy.newProxyInstance(callerClass.getClassLoader(),
                 new Class[]{interfaceType}, invocationHandler);
+    }
+
+    // azért kell külön osztályba, mert TeaVM-et zavarná ha ennek az osztálynak a clinitjében lenne StackWalker
+    private static class StackWalkerHolderForProxy {
+
+        private static final StackWalker STACK_WALKER = StackWalker.getInstance(Option.RETAIN_CLASS_REFERENCE);
     }
 
     public static int orderedAccessLevel(Member m) {

@@ -4,7 +4,7 @@ package ui11;
 import ui11.geom.AffineTransformation;
 import ui11.geom.Rect;
 import ui11.geom.Size;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.text.Text;
 import ui11.layout.singlechild.Align;
 import ui11.layout.multichild.Grid;

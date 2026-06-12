@@ -14,8 +14,8 @@ public class ValuePreservingFaded<T> extends Widget {
     private final T value;
     private final Function<T, Widget> contentFactory;
 
-    @State private T lastValueWhenWasVisible;
-    @State private boolean neverWasVisible;
+    @Remember private T lastValueWhenWasVisible;
+    @Remember private boolean neverWasVisible;
 
     public ValuePreservingFaded(boolean visible, T value, Function<T, Widget> contentFactory) {
         this.visible = visible;

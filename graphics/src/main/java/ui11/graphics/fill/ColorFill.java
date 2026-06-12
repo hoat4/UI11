@@ -1,16 +1,21 @@
 package ui11.graphics.fill;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
+import ui11.color.Color;
+
+import java.util.Objects;
 
 public final class ColorFill extends SubstitutedWidget {
 
-    private final Color color;
+    private final @NonNull Color color;
 
-    public ColorFill(Color color) {
+    public ColorFill(@NonNull Color color) {
+        Objects.requireNonNull(color, "color");
         this.color = color;
     }
 
-    public Color color() {
+    public @NonNull Color color() {
         return color;
     }
 

@@ -1,10 +1,10 @@
 package ui11.decoration;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 // TODO ez duplikálva van, van ez, meg graphics.RoundedCorners is
 
@@ -34,9 +34,8 @@ public final class RoundedCorners extends SubstitutedWidget {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         if (content instanceof Box b && b.cornerRadius().isZero())
             return b.withCornerRadius(radius);
         else

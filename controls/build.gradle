@@ -6,6 +6,6 @@ dependencies  {
     api project(":text")
     implementation project(":animation") // MenuOverlayben lévő hack miatt
 
-    testImplementation project(":platform:awt")
+    testImplementation project(":platform-awt")
     testImplementation project(":controls-defaultlook")
 }

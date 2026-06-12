@@ -3,5 +3,5 @@ dependencies {
     implementation project(":text") // TODO em-ek resolveolása miatt kell ez most
 
     testImplementation project(":desktop")
-    testImplementation project(":platform:awt")
+    testImplementation project(":platform-awt")
 }

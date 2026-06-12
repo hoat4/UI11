@@ -1,17 +1,17 @@
 package ui11.input.focus;
 
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 import ui11.input.pointer.Pointer;
 import ui11.input.pointer.Pointer.Button;
 import ui11.input.pointer.PointerRegion;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class PointerRegionFindTest {
     public static void main(String[] args) {
-        Desktop.getDesktop().openWindow(new PointerRegion(new ColorFill(Color.GREEN)) {
+        Window.open(new PointerRegion(new ColorFill(Color.GREEN)) {
             @Nullable
             @Override
             public PointerListener onPointerDown(Pointer pointer, Button button) {

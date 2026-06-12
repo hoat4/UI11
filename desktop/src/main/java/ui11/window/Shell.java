@@ -1,7 +1,5 @@
 package ui11.window;
 
-import ui11.window.Shell.ShellProvider;
-
 import java.net.URI;
 import java.util.ServiceLoader;
 
@@ -19,5 +17,10 @@ public interface Shell {
         // TODO boolean isAvailable();
 
         Shell shell();
+    }
+
+    interface URLResolver {
+
+        URI toAbsoluteURL(URI relativeURL);
     }
 }

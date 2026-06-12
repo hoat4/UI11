@@ -1,8 +1,5 @@
 package ui11;
 
-import ui11.provide.UpValue;
-import ui11.provide.UpValueWrapper;
-
 public class TestStealDelegate2 {
     public void main() {
         // ezt az esetet teszteljük:
@@ -30,7 +27,7 @@ public class TestStealDelegate2 {
 
         // lásd még TestStealDelegate osztály
 
-        new RootElement(new Component() {
+        WidgetTree.create(new Component<>() {
 
             @Inject private Slot outerSlot1;
             @Inject private Slot outerSlot2;
@@ -40,17 +37,18 @@ public class TestStealDelegate2 {
             @Inject private Slot w3Slot;
 
             @Override
-            protected void update() {
-                Widget w1 = innerSlot.use(new W1());
-                Widget w3 = w3Slot.use(new W3(new W2(w1)));
-                outerSlot1.instantiate(new T(w3));
-                outerSlot2.instantiate(new T(w1));
-                outerSlot3.instantiate(new T(w3));
+            protected Void update() {
+                Widget w1 = new W1().withSlot(innerSlot);
+                Widget w3 = new W3(new W2(w1)).withSlot(w3Slot);
+                useComponent(outerSlot1, new T(w3));
+                useComponent(outerSlot2, new T(w1));
+                useComponent(outerSlot3, new T(w3));
+                return null;
             }
-        }, Runnable::run).start();
+        }, Runnable::run);
     }
 
-    private static class T extends Component {
+    private static class T extends Component<Void> {
 
         private final Widget w;
 
@@ -61,8 +59,9 @@ public class TestStealDelegate2 {
         }
 
         @Override
-        protected void update() {
-            System.out.println(slot.instantiate(w).lookup(UV.class));
+        protected Void update() {
+            System.out.println(useWidget(slot, w, UV.class));
+            return null;
         }
     }
 
@@ -97,9 +96,10 @@ public class TestStealDelegate2 {
     private static class W1 extends Widget {
         @Override
         protected Widget build() {
-            return new UpValueWrapper(UV.X);
+            return new UV();
         }
     }
 
-    static enum UV implements UpValue {X, Y}
+    private static class UV extends EndingWidget {
+    }
 }

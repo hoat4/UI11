@@ -2,7 +2,7 @@ package ui11.observable;
 
 public interface Scope {
 
-    void onClose(Runnable closeListener);
+    void onClose(Runnable closeListener) throws ScopeAlreadyClosedException;
 
     static Scope global() {
         class Holder {
@@ -18,5 +18,8 @@ public interface Scope {
             };
         }
         return Holder.GLOBAL_SCOPE;
+    }
+
+    class ScopeAlreadyClosedException extends RuntimeException {
     }
 }

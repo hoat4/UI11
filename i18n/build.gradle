@@ -1,0 +1,16 @@
+dependencies {
+    implementation project(":reflectutil")
+    implementation "org.teavm:teavm-jso:${teavmVersion}" // JSObject
+    implementation "org.teavm:teavm-metaprogramming-api:${teavmVersion}"
+
+    // LocalizedRichTextWidget
+    api project(":base")
+    implementation project(":text")
+    implementation project(":layout-model")
+    implementation project(":css") // ResidBubble-höz ideiglenesen
+    implementation "org.teavm:teavm-interop:${teavmVersion}" // PlatformMarker miatt
+
+
+    testImplementation project(":platform-awt")
+    testImplementation project(":layout-model")
+}

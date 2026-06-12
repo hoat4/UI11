@@ -1,11 +1,11 @@
 package ui11;
 
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.input.gesture.ClickListener;
 import ui11.layout.singlechild.Padding;
 import ui11.observable.MutableObservable;
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 import static ui11.decoration.Background.withBackground;
 import static ui11.geom.Length.px;
@@ -16,12 +16,7 @@ public class InterfaceProxyTest {
 
     public static void main(String[] args) throws InterruptedException {
         MutableObservable<Widget> slot = MutableObservable.withInitial(empty());
-        Desktop.getDesktop().openWindow(new WidgetResolverProvider(new SlotOld2(slot), (w, c) -> {
-            return switch (w) {
-                case W3 w3 -> new W3Impl(w3);
-                default -> null;
-            };
-        }));
+        Window.open(new SlotOld2(slot));
         int i = 1;
         while (true) {
             int j = i++;
@@ -44,11 +39,12 @@ public class InterfaceProxyTest {
     private static final class W1 extends Widget {
 
         private final int i;
-        @Listener private final Runnable r;
+        private final Runnable r;
 
         private W1(int i, Runnable r) {
             this.i = i;
-            this.r = r;
+            this.r = listenerProxy(r);
+            System.out.println("create w1 "+i);
         }
 
         @Override
@@ -57,20 +53,31 @@ public class InterfaceProxyTest {
             // ellenőrzi, hogy nem száll-e el StackOverflowErrorral (ld. ListenerProxyBase::toString)
             r.toString();
 
-            return withBackground(Color.LIGHTCORAL, Padding.allSides(px(20),
-                    new ClickListener(new Text(i + " / " + Math.random()), r)
-            ));
+            System.out.println("build w1 "+i);
+
+            return new ClickListener(
+                    withBackground(Color.LIGHTCORAL,
+                            Padding.allSides(px(20),
+                                    new Text(i + " / " + Math.random())
+                            )
+                    ),
+                    r
+            );
         }
     }
+
+    // TODO nem listener proxy-kkal kapcsolatos probléma, de meg kéne nézni: ha ClickListenert
+    //      beljebb viszem mindkettő widgetben hogy csak Text-re vonatkozzon,
+    //      akkor W1 nem kattintható, W3 viszont igen. miért?
 
     private static final class W3 extends Widget {
 
         private final int i;
-        @Listener private final Runnable r;
+        private final Runnable r;
 
         private W3(int i, Runnable r) {
             this.i = i;
-            this.r = r;
+            this.r = listenerProxy(r);
         }
 
         @Override
@@ -84,14 +91,21 @@ public class InterfaceProxyTest {
         private final W3 w3;
 
         public W3Impl(W3 w3) {
+            System.out.println("w3 create");
             this.w3 = w3;
         }
 
         @Override
         protected Widget build() {
-            return withBackground(Color.LIGHTBLUE, Padding.allSides(px(20),
-                    new ClickListener(new Text(w3.i + " / " + Math.random()), w3.r)
-            ));
+            System.out.println("w3 build");
+            return new ClickListener(
+                    withBackground(Color.LIGHTBLUE,
+                            Padding.allSides(px(20),
+                                    new Text(w3.i + " / " + Math.random())
+                            )
+                    ),
+                    w3.r
+            );
         }
     }
 }

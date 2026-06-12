@@ -5,7 +5,7 @@ import ui11.geom.Path.PathBuilder;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.geom.StrokedShape;
-import ui11.graphics.fill.Color;
+import ui11.color.Color;
 import ui11.layout.helper.MultiChildLayout;
 import ui11.layout.protocol.Sizing;
 import ui11.window.Desktop;

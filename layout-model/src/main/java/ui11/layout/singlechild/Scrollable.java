@@ -1,12 +1,12 @@
 package ui11.layout.singlechild;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.geom.Vec2;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 // TODO ha ez active element marad, de nincs a widget fában,
 //      akkor meg kéne maradnia a scroll pozíciónak? DOMScrollablePeer esetén jelenleg eltűnik

@@ -4,8 +4,8 @@ import ui11.geom.Axis;
 import ui11.geom.Size;
 import ui11.geom.Length;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 // ehelyett inkább kéne egy BoxConstraints-szerűség, double helyett Length-tel, de végtelent is lehetővé téve

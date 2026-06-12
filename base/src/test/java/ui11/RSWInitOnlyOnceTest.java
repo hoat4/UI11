@@ -1,7 +1,7 @@
 package ui11;
 
 import ui11.text.Text;
-import ui11.window.Desktop;
+import ui11.window.Window;
 
 // akkor sikeres, ha a 23-mas szám kiírása után 2 másodperccel megjelenik a 43,
 // és a konzolon csak 1 db "initState" felirat van
@@ -33,7 +33,7 @@ public class RSWInitOnlyOnceTest extends Widget {
     public static void main(String[] args) throws InterruptedException {
         SlotOld slot = new SlotOld();
         slot.set(new RSWInitOnlyOnceTest(23));
-        Desktop.getDesktop().openWindow(slot);
+        Window.open(slot);
         Thread.sleep(2000);
         slot.set(new RSWInitOnlyOnceTest(43));
     }

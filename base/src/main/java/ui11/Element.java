@@ -1,25 +1,27 @@
 package ui11;
 
-import ui11.observable.*;
-import ui11.observable.Observable;
-import ui11.Element.InheritedValueHolder.IVUsage;
-import ui11.provide.DynamicProvider;
-import ui11.provide.UpValue;
-import ui11.resolution.ErrorWidgetFactory;
-import ui11.resolution.WidgetResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ui11.Element.InheritedValueHolder.IVUsage;
+import ui11.observable.*;
+import ui11.provide.DynamicProvider;
+import ui11.provide.Provider;
+import ui11.provide.Provider.Mergeable;
+import ui11.resolution.ErrorWidgetFactory;
+import ui11.resolution.WidgetResolver;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.util.*;
 import java.util.Map.Entry;
-
-import static java.util.stream.Collectors.joining;
 
 // kéne olyan mechanizmus, amivel childrent/cachedPeereket megőrizhetjük stop/start között
 
 // TODO itt a javadocban Lifecycle annotációk elavultak
+
+// TODO ha egy nem-delegate childet vesznek el, akkor meg kéne próbálni visszarakni, és ha upvalue módosul, akkor
+//      refreshSelfet igényelni
 
 /**
  * An instantiation of a {@linkplain Widget} at a particular location in the tree.
@@ -47,10 +49,10 @@ import static java.util.stream.Collectors.joining;
  * tetszőleges hosszú láncot képezve.
  * <p>
  * Egy Elementnek tetszőleges számú gyereke lehet. Úgy lehet hozzáadni gyerek Elementet, hogy az {@code build()}
- * implementációjában meghívjuk a {@link BuildContext#instantiate(Object, Widget)}-ot. Ha az egyik updatekor egy adott
- * elemenetet hozzáadtunk gyerekként, míg a következő updateben már nem, akkor az a gyerek törlődik.
+ * implementációjában meghívjuk a {@link Element#instantiate(Slot, Widget, RefreshID)}-et. Ha az egyik updatekor egy
+ * adott elemenetet hozzáadtunk gyerekként, míg a következő updateben már nem, akkor az a gyerek törlődik.
  */
-sealed abstract class Element permits RootElement, RSWStateHolder {
+class Element {
 
     // TODO ha nincs slf4j impl, akkor ez NOP logger lesz
     static final Logger logger = LoggerFactory.getLogger(Element.class);
@@ -72,24 +74,23 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
     private static final int REFRESH_REASON_MASK_ALL_CHILDREN =
             REFRESH_REASON_DIRECT_IV_USED_BY_CHILDREN | REFRESH_REASON_INDIRECT_IV_USED_BY_CHILDREN;
 
-    @Nonnull final ObservableHelper observableHelper = new ObservableHelper(this);
-    @Nonnull
-    ElementState elementState = ElementState.INITIAL;
-    @Nullable
-    Element parent;
-    @Nonnull final List<Element> children = new ArrayList<>();
+    final @NonNull ObservableHelper observableHelper = new ObservableHelper(this);
+    @NonNull ElementState elementState = ElementState.INITIAL;
+    @Nullable Element parent;
+    final @NonNull List<Element> children = new ArrayList<>();
 
     boolean addedToParentInCurrentRefreshStateOfParent;
 
+    // TODO ezt lehet törölni, mivel már UpValueWrapper.next nem létező fogalom EndingWidget átállás óta
     /**
      * Ez akkor és csak akkor nem null, ha parent nem null. Az elemei közt nem szerepel null.
      */
-    List<? extends UpValue> directAncestorUpValues;
+    List<? extends EndingWidget> directAncestorUpValues;
 
     /**
      * Ez akkor és csak akkor nem null, ha elementState == ElementState.REFRESHING_SELF
      */
-    BuildContext refreshState;
+    RefreshID refreshID;
 
     /**
      * Csak akkor értelmezhető, ha elementState == {@code REFRESHING_CHILDREN_*}.<p> Azért kell, hogy a refresh során
@@ -103,6 +104,9 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
      * {@code refreshChildren} közepén is (ha egy descendant eltulajdonítja az egyik gyerekünket).
      */
     Element[] refreshingChildren;
+
+    // delegate visszarakáshoz
+    Widget delegateWidget;
 
     // nem Observable, mert nincs értelme feliratkozni rá, helyette a descendant által provided értékeket kell figyelni
     WidgetInstantiation delegate;
@@ -119,27 +123,40 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
      * Akkor és csak akkor null, ha ez az Element egy RootElement.
      */
     final Map<Class<?>, InheritedValueHolder> inheritedValues =
-            this instanceof RootElement ? null : new HashMap<>();
+            this instanceof WidgetTree.RootElement ? null : new HashMap<>();
 
-    // ha ennek a nevét módosítjuk, módosítsuk ListenerProxyGenerator.Element_originalModel_FIELD_NAME-t is
-    Object model;
-
-    final Map<Class<? extends UpValue>, Object> parentInterestedUpValues = new HashMap<>(); // ez üres, ha parent == null
+    /**
+     * Ez üres, ha parent == null.
+     * <p>
+     * A valuek azok, amelyek nem {@link #directAncestorUpValues}-beliek.
+     */
+    final Map<Class<? extends EndingWidget>, EndingWidget> parentInterestedUpValues = new HashMap<>();
     final InvalidationPoint upValuesIP = new InvalidationPoint();
 
     WidgetResolver vp;
 
-    /**
-     * az ebben lévő elemek nem feltétlen childok
-     */
-    // TODO ennek tartalmát törölni kéne valamikor, mert így mem leak.
-    //      nem világos hogy mikor, mert withKeyt/Slotot descendant widgetek is használhatják.
-    @Nonnull final Map<Object, Element> cachedPeers = new HashMap<>();
+    Slot delegateSlot; // lazy létrehozás, mert a fa alján nem kell
 
     private SimpleScope activeScope;
     SimpleScope refreshScope;
 
-    private final List<InheritedProp<?>> inheritedProps = new ArrayList<>();
+    WidgetState<?> currentState;
+
+    /**
+     * ennek a bezárásakor még a régi IV-k látszódnak
+     */
+    private SimpleScope untilWidgetStateNextRebuild;
+
+    /**
+     * ez lehet state, de lehet nem state role-ú is
+     */
+    private Widget nextWidget;
+
+    void setWidget(Widget w) {
+        if (!Widget.class.isInstance(w)) // TeaVM-es kód bugjakor előjött egy ilyen, hogy nem Widget volt a megadott
+            throw new RuntimeException("not a widget: " + w);
+        nextWidget = w;
+    }
 
     /**
      * ezt nem szabad meghívni, ha inactivatable állapotban vagyunk
@@ -170,7 +187,7 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
             // azért reasont tárolunk el és nem csak 2 boolt, hogy debuggerben könnyebben lehessen visszakövetni
             int toBeRefreshed = 0;
 
-            if (!(this instanceof RootElement)) // ha egy IV hiányzik, a delegateet be kéne állítani valami hibaüzenetre
+            if (!(this instanceof WidgetTree.RootElement)) // ha egy IV hiányzik, a delegateet be kéne állítani valami hibaüzenetre
                 toBeRefreshed |= refreshIVs();
 
             if (updateUserVisibleModel())
@@ -218,7 +235,9 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
                 if (delegate != null && delegate.element != null && delegate.element.parent != this) {
                     // elvették tőlünk a delegateet, és nincs refreshSelf se kérve.
                     // ezért vissza kell rakni.
-                    delegate = registerChild(delegate.element, delegate.key, delegate.upValues, delegate.ivs);
+                    if (delegateSlot == null)
+                        delegateSlot = new Slot(null);
+                    delegate = instantiate(delegateSlot, delegateWidget, delegate.refresh);
                 }
 
                 elementState = ElementState.REFRESHING_CHILDREN_AFTER_NO_SELF;
@@ -266,16 +285,53 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
                     "This: " + this + "\n" +
                     "Delegate: " + delegate.element + "\n" +
                     "Parent of delegate: " + delegate.element.parent + "\n" +
-                    "Refresh stack: \n" + refreshStackToString(Map.of(delegate.element, "delegate",
-                    delegate.element.parent, "parent of delegate")));
+                    "Refresh stack: \n" + refreshStackToString(
+                    delegate.element.parent == null ?
+                            Map.of(delegate.element, "delegate") :
+                            Map.of(delegate.element, "delegate",
+                                    delegate.element.parent, "parent of delegate")
+            ));
     }
-
-    abstract Class<?> modelType();
 
     /**
      * @return true, ha kell refreshSelf a modelváltozás miatt, különben false
      */
-    abstract boolean updateUserVisibleModel();
+    private boolean updateUserVisibleModel() {
+        Objects.requireNonNull(nextWidget, "nextWidget");
+
+        if (currentState != null && currentState.effectiveModel() == nextWidget)
+            // fast-path
+            return false;
+
+        nextWidget.initListenerProxyData();
+
+        WidgetState.ChangeModelResult changeModelResult;
+        if (currentState == null)
+            changeModelResult = WidgetState.ChangeModelResult.NEEDS_NEW_STATE;
+        else
+            changeModelResult = currentState.tryChangeModel(nextWidget);
+
+        return switch (changeModelResult) {
+            case NEEDS_NEW_STATE -> {
+                // új widget state-et kell létrehozni
+
+                WidgetState<?> prevState = currentState;
+                if (prevState != null)
+                    prevState.dispose();
+
+                // ezt azért, hogy ha accessor() exceptiont dob, akkor ne maradjon elavult érték currentStateben
+                currentState = null;
+
+                currentState = new WidgetState<>(this, nextWidget);
+
+                // TODO mit csináljunk, ha konstruktor exceptiont dob?
+
+                yield true;
+            }
+            case MODEL_IS_SAME_AS_BEFORE -> false;
+            case MODEL_CHANGED -> true;
+        };
+    }
 
     // TODO ha ez nem sikerül (pl. nem létezik egyik IV), akkor delegatenek ki kéne azért rakni valamit
 
@@ -283,7 +339,7 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
      * @return refresh reason mask
      */
     private int refreshIVs() {
-        assert !(this instanceof RootElement);
+        assert !(this instanceof WidgetTree.RootElement);
 
         // bitmask REFRESH_REASON_... konstansokból
         int changed = 0;
@@ -358,7 +414,7 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
     }
 
     private void refreshSelf(boolean isStartOrRestart, boolean isStart) {
-        refreshState = new BuildContext(this, isStartOrRestart, isStart);
+        refreshID = new RefreshID();
         for (Element e : children) {
             switch (e.elementState) {
                 case IDLE -> e.elementState = ElementState.IDLE_STOPPABLE;
@@ -385,22 +441,22 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
             h.obsC = prevObsC;
             h.obsI = prevObsI;
 
-            refreshState = null;
+            refreshID = null;
             for (Element e : children)
                 e.addedToParentInCurrentRefreshStateOfParent = false;
         }
         // TODO tisztítsuk majd meg byKeyt
-        RootElement context = root();
+        WidgetTree.RootElement context = root();
         for (Element e : children)
             if (e.elementState == ElementState.IDLE_STOPPABLE || e.elementState == ElementState.REFRESH_REQUESTED_STOPPABLE)
                 context.submitForDispose(e);
     }
 
-    private RootElement root() {
+    private WidgetTree.RootElement root() {
         Element e = this;
         while (e.parent != null)
             e = e.parent;
-        return (RootElement) e;
+        return (WidgetTree.RootElement) e;
     }
 
     // TODO fieldName-et nem kéne bewrappelnie "field '...'" stringbe,
@@ -490,14 +546,14 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
             //      a másodiknak a ensureFresh-jekor ez a hiba jön elő:
             //      ui11.ObservableHelper: Observed value was invalidated, but node is in REFRESHING_SELF_BEFORE_CHILDREN state: DOMGridPeer@9dba2e70
             //      reprodukálható, ha kiszedjük DOMGridPeerből a overlay számolást és belépünk bowling lobbiba
-            for (Entry<Class<? extends UpValue>, Object> entry : parentInterestedUpValues.entrySet()) {
-                Class<? extends UpValue> type = entry.getKey();
+            for (Entry<Class<? extends EndingWidget>, EndingWidget> entry : parentInterestedUpValues.entrySet()) {
+                Class<? extends EndingWidget> type = entry.getKey();
                 Object val = entry.getValue();
                 Object newVal = lookupImpl(type, true, true);
                 if (!Objects.equals(val, newVal)) {
-                    //System.out.println("invalidate parent because " + type.getSimpleName() + " changed from " + val + " to " + newVal);
-                    //System.out.println("Parent: " + parent);
-                    //System.out.println("This: " + this);
+                    System.out.println("invalidate parent because " + type.getSimpleName() + " changed from " + val + " to " + newVal);
+                    System.out.println("Parent: " + parent);
+                    System.out.println("This: " + this);
                     parent.upValuesIP.invalidate();
                     break;
                 }
@@ -511,9 +567,6 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
      */
     void doRefreshSelf() {
         try {
-            for (InheritedProp<?> p : inheritedProps)
-                p.update();
-
             Widget content = build();
             if (content == null)
                 // el kéne dönteni hogy lehet-e null. ha igen, akkor withKey-ben is kezelni kéne.
@@ -522,7 +575,9 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
             //      fölöslegesen refresheljük az előző delegateet, mert már
             //      csak a wrapperben kéne.
             //      lehet hogy a children elejére kéne rakni valahogy (vagy legalább az előző delegate elé).
-            delegate = refreshState.instantiate(DelegateSlot.DELEGATE_SLOT, content);
+            if (delegateSlot == null)
+                delegateSlot = new Slot(null);
+            delegate = instantiate(delegateSlot, delegateWidget = content, refreshID);
         } catch (Throwable t) {
             delegate = delegateCreationFailed(t);
         }
@@ -536,6 +591,13 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         WidgetInstantiation delegateHandle;
         logger.error("Failed to make delegate for " + this, t);
 
+        // TODO Errorok esetén se kéne feltétlen továbbdobni.
+        //      pl. UnsatisfiedLinkError előfordult már
+        //      (TeaVM metaprogramming API-t használó kódot próbáltam futtatni JVM-en).
+        //      talán csak OutOfMemoryErrort és StackOverflowErrort kéne továbbdobni.
+        //      viszont akkor is úgy, hogy a delegate ne maradjon elavult.
+
+
         if (t instanceof Error e && !(e instanceof AssertionError))
             throw e;
 
@@ -544,7 +606,9 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
             if (sl.hasNext()) {
                 ErrorWidgetFactory errorWidgetFactory = sl.next();
                 Widget widget = errorWidgetFactory.makeDelegateCreationError(t);
-                delegateHandle = refreshState.instantiate(DelegateSlot.DELEGATE_SLOT, widget);
+                if (delegateSlot == null)
+                    delegateSlot = new Slot(null);
+                delegateHandle = instantiate(delegateSlot, delegateWidget = widget, refreshID);
                 // TODO StackOverflowError lesz, ha nem tudja a hibaüzenetet sem megjeleníteni
             } else {
                 logger.error("No error widget factory");
@@ -559,10 +623,6 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         }
     }
 
-    private enum DelegateSlot {
-        DELEGATE_SLOT
-    }
-
     /**
      * Meghatározza hogy mi legyen ennek a Elementnek a delegate-je.
      * <p>
@@ -573,7 +633,29 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
     // TODO ez most restartkor mindenképpen meghívódik. ezen lehet
     //      hogy változtatni kéne. de ha változtatunk, akkor
     //      LottieWebAnimationPeer-t is át kell írni, meg sok más E-t is.
-    abstract Widget build();
+    private Widget build() {
+        if (currentState == null)
+            throw new IllegalStateException();
+
+        closeUntilNextRebuildScope();
+
+        currentState.retrieveInheritedValues();
+        currentState.callInitIfNotCalled();
+        currentState.callOnResumeIfNotCalled();
+
+        Widget content = currentState.stateWidget.build();
+        if (content == null)
+            throw new NullPointerException(getClass().getSimpleName() +
+                    ".build() returned null on " + currentState);
+
+        // ha csak a decorate invalidálódik, akkor nem kéne build-et meghívni, mert
+        // váratlanul előjöhetne a build() implementáció esetleges nem-idempotenssége miatti hiba.
+        // utóbbit dekorációtól független módon kéne inkább kiszűrni, pl. definiálni valami debug módot,
+        // amikor mondjuk 2 másodpercenként invalidálódik az összes build
+        content = currentState.decorateChild(content);
+
+        return content;
+    }
 
     private void refreshChildren(boolean all) {
         assert children.stream().allMatch(e -> e.parent == this);
@@ -613,8 +695,77 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
     }
 
     /**
-     * saját magunkra self refresht kérünk, ancestorokra csak simát
+     * Ennek az Elementnek a gyerekévé teszi a megadott Widgetből képezhető egy Elementet, ami a következő frissítésig
+     * aktív fog maradni. Csak a frissítés közben hívható meg.
+     *
+     * @throws IllegalStateException ha nem REFRESHING_SELF állapotban van jelenleg az Element
+     * @throws NullPointerException  ha a megadott widget {@code null}
      */
+    // TODO ideiglenes instantiate? pl. MultiChildLayouthoz
+    // TODO duplicate key detektálása, pl. DOMGridPeernél az egymásra rakható elemek kapcsán előjött
+    //      upValues invalidálás bugot óráig tartott debugolni
+    WidgetInstantiation instantiate(Slot slot, Widget widget, RefreshID refreshState) {
+        Objects.requireNonNull(slot, "key");
+        Objects.requireNonNull(widget, "widget");
+
+        // TODO ennek nem kéne listának lennie, mert EndingWidgetből csak 1 lehet
+        List<EndingWidget> upValues = new ArrayList<>();
+        Map<Class<?>, Object> ivs = new HashMap<>();
+
+        while (true) {
+            Objects.requireNonNull(slot);
+            switch (widget) {
+                case EndingWidget upValueWrapper -> {
+                    upValues.add(upValueWrapper);
+                    return new WidgetInstantiation(this, refreshState, null, upValues);
+                }
+                case null -> {
+                    throw new NullPointerException("CSB null " + this + ", " + upValues);
+                }
+                case Provider<?> p -> {
+                    Object val = p.value();
+
+                    // részben azért nem val instanceof Mergeable-t nézünk, hogy null esetén is működjön,
+                    // részben pedig hogy findIVProvidesUntil nem a példány típusából, hanem a megadott típusból
+                    // dönti el, hogy directIVsből vagy a directAncestorEDs-ből szedje az értékeket.
+                    final boolean isMergeableType = Mergeable.class.isAssignableFrom(p.type()) || p.type() == DynamicProvider.class;
+
+                    // p.ignoreMergeableType helyett eredetileg azt néztük, hogy
+                    // currentState.stateWidget instanceof InheritedValueMerger. de ez nem működik helyesen,
+                    // ha két egymásba ágyazott mergeölhető Provider van.
+                    if (isMergeableType && !p.ignoreMergeableType) {
+                        widget = new InheritedValueMerger<>(p);
+                    } else {
+                        ivs.put(p.type(), val);
+                        widget = p.content();
+                    }
+                }
+                case KeyWrapper kw -> {
+                    slot = kw.slot;
+                    widget = kw.content;
+                }
+                default -> {
+                    return handleRegularWidget(widget, slot, refreshState, upValues, ivs);
+                }
+            }
+        }
+    }
+
+    private @NonNull WidgetInstantiation handleRegularWidget(Widget widget, Slot slot,
+                                                             RefreshID refreshState,
+                                                             List<EndingWidget> upValues, Map<Class<?>, Object> ivs) {
+        Element peer = slot.element;
+
+        peer.setWidget(widget);
+        registerChild(peer);
+
+        peer.directAncestorUpValues = upValues;
+        peer.directIVs = ivs;
+        return new WidgetInstantiation(this, refreshState, peer, upValues);
+    }
+
+    // TODO ez így inkonzisztens, mert ha a parent REFRESHING_CHILDREN_* állapotban van,
+    //      akkor refreshSelfet kér, különben pedig nem
     void requestRefresh() {
         // TODO ha a végén exceptiont dobunk, akkor az előzőekben átállított elementState-eket vissza kéne állítani
         for (Element e = this, prev = null; ; ) {
@@ -676,12 +827,12 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
             }
 
             if (e.parent == null) {
-                if (e instanceof RootElement rootElement) {
+                if (e instanceof WidgetTree.RootElement rootElement) {
                     rootElement.requestRootRefresh();
                     return;
                 } else
                     // nem lehetséges
-                    throw new RuntimeException("have no parent, but not " + RootElement.class.getSimpleName() + ": " + e);
+                    throw new RuntimeException("have no parent, but not " + WidgetTree.RootElement.class.getSimpleName() + ": " + e);
             } else {
                 if (e.parent.elementState == ElementState.REFRESHING_SELF_BEFORE_CHILDREN ||
                         parent.elementState == ElementState.REFRESHING_SELF_AFTER_CHILDREN)
@@ -710,8 +861,7 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         return false;
     }
 
-    @Nonnull
-    private IllegalStateException cantRequestRefresh(Element e) {
+    private @NonNull IllegalStateException cantRequestRefresh(Element e) {
         return new IllegalStateException("Cannot request refresh of " + this +
                 " because " + e + " is in " + e.elementState + ". \n" +
                 // nem feltétlen szerepel a refresh stackben a this
@@ -720,15 +870,13 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
                 e.refreshStackToString(Map.of(this, "ORIG")));
     }
 
-    @Nonnull
-    WidgetInstantiation registerChild(Element e1, @Nonnull KeyWrapper kw,
-                                      List<? extends UpValue> upValues, Map<Class<?>, Object> ivs) {
+    /**
+     * ezután e1 refreshelve lesz
+     */
+    void registerChild(@NonNull Element e1) {
         assert elementState == ElementState.REFRESHING_SELF_BEFORE_CHILDREN || elementState == ElementState.REFRESHING_SELF_AFTER_CHILDREN;
         if (e1.elementState == ElementState.REFRESHING_SELF_BEFORE_CHILDREN || e1.elementState == ElementState.REFRESHING_SELF_AFTER_CHILDREN)
             throw new IllegalStateException();
-
-        // TODO ha cachedPeersből szedtük ki, akkor felesleges újra putolni
-        kw.container.cachedPeers.put(kw.key, e1);
 
         if (e1.parent != this) {
             // TODO rekurzió detektálása
@@ -792,49 +940,15 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
                 case REFRESH_REQUESTED_STOPPABLE -> e1.elementState = ElementState.REFRESH_REQUESTED;
             }
 
-            // mert IV-k megváltozhattak. vagy modelt átírhatta trySetModel.
+            // itt szándékosan nem töröljük parentInterestedUpValuest,
+            // mert ha az első instantiate után a másodikban egy UpValueWrapperben van ez a widget,
+            // akkor még subscribeolva kell maradnunk az első instantiate után kiolvasott UpValuera.
+            // TODO ha két instantiate között megváltozik a widget inputja úgy, hogy a saját maga által előállított
+            //      upvaluek is megváltoznak, akkor azt nem kéne hagynunk
+
+            // mert IV-k megváltozhattak. vagy modelt átírhatták.
             e1.requestRefresh();
         }
-
-        e1.directAncestorUpValues = upValues;
-        e1.directIVs = ivs;
-        return new WidgetInstantiation(this, refreshState, e1, upValues, kw, ivs);
-    }
-
-    // TODO ha előző @DefaultPeer-rel találta meg,
-    //      akkor engedje a trySetModelt akkor is ha nincs modelType
-
-    /**
-     * ezt akkor szabad csak meghívni, ha utána meg lesz hívva is a leendő parent registerChild-ja
-     */
-    final boolean trySetModel(Object model) {
-        Objects.requireNonNull(model);
-
-        // TODO ez a komment még érvényes?
-        // az isAssignableFrom azért használható, mert ha descendantbe más DefaultPeerCreator megadva,
-        // akkor ElementDefReflector hibát jelezne
-
-        Class<?> requiredType = modelType();
-        if (requiredType != null && requiredType.isAssignableFrom(model.getClass())) {
-            this.model = model;
-
-            // ilyenkor még nem szabad refresht kérni, mert
-            // még nem a "végleges" parentünknél vagyunk, csak hamarosan fogunk odakerülni.
-            // viszont registerChild amúgy is kér jelenleg mindig refresht, ezért nem baj,
-            // ha itt nem kérünk.
-
-            // if (elementState != ElementState.INITIAL && elementState != ElementState.STOPPED)
-            //     requestRefresh();
-            return true;
-        } else
-            return false;
-
-        // TODO modelt nullra kéne állítani, amikor már nincs
-    }
-
-    final void setModel(Widget widget) {
-        if (!trySetModel(widget))
-            throw new RuntimeException("trySetModel failed on " + this + " to " + widget);
     }
 
     void inactivate() {
@@ -851,17 +965,29 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
 
         while (!children.isEmpty())
             children.getLast().inactivate();
+
+        if (currentState != null) // TODO lehet olyan, hogy currentState == null?
+            currentState.onResumeCalled = false;
+        closeUntilNextRebuildScope();
+        if (currentState != null)
+            currentState.closeUntilPauseScope();
     }
 
     // beleveszi directAncestorEDs tartalmát is.
     // ez nem használható, ha ez az Element egy RootElement
-    @Nonnull
-    <U extends UpValue> U lookupImpl(Class<U> type, boolean noEnsureFresh, boolean optional) {
+    <U extends EndingWidget> @NonNull U lookupImpl(Class<U> type, boolean noEnsureFresh, boolean optional) {
         Element e = this;
 
         while (e != null) {
-            U t = findInUpValueList(type, e.directAncestorUpValues);
-            if (t != null) return t;
+            // ha e == this, akkor ezért nem kell néznünk:
+            // - ha invalidateParentIfUpValuesChangedből vagyunk hívva: parentInterestedUpValuesban valuek azok,
+            //   amelyek nem directAncestorUpValuesban vannak
+            // - ha doLookupból vagyunk hívva: már megnézte directAncestorUpValues tartalmát, ezért felesleges újra
+            //   megnézni
+            if (e != this) {
+                U t = findInUpValueList(type, e.directAncestorUpValues);
+                if (t != null) return t;
+            }
 
             if (noEnsureFresh) {
                 assert e == this || e.elementState == ElementState.IDLE; // IDLE_STOPPABLE sem lehet
@@ -893,7 +1019,7 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
                 e = null;
             else {
                 if (e.delegate.element == null) {
-                    t = findInUpValueList(type, e.delegate.upValues);
+                    U t = findInUpValueList(type, e.delegate.upValues);
                     if (t != null) return t;
                     break;
                 } else
@@ -904,29 +1030,39 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         if (optional)
             return null;
 
-        StringBuilder sb = new StringBuilder(type.getName() + " not found in delegate chain of " + this);
-        sb.append("\nDelegate chain: \n");
+        // TODO exception típus
+        throw new RuntimeException(type.getName() + " not found in delegate chain of " + this + "\n" +
+                "Delegate chain after lookup: \n" + debug_delegateChain());
+    }
 
-        e = this;
+    private String debug_delegateChain() {
+        StringBuilder sb = new StringBuilder();
+
+        Element e = this;
         while (true) {
-            for (UpValue u : e.directAncestorUpValues)
+            for (EndingWidget u : e.directAncestorUpValues)
                 sb.append("- up value: ").append(u).append("\n");
-            if (e.model != null)
-                sb.append("- widget: ").append(e.model).append("\n");
+            if (e.directIVs != null)
+                e.directIVs.forEach((ivType, ivValue) -> {
+                    // ivType.getSimpleName nem mindig működik TeaVM esetén
+                    sb.append("- inherited value: ").
+                            append(ivValue == null ? "<null value>" : ivValue.getClass().getName()).
+                            append("\n");
+                });
+            if (e.debug_getCurrentWidget() != null)
+                sb.append("- widget: ").append(e.debug_getCurrentWidget()).append("\n");
             sb.append("- element (").append(e.elementState).append("): ").append(e).append("\n");
             if (e.delegate == null)
                 break;
             else if (e.delegate.element == null) {
-                for (UpValue u : e.directAncestorUpValues)
+                for (EndingWidget u : e.delegate.upValues)
                     sb.append("- up value: ").append(u).append("\n");
                 break;
             } else {
                 e = e.delegate.element;
             }
         }
-
-        // TODO exception típus
-        throw new RuntimeException(sb.toString());
+        return sb.toString();
     }
 
     private boolean delegateParentMismatch() {
@@ -934,76 +1070,12 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         return delegate != null && delegate.element != null && delegate.element.parent != this;
     }
 
-    static <U extends UpValue> @Nullable U findInUpValueList(Class<U> type, List<? extends UpValue> upValues) {
-        for (UpValue ed : upValues) {
+    static <U extends EndingWidget> @Nullable U findInUpValueList(Class<U> type, List<? extends EndingWidget> upValues) {
+        for (EndingWidget ed : upValues) {
             if (type.isInstance(ed))
                 return type.cast(ed);
         }
         return null;
-    }
-
-    // azért nem egy annotáció, mert ott nem lehet rendesen invalidálni a függőséget a mező olvasásakor
-    // (csak approximálni próbáltunk, hogy akkor a @Inherited mezőt tartalmazó widgetet invalidáljuk,
-    //  de ez kapásból elbukik, ha pl. egy inner class Element eléri az illető mezőt).
-    <T> Observable<T> inherited(Class<T> type, boolean optional) {
-        // duplicate-eket szűrni kéne? lehet hogy kiderülhet általa, ha valaki folyton újra meghívja ezt
-
-        if (elementState != ElementState.INITIAL &&
-                elementState != ElementState.START_REQUESTED)
-            throw new IllegalStateException("too late to add inherited prop " + type.getName() + ", " + this);
-
-        InheritedProp<T> p = new InheritedProp<>(type, optional);
-        inheritedProps.add(p);
-        return p;
-    }
-
-    private class InheritedProp<T> implements Observable<T> {
-
-        private final MutableObservable<T> value = MutableObservable.ofNullable();
-        private final Class<T> type;
-        private final boolean optional;
-
-        public InheritedProp(Class<T> type, boolean optional) {
-            this.type = type;
-            this.optional = optional;
-        }
-
-        @Override
-        public T get() {
-            /*
-            System.out.println("subscribe to " + type.getSimpleName() + " prop of " +
-                    Integer.toHexString(Element.this.hashCode()) + " by " +
-                    (ObserverHolder.current().obsC instanceof ObservableHelper h ?
-                            Integer.toHexString(h.node.hashCode()) : ObserverHolder.current().obsC));
-            if (ObserverHolder.current().obsC instanceof ObservableHelper h) {
-                System.out.println("THIS:  " + debug_ancestors());
-                System.out.println("OTHER: " + h.node.debug_ancestors());
-                System.out.println();
-            }
-            */
-
-            ensureActive();
-            T t = value.get();
-            if (t == null && !optional)
-                throw new RuntimeException("internal error, IV has no value (1) but non optional: " + this + ", " + Element.this);
-            return t;
-        }
-
-        void update() {
-            T val = findInheritedValueForInjection(type, optional, null);
-            if (val == null && !optional)
-                throw new RuntimeException("internal error, IV has no value (2) but non optional: " + this + ", " + Element.this);
-            value.set(val);
-        }
-
-        @Override
-        public String toString() {
-            return "InheritedProp{" +
-                    "value=" + value +
-                    ", type=" + type +
-                    ", optional=" + optional +
-                    ", of " + Element.this + "}";
-        }
     }
 
     void ensureActive() {
@@ -1025,6 +1097,52 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         if (activeScope == null || activeScope.isClosed())
             throw new IllegalStateException(elementState.toString());
         return activeScope;
+    }
+
+    Scope untilWidgetStateNextRebuild(Widget requestor) throws IllegalStateException {
+        if (currentState.stateWidget != requestor)
+            // elvileg nem lehetséges ilyen
+            throw new RuntimeException("WE2 uNR");
+
+        if (untilWidgetStateNextRebuild == null) {
+            this.untilWidgetStateNextRebuild = new SimpleScope(Scope.global());
+        }
+        return untilWidgetStateNextRebuild;
+    }
+
+    Scope untilWidgetStatePause(Widget requestor) throws IllegalStateException {
+        if (currentState.stateWidget != requestor)
+            // elvileg nem lehetséges ilyen
+            throw new RuntimeException("WE2 uU");
+
+        return currentState.untilPause();
+    }
+
+    private void closeUntilNextRebuildScope() {
+        if (untilWidgetStateNextRebuild != null) {
+            SimpleScope s = untilWidgetStateNextRebuild;
+            untilWidgetStateNextRebuild = null;
+            s.close();
+        }
+    }
+
+    boolean isRefreshingSelfOrDescendants() {
+        return elementState == ElementState.REFRESHING_SELF_BEFORE_CHILDREN ||
+                elementState == ElementState.REFRESHING_SELF_AFTER_CHILDREN ||
+                elementState == ElementState.REFRESHING_CHILDREN_AFTER_SELF ||
+                elementState == ElementState.REFRESHING_CHILDREN_AFTER_NO_SELF ||
+                elementState == ElementState.REFRESHING_CHILDREN_AFTER_NO_SELF_BUT_SELF_REQUESTED_IN_DESCENDANTS ||
+                elementState == ElementState.REFRESHING_CHILDREN_SECOND;
+    }
+
+    WidgetAccessor<?> accessor(Widget requestedBy) {
+        if (requestedBy != currentState.stateWidget)
+            throw new IllegalStateException("WE a");
+        return currentState.accessor;
+    }
+
+    boolean isActive() {
+        return activeScope != null && !activeScope.isClosed();
     }
 
     String refreshStackToString(Map<Element, String> marks) {
@@ -1054,10 +1172,15 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
 
                     sb.append(depth).append(". ");
                     int prefixLength = sb.length() - pos;
-                    sb.append(e.getClass().getSimpleName()).
-                            append(e.parent != null ? " #" + e.parent.children.indexOf(e) : "").
-                            append(" (").append(e.elementState).append(")").
-                            append(": ").append(e.toString().replace("\n", "\n" + " ".repeat(prefixLength))).
+                    if (e.getClass() == Element.class)
+                        sb.append(e.elementState).
+                                append(e.parent != null ? ", #" + e.parent.children.indexOf(e) : "");
+                    else
+                        sb.append(e.getClass().getSimpleName()).
+                                append(e.parent != null ? " #" + e.parent.children.indexOf(e) : "").
+                                append(" (").append(e.elementState).append(")");
+                    sb.append(": ").
+                            append(e.toString().replace("\n", "\n" + " ".repeat(prefixLength))).
                             append("\n");
                     for (Element child : e.children) {
                         // valójában azt akarjuk nézni hogy elementState REFRESHING_SELF vagy REFRESHING_CHILDREN-e,
@@ -1092,6 +1215,17 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         return sb.toString();
     }
 
+    Widget debug_getCurrentWidget() {
+        return currentState == null ? null : currentState.stateWidget;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + (currentState == null ? " (no current widget state) model widget = " + nextWidget :
+                currentState.stateWidget == null ? " (no current widget) model widget = " + nextWidget :
+                        ": current state widget = " + currentState.stateWidget);
+    }
+
     // https://www.figma.com/board/QddkKq9pxYkYFlGwu0FUtk/ElementState?t=yVIO5zyAmVum82xP-6
 
     /**
@@ -1107,8 +1241,7 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         INITIAL,
 
         /**
-         * Ekkor a {@linkplain Element#refresh()} viselkedése ugyanaz, mint {@link #REFRESH_REQUESTED} esetén, de
-         * {@link BuildContext#isStartOrRestart} {@code true} lesz, ezáltal {@link Widget#onResume()} is meghívódik.
+         * Similar to {@link #REFRESH_REQUESTED}, but means first refresh after attached to the tree.
          */
         START_REQUESTED,
 
@@ -1125,7 +1258,7 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         REFRESH_REQUESTED_STOPPABLE,
 
         /**
-         * Ilyenkor lehet {@link BuildContext#instantiate(Object, Widget) Element4.childet} meghívni (és
+         * Ilyenkor lehet {@link Element#instantiate(Slot, Widget, RefreshID) Element.instantiate}-et meghívni (és
          * {@linkplain #REFRESHING_SELF_AFTER_CHILDREN}-ben).
          */
         REFRESHING_SELF_BEFORE_CHILDREN,
@@ -1150,7 +1283,7 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
         REFRESHING_CHILDREN_AFTER_NO_SELF_BUT_SELF_REQUESTED_IN_DESCENDANTS,
 
         /**
-         * Ilyenkor lehet {@link BuildContext#instantiate(Object, Widget) Element4.childet} meghívni (és
+         * Ilyenkor lehet {@link Element#instantiate(Slot, Widget, RefreshID) Element.instantiate}-et meghívni (és
          * {@linkplain #REFRESHING_SELF_BEFORE_CHILDREN}-ben).
          */
         REFRESHING_SELF_AFTER_CHILDREN,
@@ -1221,5 +1354,8 @@ sealed abstract class Element permits RootElement, RSWStateHolder {
             depth--;
             print(s);
         }
+    }
+
+    static final class RefreshID {
     }
 }

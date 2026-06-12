@@ -7,6 +7,9 @@ public enum Axis {
 
     HORIZONTAL, VERTICAL;
 
+    /**
+     * Returns the axis perpendicular to this axis.
+     */
     public Axis cross() {
         return this == HORIZONTAL ? VERTICAL : HORIZONTAL;
     }

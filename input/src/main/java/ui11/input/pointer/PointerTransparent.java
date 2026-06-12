@@ -1,9 +1,9 @@
 package ui11.input.pointer;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 // definiálni kéne hogy ez mit csinál pontosan, pl. lehet-e descendantot nem transparentté tenni
@@ -14,18 +14,16 @@ public final class PointerTransparent extends SubstitutedWidget {
 
     private final Widget content;
 
-    public PointerTransparent(@Nonnull Widget content) {
+    public PointerTransparent(@NonNull Widget content) {
         this.content = Objects.requireNonNull(content);
     }
 
-    @Nonnull
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 }

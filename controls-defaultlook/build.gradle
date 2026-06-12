@@ -4,6 +4,6 @@ dependencies {
     implementation project(":desktop") // link megnyitás miatt
     implementation project(":input")
 
-    testImplementation project(":platform:awt")
+    testImplementation project(":platform-awt")
     testImplementation project(":layout-constraint")
 }

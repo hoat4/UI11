@@ -1,11 +1,11 @@
 package ui11.input.pointer;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.input.pointer.Pointer.Button;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 public abstract class PointerRegion extends SubstitutedWidget {
@@ -21,9 +21,8 @@ public abstract class PointerRegion extends SubstitutedWidget {
         return content;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return content;
     }
 

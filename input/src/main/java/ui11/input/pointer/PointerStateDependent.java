@@ -1,6 +1,7 @@
 package ui11.input.pointer;
 
-import ui11.SubstitutedWidget;
+import org.jspecify.annotations.NonNull;
+import ui11.resolution.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
@@ -9,7 +10,7 @@ import ui11.graphics.Surface;
 import ui11.input.pointer.MouseRegion.MouseListener;
 import ui11.input.pointer.Pointer.StandardMouseButton;
 
-import javax.annotation.Nonnull;
+import static ui11.graphics.effect.Overlay.overlay;
 
 // itt specifikálni kéne, hogy egérállapot-váltáskor ezek egymás helyébe lépnek
 // (mert ugyanaz az implicit keyük).
@@ -43,10 +44,26 @@ public final class PointerStateDependent extends SubstitutedWidget {
         return pressedContent;
     }
 
-    @Nonnull
     @Override
-    protected Widget fallbackContent() {
+    protected @NonNull Widget fallbackContent() {
         return new PointerStateDependentImpl(this);
+    }
+
+    // TODO ennek megtévesztő a neve, mert a tartalom lesz pointer transparent, nem a háttér
+    public static Widget withPointerStateDependentBackground(
+            Widget defaultBackground,
+            Widget hoverBackground,
+            Widget pressedBackground,
+            Widget content) {
+
+        return overlay(
+                new PointerStateDependent( // TODO ez helyesen működik, ha empty a háttér?
+                        defaultBackground,
+                        hoverBackground,
+                        pressedBackground
+                ),
+                new PointerTransparent(content)
+        );
     }
 }
 
@@ -54,10 +71,10 @@ class PointerStateDependentImpl extends Widget {
 
     private final PointerStateDependent pointerStateDependent;
 
-    @Inject private Observable<Surface> surface;
+    @Inject private Surface surface;
 
-    @State private MutableObservable<Boolean> isHover;
-    @State private MutableObservable<PressState> isPressed;
+    @Remember private MutableObservable<Boolean> isHover;
+    @Remember private MutableObservable<PressState> isPressed;
 
     public PointerStateDependentImpl(PointerStateDependent pointerStateDependent) {
         this.pointerStateDependent = pointerStateDependent;
@@ -65,7 +82,6 @@ class PointerStateDependentImpl extends Widget {
 
     @Override
     protected void initState() {
-        isHover = MutableObservable.withInitial(false);
         isPressed = MutableObservable.withInitial(PressState.NOT_PRESSED);
     }
 
@@ -97,7 +113,7 @@ class PointerStateDependentImpl extends Widget {
 
             @Override
             public void drag(Location location) {
-                boolean hover = surface.get().hitTest(location);
+                boolean hover = surface.hitTest(location);
                 isHover.set(hover);
                 isPressed.set(hover ? PressState.PRESSED : PressState.DRAGGED_OUT);
             }

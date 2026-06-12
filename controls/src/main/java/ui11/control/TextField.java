@@ -1,14 +1,14 @@
 package ui11.control;
 
-import ui11.SubstitutedWidget;
+import ui11.resolution.SubstitutedWidget;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 public final class TextField extends SubstitutedWidget {
 
     private final EditablePlainText text;
-    @Nullable @Listener private final Runnable onAction;
+    @Nullable private final Runnable onAction;
     private final boolean autofocus;
 
     public TextField(EditablePlainText editablePlainText) {
@@ -23,7 +23,7 @@ public final class TextField extends SubstitutedWidget {
                      @Nullable Runnable onAction,
                      boolean autofocus) {
         this.text = text;
-        this.onAction = onAction;
+        this.onAction = listenerProxy(onAction);
         this.autofocus = autofocus;
         Objects.requireNonNull(text);
     }

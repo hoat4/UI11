@@ -1,3 +1,5 @@
+// TODO ez a javadoc évek óta elavult, és lehet hogy nem is kell ilyen közös module
+
 //import ui11.Node;
 
 /**
