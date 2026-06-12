@@ -1,5 +1,5 @@
 dependencies {
-    api project(":core:widgettree")
+    api project(":base")
     implementation project(":graphics")
 
     implementation "org.teavm:teavm-interop:${teavmVersion}" // hogy DefaultURLImageView-t letilthassuk

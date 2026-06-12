@@ -1,5 +1,5 @@
 dependencies  {
-    api project(":core:widgettree")
+    api project(":base")
     api project(":layout-model")
     api project(":graphics")
     api project(":input")

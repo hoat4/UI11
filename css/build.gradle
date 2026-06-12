@@ -1,5 +1,5 @@
 dependencies {
-    api project(":core:widgettree")
+    api project(":base")
     implementation project(":graphics") // Empty miatt
 
     testImplementation project(":desktop")

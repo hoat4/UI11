@@ -6,7 +6,7 @@ dependencies  {
     // TODO api project(":ui")
     api "org.teavm:teavm-jso-apis:${teavmVersion}"
 
-    api project(":core:widgettree")
+    api project(":base")
     implementation project(":audio") // ez lehetne külön modulba
     implementation project(":controls")
     implementation project(":css")

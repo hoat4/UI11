@@ -1,5 +1,5 @@
 dependencies {
-    api project(":core:widgettree")
+    api project(":base")
     api project(":desktop")
     implementation project(":layout-constraint") // azért hogy TextPeer tudjon preferredsizeot megadni
 

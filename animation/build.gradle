@@ -1,5 +1,5 @@
 dependencies {
-    api project(":core:widgettree")
+    api project(":base")
     api project(":geom") // Interpolator miatt
     implementation project(":graphics") // Faded miatt
     implementation project(":input") // Faded miatt

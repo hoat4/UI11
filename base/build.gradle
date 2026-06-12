@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies  {
-    api project(":core:observable")
+    api project(":observable")
 
-    implementation project(":core:reflectutil")
+    implementation project(":reflectutil")
     implementation "org.teavm:teavm-metaprogramming-api:${teavmVersion}"
     implementation "org.teavm:teavm-metaprogramming-impl:${teavmVersion}" // ListenerProxyTeaVMSupport::teavmClassToType
     implementation "org.teavm:teavm-interop:${teavmVersion}"

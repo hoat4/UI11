@@ -1,5 +1,5 @@
 dependencies {
-    api project(":core:widgettree")
+    api project(":base")
     api project(":geom")
     implementation project(":graphics") // PointerStateDependentImpl miatt
     testImplementation project(":desktop")
