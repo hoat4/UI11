@@ -59,7 +59,11 @@ public interface Color extends Lerpable<Color> {
     public static RGBColor sRGB(double r, double g, double b, double a) {
         return new RGBColor(r, g, b, a, ColorSpace.sRGB);
     }
-    
+
+    static RGBColor sRGBBytes(byte r, byte g, byte b, byte a) {
+        return sRGB((r & 0xFF) / 255.0, (g & 0xFF) / 255.0, (b & 0xFF) / 255.0, (a & 0xFF) / 255.0);
+    }
+
     public static RGBColor gray(double v) {
         return sRGB(v, v, v);
     }

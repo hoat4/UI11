@@ -1,0 +1,19 @@
+apply plugin: "java"
+apply plugin: "application"
+
+dependencies {
+    implementation project(":renderer-opengles")
+
+    implementation "org.openjfx:javafx-base:22:win"
+    implementation "org.openjfx:javafx-graphics:22:win"
+
+    implementation 'org.slf4j:slf4j-api:2.0.12'
+    implementation 'org.slf4j:slf4j-simple:2.0.12' // TODO testImplementation
+
+    implementation project(":animation")
+    implementation project(":desktop")
+    implementation project(":graphics")
+    implementation project(":layout-model") // TODO testImplementation
+    implementation project(":layout-constraint") // TODO testImplementation
+    implementation project(":text")
+}

@@ -1,0 +1,17 @@
+apply plugin: "java"
+
+dependencies {
+    implementation project(":base")
+    implementation project(":graphics")
+    implementation project(":input")
+    implementation project(":text")
+
+    implementation "org.lwjgl:lwjgl-opengles:3.3.4"
+    implementation "org.lwjgl:lwjgl-freetype:3.3.4"
+    implementation "org.lwjgl:lwjgl-egl:3.3.4"
+    implementation "org.lwjgl:lwjgl:3.3.4:natives-windows"
+    implementation "org.lwjgl:lwjgl-opengles:3.3.4:natives-windows"
+    implementation "org.lwjgl:lwjgl-freetype:3.3.4:natives-windows"
+
+    implementation 'org.slf4j:slf4j-api:2.0.12'
+}

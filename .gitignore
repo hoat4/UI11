@@ -22,3 +22,6 @@ platform/lottie-web/build
 text/build
 webcontent/build
 
+# copy these from e.g. Chrome's binaries (C:\Program Files\Google\Chrome\Application\149.0.7827.103)
+libEGL.dll
+libGLESv2.dll
