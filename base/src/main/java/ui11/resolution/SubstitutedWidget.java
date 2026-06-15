@@ -28,7 +28,7 @@ import static java.util.stream.Collectors.joining;
 public abstract class SubstitutedWidget extends Widget {
 
     @Inject(required = false) private WidgetResolver widgetResolver;
-    @Inject private PeerCreationRequest<?> peerCreationRequest;
+    @Inject private PeerCreationRequestCollection peerCreationRequestCollection;
 
     /**
      * It is final because there are no {@link Remember state fields} permitted in the subclasses, so it not sensible
@@ -42,6 +42,8 @@ public abstract class SubstitutedWidget extends Widget {
     @Override
     protected final Widget build() {
         Widget resolved = null;
+
+        PeerCreationRequest<?> peerCreationRequest = peerCreationRequestCollection.request;
 
         if (widgetResolver != null)
             resolved = widgetResolver.resolveOrNull(this, peerCreationRequest);

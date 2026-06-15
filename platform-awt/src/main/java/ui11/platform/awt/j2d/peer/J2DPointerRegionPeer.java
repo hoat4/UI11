@@ -1,5 +1,6 @@
 package ui11.platform.awt.j2d.peer;
 
+import ui11.EndingWidget;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
@@ -13,7 +14,6 @@ public class J2DPointerRegionPeer extends Widget {
     private final PointerRegion pointerRegion;
 
     @Inject private Slot contentSlot;
-    @Inject private PeerCreationRequest<?> peerCreationRequest;
 
     @Remember private ListenerInputNode inputNode;
 
@@ -28,12 +28,10 @@ public class J2DPointerRegionPeer extends Widget {
 
     @Override
     protected Widget build() {
-        J2DNodeHolder h = makePeer(contentSlot, pointerRegion.content(), new J2DPeerCreationRequest());
-        inputNode.child.set(h.inputNode());
+        J2DNodeHolder childH = makePeer(contentSlot, pointerRegion.content(), new J2DPeerCreationRequest());
+        inputNode.child.set(childH.inputNode());
         inputNode.listener = pointerRegion;
-        if (peerCreationRequest instanceof J2DPeerCreationRequest)
-            return new J2DNodeHolder(h.renderNode(), inputNode);
-        else
-            return pointerRegion.content().withSlot(contentSlot);
+        J2DNodeHolder h = new J2DNodeHolder(childH.renderNode(), inputNode);
+        return EndingWidget.combine(pointerRegion.content().withSlot(contentSlot), h);
     }
 }

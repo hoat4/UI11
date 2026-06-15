@@ -60,7 +60,7 @@ public class TestStealDelegate2 {
 
         @Override
         protected Void update() {
-            System.out.println(useWidget(slot, w, UV.class));
+            System.out.println(useWidget(slot, w, TestStealDelegate.UV.UVRequest.INSTANCE));
             return null;
         }
     }
@@ -96,10 +96,7 @@ public class TestStealDelegate2 {
     private static class W1 extends Widget {
         @Override
         protected Widget build() {
-            return new UV();
+            return new TestStealDelegate.UV();
         }
-    }
-
-    private static class UV extends EndingWidget {
     }
 }

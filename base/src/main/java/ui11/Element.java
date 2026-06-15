@@ -8,6 +8,8 @@ import ui11.provide.DynamicProvider;
 import ui11.provide.Provider;
 import ui11.provide.Provider.Mergeable;
 import ui11.resolution.ErrorWidgetFactory;
+import ui11.resolution.PeerCreationRequest;
+import ui11.resolution.PeerCreationRequestCollection;
 import ui11.resolution.WidgetResolver;
 
 import org.jspecify.annotations.NonNull;
@@ -465,7 +467,18 @@ class Element {
     // fieldName csak inherited() miatt nullable
     @Nullable
     final <T> T findInheritedValueForInjection(Class<T> type, boolean optional, @Nullable String fieldOrParameterName) {
-        Object value = findInheritedValue(type, IVUsage.USED_BY_SELF);
+        Object value;
+        if (PeerCreationRequest.class.isAssignableFrom(type) && type != PeerCreationRequest.class) {
+            value = findInheritedValue(PeerCreationRequestCollection.class, IVUsage.USED_BY_SELF);
+            if (value != IVNotProvided.IV_NOT_PROVIDED) {
+                PeerCreationRequestCollection requestCollection = (PeerCreationRequestCollection) value;
+                if (requestCollection.request.getClass() == type)
+                    value = requestCollection.request;
+                else
+                    value = IVNotProvided.IV_NOT_PROVIDED;
+            }
+        } else
+            value = findInheritedValue(type, IVUsage.USED_BY_SELF);
         if (value == IVNotProvided.IV_NOT_PROVIDED)
             if (optional)
                 value = null; // TODO ha primitív típus, akkor nyilván nem null kéne
@@ -708,13 +721,16 @@ class Element {
         Objects.requireNonNull(slot, "key");
         Objects.requireNonNull(widget, "widget");
 
-        // TODO ennek nem kéne listának lennie, mert EndingWidgetből csak 1 lehet
         List<EndingWidget> upValues = new ArrayList<>();
         Map<Class<?>, Object> ivs = new HashMap<>();
 
         while (true) {
             Objects.requireNonNull(slot);
             switch (widget) {
+                case EndingWidget.MultipleUpValues multipleUpValues-> {
+                    upValues.addAll(multipleUpValues.endingWidgets);
+                    widget = multipleUpValues.next;
+                }
                 case EndingWidget upValueWrapper -> {
                     upValues.add(upValueWrapper);
                     return new WidgetInstantiation(this, refreshState, null, upValues);

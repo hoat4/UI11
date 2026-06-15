@@ -5,11 +5,13 @@ import com.github.weisj.jsvg.parser.SVGLoader;
 import com.github.weisj.jsvg.view.FloatSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ui11.EndingWidget;
 import ui11.MultiSlot;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.graphics.Surface;
 import ui11.layout.protocol.BoxLayoutResult;
+import ui11.platform.awt.j2d.J2DPeerCreationRequest;
 import ui11.resolution.PeerCreationRequest;
 import ui11.task.BackgroundTask;
 import ui11.task.TaskStatus;
@@ -36,7 +38,7 @@ public class J2DSVGImageViewPeer extends Widget {
     @Inject private URLResolver urlResolver;
     @Inject private Surface surface;
     @Inject private MultiSlot<URI> loadTaskSlot;
-    @Inject private PeerCreationRequest<?> peerCreationRequest;
+    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
 
     @Remember private SVGDocumentRenderNode node;
     @Remember private OpaqueInputNode inputNode;
@@ -81,11 +83,12 @@ public class J2DSVGImageViewPeer extends Widget {
                 node.size.set(size);
                 inputNode.shape.set(new Rectangle2D.Double(0, 0, size.width(), size.height()));
                 FloatSize docSize = loadedDocument.size();
-                if (peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest r)
+                Widget result = new J2DNodeHolder(node, inputNode);
+                if (sizeRequest != null)
                     // TODO constraintset figyelembe kéne venni
-                    yield new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height));
-                else
-                    yield new J2DNodeHolder(node, inputNode);
+                    result = EndingWidget.combine(result,
+                            new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height)));
+                yield result;
             }
         };
     }

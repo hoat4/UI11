@@ -58,7 +58,7 @@ public class Element4Test {
             @Override
             protected Void update() {
                 useWidget(slot, new Provider<>(Integer.class, 1347,
-                        new E()), ComponentResultUpValue.class);
+                        new E()), ComponentResultRequest.instance());
                 return null;
             }
         }, executor);

@@ -1,5 +1,7 @@
 package ui11;
 
+import ui11.resolution.PeerCreationRequest;
+
 public class UpValueInvalidationBugTest {
     public void main() {
         // TODO ez a teszt valszeg hülyeség, mert nem lehet mit kezdeni ezzel, hogy kétszer is instantiate-eli
@@ -31,8 +33,8 @@ public class UpValueInvalidationBugTest {
             @Override
             protected Void update() {
                 // szándékosan ugyanaz a slot
-                useWidget(slot, new W1(1), U2.class);
-                useWidget(slot, new W1(2), U2.class);
+                useWidget(slot, new W1(1), U2.U2Request.INSTANCE);
+                useWidget(slot, new W1(2), U2.U2Request.INSTANCE);
                 System.out.println("done");
                 return null;
             }
@@ -45,6 +47,15 @@ public class UpValueInvalidationBugTest {
 
         U2(int i) {
             this.i = i;
+        }
+
+        static class U2Request extends PeerCreationRequest<U2> {
+
+            static final U2Request INSTANCE = new U2Request();
+
+            private U2Request() {
+                super(U2.class);
+            }
         }
     }
 }

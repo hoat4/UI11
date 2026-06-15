@@ -1,5 +1,6 @@
 package ui11.layout.impl;
 
+import ui11.EndingWidget;
 import ui11.MultiSlot;
 import ui11.Slot;
 import ui11.Widget;
@@ -14,7 +15,7 @@ public final class DefaultOverlayLayoutImpl extends Widget {
     private final Overlay overlay;
     private final Widget peer;
 
-    @Inject private PeerCreationRequest<?> peerCreationRequest;
+    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
     @Inject private Slot peerSlot;
     @Inject private MultiSlot<Integer> childrenSlots;
 
@@ -25,17 +26,19 @@ public final class DefaultOverlayLayoutImpl extends Widget {
 
     @Override
     protected Widget build() {
-        BoxConstraints constraints =
-                peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest req ?
-                        req.constraints() : null;
+        Widget peerWithSlot = peer.withSlot(peerSlot);
+        if (sizeRequest == null)
+            return peerWithSlot;
+
+        BoxConstraints constraints = sizeRequest.constraints();
         if (constraints == null)
-            return peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest ?
-                    new BoxLayoutResult.OfNoConstraints() :
-                    peer.withSlot(peerSlot);
+            // TODO ha csak Gone van az Overlayben, akkor mi a teendő?
+            return EndingWidget.combine(peerWithSlot,
+                    new BoxLayoutResult.OfNoConstraints());
 
         // constraintset nem kell megadni Providerben, mert már amúgyis inherited value
         Size s = useWidgets(childrenSlots, overlay.items(),
-                new BoxLayoutResult.BoxConstraintsPeerCreationRequest(constraints)).
+                new BoxLayoutResult.SizeRequest(constraints)).
                 filter(boxLayoutResult -> switch (boxLayoutResult) {
                     case BoxLayoutResult.OfChosenSize _ -> true;
                     case BoxLayoutResult.OfGone _ -> false;
@@ -51,6 +54,6 @@ public final class DefaultOverlayLayoutImpl extends Widget {
         if (!constraints.isSatisfiedBy(s))
             throw new RuntimeException(constraints + " is not satisfied by " + s + " (returned by " + this + ")");
 
-        return new BoxLayoutResult.OfChosenSize(s);
+        return EndingWidget.combine(peerWithSlot, new BoxLayoutResult.OfChosenSize(s));
     }
 }

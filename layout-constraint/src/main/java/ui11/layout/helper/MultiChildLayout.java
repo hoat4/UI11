@@ -17,7 +17,6 @@ import ui11.graphics.effect.Overlay;
 import ui11.graphics.effect.Transform;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.provide.Provider;
-import ui11.resolution.PeerCreationRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +30,7 @@ public class MultiChildLayout extends Widget {
 
     private final MultiChildLayoutDelegate delegate;
 
-    @Inject private PeerCreationRequest<?> peerCreationRequest;
+    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
     @Inject(required = false) private Surface surface;
     @Inject private MultiSlot<Object> childSlots;
     @Inject private MultiSlot<Object> childTransformSlots;
@@ -45,12 +44,8 @@ public class MultiChildLayout extends Widget {
 
     @Override
     protected Widget build() {
-        boolean hasBoxConstraintsPeerCreationRequest =
-                peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest;
-        BoxConstraints constraints = hasBoxConstraintsPeerCreationRequest ?
-                ((BoxLayoutResult.BoxConstraintsPeerCreationRequest) peerCreationRequest).constraints() : null;
+        BoxConstraints constraints = sizeRequest != null ? sizeRequest.constraints() : null;
 
-        boolean fromConstraints = constraints != null;
         if (constraints == null) {
             if (surface == null)
                 throw new IllegalStateException("no " + Surface.class.getSimpleName() + " or " +
@@ -59,6 +54,9 @@ public class MultiChildLayout extends Widget {
         }
         if (elements != null)
             throw new IllegalStateException();
+
+        // TODO ha constraints megegyezik az előzővel, akkor csak vissza kéne adni az előző eredményt, nem újra
+        //      meghívni a doLayoutot. de az a baj, hogy lehet hogy a doLayoutnak változott meg egy observable-je.
 
         elements = new ArrayList<>();
         Widget result;
@@ -76,12 +74,6 @@ public class MultiChildLayout extends Widget {
                 return new ColorFill(Color.CYAN);
             }
 
-            if (hasBoxConstraintsPeerCreationRequest)
-                if (fromConstraints)
-                    return new BoxLayoutResult.OfChosenSize(s);
-                else
-                    return new BoxLayoutResult.OfNoConstraints();
-
             result = new Overlay(elements);
         } finally {
             elements = null;
@@ -91,17 +83,17 @@ public class MultiChildLayout extends Widget {
         // másrészt mert még nem is tud, mert Transform, Clip, stb. nem forwardolja a BoxLayoutProtocolt
         result = new Provider<>(BoxConstraints.class, null, result);
 
+        if (sizeRequest != null)
+            result = EndingWidget.combine(result, new BoxLayoutResult.OfChosenSize(s));
+
         return result;
     }
 
     @Override
     public String toString() {
-        if (peerCreationRequest == null) // observable inicializáltságát nézzük
+        if (childSlots == null) // TODO ez egy hack, csak azt nézzük hogy volt-e már inicializálva ez a widget
             return super.toString();
-        BoxConstraints constraints =
-                peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest req ?
-                        req.constraints() : null;
-        return super.toString() + "{constraints=" + constraints + ", " +
+        return super.toString() + "{req=" + sizeRequest + ", " +
                 "currentCallback " + (currentCallback == null ? "==" : "!=") + " null}";
     }
 
@@ -156,7 +148,7 @@ public class MultiChildLayout extends Widget {
                         MultiChildLayoutDelegate.class.getSimpleName() + ".delegate (" + this + ")");
 
             BoxLayoutResult layoutResult = makePeer(childSlots.get(key), widget,
-                    new BoxLayoutResult.BoxConstraintsPeerCreationRequest(constraints));
+                    new BoxLayoutResult.SizeRequest(constraints));
             return switch (layoutResult) {
                 case BoxLayoutResult.OfGone _ -> {
                     logger.error("Gone in measure: " + key + ", " + widget + ", " + constraints);
@@ -184,7 +176,7 @@ public class MultiChildLayout extends Widget {
 
             // TODO ilyenkor még nem kéne megadni nekik Surface-t, mert rossz méret van benne
             BoxLayoutResult r = makePeer(childSlots.get(key), widget,
-                    new BoxLayoutResult.BoxConstraintsPeerCreationRequest(null));
+                    new BoxLayoutResult.SizeRequest(null));
             if (r instanceof BoxLayoutResult.OfGone)
                 return null;
 

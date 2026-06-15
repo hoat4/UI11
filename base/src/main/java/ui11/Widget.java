@@ -7,6 +7,7 @@ import ui11.observable.ObservableBase;
 import ui11.observable.Scope;
 import ui11.provide.Provider;
 import ui11.resolution.PeerCreationRequest;
+import ui11.resolution.PeerCreationRequestCollection;
 import ui11.resolution.SubstitutedWidget;
 
 import java.lang.annotation.Retention;
@@ -234,7 +235,7 @@ public abstract class Widget implements Cloneable {
 
     @SuppressWarnings("unchecked")
     protected final <R> R useComponent(Slot slot, Component<R> component) {
-        return (R) useWidget(slot, component, Component.ComponentResultUpValue.class).result;
+        return (R) useWidget(slot, component, Component.ComponentResultRequest.instance()).result;
     }
 
     /**
@@ -243,8 +244,16 @@ public abstract class Widget implements Cloneable {
      *
      * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő UpValuet
      */
-    <U extends EndingWidget> U useWidget(Slot defaultSlot, Widget widget, Class<U> upValueType) {
+    <U extends EndingWidget> U useWidget(Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
+        Objects.requireNonNull(defaultSlot);
         Objects.requireNonNull(widget);
+        Objects.requireNonNull(request);
+
+
+        // TODO egyszerre több request
+        // egyelőre így adjuk át, majd kéne valami hatékonyabb megoldás
+        widget = new Provider<>(PeerCreationRequestCollection.class,
+                new PeerCreationRequestCollection(request), widget);
 
         Element element = element();
         if (element == null || element.refreshID == null)
@@ -258,23 +267,20 @@ public abstract class Widget implements Cloneable {
                     + " (default slot: " + defaultSlot + ")");
 
         if (Element.TRACE_REFRESH)
-            Element.TraceRefresh.TL.get().print("useWidget " + upValueType.getSimpleName() + ": " + decoratedWidget);
+            Element.TraceRefresh.TL.get().print("useWidget " + request + ": " + decoratedWidget);
 
         WidgetInstantiation widgetInstantiation = element.instantiate(defaultSlot, decoratedWidget, element.refreshID);
 
         if (Element.TRACE_REFRESH)
-            Element.TraceRefresh.TL.get().print("lookup " + upValueType.getSimpleName() + ": " + decoratedWidget);
+            Element.TraceRefresh.TL.get().print("lookup " + request + ": " + decoratedWidget);
 
-        return widgetInstantiation.lookup(upValueType);
+        return widgetInstantiation.lookup(request.peerType());
     }
 
     protected final <U extends EndingWidget> U makePeer(
             Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
 
-        // egyelőre így adjuk át, majd kéne valami hatékonyabb megoldás
-        widget = new Provider<>(PeerCreationRequest.class, request, widget);
-
-        return useWidget(defaultSlot, widget, request.peerType());
+        return useWidget(defaultSlot, widget, request);
     }
 
     protected final <U extends EndingWidget> Stream<U> useWidgets(MultiSlot<Integer> slots,

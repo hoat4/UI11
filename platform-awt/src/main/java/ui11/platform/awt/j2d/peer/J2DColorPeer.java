@@ -39,6 +39,8 @@ public class J2DColorPeer extends Widget {
         if (shape == J2DSurface.INFINITE_SHAPE)
             return new J2DNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE);
 
+        // TODO ezt observeli J2DGroupPeer isOpaque miatt, és valamiért invalidálni próbálja J2DGroupPeert ez,
+        //      ezért exception lesz itt (pl. ButtonTest)
         inputNode.shape.set(shape);
 
         if (colorFill.color().equals(ui11.color.Color.TRANSPARENT))

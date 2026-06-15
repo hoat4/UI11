@@ -1,5 +1,7 @@
 package ui11;
 
+import ui11.resolution.PeerCreationRequest;
+
 public class TestStealDelegate {
     public void main() {
         // azt az esetet teszteljük, ha elvesszük egy W2 widgetnek a delegatejét (W1), majd újra refresheljük W2-t.
@@ -44,7 +46,7 @@ public class TestStealDelegate {
 
         @Override
         protected Void update() {
-            System.out.println(useWidget(slot, w, UV.class));
+            System.out.println(useWidget(slot, w, UV.UVRequest.INSTANCE));
             return null;
         }
     }
@@ -70,6 +72,15 @@ public class TestStealDelegate {
         }
     }
 
-    private static class UV extends EndingWidget {
+    static class UV extends EndingWidget {
+
+        static class UVRequest extends PeerCreationRequest<UV> {
+
+            static final UVRequest INSTANCE = new UVRequest();
+
+            private UVRequest() {
+                super(UV.class);
+            }
+        }
     }
 }

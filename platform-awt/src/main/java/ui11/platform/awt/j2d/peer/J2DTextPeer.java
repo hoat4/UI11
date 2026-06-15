@@ -1,6 +1,7 @@
 package ui11.platform.awt.j2d.peer;
 
 import org.jspecify.annotations.NonNull;
+import ui11.EndingWidget;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.geom.Size;
@@ -23,7 +24,7 @@ public class J2DTextPeer extends Widget {
     private final Text text;
 
     @Inject private TextStyle textStyle;
-    @Inject private PeerCreationRequest<?> peerCreationRequest;
+    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
 
     @Remember private TextRenderNode node;
     @Remember private OpaqueInputNode inputNode;
@@ -70,18 +71,22 @@ public class J2DTextPeer extends Widget {
 
         inputNode.shape.set(new Rectangle(w, h));
 
-        BoxConstraints constraints =
-                peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest req ?
-                        req.constraints() : null;
-        if (constraints != null)
-            return new BoxLayoutResult.OfChosenSize(constraints.clamp(new Size(w, h)));
-        else if (peerCreationRequest instanceof BoxLayoutResult.BoxConstraintsPeerCreationRequest)
-             return new BoxLayoutResult.OfNoConstraints();
-        else
-            return new J2DNodeHolder(
-                    node,
-                    inputNode
-            );
+        Widget result = new J2DNodeHolder(
+                node,
+                inputNode
+        );
+
+        if (sizeRequest != null)
+            if (sizeRequest.constraints() != null) {
+                Size size = sizeRequest.constraints().clamp(new Size(w, h));
+                result = EndingWidget.combine(result,
+                        new BoxLayoutResult.OfChosenSize(size));
+            } else {
+                result = EndingWidget.combine(result,
+                        new BoxLayoutResult.OfNoConstraints());
+            }
+
+        return result;
     }
 
     static @NonNull Font awtFont(TextStyle ts) {

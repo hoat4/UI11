@@ -23,11 +23,13 @@ public sealed abstract class BoxLayoutResult extends EndingWidget {
         }
     }
 
-    public static final class OfNoConstraints extends BoxLayoutResult {}
+    public static final class OfNoConstraints extends BoxLayoutResult {
+    }
 
-    public static final class OfGone extends BoxLayoutResult {}
+    public static final class OfGone extends BoxLayoutResult {
+    }
 
-    public static class BoxConstraintsPeerCreationRequest extends PeerCreationRequest<BoxLayoutResult> {
+    public static class SizeRequest extends PeerCreationRequest<BoxLayoutResult> {
 
         private final BoxConstraints constraints;
 
@@ -35,7 +37,7 @@ public sealed abstract class BoxLayoutResult extends EndingWidget {
          *
          * @param constraints ez null, ha még csak az érdekel hogy gone-e
          */
-        public BoxConstraintsPeerCreationRequest(@Nullable BoxConstraints constraints) {
+        public SizeRequest(@Nullable BoxConstraints constraints) {
             super(BoxLayoutResult.class);
             this.constraints = constraints;
         }
@@ -48,13 +50,18 @@ public sealed abstract class BoxLayoutResult extends EndingWidget {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
 
-            BoxConstraintsPeerCreationRequest that = (BoxConstraintsPeerCreationRequest) o;
+            SizeRequest that = (SizeRequest) o;
             return Objects.equals(constraints, that.constraints);
         }
 
         @Override
         public int hashCode() {
             return Objects.hashCode(constraints);
+        }
+
+        @Override
+        public String toString() {
+            return "SizeRequest[constraints=" + constraints + "]";
         }
     }
 }
