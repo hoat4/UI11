@@ -2,6 +2,7 @@ package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
 import ui11.MultiSlot;
+import ui11.Widget;
 import ui11.geom.Axis;
 import ui11.geom.Length;
 import ui11.layout.multichild.Grid;
@@ -19,8 +20,6 @@ public class DOMGridPeer extends DOMLayoutPeerBase {
 
     private final Grid grid;
 
-    @Inject private MultiSlot<GridItemKey> slots;
-
     @Remember private BitSet goneItems;
 
     public DOMGridPeer(Grid grid) {
@@ -28,7 +27,8 @@ public class DOMGridPeer extends DOMLayoutPeerBase {
         this.grid = grid;
     }
 
-    private record GridItemKey(int col, int row, int overlayIndex) {}
+    private record GridItemKey(int col, int row, int overlayIndex) {
+    }
 
     @Override
     protected void initState() {
@@ -40,8 +40,26 @@ public class DOMGridPeer extends DOMLayoutPeerBase {
         elem().getClassList().add(CLASS_GRID_CONTAINER);
     }
 
+    private record GridPos(int col, int row) {
+    }
+
     @Override
-    protected List<? extends HTMLElement> children() {
+    protected Widget doBuild() {
+        Map<GridItemKey, Widget> widgets = new HashMap<>();
+        Map<GridPos, Integer> overlayCounts = new HashMap<>();
+        List<Item> items = grid.items();
+        for (Item item : items) {
+            int overlayIndex = overlayCounts.compute(new GridPos(item.col(), item.row()),
+                    (p, j) -> j == null ? 0 : j + 1);
+            GridItemKey key = new GridItemKey(item.col(), item.row(), overlayIndex);
+            widgets.put(key, item.widget());
+        }
+        return makePeers(widgets, peers->{
+            return updateChildren(children(peers));
+        });
+    }
+
+    private List<HTMLElement> children(Map<GridItemKey, ? extends DOMElementHolder> peers) {
         Grid e = grid;
         HTMLElement htmlElement = elem();
 
@@ -49,7 +67,6 @@ public class DOMGridPeer extends DOMLayoutPeerBase {
         List<Item> items = e.items();
         goneItems.clear();
 
-        record GridPos(int col, int row) {}
         Map<GridPos, Integer> overlayCounts = new HashMap<>();
 
         for (int i = 0; i < items.size(); i++) {
@@ -57,7 +74,7 @@ public class DOMGridPeer extends DOMLayoutPeerBase {
             int overlayIndex = overlayCounts.compute(new GridPos(item.col(), item.row()),
                     (p, j) -> j == null ? 0 : j + 1);
             GridItemKey key = new GridItemKey(item.col(), item.row(), overlayIndex);
-            DOMElementHolder childH = peerOf(slots.get(key), item.widget());
+            DOMElementHolder childH = peers.get(key);
 
             if (childH.isHidden())
                 // TODO ez így hibás, mert hozzá kéne adni a DOM-hoz valahová

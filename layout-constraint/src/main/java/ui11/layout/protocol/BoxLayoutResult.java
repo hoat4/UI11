@@ -10,6 +10,8 @@ import java.util.Objects;
 
 public sealed abstract class BoxLayoutResult extends EndingWidget {
 
+    // TODO ez kb. ugyanaz mint FixedSize. ezzel majd kéne kezdeni valamit, pl. lehet hogy ezt valahogy meg lehetne
+    //      szüntetni, de még nem tudom, hogy hogyan
     public static final class OfChosenSize extends BoxLayoutResult {
 
         private final @NonNull Size size;

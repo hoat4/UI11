@@ -1,7 +1,7 @@
 package ui11.platform.dom.peers;
 
-import org.teavm.jso.dom.html.HTMLElement;
 import ui11.Slot;
+import ui11.Widget;
 import ui11.layout.singlechild.Padding;
 import ui11.platform.dom.DOMLayoutPeerBase;
 
@@ -10,8 +10,6 @@ import java.util.List;
 public class DOMPaddingPeer extends DOMLayoutPeerBase {
 
     private final Padding padding;
-
-    @Inject private Slot contentSlot;
 
     public DOMPaddingPeer(Padding padding) {
         super(false, false);
@@ -24,12 +22,14 @@ public class DOMPaddingPeer extends DOMLayoutPeerBase {
     }
 
     @Override
-    protected List<? extends HTMLElement> children() {
+    protected Widget doBuild() {
         if (padding.insets().isZero())
             elem().getStyle().removeProperty("padding");
         else
             elem().getStyle().setProperty("padding", insetsToCSS(padding.insets()));
 
-        return List.of(peerOf(contentSlot, padding.content()).element());
+        return makePeer(padding.content(), h->{
+            return updateChildren(List.of(h.element()));
+        });
     }
 }

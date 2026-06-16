@@ -15,6 +15,7 @@ import ui11.platform.opengl.rendertree.EmptyRenderNode;
 import ui11.platform.opengl.rendertree.FillTrianglesWithColorRenderNode;
 import ui11.platform.opengl.rendertree.GroupRenderNode;
 import ui11.platform.opengl.rendertree.RenderNode;
+import ui11.provide.Provider;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -23,8 +24,7 @@ public class GLOverlayPeer extends Widget {
 
     private final Overlay overlay;
 
-    @Inject private MultiSlot<Integer> slots;
-    @Inject private Observable<Surface> parentSurface;
+    @Inject private Surface parentSurface;
     @Inject private Observable<BufferPool> bufferPool;
 
     @Remember private List<GLSurface> childSurfaces;
@@ -46,22 +46,32 @@ public class GLOverlayPeer extends Widget {
 
     @Override
     protected Widget build() {
-        List<RenderNode> childRenderNodes = new ArrayList<>();
-        List<InputNode> childInputNodes = new ArrayList<>();
+        List<Widget> items = new ArrayList<>();
 
-        Shape2D shape = ((GLSurface) parentSurface.get()).shape();
-
-        List<FillTrianglesWithColorRenderNode> fillTrianglesNodes = new ArrayList<>();
         for (int i = 0; i < overlay.items().size(); i++) {
-            Widget widget = overlay.items().get(i);
-
             if (i == childSurfaces.size())
                 childSurfaces.add(new ShapeInheritingGLSurface());
 
             GLSurface surface = childSurfaces.get(i);
-            surface.parent.set((GLSurface) parentSurface.get());
+            surface.parent.set((GLSurface) parentSurface);
 
-            GLNodeHolder h = makePeer(slots.get(i), widget, new GLNodeHolder.GLNodeRequest());
+            items.add(new Provider<>(Surface.class, surface, overlay.items().get(i)));
+        }
+
+        if (childSurfaces.size() > overlay.items().size())
+            childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
+
+        return new GLNodeHolder.GLNodeRequest().executedOn(items, this::doBuild);
+    }
+
+    private Widget doBuild(List<? extends GLNodeHolder> children) {
+        List<RenderNode> childRenderNodes = new ArrayList<>();
+        List<InputNode> childInputNodes = new ArrayList<>();
+
+        Shape2D shape = ((GLSurface) parentSurface).shape();
+
+        List<FillTrianglesWithColorRenderNode> fillTrianglesNodes = new ArrayList<>();
+        for (GLNodeHolder h : children) {
             switch (h.renderNode()) {
                 case EmptyRenderNode emptyRenderNode -> {
                     // nothing to do
@@ -83,9 +93,6 @@ public class GLOverlayPeer extends Widget {
         }
         mergeInto(fillTrianglesNodes, childRenderNodes);
         mergedNodeCache.values().retainAll(childRenderNodes);
-
-        if (childSurfaces.size() > overlay.items().size())
-            childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
 
         return new GLNodeHolder(
                 switch (childRenderNodes.size()) {

@@ -1,11 +1,9 @@
 package ui11.layout.impl;
 
 import ui11.Widget;
-import ui11.geom.Rect;
 import ui11.geom.Size;
-import ui11.layout.helper.MultiChildLayout;
-import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback;
-import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback.Placeable;
+import ui11.geom.Vec2;
+import ui11.layout.helper.SingleChildLayout;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.singlechild.Align;
 import ui11.layout.singlechild.Alignment;
@@ -20,36 +18,29 @@ public final class DefaultAlignImpl extends Widget {
 
     @Override
     protected Widget build() {
-        return new MultiChildLayout(this::doLayout);
-    }
+        return new SingleChildLayout(align.content(), new SingleChildLayout.SingleChildLayoutDelegate() {
+            @Override
+            public BoxConstraints computeChildConstraints(BoxConstraints containerConstraints) {
+                BoxConstraints c2 = containerConstraints;
+                Alignment alignment = align.alignment();
+                if (alignment.horizSum != 0)
+                    c2 = c2.loosenHorizontally();
+                if (alignment.vertSum != 0)
+                    c2 = c2.loosenVertically();
+                return c2;
+            }
 
-    private Size doLayout(BoxConstraints constraints, MultiChildLayoutCallback callback) {
-        BoxConstraints c2 = constraints;
-        Alignment alignment = align.alignment();
-        if (alignment.horizSum != 0)
-            c2 = c2.loosenHorizontally();
-        if (alignment.vertSum != 0)
-            c2 = c2.loosenVertically();
+            @Override
+            public Size computeContainerSize(BoxConstraints containerConstraints, Size childSize) {
+                return Size.max(containerConstraints.min(), childSize);
+            }
 
-        Placeable childPlaceable = callback.asPlaceable("content", align.content());
-        Size childSize = childPlaceable.measure(c2);
-        Size containerSize = Size.max(constraints.min(), childSize);
-
-        assert constraints.isSatisfiedBy(containerSize);
-        double l = (containerSize.width() - childSize.width()) * alignment.leftFraction;
-        double t = (containerSize.height() - childSize.height()) * alignment.topFraction;
-        double r = l + childSize.width();
-        double b = t + childSize.height();
-
-        // TODO ha nem egész a container mérete, akkor a childnak sem kéne valszeg erőltetni
-        //      hogy egész mérete legyen
-        l = Math.floor(l);
-        t = Math.floor(t);
-        r = Math.ceil(r);
-        b = Math.ceil(b);
-
-        childPlaceable.placeAt(Rect.ofTopRightBottomLeft(t, r, b, l));
-
-        return containerSize;
+            @Override
+            public Vec2 computeChildPosition(Size containerSize, Size childSize) {
+                double l = (containerSize.width() - childSize.width()) * align.alignment().leftFraction;
+                double t = (containerSize.height() - childSize.height()) * align.alignment().topFraction;
+                return new Vec2(l, t);
+            }
+        });
     }
 }

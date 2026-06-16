@@ -4,6 +4,7 @@ import org.jspecify.annotations.NonNull;
 import org.teavm.jso.dom.html.HTMLElement;
 import ui11.EndingWidget;
 import ui11.Slot;
+import ui11.Widget;
 import ui11.layout.singlechild.Cover;
 import ui11.platform.dom.DOMPeerBase;
 
@@ -13,8 +14,6 @@ import java.util.Objects;
 public class DOMCoverPeer extends DOMPeerBase<HTMLElement> {
 
     private final Cover cover;
-
-    @Inject private Slot contentSlot;
 
     public DOMCoverPeer(Cover cover) {
         this.cover = cover;
@@ -27,9 +26,11 @@ public class DOMCoverPeer extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    protected void update() {
-        CSSBackgroundImage img = makePeer(contentSlot, cover.content(), new CSSBackgroundImagePeerCreationRequest());
-        elem().getStyle().setProperty("background-image", "url(" + img.uri.toString() + ")");
+    protected Widget doBuild() {
+        return new CSSBackgroundImagePeerCreationRequest().executedOn(cover.content(), img->{
+            elem().getStyle().setProperty("background-image", "url(" + img.uri.toString() + ")");
+            return endingWidget();
+        });
     }
 
     public static final class CSSBackgroundImage extends EndingWidget {

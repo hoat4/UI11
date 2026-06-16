@@ -4,10 +4,7 @@ import com.sun.glass.ui.Application;
 import com.sun.glass.ui.View;
 import com.sun.glass.ui.Window;
 import ui.platform.glass.windows.CompositorTimingThread;
-import ui11.Component;
-import ui11.Slot;
-import ui11.Widget;
-import ui11.WidgetTree;
+import ui11.*;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
 import ui11.geom.Mat4;
@@ -30,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static ui11.geom.Length.px;
+import static ui11.graphics.Empty.empty;
 
 public class WindowImpl {
 
@@ -84,13 +82,10 @@ public class WindowImpl {
 
         BufferPool bufferPool = new BufferPool();
 
-        Component<Void> rootComponent = new Component<>() {
-
-            @Inject
-            private Slot rootSlot;
+        Widget rootComponent = new Widget() {
 
             @Override
-            protected Void update() {
+            protected Widget build() {
                 Widget w = rootWidget;
 
                 w = new Provider<>(TextStyle.class, DEFAULT_TEXT_STYLE, w);
@@ -108,7 +103,8 @@ public class WindowImpl {
                         0, 0, 0, 1
                 );
 
-                RenderNode rootRenderNode = makePeer(rootSlot, w, new GLNodeHolder.GLNodeRequest()).renderNode();
+
+                return new GLNodeHolder.GLNodeRequest().executedOn(w, h -> {
 
                 /*
                 System.out.println("New render tree. Viewport size: "+innerSize.get());
@@ -116,11 +112,13 @@ public class WindowImpl {
                 System.out.println();
                  */
 
-                rootRenderNode.addToDisplayList(initialTransform, displayList);
-                currentDisplayList = displayList;
-                repaint();
+                    h.renderNode().addToDisplayList(initialTransform, displayList);
+                    currentDisplayList = displayList;
+                    repaint();
 
-                return null;
+                    return new EndingWidget() {
+                    };
+                });
             }
         };
 

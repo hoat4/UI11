@@ -1,11 +1,8 @@
 package ui11.platform.dom.peers;
 
-import org.teavm.jso.dom.html.HTMLElement;
-import ui11.Slot;
+import ui11.Widget;
 import ui11.graphics.effect.Opacity;
 import ui11.platform.dom.DOMLayoutPeerBase;
-
-import java.util.List;
 
 // eredetileg DOMPeer kezelte Node.tmp_findTags-zal Opacity-t, de úgy egyrészt nem tudunk reagálni a változásokra,
 // másrészt felesleges updateelni az egész peert, főleg ha valami nagy layout.
@@ -13,8 +10,6 @@ import java.util.List;
 public class DOMOpacityPeer extends DOMLayoutPeerBase {
 
     private final Opacity opacity;
-
-    @Inject private Slot contentSlot;
 
     public DOMOpacityPeer(Opacity opacity) {
         super(false, false);
@@ -27,9 +22,9 @@ public class DOMOpacityPeer extends DOMLayoutPeerBase {
     }
 
     @Override
-    protected List<? extends HTMLElement> children() {
+    protected Widget doBuild() {
         elem().getStyle().setProperty("opacity", Double.toString(opacity.opacity()));
 
-        return List.of(peerOf(contentSlot, opacity.content()).element());
+        return updateToSingleChild(opacity.content());
     }
 }

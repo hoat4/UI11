@@ -7,7 +7,6 @@ import ui11.input.pointer.PointerRegion;
 import ui11.platform.awt.j2d.J2DNodeHolder;
 import ui11.platform.awt.j2d.J2DPeerCreationRequest;
 import ui11.platform.awt.j2d.inputtree.ListenerInputNode;
-import ui11.resolution.PeerCreationRequest;
 
 public class J2DPointerRegionPeer extends Widget {
 
@@ -28,10 +27,12 @@ public class J2DPointerRegionPeer extends Widget {
 
     @Override
     protected Widget build() {
-        J2DNodeHolder childH = makePeer(contentSlot, pointerRegion.content(), new J2DPeerCreationRequest());
-        inputNode.child.set(childH.inputNode());
-        inputNode.listener = pointerRegion;
-        J2DNodeHolder h = new J2DNodeHolder(childH.renderNode(), inputNode);
-        return EndingWidget.combine(pointerRegion.content().withSlot(contentSlot), h);
+        Widget content = pointerRegion.content().withSlot(contentSlot);
+        return new J2DPeerCreationRequest().executedOn(content, peer -> {
+            inputNode.child.set(peer.inputNode());
+            inputNode.listener = pointerRegion;
+            J2DNodeHolder h = new J2DNodeHolder(peer.renderNode(), inputNode);
+            return EndingWidget.combine(content, h);
+        });
     }
 }

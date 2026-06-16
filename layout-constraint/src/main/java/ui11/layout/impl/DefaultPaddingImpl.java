@@ -1,14 +1,9 @@
 package ui11.layout.impl;
 
 import ui11.Widget;
-import ui11.geom.Axis;
-import ui11.geom.Length;
-import ui11.geom.Rect;
-import ui11.geom.Size;
+import ui11.geom.*;
 import ui11.layout.Insets;
-import ui11.layout.helper.MultiChildLayout;
-import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback;
-import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback.Placeable;
+import ui11.layout.helper.SingleChildLayout;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.singlechild.Padding;
 import ui11.text.TextStyle;
@@ -25,31 +20,29 @@ public class DefaultPaddingImpl extends Widget {
 
     @Override
     protected Widget build() {
-        return new MultiChildLayout(this::doLayout);
-    }
-
-    private Size doLayout(BoxConstraints constraints, MultiChildLayoutCallback callback) {
-        Placeable contentPlaceable = callback.asPlaceable("content", padding.content());
-
-        Size containerSize;
         Size allPadding = new Size(
                 evalLen(padding.insets().sum(Axis.HORIZONTAL)),
                 evalLen(padding.insets().sum(Axis.VERTICAL))
         );
-        BoxConstraints childConstraints = constraints.subtract(allPadding);
-        containerSize = contentPlaceable.measure(childConstraints).add(allPadding);
-        containerSize = constraints.clamp(containerSize);
 
-        Rect contentBounds = Rect.of(containerSize);
+        return new SingleChildLayout(padding.content(), new SingleChildLayout.SingleChildLayoutDelegate() {
+            @Override
+            public BoxConstraints computeChildConstraints(BoxConstraints containerConstraints) {
+                return containerConstraints.subtract(allPadding);
+            }
 
-        Insets pad = padding.insets();
-        if (!pad.isZero())
-            contentBounds = contentBounds.inset(evalLen(pad.top()), evalLen(pad.right()),
-                    evalLen(pad.bottom()), evalLen(pad.left()));
+            @Override
+            public Size computeContainerSize(BoxConstraints containerConstraints, Size childSize) {
+                return childSize.add(allPadding);
+            }
 
-        contentPlaceable.placeAt(contentBounds);
-
-        return containerSize;
+            @Override
+            public Vec2 computeChildPosition(Size containerSize, Size childSize) {
+                Insets pad = padding.insets();
+                return Rect.of(containerSize).inset(evalLen(pad.top()), evalLen(pad.right()),
+                        evalLen(pad.bottom()), evalLen(pad.left())).topLeft();
+            }
+        });
     }
 
     private double evalLen(Length l) {

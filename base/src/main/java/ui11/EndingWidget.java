@@ -14,7 +14,7 @@ import java.util.Set;
  * A widget that is fully concrete, e.g. doesn't build more widgets.
  * <p>
  * A widget can query the EndingWidget of a child using
- * {@link Widget#makePeer(Slot, Widget, PeerCreationRequest)}.
+ * {@link Widget#internal_makePeer(Slot, Widget, PeerCreationRequest)}.
  */
 public abstract class EndingWidget extends Widget {
 

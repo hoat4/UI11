@@ -1,17 +1,13 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLAnchorElement;
-import ui11.Slot;
 import ui11.Widget;
 import ui11.control.Hyperlink;
-import ui11.platform.dom.DOMElementHolder;
 import ui11.platform.dom.DOMPeerBase;
 
 public class DOMHyperlinkPeer extends DOMPeerBase<HTMLAnchorElement> {
 
     private final Hyperlink hyperlink;
-
-    @Inject private Slot contentSlot;
 
     public DOMHyperlinkPeer(Hyperlink hyperlink) {
         this.hyperlink = hyperlink;
@@ -27,13 +23,15 @@ public class DOMHyperlinkPeer extends DOMPeerBase<HTMLAnchorElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         elem().setHref(hyperlink.target().toString());
 
-        DOMElementHolder childPeer = peerOf_sameSurface(contentSlot, hyperlink.content());
-        if (elem().getChildren().getLength() != 1 || !elem().getChildren().item(0).equals(childPeer.element())) {
-            elem().setInnerHTML("");
-            elem().appendChild(childPeer.element());
-        }
+        return makePeer_sameSurface(hyperlink.content(), childPeer -> {
+            if (elem().getChildren().getLength() != 1 || !elem().getChildren().item(0).equals(childPeer.element())) {
+                elem().setInnerHTML("");
+                elem().appendChild(childPeer.element());
+            }
+            return endingWidget();
+        });
     }
 }

@@ -1,7 +1,6 @@
 package ui11.platform.dom.peers;
 
-import org.teavm.jso.dom.html.HTMLElement;
-import ui11.Slot;
+import ui11.Widget;
 import ui11.layout.singlechild.PassiveHeight;
 import ui11.platform.dom.DOMLayoutPeerBase;
 
@@ -19,9 +18,6 @@ public class DOMPassiveHeightPeer extends DOMLayoutPeerBase {
 
     private final PassiveHeight passiveHeight;
 
-    @Inject private Slot contentSlot;
-    @Inject private Slot helperImageSlot;
-
     public DOMPassiveHeightPeer(PassiveHeight passiveHeight) {
         super(false, false);
         this.passiveHeight = passiveHeight;
@@ -33,16 +29,18 @@ public class DOMPassiveHeightPeer extends DOMLayoutPeerBase {
     }
 
     @Override
-    protected List<? extends HTMLElement> children() {
+    protected Widget doBuild() {
         if (passiveHeight.aspectRatio() != 1)
             // ha megadott aspect ratio van, akkor SVG-t lehetne generálni, amit img src-be rakunk data URI-ként.
             // ha a child elem aspect ratiot kéne figyelmi (aspectRatio=-1), akkor nem tudom, mit lehetne csinálni.
             throw new RuntimeException("TODO PassiveHeight aspectRatio != 1: " + passiveHeight);
 
-        return List.of(
-                peerOf(helperImageSlot, cssClass(CLASS_PASSIVE_HEIGHT_HELPER_IMAGE,
-                        new DOMImageElement(IMAGE_1x1))).element(),
-                peerOf(contentSlot, passiveHeight.content()).element()
-        );
+        Widget helperImage = cssClass(CLASS_PASSIVE_HEIGHT_HELPER_IMAGE,
+                new DOMImageElement(IMAGE_1x1));
+        return makePeer(helperImage, helperImageH -> {
+            return makePeer(passiveHeight.content(), contentH -> {
+                return updateChildren(List.of(helperImageH.element(), contentH.element()));
+            });
+        });
     }
 }

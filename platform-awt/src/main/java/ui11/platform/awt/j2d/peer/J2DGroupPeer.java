@@ -12,6 +12,7 @@ import ui11.platform.awt.j2d.inputtree.*;
 import ui11.platform.awt.j2d.rendertree.EmptyRenderNode;
 import ui11.platform.awt.j2d.rendertree.GroupRenderNode;
 import ui11.platform.awt.j2d.rendertree.RenderNode;
+import ui11.provide.Provider;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -21,7 +22,6 @@ public class J2DGroupPeer extends Widget {
 
     private final Overlay overlay;
 
-    @Inject private MultiSlot<Integer> slots;
     @Inject private Surface parentSurface;
 
     @Remember private List<J2DSurface> childSurfaces;
@@ -41,21 +41,31 @@ public class J2DGroupPeer extends Widget {
 
     @Override
     protected Widget build() {
-        List<RenderNode> childRenderNodes = new ArrayList<>();
-        List<InputNode> childInputNodes = new ArrayList<>();
-
-        Shape shape = ((J2DSurface) parentSurface).shape();
+        List<Widget> items = new ArrayList<>();
 
         for (int i = 0; i < overlay.items().size(); i++) {
-            Widget widget = overlay.items().get(i);
-
             if (i == childSurfaces.size())
                 childSurfaces.add(new ShapeInheritingJ2DSurface());
 
             J2DSurface surface = childSurfaces.get(i);
             surface.parent.set((J2DSurface) parentSurface);
 
-            J2DNodeHolder h = makePeer(slots.get(i), widget, new J2DPeerCreationRequest());
+            items.add(new Provider<>(Surface.class, surface, overlay.items().get(i)));
+        }
+
+        if (childSurfaces.size() > overlay.items().size())
+            childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
+
+        return new J2DPeerCreationRequest().executedOn(items, this::doBuild);
+    }
+
+    private Widget doBuild(List<? extends J2DNodeHolder> children) {
+        List<RenderNode> childRenderNodes = new ArrayList<>();
+        List<InputNode> childInputNodes = new ArrayList<>();
+
+        Shape shape = ((J2DSurface) parentSurface).shape();
+
+        for (J2DNodeHolder h : children) {
             if (!(h.renderNode() instanceof EmptyRenderNode))
                 childRenderNodes.add(h.renderNode());
             if (!(h.inputNode() instanceof TransparentInputNode)) {
@@ -64,9 +74,6 @@ public class J2DGroupPeer extends Widget {
                 childInputNodes.add(h.inputNode());
             }
         }
-
-        if (childSurfaces.size() > overlay.items().size())
-            childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
 
         return new J2DNodeHolder(
                 switch (childRenderNodes.size()) {

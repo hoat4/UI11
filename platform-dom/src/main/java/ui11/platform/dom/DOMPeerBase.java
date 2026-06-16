@@ -14,6 +14,13 @@ import ui11.platform.dom.peers.DOMCoverPeer;
 import ui11.resolution.PeerCreationRequest;
 import ui11.text.TextStyle;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toMap;
+
 public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
 
     // TODO ha megváltozik a DOMEnv (pl. másik ablakba kerülünk), akkor mi legyen?
@@ -46,7 +53,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
         H fixedElement = fixedElement();
         if (elementHolder == null ||
                 (fixedElement != null ? fixedElement != elementHolder.element :
-                !elem().getNodeName().equalsIgnoreCase(elementName()))) {
+                        !elem().getNodeName().equalsIgnoreCase(elementName()))) {
             elementHolder = new DOMSurface(env,
                     fixedElement == null ? env.document.createElement(elementName()) : fixedElement);
             initElement();
@@ -61,18 +68,38 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
 
         elementHolder.update(proxySurface, cumulativePropList, textStyle);
 
-        update();
+        return doBuild();
+    }
 
+    protected abstract Widget doBuild();
+
+    protected Widget endingWidget() {
         DOMElementHolder result = new DOMElementHolder(elementHolder.element, asCSSColor(), asCSSImage());
         return wrapResult(result);
     }
 
-    protected DOMElementHolder peerOf(Slot slot, Widget widget) {
-        return makePeer(slot, new DOMWidgetWrapper(widget), new DOMPeerCreationRequest());
+    protected Widget makePeer(Widget widget, Function<DOMElementHolder, Widget> f) {
+        return new DOMPeerCreationRequest().executedOn(new DOMWidgetWrapper(widget), f);
     }
 
-    protected DOMElementHolder peerOf_sameSurface(Slot slot, Widget widget) {
-        return makePeer(slot, new DOMWidgetWrapper(widget), new DOMPeerCreationRequest());
+    protected Widget makePeers(List<? extends Widget> widgets,
+                               Function<List<? extends DOMElementHolder>, Widget> f) {
+        return new DOMPeerCreationRequest().executedOn(
+                widgets.stream().map(DOMWidgetWrapper::new).toList(), f);
+    }
+
+    protected <K> Widget makePeers(Map<K, ? extends Widget> widgets,
+                                   Function<Map<K, ? extends DOMElementHolder>, Widget> f) {
+        widgets = widgets.entrySet().stream().collect(toMap(
+                Map.Entry::getKey,
+                e -> new DOMWidgetWrapper(e.getValue()))
+        );
+        return new DOMPeerCreationRequest().executedOn(widgets, f);
+    }
+
+    protected Widget makePeer_sameSurface(Widget widget, Function<DOMElementHolder, Widget> f) {
+        // TODO ez most ugyanaz mint a sima makePeer
+        return new DOMPeerCreationRequest().executedOn(new DOMWidgetWrapper(widget), f);
     }
 
     protected Widget wrapResult(DOMElementHolder h) {
@@ -87,8 +114,6 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     protected final H elem() {
         return (H) elementHolder.element;
     }
-
-    protected abstract void update();
 
     protected String asCSSColor() {
         return null;

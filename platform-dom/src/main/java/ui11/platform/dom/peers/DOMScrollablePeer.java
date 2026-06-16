@@ -1,7 +1,5 @@
 package ui11.platform.dom.peers;
 
-import org.teavm.jso.dom.html.HTMLElement;
-import ui11.Slot;
 import ui11.Widget;
 import ui11.geom.Vec2;
 import ui11.geom.Rect;
@@ -10,8 +8,6 @@ import ui11.layout.singlechild.Scrollable;
 import ui11.layout.singlechild.Scrollable.ScrollablePeer;
 import ui11.platform.dom.*;
 
-import java.util.List;
-
 // TODO ez most nem jó, mert ha nem rakjuk PassiveSize-ba, akkor "kitolja" az alatta/jobbra lévő elemeket a képernyőből
 
 public class DOMScrollablePeer extends DOMLayoutPeerBase {
@@ -19,8 +15,6 @@ public class DOMScrollablePeer extends DOMLayoutPeerBase {
     private static final String CLASS_OVERFLOW_SCROLL = "oS";
 
     private final Scrollable scrollable;
-
-    @Inject private Slot contentSlot;
 
     public DOMScrollablePeer(Scrollable scrollable) {
         super(false, false);
@@ -34,15 +28,13 @@ public class DOMScrollablePeer extends DOMLayoutPeerBase {
     }
 
     @Override
-    protected List<? extends HTMLElement> children() {
+    protected Widget doBuild() {
         untilNextRebuild().onClose(elem().onEvent("scroll", evt -> {
             if (scrollable.onScroll() != null)
                 scrollable.onScroll().run();
         })::dispose);
 
-        return List.of(
-                peerOf(contentSlot, scrollable.content()).element()
-        );
+        return updateToSingleChild(scrollable.content());
     }
 
     @Override

@@ -29,7 +29,6 @@ public class J2DTransformPeer extends Widget {
     private final Transform transform;
 
     @Inject private Surface parentSurface;
-    @Inject private Slot transformedContentSlot;
 
     @Remember private TransformedSurface surface;
     @Remember private TransformRenderNode node;
@@ -57,18 +56,18 @@ public class J2DTransformPeer extends Widget {
         // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
-        J2DNodeHolder childNodes = makePeer(transformedContentSlot,
-                new Provider<>(Surface.class, surface, transform.content()),
-                new J2DPeerCreationRequest());
 
-        return new J2DNodeHolder(
-                nonDegenerateTransform ?
-                        makeRenderNode(childNodes.renderNode()) :
-                        EmptyRenderNode.INSTANCE,
-                nonDegenerateTransform ?
-                        makeInputNode(childNodes.inputNode()) :
-                        TransparentInputNode.INSTANCE
-        );
+        Widget content = new Provider<>(Surface.class, surface, transform.content());
+        return new J2DPeerCreationRequest().executedOn(content, peer -> {
+            return new J2DNodeHolder(
+                    nonDegenerateTransform ?
+                            makeRenderNode(peer.renderNode()) :
+                            EmptyRenderNode.INSTANCE,
+                    nonDegenerateTransform ?
+                            makeInputNode(peer.inputNode()) :
+                            TransparentInputNode.INSTANCE
+            );
+        });
     }
 
     private RenderNode makeRenderNode(RenderNode childNode) {

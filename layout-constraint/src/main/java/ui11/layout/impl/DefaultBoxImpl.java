@@ -1,24 +1,28 @@
 package ui11.layout.impl;
 
+import ui11.EndingWidget;
+import ui11.Slot;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.decoration.Box;
 import ui11.decoration.Box.BorderSpec;
 import ui11.decoration.Box.BoxShadow;
 import ui11.geom.*;
+import ui11.graphics.Surface;
+import ui11.graphics.effect.Overlay;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
 import ui11.graphics.shaper.RoundedCorners;
 import ui11.graphics.shaper.Stroke;
 import ui11.layout.LayoutSize;
-import ui11.layout.helper.MultiChildLayout;
-import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback;
-import ui11.layout.helper.MultiChildLayout.MultiChildLayoutCallback.Placeable;
+import ui11.layout.helper.SingleChildLayout;
 import ui11.layout.protocol.BoxConstraints;
+import ui11.layout.protocol.BoxLayoutResult;
 import ui11.text.TextStyle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static ui11.geom.Length.px;
 
@@ -28,6 +32,16 @@ public class DefaultBoxImpl extends Widget {
     private final Box box;
 
     @Inject private TextStyle ts;
+    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
+    @Inject(required = false) private Surface surface;
+    @Inject private Slot contentSlot;
+    @Inject private Slot contentWithRoundedCornersSlot;
+    @Inject private Slot backgroundSlot;
+    @Inject private Slot borderSlot;
+    @Inject private Slot shadowTopSlot;
+    @Inject private Slot shadowBottomSlot;
+    @Inject private Slot shadowLeftSlot;
+    @Inject private Slot shadowRightSlot;
 
     public DefaultBoxImpl(Box box) {
         this.box = box;
@@ -35,11 +49,7 @@ public class DefaultBoxImpl extends Widget {
 
     @Override
     protected Widget build() {
-        return new MultiChildLayout(this::doLayout);
-    }
-
-    private Size doLayout(BoxConstraints constraints, MultiChildLayoutCallback callback) {
-        Placeable contentPlaceable = callback.asPlaceable("content", box.content());
+        BoxConstraints constraints = containerConstraints();
 
         Size containerSize = null;
         LayoutSize fs = box.fixedSize();
@@ -75,8 +85,25 @@ public class DefaultBoxImpl extends Widget {
                     borderSizeSum(Axis.VERTICAL) * 2
             );
             BoxConstraints childConstraints = constraints.subtract(allPadding);
-            containerSize = contentPlaceable.measure(childConstraints).add(allPadding);
-        }
+            return new BoxLayoutResult.SizeRequest(childConstraints).executedOn(box.content().withSlot(contentSlot), r -> {
+                Size childSize = switch (r) {
+                    case BoxLayoutResult.OfGone _ -> Size.ZERO;
+                    case BoxLayoutResult.OfNoConstraints _ -> {
+                        throw new RuntimeException("unexpected " +
+                                BoxLayoutResult.class.getSimpleName() + ": " + r);
+                    }
+                    case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size();
+                };
+                Size newContainerSize = childSize.add(allPadding);
+                return layoutPhase2(newContainerSize);
+            });
+        } else
+            return layoutPhase2(containerSize);
+    }
+
+    private Widget layoutPhase2(Size containerSize) {
+        BoxConstraints constraints = containerConstraints();
+
         containerSize = constraints.clamp(containerSize);
 
         // pixelhatárokat preferáljuk, ha elfér a konténerben.
@@ -99,28 +126,32 @@ public class DefaultBoxImpl extends Widget {
 
         double cornerRadius = evalLen(box.cornerRadius());
 
+        Canvas canvas = new Canvas();
+
         if (box.boxShadow() != null)
-            makeBoxShadow(containerSize, box.boxShadow(), callback);
+            makeBoxShadow(containerSize, box.boxShadow(), canvas);
 
         if (box.background() != null) {
             Widget background = box.background();
             if (cornerRadius >= 0.001)
                 background = RoundedCorners.withRoundedCorners(px(cornerRadius), background);
 
-            callback.place("background", background, contentBounds);
+            canvas.add(background.withSlot(backgroundSlot), contentBounds);
         }
 
-        Widget content = contentPlaceable.widget();
+        Widget content = box.content().withSlot(contentSlot);
         if (cornerRadius >= 0.001)
             content = RoundedCorners.withRoundedCorners(px(cornerRadius), content);
 
-        callback.place("contentWithRoundedCorners", content, contentBounds,
-                contentPlaceable.lastMeasureConstraints());
+        canvas.add(content.withSlot(contentWithRoundedCornersSlot), contentBounds);
 
         if (border != null)
-            callback.placeOverlay("border", borderShape);
+            canvas.add(borderShape.withSlot(borderSlot), Rect.of(containerSize));
 
-        return containerSize;
+        Widget w = canvas.build();
+        if (sizeRequest != null)
+            w = EndingWidget.combine(w, new BoxLayoutResult.OfChosenSize(containerSize));
+        return w;
     }
 
     private double borderSizeSum(Axis axis) {
@@ -165,35 +196,69 @@ public class DefaultBoxImpl extends Widget {
                 bounds.inset(top, top, top, top));
     }
 
-    private record BorderInfo(Widget borderStroke, Rect contentShape) {}
+    private record BorderInfo(Widget borderStroke, Rect contentShape) {
+    }
 
-    private void makeBoxShadow(Size s, BoxShadow m, MultiChildLayoutCallback callback) {
+    private void makeBoxShadow(Size s, BoxShadow m, Canvas canvas) {
         double emSize = ts.size();
         Length len = m.blur();
         if (len.rel() != 0)
             throw new RuntimeException("box shadow doesn't support sizes that are relative to parent");
         double blur = len.em() * emSize + len.px();
 
-        callback.place("shadowTop", new LinearGradient(180, List.of(
+        canvas.add(new LinearGradient(180, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        )), new Rect(0, -blur, s.width(), blur));
+        )).withSlot(shadowTopSlot), new Rect(0, -blur, s.width(), blur));
 
-        callback.place("shadowRight", new LinearGradient(270, List.of(
+        canvas.add(new LinearGradient(270, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        )), new Rect(s.width(), 0, blur, s.height()));
+        )).withSlot(shadowRightSlot), new Rect(s.width(), 0, blur, s.height()));
 
-        callback.place("shadowBottom", new LinearGradient(0, List.of(
+        canvas.add(new LinearGradient(0, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        )), new Rect(0, s.height(), s.width(), blur));
+        )).withSlot(shadowBottomSlot), new Rect(0, s.height(), s.width(), blur));
 
-        callback.place("shadowLeft", new LinearGradient(90, List.of(
+        canvas.add(new LinearGradient(90, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        )), new Rect(-blur, 0, blur, s.height()));
+        )).withSlot(shadowLeftSlot), new Rect(-blur, 0, blur, s.height()));
 
         // TODO sarkok
     }
+
+    private BoxConstraints containerConstraints() {
+        BoxConstraints constraints = sizeRequest != null ? sizeRequest.constraints() : null;
+
+        if (constraints == null) {
+            if (surface == null)
+                throw new IllegalStateException("no " + Surface.class.getSimpleName() + " or " +
+                        BoxConstraints.class.getSimpleName() + " provided for " + this);
+            constraints = BoxConstraints.tight(surface.size());
+        }
+        return constraints;
+    }
+
+
+    // ebből majd lehetne egy publikus osztály.
+    // csak akkor lent a buildbe new FixedSize(Length.zero(), ...) kéne
+    // (most azért nem lehet, mert végtelen rekurziót eredményezne, mivel
+    // FixedSize is Box-szal van implementálva)
+    private static final class Canvas {
+
+        private final List<Widget> widgets = new ArrayList<>();
+
+        public void add(Widget w, Rect bounds) {
+            Objects.requireNonNull(w);
+            Objects.requireNonNull(bounds);
+            widgets.add(SingleChildLayout.transformWidgetToBounds(w, bounds));
+        }
+
+        public Widget build() {
+            return new Overlay(widgets);
+        }
+    }
+
 }

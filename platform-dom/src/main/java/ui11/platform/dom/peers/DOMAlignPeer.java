@@ -6,6 +6,7 @@ import ui11.Widget;
 import ui11.css.WrapWithCSSClassTag;
 import ui11.layout.singlechild.Align;
 import ui11.layout.singlechild.Alignment;
+import ui11.platform.dom.DOMElementHolder;
 import ui11.platform.dom.DOMLayoutPeerBase;
 
 import java.util.List;
@@ -42,7 +43,6 @@ public class DOMAlignPeer extends DOMLayoutPeerBase {
     private final Align align;
 
     @Inject private Slot alignedContentSlot;
-    @Inject private Slot wrappedContentSlot;
 
     @Remember private String[] prev;
 
@@ -57,32 +57,33 @@ public class DOMAlignPeer extends DOMLayoutPeerBase {
     }
 
     @Override
-    protected List<? extends HTMLElement> children() {
+    protected Widget doBuild() {
         Widget alignedContent = align.content().withSlot(alignedContentSlot);
         Widget alignedContentWithCSSClass = align.allowExpandOutside() ?
                 WrapWithCSSClassTag.wrapWithCssClass(CLASS_EXPAND_OUTSIDE, alignedContent) :
                 alignedContent;
-        HTMLElement child = peerOf(wrappedContentSlot, alignedContentWithCSSClass).element();
 
-        if (prev != null)
-            elem().getClassList().remove(prev);
-        String[] classes = align.alignment() == null ?
-                CLASS_FILL : CLASS_ATTRS[align.alignment().ordinal()];
-        Objects.requireNonNull(classes);
-        elem().getClassList().add(prev = classes);
+        return makePeer(alignedContentWithCSSClass, (DOMElementHolder child) -> {
+            if (prev != null)
+                elem().getClassList().remove(prev);
+            String[] classes = align.alignment() == null ?
+                    CLASS_FILL : CLASS_ATTRS[align.alignment().ordinal()];
+            Objects.requireNonNull(classes);
+            elem().getClassList().add(prev = classes);
 
-        // TODO ez valszeg hülyén működik, ha allowExpandOutside == true és van insets
+            // TODO ez valszeg hülyén működik, ha allowExpandOutside == true és van insets
 
-        if (align.allowExpandOutside()) {
-            elem().getClassList().remove(CLASS_CHILDREN_MAX_SIZE_IS_100PERCENT);
-        } else {
-            // Gridnél most ilyesmi valszeg miatt kellett a a minmax(0, ...) hack
-            elem().getClassList().add(CLASS_CHILDREN_MAX_SIZE_IS_100PERCENT);
-        }
+            if (align.allowExpandOutside()) {
+                elem().getClassList().remove(CLASS_CHILDREN_MAX_SIZE_IS_100PERCENT);
+            } else {
+                // Gridnél most ilyesmi valszeg miatt kellett a a minmax(0, ...) hack
+                elem().getClassList().add(CLASS_CHILDREN_MAX_SIZE_IS_100PERCENT);
+            }
 
-        elem().setAttribute("data-align",
-                align.alignment() == null ? "FILL" : align.alignment().displayName);
+            elem().setAttribute("data-align",
+                    align.alignment() == null ? "FILL" : align.alignment().displayName);
 
-        return List.of(child);
+            return updateChildren(List.of(child.element()));
+        });
     }
 }

@@ -124,6 +124,14 @@ public record Vec2(double x, double y) implements Lerpable<Vec2> {
         return Math.acos(this.dot(b) / (this.length() * b.length()));
     }
 
+    public Vec2 floor() {
+        return new Vec2(Math.floor(x), Math.floor(y));
+    }
+
+    public Vec2 ceil() {
+        return new Vec2(Math.ceil(x), Math.ceil(y));
+    }
+
     public Vec2 with(int i, double val) {
         return switch (i) {
             case 0 -> new Vec2(val, y);

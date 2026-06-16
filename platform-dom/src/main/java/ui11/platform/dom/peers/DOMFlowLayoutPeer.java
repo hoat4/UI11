@@ -1,21 +1,15 @@
 package ui11.platform.dom.peers;
 
-import org.teavm.jso.dom.html.HTMLElement;
-import ui11.MultiSlot;
 import ui11.Widget;
 import ui11.layout.multichild.flow.Flow;
-import ui11.platform.dom.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import ui11.platform.dom.DOMElementHolder;
+import ui11.platform.dom.DOMLayoutPeerBase;
 
 public class DOMFlowLayoutPeer extends DOMLayoutPeerBase {
 
     static final String CLASS_FLOW = "fl";
 
     private final Flow flow;
-
-    @Inject private MultiSlot<Integer> slots;
 
     public DOMFlowLayoutPeer(Flow flow) {
         super(false, false);
@@ -28,14 +22,8 @@ public class DOMFlowLayoutPeer extends DOMLayoutPeerBase {
     }
 
     @Override
-    protected List<? extends HTMLElement> children() {
-        List<HTMLElement> childElements = new ArrayList<>();
-        List<? extends Widget> widgets = flow.items();
-        for (int i = 0; i < widgets.size(); i++) {
-            Widget o = widgets.get(i);
-            if (o != null)
-                childElements.add(peerOf(slots.get(i), o).element());
-        }
-        return childElements;
+    protected Widget doBuild() {
+        return makePeers(flow.items(), hList ->
+                updateChildren(hList.stream().map(DOMElementHolder::element).toList()));
     }
 }

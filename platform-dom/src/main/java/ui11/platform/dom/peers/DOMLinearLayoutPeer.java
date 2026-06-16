@@ -27,7 +27,6 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
 
     private final LinearLayout linearLayout;
 
-    @Inject private MultiSlot<Integer> slots;
     @Inject private DOMEnvironment env; // TODO ez így ronda
 
     @Remember private BitSet gone;
@@ -49,17 +48,17 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
     }
 
     @Override
-    protected List<? extends HTMLElement> children() {
+    protected Widget doBuild() {
+        return makePeers(linearLayout.items(), this::doBuild2);
+    }
+
+    private Widget doBuild2(List<? extends DOMElementHolder> hList) {
         LinearLayout e = linearLayout;
         HTMLElement htmlElement = elem();
-
         List<HTMLElement> childElements = new ArrayList<>();
         gone.clear();
-        List<? extends Widget> items = e.items();
-
-        for (int i = 0; i < items.size(); i++) {
-            Widget o = items.get(i);
-            DOMElementHolder childH = peerOf(slots.get(i), o);
+        for (int i = 0; i < hList.size(); i++) {
+            DOMElementHolder childH = hList.get(i);
             if (childH.isHidden())
                 gone.set(i); // TODO ez így hibás, mert hozzá kéne adni a DOM-hoz
             else if (childH.element().getNodeName().equalsIgnoreCase("img")) {
@@ -95,7 +94,7 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
         }
 
         boolean everyWeightIsZero = true;
-        for (Widget item : items) {
+        for (Widget item : linearLayout.items()) {
             if (Item.weight(item) != 0) { // TODO ez most Gone-okat is figyelembe veszi
                 everyWeightIsZero = false;
                 break;
@@ -141,11 +140,11 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
          */
 
         int j = 0;
-        for (int i = 0; i < items.size(); i++) {
+        for (int i = 0; i < linearLayout.items().size(); i++) {
             if (gone.get(i))
                 continue;
 
-            Widget item = items.get(i);
+            Widget item = linearLayout.items().get(i);
 
             double weight = e.mainAxisAlignment() == JustifyContent.STRETCH ? Item.weight(item) : 0;
             HTMLElement childPeer = childElements.get(j++);
@@ -155,6 +154,6 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
                 childPeer.getStyle().setProperty("flex-grow", Double.toString(weight));
         }
 
-        return childElements;
+        return updateChildren(childElements);
     }
 }

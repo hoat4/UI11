@@ -8,10 +8,7 @@ import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.Component;
-import ui11.WidgetTree;
-import ui11.Slot;
-import ui11.Widget;
+import ui11.*;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
 import ui11.control.*;
@@ -105,7 +102,7 @@ public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
             document.getHead().appendChild(css);
         }
 
-        class DOMElementRoot extends Component<Void> {
+        class DOMElementRoot extends Widget {
 
             @Inject private Slot rootWidgetSlot;
 
@@ -153,7 +150,7 @@ public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
             }
 
             @Override
-            protected Void update() {
+            protected Widget build() {
                 // ide berakni Provider-eket nem teljesen ugyanaz, mint a fenti @Provide metódusok:
                 // ha itt exception keletkezik, akkor a @Provide-ot figyelembe lesznek véve az errorwidget
                 // előállításakor, de az itt létrehozott Provider-ek viszont nyilván nem
@@ -175,13 +172,13 @@ public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
                     }
                 }
 
-                Widget contentRoot = new RootWidgetWrapper(widget);
-                DOMElementHolder childElement =
-                        makePeer(rootWidgetSlot, new DOMWidgetWrapper(contentRoot),
-                                new DOMPeerBase.DOMPeerCreationRequest());
-                element.setInnerHTML("");
-                element.appendChild(childElement.element());
-                return null;
+                Widget contentRoot = new RootWidgetWrapper(new DOMWidgetWrapper(widget));
+                return new DOMPeerBase.DOMPeerCreationRequest().executedOn(contentRoot, rootPeer->{
+                    element.setInnerHTML("");
+                    element.appendChild(rootPeer.element());
+                    return new EndingWidget() {
+                    };
+                });
             }
         }
         element.getClassList().add("fp");

@@ -47,12 +47,12 @@ public class J2DClipPeer extends Widget {
 
         Widget widget = clip.content();
         widget = new Provider<>(Surface.class, childSurface, widget);
-        J2DNodeHolder h = makePeer(contentSlot, widget, new J2DPeerCreationRequest());
-
-        return new J2DNodeHolder(
-                makeRenderNode(h.renderNode(), childSurface.shape()),
-                makeInputNode(h.inputNode(), childSurface.shape())
-        );
+        return new J2DPeerCreationRequest().executedOn(widget, peer -> {
+            return new J2DNodeHolder(
+                    makeRenderNode(peer.renderNode(), childSurface.shape()),
+                    makeInputNode(peer.inputNode(), childSurface.shape())
+            );
+        });
     }
 
     private RenderNode makeRenderNode(RenderNode childNode, Shape awtShape) {

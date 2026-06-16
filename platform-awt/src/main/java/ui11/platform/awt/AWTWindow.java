@@ -84,10 +84,7 @@ public class AWTWindow {
         size.set(new Size(frame.innerWidth(), frame.innerHeight()));
     }
 
-    class Root extends Component<Void> {
-
-        @Inject private Slot contentSlot;
-        @Inject private Slot repainterSlot;
+    class Root extends Widget {
 
         @Remember private AWTScheduler scheduler;
 
@@ -97,7 +94,7 @@ public class AWTWindow {
         }
 
         @Override
-        protected Void update() {
+        protected Widget build() {
             final TextStyle rootTextStyle = new TextStyle(
                     Color.BLACK,
                     12D, null, TextAlign.LEFT,
@@ -110,15 +107,16 @@ public class AWTWindow {
             // TODO mi legyen ha a root widget peerjét nem sikerül létrehozni?
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
             //      a hibaüzenetet (Text widget) tudná resolvolni
-            rootNodeHolder.set(makePeer(contentSlot, content, new J2DPeerCreationRequest()));
-            // TODO repaint kéne, ha rootPeer megváltozik
 
-            if (!frame.isVisible()) // TODO onResume kéne, csak az túl korán van
-                frame.setVisible(true);
+            return new J2DPeerCreationRequest().executedOn(content, contentPeer->{
+                rootNodeHolder.set(contentPeer);
+                // TODO repaint kéne, ha rootPeer megváltozik
 
-            useComponent(repainterSlot, new Repainter());
+                if (!frame.isVisible()) // TODO onResume kéne, csak az túl korán van
+                    frame.setVisible(true);
 
-            return null;
+                return new Repainter();
+            });
         }
 
         @Provide

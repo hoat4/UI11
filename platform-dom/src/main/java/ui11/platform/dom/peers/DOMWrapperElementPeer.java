@@ -1,14 +1,14 @@
 package ui11.platform.dom.peers;
 
-import ui11.Slot;
-import ui11.platform.dom.*;
 import org.teavm.jso.dom.html.HTMLElement;
+import ui11.Widget;
+import ui11.platform.dom.DOMLayoutPeerBase;
+import ui11.platform.dom.DOMPeerBase;
+import ui11.platform.dom.HTMLElementHint;
 
 public class DOMWrapperElementPeer extends DOMPeerBase<HTMLElement> {
 
     private final HTMLElementHint tag;
-
-    @Inject private Slot contentSlot;
 
     // TODO ez nem tud reagálni a htmlElementName megváltozására
     public DOMWrapperElementPeer(HTMLElementHint tag) {
@@ -26,15 +26,18 @@ public class DOMWrapperElementPeer extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    protected void update() {
-        HTMLElement childElement = peerOf(contentSlot, tag.content()).element();
+    protected Widget doBuild() {
+        return makePeer(tag.content(), peer->{
+            HTMLElement childElement = peer.element();
 
-        DOMLayoutPeerBase.removeAllChildLayoutProperties(childElement);
-        if (elem().getChildren().getLength() == 0)
-            elem().appendChild(childElement);
-        else if (elem().getChildren().item(0) != childElement) {
-            elem().setInnerHTML("");
-            elem().appendChild(childElement);
-        }
+            DOMLayoutPeerBase.removeAllChildLayoutProperties(childElement);
+            if (elem().getChildren().getLength() == 0)
+                elem().appendChild(childElement);
+            else if (elem().getChildren().item(0) != childElement) {
+                elem().setInnerHTML("");
+                elem().appendChild(childElement);
+            }
+            return endingWidget();
+        });
     }
 }

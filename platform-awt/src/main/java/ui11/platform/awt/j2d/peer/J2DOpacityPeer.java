@@ -11,8 +11,6 @@ public class J2DOpacityPeer extends Widget {
 
     private final Opacity opacity;
 
-    @Inject private Slot childSlot;
-
     @Remember private OpacityRenderNode opacityRenderNode;
 
     public J2DOpacityPeer(Opacity opacity) {
@@ -26,12 +24,13 @@ public class J2DOpacityPeer extends Widget {
 
     @Override
     protected Widget build() {
-        J2DNodeHolder childNodeHolder = makePeer(childSlot, opacity.content(), new J2DPeerCreationRequest());
-        opacityRenderNode.opacity.set(opacity.opacity());
-        opacityRenderNode.content.set(childNodeHolder.renderNode());
-        return new J2DNodeHolder(
-                opacityRenderNode,
-                childNodeHolder.inputNode()
-        );
+        return new J2DPeerCreationRequest().executedOn(opacity.content(), peer -> {
+            opacityRenderNode.opacity.set(opacity.opacity());
+            opacityRenderNode.content.set(peer.renderNode());
+            return new J2DNodeHolder(
+                    opacityRenderNode,
+                    peer.inputNode()
+            );
+        });
     }
 }

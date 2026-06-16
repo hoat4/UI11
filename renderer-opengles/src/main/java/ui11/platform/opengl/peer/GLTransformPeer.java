@@ -51,26 +51,27 @@ public class GLTransformPeer extends Widget {
         surface.parent.set((GLSurface) parentSurface);
         boolean nonDegenerateTransform = surface.update(transform.transformation());
 
+        Widget transformedContent = new Provider<>(Surface.class, surface, transform.content()).withSlot(transformedContentSlot);
+
         if (surface.renderNodeTranslation.snoop() != null) {
             // ilyenkor nem kell TransformRenderNode
-            return new Provider<>(Surface.class, surface, transform.content()).withSlot(transformedContentSlot);
+            return transformedContent;
         }
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
-        GLNodeHolder childNodes = makePeer(transformedContentSlot,
-                        new Provider<>(Surface.class, surface, transform.content()),
-                new GLNodeHolder.GLNodeRequest());
 
-        return new GLNodeHolder(
-                nonDegenerateTransform ?
-                        makeRenderNode(childNodes.renderNode()) :
-                        EmptyRenderNode.INSTANCE,
-                nonDegenerateTransform ?
-                        makeInputNode(childNodes.inputNode()) :
-                        TransparentInputNode.INSTANCE
-        );
+        return new GLNodeHolder.GLNodeRequest().executedOn(transformedContent, peer -> {
+            return new GLNodeHolder(
+                    nonDegenerateTransform ?
+                            makeRenderNode(peer.renderNode()) :
+                            EmptyRenderNode.INSTANCE,
+                    nonDegenerateTransform ?
+                            makeInputNode(peer.inputNode()) :
+                            TransparentInputNode.INSTANCE
+            );
+        });
     }
 
     private RenderNode makeRenderNode(RenderNode childNode) {

@@ -1,6 +1,5 @@
 package ui11;
 
-import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.observable.ObservableBase;
@@ -14,7 +13,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -277,34 +275,12 @@ public abstract class Widget implements Cloneable {
         return widgetInstantiation.lookup(request.peerType());
     }
 
-    protected final <U extends EndingWidget> U makePeer(
+    // TODO ez legyen package-privát. de egyelőre nem lehet, mert PeerCreationRequest
+    //      másik package-ben van.
+    protected final <U extends EndingWidget> U internal_makePeer(
             Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
 
         return useWidget(defaultSlot, widget, request);
-    }
-
-    protected final <U extends EndingWidget> Stream<U> useWidgets(MultiSlot<Integer> slots,
-                                                             List<? extends Widget> widgets,
-                                                             PeerCreationRequest<U> request) {
-        return instantiateMultiple(slots, widgets.toArray(), request);
-    }
-
-    protected final <U extends EndingWidget> Stream<U> useWidgets(MultiSlot<Integer> slots,
-                                                             Stream<? extends Widget> widgets,
-                                                             PeerCreationRequest<U> request) {
-        return instantiateMultiple(slots, widgets.toArray(), request);
-    }
-
-    private <U extends EndingWidget> @NonNull Stream<U> instantiateMultiple(
-            MultiSlot<Integer> slots, Object[] array,
-            PeerCreationRequest<U> request) {
-
-        for (int i = 0; i < array.length; i++)
-            array[i] = makePeer(slots.get(i), (Widget) array[i], request);
-
-        @SuppressWarnings("unchecked")
-        Stream<U> castedStream = (Stream<U>) (Stream<?>) Stream.of(array);
-        return castedStream;
     }
 
     // equals/hashCodera final kell?

@@ -2,6 +2,7 @@ package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
 import ui11.Slot;
+import ui11.Widget;
 import ui11.decoration.Box;
 import ui11.decoration.Box.BorderSpec;
 import ui11.decoration.Box.BoxShadow;
@@ -10,6 +11,9 @@ import ui11.layout.Insets;
 import ui11.platform.dom.DOMElementHolder;
 import ui11.platform.dom.DOMLayoutPeerBase;
 import ui11.platform.dom.DOMPeerBase;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static ui11.css.CSSClassTag.cssClass;
 
@@ -25,10 +29,6 @@ public class DOMBoxPeer extends DOMPeerBase<HTMLElement> {
 
     private final Box box;
 
-    @Inject private Slot contentSlot;
-    @Inject private Slot backgroundSlot;
-    @Inject private Slot borderFillSlot;
-
     public DOMBoxPeer(Box box) {
         this.box = box;
     }
@@ -39,14 +39,28 @@ public class DOMBoxPeer extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    protected void update() {
-        DOMElementHolder childPeer = peerOf_sameSurface(contentSlot, box.content());
-        DOMElementHolder bgPeer = box.background() == null ? null : peerOf(backgroundSlot,
-                        cssClass(CLASS_POSITION_ABSOLUTE, CLASS_Z_ZERO, box.background()));
-        DOMElementHolder borderFillPeer = box.border() == null ||
-                box.border().thickness().isZero() ? null :
-                peerOf(borderFillSlot, box.border().fill());
+    protected Widget doBuild() {
+        enum ChildType {
+            CONTENT, BACKGROUND, BORDER_FILL
+        }
 
+        Map<ChildType, Widget> widgets = new HashMap<>();
+        widgets.put(ChildType.CONTENT, box.content());
+        if (box.background() != null)
+            widgets.put(ChildType.BACKGROUND, cssClass(CLASS_POSITION_ABSOLUTE, CLASS_Z_ZERO, box.background()));
+        if (box.border() != null && !box.border().thickness().isZero())
+            widgets.put(ChildType.BORDER_FILL, box.border().fill());
+
+        return makePeers(widgets, peers -> {
+            update(peers.get(ChildType.CONTENT), peers.get(ChildType.BACKGROUND),
+                    peers.get(ChildType.BORDER_FILL));
+            return endingWidget();
+        });
+    }
+
+    private void update(DOMElementHolder childPeer,
+                        DOMElementHolder bgPeer,
+                        DOMElementHolder borderFillPeer) {
         boolean hasNonColorBackground = false;
         String bgAsCSSImage = bgPeer == null ? null : bgPeer.asCSSImage();
         if (bgPeer != null && bgAsCSSImage == null) // TODO URLImageView-t is kezeljük majd

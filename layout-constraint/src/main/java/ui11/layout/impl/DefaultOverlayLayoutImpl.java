@@ -17,7 +17,6 @@ public final class DefaultOverlayLayoutImpl extends Widget {
 
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
     @Inject private Slot peerSlot;
-    @Inject private MultiSlot<Integer> childrenSlots;
 
     public DefaultOverlayLayoutImpl(Overlay overlay, Widget peer) {
         this.overlay = overlay;
@@ -36,24 +35,25 @@ public final class DefaultOverlayLayoutImpl extends Widget {
             return EndingWidget.combine(peerWithSlot,
                     new BoxLayoutResult.OfNoConstraints());
 
-        // constraintset nem kell megadni Providerben, mert már amúgyis inherited value
-        Size s = useWidgets(childrenSlots, overlay.items(),
-                new BoxLayoutResult.SizeRequest(constraints)).
-                filter(boxLayoutResult -> switch (boxLayoutResult) {
-                    case BoxLayoutResult.OfChosenSize _ -> true;
-                    case BoxLayoutResult.OfGone _ -> false;
-                    case BoxLayoutResult.OfNoConstraints _ -> {
-                        throw new RuntimeException("unexpected " +
-                                BoxLayoutResult.class.getSimpleName() + ": " + boxLayoutResult);
-                    }
-                }).
-                map(r -> ((BoxLayoutResult.OfChosenSize) r).size()).
-                reduce(Size::max).
-                orElse(constraints.min());
+        BoxLayoutResult.SizeRequest req = new BoxLayoutResult.SizeRequest(constraints);
+        return req.executedOn(overlay.items(), peers -> {
+            Size s = peers.stream().
+                    filter(boxLayoutResult -> switch (boxLayoutResult) {
+                        case BoxLayoutResult.OfChosenSize _ -> true;
+                        case BoxLayoutResult.OfGone _ -> false;
+                        case BoxLayoutResult.OfNoConstraints _ -> {
+                            throw new RuntimeException("unexpected " +
+                                    BoxLayoutResult.class.getSimpleName() + ": " + boxLayoutResult);
+                        }
+                    }).
+                    map(r -> ((BoxLayoutResult.OfChosenSize) r).size()).
+                    reduce(Size::max).
+                    orElse(constraints.min());
 
-        if (!constraints.isSatisfiedBy(s))
-            throw new RuntimeException(constraints + " is not satisfied by " + s + " (returned by " + this + ")");
+            if (!constraints.isSatisfiedBy(s))
+                throw new RuntimeException(constraints + " is not satisfied by " + s + " (returned by " + this + ")");
 
-        return EndingWidget.combine(peerWithSlot, new BoxLayoutResult.OfChosenSize(s));
+            return EndingWidget.combine(peerWithSlot, new BoxLayoutResult.OfChosenSize(s));
+        });
     }
 }

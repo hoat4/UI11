@@ -20,7 +20,7 @@ public final class WidgetTree {
         this.rootElement = rootElement;
     }
 
-    public static WidgetTree create(Component<Void> root, Executor executor) {
+    public static WidgetTree create(Widget root, Executor executor) {
         Objects.requireNonNull(root);
         Objects.requireNonNull(executor);
 
@@ -39,13 +39,15 @@ public final class WidgetTree {
         private List<Element> toBeDisposed;
         private final Map<Class<?>, Object> ivDefaultValues = new HashMap<>();
 
-        private RootElement(Component<Void> root, Executor executor) {
+        private RootElement(Widget root, Executor executor) {
             // ha rootnak widgetproxy-t akarunk megadni (Provider, KeyWrapper) vagy EndingWidgetet, akkor
             // be kell wrappelni egy widgetbe
 
             this.executor = executor;
-            setWidget(root);
+            // setWidget csak regular widgetet tud fogadni, ezért wrappelni kell a rootot
+            setWidget(new RootWidgetWrapper(root));
         }
+
 
         void start() {
             if (elementState != ElementState.INITIAL && elementState != ElementState.STOPPED)
@@ -93,6 +95,21 @@ public final class WidgetTree {
             toBeDisposed.add(e);
         }
     }
+
+    private static class RootWidgetWrapper extends Widget {
+
+        private final Widget content;
+
+        public RootWidgetWrapper(Widget content) {
+            this.content = content;
+        }
+
+        @Override
+        protected Widget build() {
+            return content;
+        }
+    }
+
 
     // TODO ez 2023-09-08-án (r22244) került be, aztán Element4 óta, azaz
     //      kb. 2024-07-02 (r23141) óta nincs használva.

@@ -3,8 +3,11 @@ package ui11;
 import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 // TODO duplicate-ek detektálása
 
@@ -46,5 +49,11 @@ public final class MultiSlot<K> {
         if (result == null)
             slots.put(item, result = new Slot(ownerWidgetState));
         return result;
+    }
+
+    public static List<? extends Widget> assignSlots(MultiSlot<Integer> slots, List<? extends Widget> items) {
+        return IntStream.range(0, items.size()).
+                mapToObj(i -> items.get(i).withSlot(slots.get(i))).
+                collect(Collectors.toUnmodifiableList());
     }
 }

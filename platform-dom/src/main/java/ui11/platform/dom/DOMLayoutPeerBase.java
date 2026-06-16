@@ -4,11 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.dom.xml.Element;
+import ui11.Widget;
 import ui11.platform.dom.peers.DOMBoxPeer;
 
 import java.util.List;
 import java.util.Set;
 
+/**
+ * doBuild (or an inner widget) should call {@link #updateChildren(List)} and return its result
+ */
 public abstract class DOMLayoutPeerBase extends DOMPeerBase<HTMLElement> {
 
     private static final Logger logger = LoggerFactory.getLogger(DOMLayoutPeerBase.class);
@@ -25,22 +29,21 @@ public abstract class DOMLayoutPeerBase extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    public final void update() {
+    protected Widget endingWidget() {
         if (mouseTransparent() && !hasPointerListener())
             elem().getClassList().add(CLASS_POINTER_TRANSPARENT_CONTAINER);
         else
             elem().getClassList().remove(CLASS_POINTER_TRANSPARENT_CONTAINER);
 
-        List<? extends HTMLElement> children = children();
-        updateChildren(children);
+        return super.endingWidget();
     }
 
-    /**
-     * should update childrenPeers
-     */
-    protected abstract List<? extends HTMLElement> children();
+    protected Widget updateToSingleChild(Widget singleChild) {
+        return makePeer(singleChild,
+                h -> updateChildren(List.of(h.element())));
+    }
 
-    private void updateChildren(List<? extends HTMLElement> newChildren) {
+    protected Widget updateChildren(List<? extends HTMLElement> newChildren) {
         if (childrenChanged(newChildren)) {
             int i = 0;
             // TODO kéne egy rendes diff algoritmust nézni, mert ez így fölöslegesen sok DOM mutationt végez
@@ -68,6 +71,7 @@ public abstract class DOMLayoutPeerBase extends DOMPeerBase<HTMLElement> {
                 elem().removeChild(elem().getChildren().item(elem().getChildren().getLength() - 1));
             }
         }
+        return endingWidget();
     }
 
     private void removeUnusedChildLayoutProperties(HTMLElement htmlElement) {

@@ -1,11 +1,9 @@
 package ui11.platform.dom.peers;
 
-import org.teavm.jso.dom.html.HTMLElement;
 import ui11.Slot;
+import ui11.Widget;
 import ui11.layout.singlechild.PassiveSize;
-import ui11.platform.dom.*;
-
-import java.util.List;
+import ui11.platform.dom.DOMLayoutPeerBase;
 
 public class DOMPassiveSizePeer extends DOMLayoutPeerBase {
 
@@ -26,9 +24,7 @@ public class DOMPassiveSizePeer extends DOMLayoutPeerBase {
     }
 
     @Override
-    protected List<? extends HTMLElement> children() {
-        return List.of(
-                peerOf(contentSlot, passiveSize.content()).element()
-        );
+    protected Widget doBuild() {
+        return updateToSingleChild(passiveSize.content());
     }
 }

@@ -13,8 +13,6 @@ public class DOMTemplatedSVGPeer extends DOMPeerBase<HTMLElement> {
     private final String svgMarkup;
     private final Map<String, ? extends Widget> embeddedWidgets;
 
-    @Inject private MultiSlot<String> slots;
-
     public DOMTemplatedSVGPeer(String svgMarkup,
                                Map<String, ? extends Widget> embeddedWidgets) {
         this.svgMarkup = svgMarkup;
@@ -27,16 +25,19 @@ public class DOMTemplatedSVGPeer extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         elem().setInnerHTML(svgMarkup);
 
-        embeddedWidgets.forEach((id, w) -> {
-            HTMLElement foreignObjectElement = elem().querySelector("#" + id);
-            foreignObjectElement.getClassList().add(DOMBoxPeer.CLASS_WRAPPERELEMENT);
-            foreignObjectElement.setInnerHTML("");
-            HTMLElement e = peerOf(slots.get(id), w).element();
-            DOMLayoutPeerBase.removeAllChildLayoutProperties(e);
-            foreignObjectElement.appendChild(e);
+        return makePeers(embeddedWidgets, peers->{
+            peers.forEach((id, peer) -> {
+                HTMLElement foreignObjectElement = elem().querySelector("#" + id);
+                foreignObjectElement.getClassList().add(DOMBoxPeer.CLASS_WRAPPERELEMENT);
+                foreignObjectElement.setInnerHTML("");
+                HTMLElement e = peer.element();
+                DOMLayoutPeerBase.removeAllChildLayoutProperties(e);
+                foreignObjectElement.appendChild(e);
+            });
+            return endingWidget();
         });
     }
 }

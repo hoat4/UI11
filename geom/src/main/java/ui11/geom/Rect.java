@@ -62,9 +62,25 @@ public record Rect(Vec2 origin, Size size) {
         return of(new Vec2(minX, minY), new Vec2(maxX, maxY));
     }
 
-    // TODO ez dob exceptiont, ha negatív méretű téglalap lenne az eredmény?
+    /**
+     * If left+right inset is greater than the width, the resulting rectangle will have 0
+     * and will be aligned proportionally to left/right inset ratio.
+     * Same for vertical axis.
+     */
     public Rect inset(double top, double right, double bottom, double left) {
-        return new Rect(origin.plus(left, top), size.subtractOrZero(left + right, top + bottom));
+        if (left + right > width()) {
+            double scale = width() / (left + right);
+            left *= scale;
+            right *= scale;
+            // TODO kerekítési hiba miatt nem lehet ezután is left+right > width?
+            //      ha igen, akkor lehetne pl. lent size.subtract helyett size.subtractIfZero-t használni
+        }
+        if (top + bottom > height()) {
+            double scale = height() / (top + bottom);
+            top *= scale;
+            bottom *= scale;
+        }
+        return new Rect(origin.plus(left, top), size.subtract(left + right, top + bottom));
     }
 
     public Rect outset(double top, double right, double bottom, double left) {
