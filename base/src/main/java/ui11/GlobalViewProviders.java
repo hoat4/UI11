@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
 
-public class GlobalViewProviders implements WidgetResolver {
+class GlobalViewProviders implements WidgetResolver {
 
     private static final GlobalViewProviders INSTANCE = new GlobalViewProviders();
     private static final List<WidgetResolver> PROVIDERS;

@@ -5,16 +5,12 @@ import ui11.reflectutil.ReflectionUtil;
 
 import static java.util.stream.Collectors.joining;
 
-// TODO ezt jó lenne külön package-be vinni, WidgetResolver és GlobalViewProviders mellé.
-//      csak azért nehéz, mert használja findInheritedValueForInjection-t egyrészt a WidgetResolver
-//      lookupolásához, másrészt a ResolutionContext::inherited implementálásához.
-
-// ResolutionContext nem biztos hogy tényleg kell, de DOMEnvironment egyelőre használja
-// CSSBackgroundImageContext miatt. talán azzal lehetne kiváltani, ha DOMCoverPeer inkább
-// cserélné a DOMEnv-es WidgetResolvert egy másikra. De nem tudom, hogy később felmerül-e
-// értelmesebb use-case ResolutionContext::inherited-re. Így is túl mély az element fa,
-// ResolutionContext nélkül pedig tovább nőhet könnyen, ha mondjuk DOMEnvironment::resolveOrNull
-// mindent bewrappelne egy újabb widgetbe csak azért, hogy CSSBackgroundImageContext-et lekérdezze.
+// időnként felmerül, hogy ezt jó lenne külön package-be vinni, WidgetResolver és GlobalViewProviders mellé.
+// Először azért volt problémás, mert használta findInheritedValueForInjection-t egyrészt a WidgetResolver
+// lookupolásához, másrészt a ResolutionContext::inherited implementálásához. ez megoldódott, át is került
+// ui11.resolution package-be.
+// De aztán jött hogy legyen mint SubstitutedWidget upvalue is egyben, meg az egész PeerCreationRequest dolog,
+// és így meg rengeteg hivatkozás lenne package-ek között, ezért inkább visszraktam a root package-be.
 
 /**
  * A stateless widget which does not determine its content by itself, instead a {@link WidgetResolver} is asked for
