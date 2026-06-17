@@ -16,9 +16,8 @@ import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.GLSurface;
 import ui11.platform.opengl.GLViewProvider;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
-import ui11.platform.opengl.rendertree.RenderNode;
 import ui11.provide.Provider;
-import ui11.resolution.WidgetResolver;
+import ui11.WidgetResolver;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static ui11.geom.Length.px;
-import static ui11.graphics.Empty.empty;
 
 public class WindowImpl {
 
@@ -116,7 +114,7 @@ public class WindowImpl {
                     currentDisplayList = displayList;
                     repaint();
 
-                    return new EndingWidget() {
+                    return new SubstitutedWidget() {
                     };
                 });
             }

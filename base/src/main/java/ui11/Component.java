@@ -2,8 +2,6 @@ package ui11;
 
 // TODO javadoc frissítése
 
-import ui11.resolution.PeerCreationRequest;
-
 /**
  * Egy szülő Element életciklusához kapcsolódik, de saját maga nem tartalmaz widgetet.
  */
@@ -16,7 +14,7 @@ public abstract class Component<R> extends Widget {
         return new ComponentResultUpValue<>(update());
     }
 
-    static class ComponentResultUpValue<R> extends EndingWidget {
+    static class ComponentResultUpValue<R> extends SubstitutedWidget {
 
         final R result;
 
@@ -25,7 +23,7 @@ public abstract class Component<R> extends Widget {
         }
     }
 
-    static class ComponentResultRequest<R> extends PeerCreationRequest<ComponentResultUpValue<R>>{
+    static class ComponentResultRequest<R> extends PeerCreationRequest<ComponentResultUpValue<R>> {
 
         private static final ComponentResultRequest<?> INSTANCE = new ComponentResultRequest<>();
 

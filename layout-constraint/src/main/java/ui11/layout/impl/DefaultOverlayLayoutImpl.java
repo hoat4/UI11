@@ -1,14 +1,11 @@
 package ui11.layout.impl;
 
-import ui11.EndingWidget;
-import ui11.MultiSlot;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.graphics.effect.Overlay;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
-import ui11.resolution.PeerCreationRequest;
 
 public final class DefaultOverlayLayoutImpl extends Widget {
 
@@ -32,9 +29,7 @@ public final class DefaultOverlayLayoutImpl extends Widget {
         BoxConstraints constraints = sizeRequest.constraints();
         if (constraints == null)
             // TODO ha csak Gone van az Overlayben, akkor mi a teendő?
-            return EndingWidget.combine(peerWithSlot,
-                    new BoxLayoutResult.OfNoConstraints());
-
+            return new BoxLayoutResult.OfNoConstraints(peerWithSlot);
         BoxLayoutResult.SizeRequest req = new BoxLayoutResult.SizeRequest(constraints);
         return req.executedOn(overlay.items(), peers -> {
             Size s = peers.stream().
@@ -53,7 +48,7 @@ public final class DefaultOverlayLayoutImpl extends Widget {
             if (!constraints.isSatisfiedBy(s))
                 throw new RuntimeException(constraints + " is not satisfied by " + s + " (returned by " + this + ")");
 
-            return EndingWidget.combine(peerWithSlot, new BoxLayoutResult.OfChosenSize(s));
+            return new BoxLayoutResult.OfChosenSize(s, peerWithSlot);
         });
     }
 }

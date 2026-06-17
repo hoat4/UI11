@@ -1,7 +1,7 @@
 package ui11.webcontent;
 
 import org.jspecify.annotations.NonNull;
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 
 import java.net.URI;
 import java.util.Objects;

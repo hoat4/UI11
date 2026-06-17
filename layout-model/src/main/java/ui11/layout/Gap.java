@@ -1,6 +1,6 @@
 package ui11.layout;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Axis;
 import ui11.layout.singlechild.Padding;

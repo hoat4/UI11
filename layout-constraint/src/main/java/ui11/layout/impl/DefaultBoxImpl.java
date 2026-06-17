@@ -1,6 +1,5 @@
 package ui11.layout.impl;
 
-import ui11.EndingWidget;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.color.Color;
@@ -150,7 +149,7 @@ public class DefaultBoxImpl extends Widget {
 
         Widget w = canvas.build();
         if (sizeRequest != null)
-            w = EndingWidget.combine(w, new BoxLayoutResult.OfChosenSize(containerSize));
+            w = new BoxLayoutResult.OfChosenSize(containerSize, w);
         return w;
     }
 

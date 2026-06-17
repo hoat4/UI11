@@ -1,6 +1,6 @@
 package ui11.platform.awt.j2d;
 
-import ui11.resolution.PeerCreationRequest;
+import ui11.PeerCreationRequest;
 
 public final class J2DPeerCreationRequest extends PeerCreationRequest<J2DNodeHolder> {
 

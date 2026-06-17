@@ -14,7 +14,7 @@
  * reagálva az element fát módosítja.
  * <p>
  * A rendererekkel érintkezhet még a felhasználó program néhány renderer által implementált interface-en keresztül:
- * {@code Scheduler}, {@link ui11.resolution.WidgetDecomposer}, {@code FocusRoot}.
+ * {@code Scheduler}, {@link ui11.WidgetResolver}, {@code FocusRoot}.
  * <p>
  * Beépített renderer-ek:
  *     <ul>

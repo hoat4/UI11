@@ -1,7 +1,5 @@
 package ui11;
 
-import ui11.resolution.PeerCreationRequest;
-
 public class TestStealDelegate {
     public void main() {
         // azt az esetet teszteljük, ha elvesszük egy W2 widgetnek a delegatejét (W1), majd újra refresheljük W2-t.
@@ -72,7 +70,7 @@ public class TestStealDelegate {
         }
     }
 
-    static class UV extends EndingWidget {
+    static class UV extends SubstitutedWidget {
 
         static class UVRequest extends PeerCreationRequest<UV> {
 

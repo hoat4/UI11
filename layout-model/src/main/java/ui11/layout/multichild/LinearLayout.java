@@ -2,7 +2,7 @@ package ui11.layout.multichild;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Axis;
 import ui11.geom.Length;
@@ -585,7 +585,7 @@ public final class LinearLayout extends SubstitutedWidget {
 
         public static double weight(@NonNull Widget e) {
             Objects.requireNonNull(e);
-            // TODO ehelyett EndingWidget rendszert kéne használni
+            // TODO ehelyett ParentDataWidgetet kéne használni
             return e instanceof Item item ? item.weight : 0;
         }
 

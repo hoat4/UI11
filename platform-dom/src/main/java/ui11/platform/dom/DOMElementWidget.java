@@ -1,6 +1,6 @@
 package ui11.platform.dom;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import org.teavm.jso.dom.html.HTMLElement;
 
 public final class DOMElementWidget extends SubstitutedWidget {

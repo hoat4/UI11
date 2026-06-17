@@ -4,8 +4,8 @@ import org.jspecify.annotations.NonNull;
 import ui11.Widget;
 import ui11.control.*;
 import ui11.control.Button.ButtonState;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.WidgetResolver;
+import ui11.PeerCreationRequest;
+import ui11.WidgetResolver;
 
 import org.jspecify.annotations.Nullable;
 

@@ -1,12 +1,11 @@
 package ui11.platform.opengl.peer;
 
-import ui11.EndingWidget;
+import ui11.ParentDataWidget;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.inputtree.ListenerInputNode;
-import ui11.resolution.PeerCreationRequest;
 
 public class GLPointerRegionPeer extends Widget {
 
@@ -32,7 +31,7 @@ public class GLPointerRegionPeer extends Widget {
             inputNode.child.set(peer.inputNode());
             inputNode.listener = pointerRegion;
             GLNodeHolder h = new GLNodeHolder(peer.renderNode(), inputNode);
-            return EndingWidget.combine(content, h);
+            return ParentDataWidget.of(h, content);
         });
     }
 }

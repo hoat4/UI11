@@ -1,7 +1,7 @@
 package ui11.text;
 
+import ui11.ErrorWidgetFactory;
 import ui11.Widget;
-import ui11.resolution.ErrorWidgetFactory;
 
 import static ui11.text.TextModifiers.withLineWrapping;
 

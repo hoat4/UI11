@@ -16,14 +16,15 @@ final class WidgetInstantiation {
     final Element.RefreshID refresh;
 
     /**
-     * akkor null, ha a lánc végén nem Element van, hanem {@link EndingWidget} (pl. J2DColorPrimitive)
+     * akkor null, ha a lánc végén nem Element van, hanem ending widget (pl. J2DColorPrimitive)
      */
     @Nullable final Element element;
 
-    final List<? extends EndingWidget> upValues;
+    final List<? extends SubstitutedWidget> upValues;
 
     WidgetInstantiation(Element container, Element.RefreshID refresh, @Nullable Element element,
-                        List<? extends EndingWidget> upValues) {
+                        List<? extends SubstitutedWidget> upValues) {
+        Objects.requireNonNull(upValues);
         this.container = container;
         this.refresh = refresh;
         this.element = element;
@@ -67,10 +68,10 @@ final class WidgetInstantiation {
      * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő Widgetet vagy Elementet a
      *                                delegate láncban
      */
-    public <U extends EndingWidget> @NonNull U lookup(Class<U> type) {
+    public <U extends SubstitutedWidget> @NonNull U lookup(Class<U> type) {
         Objects.requireNonNull(type);
-        if (type == EndingWidget.class || !EndingWidget.class.isAssignableFrom(type))
-            throw new IllegalArgumentException("not an " + EndingWidget.class.getSimpleName() + " subtype: " + type.getName());
+        if (type == SubstitutedWidget.class || !SubstitutedWidget.class.isAssignableFrom(type))
+            throw new IllegalArgumentException("not an " + SubstitutedWidget.class.getSimpleName() + " subtype: " + type.getName());
 
         return doLookup(type, false);
     }
@@ -86,11 +87,11 @@ final class WidgetInstantiation {
      *                               példányosító Element egy leszármazottja is példányosított és ugyanaz az Element
      *                               keletkezett
      */
-    public <U extends EndingWidget> Optional<U> lookupOptional(Class<U> type) {
+    public <U extends SubstitutedWidget> Optional<U> lookupOptional(Class<U> type) {
         return Optional.ofNullable(doLookup(type, true));
     }
 
-    private <U extends EndingWidget> U doLookup(Class<U> type, boolean optional) {
+    private <U extends SubstitutedWidget> U doLookup(Class<U> type, boolean optional) {
         checkIsValid();
         if (element != null) {
             // mivel épp most frissítjük a parentet, ezért nem kell külön értesíteni próbálni őt a változásokról,

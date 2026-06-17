@@ -2,7 +2,6 @@ package ui11.layout.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.EndingWidget;
 import ui11.MultiSlot;
 import ui11.Widget;
 import ui11.geom.Axis;
@@ -17,7 +16,7 @@ import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.layout.singlechild.Align;
 import ui11.layout.singlechild.Alignment;
-import ui11.resolution.PeerCreationRequest;
+import ui11.PeerCreationRequest;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -273,7 +272,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
         });
 
         if (sizeRequest != null)
-            widgetResult = EndingWidget.combine(widgetResult, new BoxLayoutResult.OfChosenSize(containerSize));
+            widgetResult = new BoxLayoutResult.OfChosenSize(containerSize, widgetResult);
 
         return widgetResult;
     }

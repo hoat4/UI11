@@ -1,8 +1,6 @@
 package ui11;
 
-import ui11.observable.Observable;
 import ui11.provide.Provider;
-import ui11.resolution.WidgetResolver;
 
 import java.util.Objects;
 

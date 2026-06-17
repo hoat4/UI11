@@ -1,6 +1,6 @@
 package ui11.media;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.media.ImageSource.BinaryImageSource;
 import ui11.media.ImageSource.InlineBinarySource;
 import ui11.media.ImageSource.URIImageSource;

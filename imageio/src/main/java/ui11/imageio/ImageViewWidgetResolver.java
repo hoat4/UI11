@@ -3,8 +3,8 @@ package ui11.imageio;
 import org.jspecify.annotations.NonNull;
 import ui11.Widget;
 import ui11.media.JPEGImageView;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.WidgetResolver;
+import ui11.PeerCreationRequest;
+import ui11.WidgetResolver;
 
 import org.jspecify.annotations.Nullable;
 

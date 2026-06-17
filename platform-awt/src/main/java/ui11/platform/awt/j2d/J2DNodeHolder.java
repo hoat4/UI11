@@ -1,13 +1,13 @@
 package ui11.platform.awt.j2d;
 
-import ui11.EndingWidget;
+import ui11.SubstitutedWidget;
 import ui11.platform.awt.j2d.inputtree.InputNode;
 import ui11.platform.awt.j2d.rendertree.RenderNode;
 
 import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
-public final class J2DNodeHolder extends EndingWidget {
+public final class J2DNodeHolder extends SubstitutedWidget {
 
     private final @NonNull RenderNode renderNode;
     private final @NonNull InputNode inputNode;

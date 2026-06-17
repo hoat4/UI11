@@ -1,6 +1,6 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.EndingWidget;
+import ui11.ParentDataWidget;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
@@ -32,7 +32,7 @@ public class J2DPointerRegionPeer extends Widget {
             inputNode.child.set(peer.inputNode());
             inputNode.listener = pointerRegion;
             J2DNodeHolder h = new J2DNodeHolder(peer.renderNode(), inputNode);
-            return EndingWidget.combine(content, h);
+            return ParentDataWidget.of(h, content);
         });
     }
 }

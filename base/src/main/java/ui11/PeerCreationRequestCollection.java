@@ -1,4 +1,4 @@
-package ui11.resolution;
+package ui11;
 
 // for now, only one peer creation request at a time
 public final class PeerCreationRequestCollection {

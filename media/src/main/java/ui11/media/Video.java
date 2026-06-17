@@ -1,6 +1,6 @@
 package ui11.media;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;

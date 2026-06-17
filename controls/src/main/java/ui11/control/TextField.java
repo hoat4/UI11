@@ -1,6 +1,6 @@
 package ui11.control;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 
 import org.jspecify.annotations.Nullable;
 import java.util.Objects;

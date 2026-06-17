@@ -1,6 +1,6 @@
 package ui11.graphics.fill;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 
 public final class RasterImageView extends SubstitutedWidget {
 

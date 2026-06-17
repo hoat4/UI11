@@ -10,8 +10,8 @@ import ui11.platform.opengl.peer.GLColorFillPeer;
 import ui11.platform.opengl.peer.GLOverlayPeer;
 import ui11.platform.opengl.peer.GLRectShapedPeer;
 import ui11.platform.opengl.peer.GLTransformPeer;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.WidgetResolver;
+import ui11.PeerCreationRequest;
+import ui11.WidgetResolver;
 
 public class GLViewProvider implements WidgetResolver {
     @Override

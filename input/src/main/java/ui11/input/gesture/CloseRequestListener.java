@@ -1,7 +1,7 @@
 package ui11.input.gesture;
 
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 
 import org.jspecify.annotations.NonNull;

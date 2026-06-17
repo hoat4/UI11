@@ -7,10 +7,6 @@ import ui11.observable.*;
 import ui11.provide.DynamicProvider;
 import ui11.provide.Provider;
 import ui11.provide.Provider.Mergeable;
-import ui11.resolution.ErrorWidgetFactory;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.PeerCreationRequestCollection;
-import ui11.resolution.WidgetResolver;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -51,7 +47,7 @@ import java.util.Map.Entry;
  * tetszőleges hosszú láncot képezve.
  * <p>
  * Egy Elementnek tetszőleges számú gyereke lehet. Úgy lehet hozzáadni gyerek Elementet, hogy az {@code build()}
- * implementációjában meghívjuk a {@link Element#instantiate(Slot, Widget, RefreshID)}-et. Ha az egyik updatekor egy
+ * implementációjában meghívjuk a {@link Element#instantiate(Slot, Widget, RefreshID, List)}-et. Ha az egyik updatekor egy
  * adott elemenetet hozzáadtunk gyerekként, míg a következő updateben már nem, akkor az a gyerek törlődik.
  */
 class Element {
@@ -87,7 +83,7 @@ class Element {
     /**
      * Ez akkor és csak akkor nem null, ha parent nem null. Az elemei közt nem szerepel null.
      */
-    List<? extends EndingWidget> directAncestorUpValues;
+    List<? extends SubstitutedWidget> directAncestorUpValues;
 
     /**
      * Ez akkor és csak akkor nem null, ha elementState == ElementState.REFRESHING_SELF
@@ -132,7 +128,7 @@ class Element {
      * <p>
      * A valuek azok, amelyek nem {@link #directAncestorUpValues}-beliek.
      */
-    final Map<Class<? extends EndingWidget>, EndingWidget> parentInterestedUpValues = new HashMap<>();
+    final Map<Class<? extends SubstitutedWidget>, SubstitutedWidget> parentInterestedUpValues = new HashMap<>();
     final InvalidationPoint upValuesIP = new InvalidationPoint();
 
     WidgetResolver vp;
@@ -239,7 +235,7 @@ class Element {
                     // ezért vissza kell rakni.
                     if (delegateSlot == null)
                         delegateSlot = new Slot(null);
-                    delegate = instantiate(delegateSlot, delegateWidget, delegate.refresh);
+                    delegate = instantiate(delegateSlot, delegateWidget, delegate.refresh, delegate.upValues);
                 }
 
                 elementState = ElementState.REFRESHING_CHILDREN_AFTER_NO_SELF;
@@ -559,8 +555,8 @@ class Element {
             //      a másodiknak a ensureFresh-jekor ez a hiba jön elő:
             //      ui11.ObservableHelper: Observed value was invalidated, but node is in REFRESHING_SELF_BEFORE_CHILDREN state: DOMGridPeer@9dba2e70
             //      reprodukálható, ha kiszedjük DOMGridPeerből a overlay számolást és belépünk bowling lobbiba
-            for (Entry<Class<? extends EndingWidget>, EndingWidget> entry : parentInterestedUpValues.entrySet()) {
-                Class<? extends EndingWidget> type = entry.getKey();
+            for (Entry<Class<? extends SubstitutedWidget>, SubstitutedWidget> entry : parentInterestedUpValues.entrySet()) {
+                Class<? extends SubstitutedWidget> type = entry.getKey();
                 Object val = entry.getValue();
                 Object newVal = lookupImpl(type, true, true);
                 if (!Objects.equals(val, newVal)) {
@@ -580,8 +576,9 @@ class Element {
      */
     void doRefreshSelf() {
         try {
+            Widget widget = currentState.stateWidget;
             Widget content = build();
-            if (content == null)
+            if (content == null && !(widget instanceof SubstitutedWidget))
                 // el kéne dönteni hogy lehet-e null. ha igen, akkor withKey-ben is kezelni kéne.
                 throw new NullPointerException("Element.build() returned null on " + this);
             // TODO ha az előző delegate bewrappelődik egy másik widgetbe, akkor
@@ -590,7 +587,18 @@ class Element {
             //      lehet hogy a children elejére kéne rakni valahogy (vagy legalább az előző delegate elé).
             if (delegateSlot == null)
                 delegateSlot = new Slot(null);
-            delegate = instantiate(delegateSlot, delegateWidget = content, refreshID);
+
+            List<? extends SubstitutedWidget> upValues = switch (widget) {
+                case ParentDataWidget.CombinerParentDataWidget combinerParentDataWidget ->
+                        List.of(combinerParentDataWidget.parentData);
+                case SubstitutedWidget substitutedWidget -> List.of(substitutedWidget);
+                default -> List.of();
+            };
+
+            if (content == null)
+                delegate = new WidgetInstantiation(this, refreshID, null, upValues);
+            else
+                delegate = instantiate(delegateSlot, delegateWidget = content, refreshID, upValues);
         } catch (Throwable t) {
             delegate = delegateCreationFailed(t);
         }
@@ -621,7 +629,7 @@ class Element {
                 Widget widget = errorWidgetFactory.makeDelegateCreationError(t);
                 if (delegateSlot == null)
                     delegateSlot = new Slot(null);
-                delegateHandle = instantiate(delegateSlot, delegateWidget = widget, refreshID);
+                delegateHandle = instantiate(delegateSlot, delegateWidget = widget, refreshID, List.of());
                 // TODO StackOverflowError lesz, ha nem tudja a hibaüzenetet sem megjeleníteni
             } else {
                 logger.error("No error widget factory");
@@ -658,8 +666,11 @@ class Element {
 
         Widget content = currentState.stateWidget.build();
         if (content == null)
-            throw new NullPointerException(getClass().getSimpleName() +
-                    ".build() returned null on " + currentState);
+            if (currentState.stateWidget instanceof SubstitutedWidget)
+                return null;
+            else
+                throw new NullPointerException(getClass().getSimpleName() +
+                        ".build() returned null on " + currentState);
 
         // ha csak a decorate invalidálódik, akkor nem kéne build-et meghívni, mert
         // váratlanul előjöhetne a build() implementáció esetleges nem-idempotenssége miatti hiba.
@@ -717,24 +728,17 @@ class Element {
     // TODO ideiglenes instantiate? pl. MultiChildLayouthoz
     // TODO duplicate key detektálása, pl. DOMGridPeernél az egymásra rakható elemek kapcsán előjött
     //      upValues invalidálás bugot óráig tartott debugolni
-    WidgetInstantiation instantiate(Slot slot, Widget widget, RefreshID refreshState) {
+    WidgetInstantiation instantiate(Slot slot, Widget widget, RefreshID refreshState,
+                                    List<? extends SubstitutedWidget> upValues) {
         Objects.requireNonNull(slot, "key");
         Objects.requireNonNull(widget, "widget");
+        Objects.requireNonNull(upValues, "upValues");
 
-        List<EndingWidget> upValues = new ArrayList<>();
         Map<Class<?>, Object> ivs = new HashMap<>();
 
         while (true) {
             Objects.requireNonNull(slot);
             switch (widget) {
-                case EndingWidget.MultipleUpValues multipleUpValues-> {
-                    upValues.addAll(multipleUpValues.endingWidgets);
-                    widget = multipleUpValues.next;
-                }
-                case EndingWidget upValueWrapper -> {
-                    upValues.add(upValueWrapper);
-                    return new WidgetInstantiation(this, refreshState, null, upValues);
-                }
                 case null -> {
                     throw new NullPointerException("CSB null " + this + ", " + upValues);
                 }
@@ -769,7 +773,8 @@ class Element {
 
     private @NonNull WidgetInstantiation handleRegularWidget(Widget widget, Slot slot,
                                                              RefreshID refreshState,
-                                                             List<EndingWidget> upValues, Map<Class<?>, Object> ivs) {
+                                                             List<? extends SubstitutedWidget> upValues,
+                                                             Map<Class<?>, Object> ivs) {
         Element peer = slot.element;
 
         peer.setWidget(widget);
@@ -991,7 +996,7 @@ class Element {
 
     // beleveszi directAncestorEDs tartalmát is.
     // ez nem használható, ha ez az Element egy RootElement
-    <U extends EndingWidget> @NonNull U lookupImpl(Class<U> type, boolean noEnsureFresh, boolean optional) {
+    <U extends SubstitutedWidget> @NonNull U lookupImpl(Class<U> type, boolean noEnsureFresh, boolean optional) {
         Element e = this;
 
         while (e != null) {
@@ -1056,7 +1061,7 @@ class Element {
 
         Element e = this;
         while (true) {
-            for (EndingWidget u : e.directAncestorUpValues)
+            for (SubstitutedWidget u : e.directAncestorUpValues)
                 sb.append("- up value: ").append(u).append("\n");
             if (e.directIVs != null)
                 e.directIVs.forEach((ivType, ivValue) -> {
@@ -1071,7 +1076,7 @@ class Element {
             if (e.delegate == null)
                 break;
             else if (e.delegate.element == null) {
-                for (EndingWidget u : e.delegate.upValues)
+                for (SubstitutedWidget u : e.delegate.upValues)
                     sb.append("- up value: ").append(u).append("\n");
                 break;
             } else {
@@ -1086,8 +1091,8 @@ class Element {
         return delegate != null && delegate.element != null && delegate.element.parent != this;
     }
 
-    static <U extends EndingWidget> @Nullable U findInUpValueList(Class<U> type, List<? extends EndingWidget> upValues) {
-        for (EndingWidget ed : upValues) {
+    static <U extends SubstitutedWidget> @Nullable U findInUpValueList(Class<U> type, List<? extends SubstitutedWidget> upValues) {
+        for (SubstitutedWidget ed : upValues) {
             if (type.isInstance(ed))
                 return type.cast(ed);
         }
@@ -1274,7 +1279,7 @@ class Element {
         REFRESH_REQUESTED_STOPPABLE,
 
         /**
-         * Ilyenkor lehet {@link Element#instantiate(Slot, Widget, RefreshID) Element.instantiate}-et meghívni (és
+         * Ilyenkor lehet {@link Element#instantiate(Slot, Widget, RefreshID, List) Element.instantiate}-et meghívni (és
          * {@linkplain #REFRESHING_SELF_AFTER_CHILDREN}-ben).
          */
         REFRESHING_SELF_BEFORE_CHILDREN,
@@ -1299,7 +1304,7 @@ class Element {
         REFRESHING_CHILDREN_AFTER_NO_SELF_BUT_SELF_REQUESTED_IN_DESCENDANTS,
 
         /**
-         * Ilyenkor lehet {@link Element#instantiate(Slot, Widget, RefreshID) Element.instantiate}-et meghívni (és
+         * Ilyenkor lehet {@link Element#instantiate(Slot, Widget, RefreshID, List) Element.instantiate}-et meghívni (és
          * {@linkplain #REFRESHING_SELF_BEFORE_CHILDREN}-ben).
          */
         REFRESHING_SELF_AFTER_CHILDREN,

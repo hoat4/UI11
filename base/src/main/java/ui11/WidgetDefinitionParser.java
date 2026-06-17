@@ -8,7 +8,6 @@ import ui11.observable.Observable;
 import ui11.provide.Provide;
 import ui11.reflectutil.ReflectionUtil;
 import ui11.reflectutil.Types;
-import ui11.resolution.SubstitutedWidget;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
@@ -72,12 +71,6 @@ class WidgetDefinitionParser {
                 throw new InvalidWidgetDefinitionException("@" + Inject.class.getSimpleName() + " and @" +
                         Remember.class.getSimpleName() + " " +
                         "cannot be used on fields in a " + SubstitutedWidget.class.getSimpleName() + " subtype: " +
-                        ReflectionUtil.memberToShortString(edClass));
-
-            if ((isInject || isState) && EndingWidget.class.isAssignableFrom(edClass))
-                throw new InvalidWidgetDefinitionException("@" + Inject.class.getSimpleName() + " and @" +
-                        Remember.class.getSimpleName() + " " +
-                        "cannot be used on fields in a " + EndingWidget.class.getSimpleName() + " subtype: " +
                         ReflectionUtil.memberToShortString(edClass));
 
             // TODO ezekben az exception messageekben nincs szó slotokról, pedig azok is lehetnek @Inject-esek

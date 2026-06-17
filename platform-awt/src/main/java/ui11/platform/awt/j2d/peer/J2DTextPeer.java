@@ -1,17 +1,14 @@
 package ui11.platform.awt.j2d.peer;
 
 import org.jspecify.annotations.NonNull;
-import ui11.EndingWidget;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.geom.Size;
-import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.platform.awt.j2d.J2DNodeHolder;
 import ui11.platform.awt.j2d.J2DUtil;
 import ui11.platform.awt.j2d.inputtree.OpaqueInputNode;
 import ui11.platform.awt.j2d.rendertree.TextRenderNode;
-import ui11.resolution.PeerCreationRequest;
 import ui11.text.Text;
 import ui11.text.TextStyle;
 
@@ -79,11 +76,9 @@ public class J2DTextPeer extends Widget {
         if (sizeRequest != null)
             if (sizeRequest.constraints() != null) {
                 Size size = sizeRequest.constraints().clamp(new Size(w, h));
-                result = EndingWidget.combine(result,
-                        new BoxLayoutResult.OfChosenSize(size));
+                result = new BoxLayoutResult.OfChosenSize(size, result);
             } else {
-                result = EndingWidget.combine(result,
-                        new BoxLayoutResult.OfNoConstraints());
+                result = new BoxLayoutResult.OfNoConstraints(result);
             }
 
         return result;

@@ -1,8 +1,6 @@
-package ui11.resolution;
+package ui11;
 
 import org.jspecify.annotations.Nullable;
-import ui11.Widget;
-import ui11.observable.Observable;
 import ui11.reflectutil.ReflectionUtil;
 
 import static java.util.stream.Collectors.joining;
@@ -24,6 +22,8 @@ import static java.util.stream.Collectors.joining;
  * <p>
  * A {@linkplain SubstitutedWidget} must not contain fields annotated with {@link ui11.Widget.Inject @Inject} or
  * {@link Widget.Remember @Remember}.
+ * <p>
+ * If a {@linkplain SubstitutedWidget} is handled by a {@link PeerCreationRequest}, then it doesn't build more widgets.
  */
 public abstract class SubstitutedWidget extends Widget {
 
@@ -38,12 +38,18 @@ public abstract class SubstitutedWidget extends Widget {
     protected final void initState() {
     }
 
+    @Override
+    protected final void onResume() {
+    }
+
     @SuppressWarnings("ConstantValue")
     @Override
     protected final Widget build() {
-        Widget resolved = null;
-
         PeerCreationRequest<?> peerCreationRequest = peerCreationRequestCollection.request;
+        if (peerCreationRequest.peerType().isInstance(this))
+            return null; // Elementben special case-elve van SubstitutedWidget, hogy build adhat vissza nullt
+
+        Widget resolved = null;
 
         if (widgetResolver != null)
             resolved = widgetResolver.resolveOrNull(this, peerCreationRequest);

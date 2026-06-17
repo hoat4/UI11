@@ -1,6 +1,6 @@
 package ui11.control;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.input.focus.FocusHolder;
 
 import org.jspecify.annotations.NonNull;

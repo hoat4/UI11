@@ -2,13 +2,18 @@ package ui11.layout.protocol;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.EndingWidget;
+import ui11.Widget;
 import ui11.geom.Size;
-import ui11.resolution.PeerCreationRequest;
+import ui11.ParentDataWidget;
+import ui11.PeerCreationRequest;
 
 import java.util.Objects;
 
-public sealed abstract class BoxLayoutResult extends EndingWidget {
+public sealed abstract class BoxLayoutResult extends ParentDataWidget {
+
+    private BoxLayoutResult(Widget next) {
+        super(next);
+    }
 
     // TODO ez kb. ugyanaz mint FixedSize. ezzel majd kéne kezdeni valamit, pl. lehet hogy ezt valahogy meg lehetne
     //      szüntetni, de még nem tudom, hogy hogyan
@@ -16,7 +21,8 @@ public sealed abstract class BoxLayoutResult extends EndingWidget {
 
         private final @NonNull Size size;
 
-        public OfChosenSize(@NonNull Size size) {
+        public OfChosenSize(@NonNull Size size, Widget content) {
+            super(content);
             this.size = Objects.requireNonNull(size);
         }
 
@@ -26,9 +32,15 @@ public sealed abstract class BoxLayoutResult extends EndingWidget {
     }
 
     public static final class OfNoConstraints extends BoxLayoutResult {
+        public OfNoConstraints(Widget content) {
+            super(content);
+        }
     }
 
     public static final class OfGone extends BoxLayoutResult {
+        public OfGone(Widget content) {
+            super(content);
+        }
     }
 
     public static class SizeRequest extends PeerCreationRequest<BoxLayoutResult> {

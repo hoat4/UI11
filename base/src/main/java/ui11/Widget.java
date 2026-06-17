@@ -5,9 +5,6 @@ import org.slf4j.LoggerFactory;
 import ui11.observable.ObservableBase;
 import ui11.observable.Scope;
 import ui11.provide.Provider;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.PeerCreationRequestCollection;
-import ui11.resolution.SubstitutedWidget;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -50,7 +47,7 @@ import static java.util.stream.Collectors.joining;
  * <p>
  * A widget describes part of the user interface by building a constellation of other widgets that describe the user
  * interface more concretely. The building process continues recursively until the description of the user interface is
- * fully concrete (i.e. only consists of {@linkplain ui11.EndingWidget EndingWidgets}).
+ * fully concrete (TODO ezt definiálni kéne).
  * <p>
  * Every non-static fields of the subtypes of this subclass must be either {@code final} or annotated with
  * {@linkplain Inject @Inject} or {@linkplain Remember @Remember}.
@@ -242,7 +239,7 @@ public abstract class Widget implements Cloneable {
      *
      * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő UpValuet
      */
-    <U extends EndingWidget> U useWidget(Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
+    <U extends SubstitutedWidget> U useWidget(Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
         Objects.requireNonNull(defaultSlot);
         Objects.requireNonNull(widget);
         Objects.requireNonNull(request);
@@ -267,20 +264,13 @@ public abstract class Widget implements Cloneable {
         if (Element.TRACE_REFRESH)
             Element.TraceRefresh.TL.get().print("useWidget " + request + ": " + decoratedWidget);
 
-        WidgetInstantiation widgetInstantiation = element.instantiate(defaultSlot, decoratedWidget, element.refreshID);
+        WidgetInstantiation widgetInstantiation = element.instantiate(
+                defaultSlot, decoratedWidget, element.refreshID, List.of());
 
         if (Element.TRACE_REFRESH)
             Element.TraceRefresh.TL.get().print("lookup " + request + ": " + decoratedWidget);
 
         return widgetInstantiation.lookup(request.peerType());
-    }
-
-    // TODO ez legyen package-privát. de egyelőre nem lehet, mert PeerCreationRequest
-    //      másik package-ben van.
-    protected final <U extends EndingWidget> U internal_makePeer(
-            Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
-
-        return useWidget(defaultSlot, widget, request);
     }
 
     // equals/hashCodera final kell?

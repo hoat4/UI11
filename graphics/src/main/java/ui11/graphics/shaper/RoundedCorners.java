@@ -1,6 +1,6 @@
 package ui11.graphics.shaper;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
 

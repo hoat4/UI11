@@ -17,8 +17,8 @@ import ui11.input.pointer.PointerRegion;
 import ui11.media.SVGImageView;
 import ui11.platform.awt.AWTEnterContentListenerPeer;
 import ui11.platform.awt.j2d.peer.*;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.WidgetResolver;
+import ui11.PeerCreationRequest;
+import ui11.WidgetResolver;
 import ui11.text.Text;
 
 import org.jspecify.annotations.Nullable;

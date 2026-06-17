@@ -45,8 +45,8 @@ import ui11.observable.Scope;
 import ui11.platform.dom.peers.*;
 import ui11.provide.Provide;
 import ui11.provide.Provider;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.WidgetResolver;
+import ui11.PeerCreationRequest;
+import ui11.WidgetResolver;
 import ui11.text.Text;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
@@ -176,7 +176,7 @@ public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
                 return new DOMPeerBase.DOMPeerCreationRequest().executedOn(contentRoot, rootPeer->{
                     element.setInnerHTML("");
                     element.appendChild(rootPeer.element());
-                    return new EndingWidget() {
+                    return new SubstitutedWidget() {
                     };
                 });
             }

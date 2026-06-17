@@ -3,9 +3,9 @@ package ui11.platform.dom;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.EndingWidget;
+import ui11.SubstitutedWidget;
 
-public final class DOMElementHolder extends EndingWidget {
+public final class DOMElementHolder extends SubstitutedWidget {
 
     private final @NonNull HTMLElement element;
     private final @Nullable String asCSSColor;

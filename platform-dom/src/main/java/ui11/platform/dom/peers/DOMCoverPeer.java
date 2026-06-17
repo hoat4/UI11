@@ -2,8 +2,7 @@ package ui11.platform.dom.peers;
 
 import org.jspecify.annotations.NonNull;
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.EndingWidget;
-import ui11.Slot;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.layout.singlechild.Cover;
 import ui11.platform.dom.DOMPeerBase;
@@ -33,7 +32,7 @@ public class DOMCoverPeer extends DOMPeerBase<HTMLElement> {
         });
     }
 
-    public static final class CSSBackgroundImage extends EndingWidget {
+    public static final class CSSBackgroundImage extends SubstitutedWidget {
 
         private final URI uri;
 

@@ -5,14 +5,11 @@ import com.github.weisj.jsvg.parser.SVGLoader;
 import com.github.weisj.jsvg.view.FloatSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.EndingWidget;
 import ui11.MultiSlot;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.graphics.Surface;
 import ui11.layout.protocol.BoxLayoutResult;
-import ui11.platform.awt.j2d.J2DPeerCreationRequest;
-import ui11.resolution.PeerCreationRequest;
 import ui11.task.BackgroundTask;
 import ui11.task.TaskStatus;
 import ui11.window.Shell.URLResolver;
@@ -86,8 +83,7 @@ public class J2DSVGImageViewPeer extends Widget {
                 Widget result = new J2DNodeHolder(node, inputNode);
                 if (sizeRequest != null)
                     // TODO constraintset figyelembe kéne venni
-                    result = EndingWidget.combine(result,
-                            new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height)));
+                    result = new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height), result);
                 yield result;
             }
         };

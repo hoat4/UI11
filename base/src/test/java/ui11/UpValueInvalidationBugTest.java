@@ -1,7 +1,5 @@
 package ui11;
 
-import ui11.resolution.PeerCreationRequest;
-
 public class UpValueInvalidationBugTest {
     public void main() {
         // TODO ez a teszt valszeg hülyeség, mert nem lehet mit kezdeni ezzel, hogy kétszer is instantiate-eli
@@ -41,7 +39,7 @@ public class UpValueInvalidationBugTest {
         }, Runnable::run);
     }
 
-    private static class U2 extends EndingWidget {
+    private static class U2 extends SubstitutedWidget {
 
         final int i;
 

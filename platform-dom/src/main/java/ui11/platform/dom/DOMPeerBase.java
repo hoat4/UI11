@@ -1,7 +1,6 @@
 package ui11.platform.dom;
 
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.Slot;
 import ui11.Widget;
 import ui11.color.RGBColor;
 import ui11.geom.Length;
@@ -11,13 +10,12 @@ import ui11.layout.Insets;
 import ui11.platform.dom.DOMWidgetWrapper.InheritedTextStyle;
 import ui11.platform.dom.DOMWidgetWrapper.ProxySurface;
 import ui11.platform.dom.peers.DOMCoverPeer;
-import ui11.resolution.PeerCreationRequest;
+import ui11.PeerCreationRequest;
 import ui11.text.TextStyle;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 

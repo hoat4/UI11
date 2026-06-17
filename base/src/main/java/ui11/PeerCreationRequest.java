@@ -1,9 +1,4 @@
-package ui11.resolution;
-
-import ui11.EndingWidget;
-import ui11.MultiSlot;
-import ui11.Slot;
-import ui11.Widget;
+package ui11;
 
 import java.util.*;
 import java.util.function.Function;
@@ -13,7 +8,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 
-public abstract class PeerCreationRequest<P extends EndingWidget> {
+public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
 
     private final Class<P> peerType;
 
@@ -55,7 +50,7 @@ public abstract class PeerCreationRequest<P extends EndingWidget> {
                 });
     }
 
-    public static <P extends EndingWidget> Widget executedMultipleOn(
+    public static <P extends SubstitutedWidget> Widget executedMultipleOn(
             List<? extends Widget> widgets,
             List<? extends PeerCreationRequest<P>> requests,
             Function<List<? extends P>, Widget> then) {
@@ -83,12 +78,12 @@ public abstract class PeerCreationRequest<P extends EndingWidget> {
 
         @Override
         protected Widget build() {
-            P p = internal_makePeer(slot, widget, PeerCreationRequest.this);
+            P p = useWidget(slot, widget, PeerCreationRequest.this);
             return f.apply(p);
         }
     }
 
-    private static class CreatePeersForList<P extends EndingWidget> extends Widget {
+    private static class CreatePeersForList<P extends SubstitutedWidget> extends Widget {
 
         private final List<? extends Widget> widgets;
         private final List<? extends PeerCreationRequest<P>> requests;
@@ -106,9 +101,11 @@ public abstract class PeerCreationRequest<P extends EndingWidget> {
 
         @Override
         protected Widget build() {
-            EndingWidget[] peers = new EndingWidget[widgets.size()];
-            for (int i = 0; i < widgets.size(); i++)
-                peers[i] = internal_makePeer(slots.get(i), widgets.get(i), requests.get(i));
+            SubstitutedWidget[] peers = new SubstitutedWidget[widgets.size()];
+            for (int i = 0; i < widgets.size(); i++) {
+                Slot defaultSlot = slots.get(i);
+                peers[i] = useWidget(defaultSlot, widgets.get(i), requests.get(i));
+            }
 
             @SuppressWarnings("unchecked")
             List<P> castedList = (List<P>) List.of(peers);
@@ -116,7 +113,7 @@ public abstract class PeerCreationRequest<P extends EndingWidget> {
         }
     }
 
-    private static class CreatePeersForMap<P extends EndingWidget, K> extends Widget {
+    private static class CreatePeersForMap<P extends SubstitutedWidget, K> extends Widget {
 
         private final Map<K, ? extends Widget> widgets;
         private final Map<K, ? extends PeerCreationRequest<P>> requests;
@@ -134,9 +131,10 @@ public abstract class PeerCreationRequest<P extends EndingWidget> {
 
         @Override
         protected Widget build() {
-            Map<K, EndingWidget> peers = new HashMap<>();
+            Map<K, SubstitutedWidget> peers = new HashMap<>();
             widgets.forEach((k, w) -> {
-                peers.put(k, internal_makePeer(slots.get(k), w, requests.get(k)));
+                Slot defaultSlot = slots.get(k);
+                peers.put(k, useWidget(defaultSlot, w, requests.get(k)));
             });
 
             @SuppressWarnings("unchecked")

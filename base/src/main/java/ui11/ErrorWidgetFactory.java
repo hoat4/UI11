@@ -1,8 +1,6 @@
-package ui11.resolution;
+package ui11;
 
 // TODO ez lehetne inkább egy widget
-
-import ui11.Widget;
 
 /**
  * Megjeleníthető tartalmat (pl. hibaüzenetet) biztosít olyan widgetnek, ami exceptiont dobott,

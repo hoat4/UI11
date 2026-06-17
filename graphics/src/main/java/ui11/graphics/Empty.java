@@ -1,6 +1,6 @@
 package ui11.graphics;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 
 // ez azért ebben a packageben van az ui11.graphics.fill helyett, mert a fill-ek
 // átlátszatlanok az egér szempontjából, ez viszont átlátszó

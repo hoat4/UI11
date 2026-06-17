@@ -1,7 +1,6 @@
 package ui11.layout.helper;
 
 import org.jspecify.annotations.NonNull;
-import ui11.EndingWidget;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.geom.Mat4;
@@ -61,7 +60,7 @@ public class SingleChildLayout extends Widget {
                     Widget resultWidget = transformWidgetToBounds(childWithSlot, childBounds);
 
                     if (sizeRequest != null)
-                        resultWidget = EndingWidget.combine(resultWidget, new BoxLayoutResult.OfChosenSize(containerSize));
+                        resultWidget = new BoxLayoutResult.OfChosenSize(containerSize, resultWidget);
 
                     yield resultWidget;
                 }

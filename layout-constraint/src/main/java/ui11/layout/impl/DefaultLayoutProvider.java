@@ -1,7 +1,7 @@
 package ui11.layout.impl;
 
 import org.jspecify.annotations.NonNull;
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box;
 import ui11.graphics.Empty;
@@ -10,8 +10,8 @@ import ui11.graphics.fill.ColorFill;
 import ui11.layout.singlechild.Align;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.singlechild.Padding;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.WidgetResolver;
+import ui11.PeerCreationRequest;
+import ui11.WidgetResolver;
 
 import org.jspecify.annotations.Nullable;
 

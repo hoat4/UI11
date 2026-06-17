@@ -1,7 +1,7 @@
 package ui11.input.gesture;
 
 import org.jspecify.annotations.NonNull;
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.input.focus.FocusHolder;
 import ui11.input.keyboard.KeyCombination;

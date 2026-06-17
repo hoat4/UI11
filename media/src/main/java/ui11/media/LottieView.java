@@ -1,6 +1,6 @@
 package ui11.media;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.animation.PlaybackController;
 import ui11.media.ImageSource.InlineStringSource;
 import ui11.media.ImageSource.TextualImageSource;

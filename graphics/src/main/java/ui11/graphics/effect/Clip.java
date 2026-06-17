@@ -1,6 +1,6 @@
 package ui11.graphics.effect;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 
 public class Clip extends SubstitutedWidget {

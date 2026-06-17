@@ -6,7 +6,7 @@ import ui11.input.pointer.Pointer.Button;
 import ui11.input.pointer.PointerRegion.PointerListener;
 
 import org.jspecify.annotations.NonNull;
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 
 import java.util.Objects;
 

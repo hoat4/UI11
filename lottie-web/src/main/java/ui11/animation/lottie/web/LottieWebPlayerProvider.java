@@ -3,9 +3,8 @@ package ui11.animation.lottie.web;
 import org.jspecify.annotations.NonNull;
 import ui11.Widget;
 import ui11.media.LottieView;
-import ui11.platform.dom.DOMEnvironment;
-import ui11.resolution.PeerCreationRequest;
-import ui11.resolution.WidgetResolver;
+import ui11.PeerCreationRequest;
+import ui11.WidgetResolver;
 
 import org.jspecify.annotations.Nullable;
 

@@ -1,6 +1,6 @@
 package ui11.text;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 
 import java.util.Objects;
 

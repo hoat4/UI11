@@ -2,8 +2,7 @@ package ui11;
 
 import ui11.Element.InheritedValueHolder.IVUsage;
 import ui11.observable.ObserverHolder;
-import ui11.resolution.GlobalViewProviders;
-import ui11.resolution.WidgetResolver;
+import ui11.provide.Provide;
 
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -107,6 +106,13 @@ public final class WidgetTree {
         @Override
         protected Widget build() {
             return content;
+        }
+
+        @Provide
+        PeerCreationRequestCollection peerCreationRequestCollection() {
+            // tetszőleges SubstitutedWidgetnél megállunk
+            return new PeerCreationRequestCollection(new PeerCreationRequest<>(SubstitutedWidget.class) {
+            });
         }
     }
 

@@ -1,15 +1,14 @@
 package ui11.platform.opengl;
 
 import org.jspecify.annotations.NonNull;
-import ui11.EndingWidget;
+import ui11.SubstitutedWidget;
 import ui11.platform.opengl.inputtree.InputNode;
-import ui11.platform.opengl.peer.GLOverlayPeer;
 import ui11.platform.opengl.rendertree.RenderNode;
-import ui11.resolution.PeerCreationRequest;
+import ui11.PeerCreationRequest;
 
 import java.util.Objects;
 
-public final class GLNodeHolder extends EndingWidget {
+public final class GLNodeHolder extends SubstitutedWidget {
 
     private final @NonNull RenderNode renderNode;
     private final @NonNull InputNode inputNode;

@@ -1,8 +1,7 @@
-package ui11.resolution;
+package ui11;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.Widget;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,6 @@
 package ui11.layout.singlechild;
 
-import ui11.resolution.SubstitutedWidget;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box;
 import ui11.layout.LayoutSize;
