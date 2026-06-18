@@ -83,7 +83,7 @@ public final class WidgetTree {
         Object findInheritedValue(Class<?> type, IVUsage usage) {
             if (type == WidgetResolver.class)
                 // TODO ez furcsa hogy itt is van hivatkozva, meg SubstitutedWidget.build-ben is
-                return GlobalViewProviders.instance();
+                return GlobalWidgetResolvers.instance();
 
             if (SupplyDefaultInstanceHelper.shouldUseDefaultInstance(type))
                 return ivDefaultValues.computeIfAbsent(type, SupplyDefaultInstanceHelper::createDefaultInstance);

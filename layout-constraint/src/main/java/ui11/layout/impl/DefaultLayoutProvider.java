@@ -10,14 +10,19 @@ import ui11.graphics.fill.ColorFill;
 import ui11.layout.singlechild.Align;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.singlechild.Padding;
-import ui11.PeerCreationRequest;
 import ui11.WidgetResolver;
 
 import org.jspecify.annotations.Nullable;
 
-public class DefaultLayoutProvider implements WidgetResolver {
+public class DefaultLayoutProvider extends WidgetResolver {
+
     @Override
-    public @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull PeerCreationRequest<?> peerCreationRequest) {
+    protected Class<? extends SubstitutedWidget> supportedTargetType() {
+        return SubstitutedWidget.class; // TODO
+    }
+
+    @Override
+    public @Nullable Widget resolveOrNull(@NonNull Widget widget) {
         return switch (widget) {
             case Align align -> new DefaultAlignImpl(align);
             case Box box -> new DefaultBoxImpl(box);

@@ -1,18 +1,22 @@
 package ui11.control.defaultlook;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
+import ui11.WidgetResolver;
 import ui11.control.*;
 import ui11.control.Button.ButtonState;
-import ui11.PeerCreationRequest;
-import ui11.WidgetResolver;
 
-import org.jspecify.annotations.Nullable;
-
-public class DefaultControlLookProvider implements WidgetResolver {
+public class DefaultControlLookProvider extends WidgetResolver {
 
     @Override
-    public @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull PeerCreationRequest<?> peerCreationRequest) {
+    protected Class<? extends SubstitutedWidget> supportedTargetType() {
+        return SubstitutedWidget.class;
+    }
+
+    @Override
+    public @Nullable Widget resolveOrNull(@NonNull Widget widget) {
         return switch (widget) {
             case Button button -> new DefaultButtonBehavior(button);
             case ButtonState buttonState -> new DefaultButtonLook(buttonState);

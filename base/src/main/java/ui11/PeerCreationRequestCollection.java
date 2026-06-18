@@ -1,7 +1,7 @@
 package ui11;
 
 // for now, only one peer creation request at a time
-public final class PeerCreationRequestCollection {
+final class PeerCreationRequestCollection {
 
     public final PeerCreationRequest<?> request;
 

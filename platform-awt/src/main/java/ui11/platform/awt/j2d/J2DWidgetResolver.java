@@ -1,6 +1,7 @@
 package ui11.platform.awt.j2d;
 
 import org.jspecify.annotations.NonNull;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.graphics.Empty;
 import ui11.graphics.effect.Clip;
@@ -17,13 +18,12 @@ import ui11.input.pointer.PointerRegion;
 import ui11.media.SVGImageView;
 import ui11.platform.awt.AWTEnterContentListenerPeer;
 import ui11.platform.awt.j2d.peer.*;
-import ui11.PeerCreationRequest;
 import ui11.WidgetResolver;
 import ui11.text.Text;
 
 import org.jspecify.annotations.Nullable;
 
-public class J2DWidgetResolver implements WidgetResolver {
+public class J2DWidgetResolver extends WidgetResolver {
 
     public static final WidgetResolver INSTANCE = new J2DWidgetResolver();
 
@@ -31,7 +31,12 @@ public class J2DWidgetResolver implements WidgetResolver {
     }
 
     @Override
-    public @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull PeerCreationRequest<?> peerCreationRequest) {
+    public Class<? extends SubstitutedWidget> supportedTargetType() {
+        return J2DNodeHolder.class;
+    }
+
+    @Override
+    public @Nullable Widget resolveOrNull(@NonNull Widget widget) {
         return switch (widget) {
             case ColorFill c -> new J2DColorPeer(c);
             case Overlay overlay -> new J2DGroupPeer(overlay);

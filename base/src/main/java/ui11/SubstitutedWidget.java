@@ -5,7 +5,7 @@ import ui11.reflectutil.ReflectionUtil;
 
 import static java.util.stream.Collectors.joining;
 
-// időnként felmerül, hogy ezt jó lenne külön package-be vinni, WidgetResolver és GlobalViewProviders mellé.
+// időnként felmerül, hogy ezt jó lenne külön package-be vinni, WidgetResolver és GlobalWidgetResolvers mellé.
 // Először azért volt problémás, mert használta findInheritedValueForInjection-t egyrészt a WidgetResolver
 // lookupolásához, másrészt a ResolutionContext::inherited implementálásához. ez megoldódott, át is került
 // ui11.resolution package-be.
@@ -48,10 +48,10 @@ public abstract class SubstitutedWidget extends Widget {
         Widget resolved = null;
 
         if (widgetResolver != null)
-            resolved = widgetResolver.resolveOrNull(this, peerCreationRequest);
+            resolved = widgetResolver.resolveOrNull(this);
 
         if (resolved == null)
-            resolved = GlobalViewProviders.instance().resolveOrNull(this, peerCreationRequest);
+            resolved = GlobalWidgetResolvers.instance().resolveOrNull(this, peerCreationRequestCollection);
 
         if (resolved == null) {
             resolved = fallbackContent();
@@ -61,7 +61,7 @@ public abstract class SubstitutedWidget extends Widget {
                         ".fallbackContent() returned null");
         }
 
-        resolved = GlobalViewProviders.instance().resolveAdditional(this, resolved);
+        resolved = GlobalWidgetResolvers.instance().resolveAdditional(this, resolved, peerCreationRequestCollection);
 
         if (widgetResolver != null) {
             resolved = widgetResolver.resolveAdditional(this, resolved);

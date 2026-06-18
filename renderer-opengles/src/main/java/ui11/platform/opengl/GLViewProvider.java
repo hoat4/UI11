@@ -1,6 +1,6 @@
 package ui11.platform.opengl;
 
-import org.jspecify.annotations.NonNull;
+import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.graphics.effect.Overlay;
 import ui11.graphics.effect.Transform;
@@ -10,12 +10,17 @@ import ui11.platform.opengl.peer.GLColorFillPeer;
 import ui11.platform.opengl.peer.GLOverlayPeer;
 import ui11.platform.opengl.peer.GLRectShapedPeer;
 import ui11.platform.opengl.peer.GLTransformPeer;
-import ui11.PeerCreationRequest;
 import ui11.WidgetResolver;
 
-public class GLViewProvider implements WidgetResolver {
+public class GLViewProvider extends WidgetResolver {
+
     @Override
-    public Widget resolveOrNull(Widget widget, @NonNull PeerCreationRequest<?> peerCreationRequest) {
+    protected Class<? extends SubstitutedWidget> supportedTargetType() {
+        return GLNodeHolder.class;
+    }
+
+    @Override
+    public Widget resolveOrNull(Widget widget) {
         return switch (widget) {
             case ColorFill colorFill -> new GLColorFillPeer(colorFill);
             case Overlay overlay -> new GLOverlayPeer(overlay);

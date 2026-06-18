@@ -45,7 +45,6 @@ import ui11.observable.Scope;
 import ui11.platform.dom.peers.*;
 import ui11.provide.Provide;
 import ui11.provide.Provider;
-import ui11.PeerCreationRequest;
 import ui11.WidgetResolver;
 import ui11.text.Text;
 import ui11.text.TextAlign;
@@ -57,6 +56,7 @@ import ui11.window.FileChooserProvider;
 import ui11.window.Shell;
 
 import org.jspecify.annotations.Nullable;
+
 import java.net.URI;
 import java.time.Duration;
 import java.util.Objects;
@@ -67,7 +67,7 @@ import static ui11.css.CSSClassTag.cssClass;
 import static ui11.graphics.Empty.empty;
 import static ui11.graphics.effect.Overlay.overlay;
 
-public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
+public class DOMEnvironment implements Shell, Scheduler {
 
     // TODO hogy lehessen "normal" letter-spacingre visszaállítani?
 
@@ -102,7 +102,11 @@ public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
             document.getHead().appendChild(css);
         }
 
+        WidgetResolver rootResolver = WidgetResolver.composite(
+                new DOMElementWidgetResolver(), new CSSBackgroundImageWidgetResolver());
+
         class DOMElementRoot extends Widget {
+
 
             @Inject private Slot rootWidgetSlot;
 
@@ -121,7 +125,7 @@ public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
 
             @Provide
             WidgetResolver widgetResolver() {
-                return DOMEnvironment.this;
+                return rootResolver;
             }
 
             @Provide
@@ -173,7 +177,7 @@ public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
                 }
 
                 Widget contentRoot = new RootWidgetWrapper(new DOMWidgetWrapper(widget));
-                return new DOMPeerBase.DOMPeerCreationRequest().executedOn(contentRoot, rootPeer->{
+                return new DOMPeerBase.DOMPeerCreationRequest().executedOn(contentRoot, rootPeer -> {
                     element.setInnerHTML("");
                     element.appendChild(rootPeer.element());
                     return new SubstitutedWidget() {
@@ -185,103 +189,6 @@ public class DOMEnvironment implements WidgetResolver, Shell, Scheduler {
 
         Executor executor = task -> window.setTimeout(task::run, 0);
         WidgetTree.create(new DOMElementRoot(), executor);
-    }
-
-    @Override
-    public @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull PeerCreationRequest<?> peerCreationRequest) {
-        // TODO ez valszeg eléggé lassú, hogy folyton lekérdezzük ezt, miközben Cover nagyon ritkán használt feature
-        if (peerCreationRequest instanceof DOMPeerBase.CSSBackgroundImagePeerCreationRequest) {
-            return switch (widget) {
-                case SVGImageView svg -> {
-                    if (svg.isInteractive())
-                        throw new RuntimeException("interactive SVGImageView inside CSSBackgroundImageContext");
-                    if (!svg.embeddedWidgets().isEmpty())
-                        throw new RuntimeException("embedded widgets in SVG inside CSSBackgroundImageContext");
-                    yield new DOMCoverPeer.CSSBackgroundImage(svg.source().toURI());
-                }
-                case JPEGImageView jpg -> new DOMCoverPeer.CSSBackgroundImage(jpg.source().toURI());
-                default -> null;
-            };
-        }
-        if (!(peerCreationRequest instanceof DOMPeerBase.DOMPeerCreationRequest))
-            return null;
-
-        return switch (widget) {
-            case ColorFill cf -> new ColorFillPeer(cf);
-            case Text s -> new TextElementPeer(s);
-            case RasterImageView iv -> {
-                throw new RuntimeException("TODO");
-            }
-            case LinearGradient g -> new DOMLinearGradientPeer(g);
-            case ConicGradient g -> new DOMConicGradientPeer(g);
-            case Mask m -> new DOMMaskPeer(m);
-            case Opacity m -> new DOMOpacityPeer(m);
-            case RoundedCorners r -> new DOMRoundedCornersPeer(r);
-            case WebContentFrame wcf -> new WebContentFramePeer(wcf);
-            case Empty e -> new EmptyElementPeer();
-            case DOMElementWidget e -> new DOMElementWrapperPeer(e);
-            case SVGImageView svg -> {
-                if (svg.embeddedWidgets().isEmpty())
-                    yield new DOMImageElement(svg.source().toURIString(), svg.isInteractive());
-                else {
-                    // TODO ilyenkor isInteractive ignorálva van
-                    if (svg.source() instanceof InlineStringSource inlineStringSource)
-                        yield new DOMTemplatedSVGPeer(inlineStringSource.content(), svg.embeddedWidgets());
-                    else
-                        throw new RuntimeException("TODO templated SVG with non-inline source: " + svg);
-                }
-            }
-            case JPEGImageView jpg -> new DOMImageElement(jpg.source().toURIString(), false);
-            case HTMLElementHint h -> new DOMWrapperElementPeer(h);
-            case Hyperlink l -> new DOMHyperlinkPeer(l);
-            case Video video -> new DOMVideoPeer(video);
-
-            // INPUT
-            case ClickListener c -> new Provider<>(CumulatingPropList.class,
-                    CumulatingPropList.ofOnClick(c.handler()), c.content());
-            case FocusListener f -> new Provider<>(CumulatingPropList.class,
-                    CumulatingPropList.ofFocus(f), f.content());
-            case PointerRegion r -> new Provider<>(CumulatingPropList.class,
-                    CumulatingPropList.ofPointerRegion(r), r.content());
-            case PointerTransparent pt -> cssClass("Pt", pt.content());
-            case CloseRequestListener closeRequestListener -> new DOMCloseRequestListenerPeer(closeRequestListener);
-            case WithCursor c -> new Provider<>(CumulatingPropList.class,
-                    CumulatingPropList.ofCursor(c.cursor()), c.content());
-
-            // LAYOUT
-            case Align a -> new DOMAlignPeer(a);
-            case Box b -> new DOMBoxPeer(b);
-            case Padding b -> new DOMPaddingPeer(b);
-            case Grid g -> new DOMGridPeer(g);
-            case LinearLayout l -> new DOMLinearLayoutPeer(l);
-            case Overlay o -> new DOMOverlayLayoutPeer(o);
-            case Flow f -> new DOMFlowLayoutPeer(f);
-            case PassiveSize p -> new DOMPassiveSizePeer(p);
-            case CSSClassTag c -> new Provider<>(CumulatingPropList.class,
-                    CumulatingPropList.ofCSSClass(c.className()), c.content());
-            case WrapWithCSSClassTag w -> cssClass(w.className(), overlay(w.content()));
-            case Scrollable s -> new DOMScrollablePeer(s);
-            case Hidden h -> new Provider<>(CumulatingPropList.class, CumulatingPropList.ofHidden(), h.content());
-            case Gone gone -> new Hidden(empty());
-            case Cover c -> new DOMCoverPeer(c);
-            case PassiveHeight p -> new DOMPassiveHeightPeer(p);
-            // TODO ha itt önmagát adjuk vissza, azt detektálni kéne. most csak végtelen ciklusba kerülünk tőle.
-
-            // FORMATTED TEXT
-            case OrderedList ol -> new DOMOrderedListPeer(ol);
-
-            // CONTROL
-            case PlainTextEditor et -> new DOMEditableTextPeer(et);
-            //case Button b -> new WidgetStateRequest<>(() -> new ButtonPeer(b, this), cf);
-            case CheckBox cb -> new DOMCheckBoxPeer(cb);
-            case RadioButton<?> rb -> new DOMRadioButtonPeer<>(rb);
-            case ComboBox<?> cb -> new ComboBoxPeer<>(cb);
-            case Slider slider -> new SliderPeer(slider);
-            // TODO case StylesheetRef sr -> handleStylesheet(sr), sr);
-            case Tooltip t -> new Provider<>(CumulatingPropList.class, CumulatingPropList.ofTooltipTag(t), t.content());
-
-            default -> null;
-        };
     }
 
     @Override
