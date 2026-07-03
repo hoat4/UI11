@@ -28,10 +28,10 @@ public class J2DPointerRegionPeer extends Widget {
     @Override
     protected Widget build() {
         Widget content = pointerRegion.content().withSlot(contentSlot);
-        return new J2DPeerCreationRequest().executedOn(content, peer -> {
-            inputNode.child.set(peer.inputNode());
+        return new J2DPeerCreationRequest().executedOn(content, result -> {
+            inputNode.child.set(result.peer().inputNode());
             inputNode.listener = pointerRegion;
-            J2DNodeHolder h = new J2DNodeHolder(peer.renderNode(), inputNode);
+            J2DNodeHolder h = new J2DNodeHolder(result.peer().renderNode(), inputNode);
             return ParentDataWidget.of(h, content);
         });
     }

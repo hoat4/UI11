@@ -31,17 +31,17 @@ public final class DefaultOverlayLayoutImpl extends Widget {
             // TODO ha csak Gone van az Overlayben, akkor mi a teendő?
             return new BoxLayoutResult.OfNoConstraints(peerWithSlot);
         BoxLayoutResult.SizeRequest req = new BoxLayoutResult.SizeRequest(constraints);
-        return req.executedOn(overlay.items(), peers -> {
-            Size s = peers.stream().
-                    filter(boxLayoutResult -> switch (boxLayoutResult) {
+        return req.executedOn(overlay.items(), results -> {
+            Size s = results.stream().
+                    filter(result -> switch (result.peer()) {
                         case BoxLayoutResult.OfChosenSize _ -> true;
                         case BoxLayoutResult.OfGone _ -> false;
                         case BoxLayoutResult.OfNoConstraints _ -> {
                             throw new RuntimeException("unexpected " +
-                                    BoxLayoutResult.class.getSimpleName() + ": " + boxLayoutResult);
+                                    BoxLayoutResult.class.getSimpleName() + ": " + result);
                         }
                     }).
-                    map(r -> ((BoxLayoutResult.OfChosenSize) r).size()).
+                    map(r -> ((BoxLayoutResult.OfChosenSize) r.peer()).size()).
                     reduce(Size::max).
                     orElse(constraints.min());
 

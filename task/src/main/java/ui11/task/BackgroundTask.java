@@ -36,6 +36,7 @@ public class BackgroundTask<T> extends Widget {
         status.set(new TaskStatus.InProgress<>());
         Future<?> future = executor.submit(() -> {
             try {
+                // TODO thread safety? de azt lehet hogy nem itt hanem MutableObservable-ben kéne
                 status.set(new TaskStatus.Success<>(callable.call()));
             } catch (Throwable e) {
                 String callableToString;

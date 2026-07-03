@@ -102,7 +102,7 @@ public class WindowImpl {
                 );
 
 
-                return new GLNodeHolder.GLNodeRequest().executedOn(w, h -> {
+                return new GLNodeHolder.GLNodeRequest().executedOn(w, result -> {
 
                 /*
                 System.out.println("New render tree. Viewport size: "+innerSize.get());
@@ -110,7 +110,7 @@ public class WindowImpl {
                 System.out.println();
                  */
 
-                    h.renderNode().addToDisplayList(initialTransform, displayList);
+                    result.peer().renderNode().addToDisplayList(initialTransform, displayList);
                     currentDisplayList = displayList;
                     repaint();
 

@@ -27,10 +27,10 @@ public class GLPointerRegionPeer extends Widget {
     @Override
     protected Widget build() {
         Widget content = pointerRegion.content().withSlot(contentSlot);
-        return new GLNodeHolder.GLNodeRequest().executedOn(content, peer->{
-            inputNode.child.set(peer.inputNode());
+        return new GLNodeHolder.GLNodeRequest().executedOn(content, result -> {
+            inputNode.child.set(result.peer().inputNode());
             inputNode.listener = pointerRegion;
-            GLNodeHolder h = new GLNodeHolder(peer.renderNode(), inputNode);
+            GLNodeHolder h = new GLNodeHolder(result.peer().renderNode(), inputNode);
             return ParentDataWidget.of(h, content);
         });
     }

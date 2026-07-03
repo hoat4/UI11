@@ -128,7 +128,7 @@ class Element {
      * <p>
      * A valuek azok, amelyek nem {@link #directAncestorUpValues}-beliek.
      */
-    final Map<Class<? extends SubstitutedWidget>, SubstitutedWidget> parentInterestedUpValues = new HashMap<>();
+    final Map<PeerCreationRequest<?>, PeerCreationRequest.ResolutionResult<?>> parentInterestedUpValues = new HashMap<>();
     final InvalidationPoint upValuesIP = new InvalidationPoint();
 
     WidgetResolver vp;
@@ -555,12 +555,17 @@ class Element {
             //      a másodiknak a ensureFresh-jekor ez a hiba jön elő:
             //      ui11.ObservableHelper: Observed value was invalidated, but node is in REFRESHING_SELF_BEFORE_CHILDREN state: DOMGridPeer@9dba2e70
             //      reprodukálható, ha kiszedjük DOMGridPeerből a overlay számolást és belépünk bowling lobbiba
-            for (Entry<Class<? extends SubstitutedWidget>, SubstitutedWidget> entry : parentInterestedUpValues.entrySet()) {
-                Class<? extends SubstitutedWidget> type = entry.getKey();
-                Object val = entry.getValue();
-                Object newVal = lookupImpl(type, true, true);
-                if (!Objects.equals(val, newVal)) {
-                    System.out.println("invalidate parent because " + type.getSimpleName() + " changed from " + val + " to " + newVal);
+
+            for (Entry<PeerCreationRequest<?>, PeerCreationRequest.ResolutionResult<?>> entry : parentInterestedUpValues.entrySet()) {
+                Class<? extends SubstitutedWidget> type = entry.getKey().peerType();
+                Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDatas = new HashMap<>();
+                PeerCreationRequest.ResolutionResult<?> oldResult = entry.getValue();
+                SubstitutedWidget newVal = lookupImpl(type, true, true, parentDatas);
+                Objects.requireNonNull(newVal);
+                parentDatas.keySet().retainAll(Set.copyOf(entry.getKey().auxiliaryTypes));
+                PeerCreationRequest.ResolutionResult<?> result = new PeerCreationRequest.ResolutionResult<>(newVal, parentDatas);
+                if (!Objects.equals(oldResult, result)) {
+                    System.out.println("invalidate parent because " + type.getSimpleName() + " changed from " + oldResult + " to " + newVal);
                     System.out.println("Parent: " + parent);
                     System.out.println("This: " + this);
                     parent.upValuesIP.invalidate();
@@ -996,7 +1001,8 @@ class Element {
 
     // beleveszi directAncestorEDs tartalmát is.
     // ez nem használható, ha ez az Element egy RootElement
-    <U extends SubstitutedWidget> @NonNull U lookupImpl(Class<U> type, boolean noEnsureFresh, boolean optional) {
+    <U extends SubstitutedWidget> @NonNull U lookupImpl(Class<U> type, boolean noEnsureFresh, boolean optional,
+                                                        Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDatas) {
         Element e = this;
 
         while (e != null) {
@@ -1006,7 +1012,7 @@ class Element {
             // - ha doLookupból vagyunk hívva: már megnézte directAncestorUpValues tartalmát, ezért felesleges újra
             //   megnézni
             if (e != this) {
-                U t = findInUpValueList(type, e.directAncestorUpValues);
+                U t = findInUpValueList(type, e.directAncestorUpValues, parentDatas);
                 if (t != null) return t;
             }
 
@@ -1040,7 +1046,7 @@ class Element {
                 e = null;
             else {
                 if (e.delegate.element == null) {
-                    U t = findInUpValueList(type, e.delegate.upValues);
+                    U t = findInUpValueList(type, e.delegate.upValues, parentDatas);
                     if (t != null) return t;
                     break;
                 } else
@@ -1091,8 +1097,12 @@ class Element {
         return delegate != null && delegate.element != null && delegate.element.parent != this;
     }
 
-    static <U extends SubstitutedWidget> @Nullable U findInUpValueList(Class<U> type, List<? extends SubstitutedWidget> upValues) {
+    static <U extends SubstitutedWidget> @Nullable U findInUpValueList(Class<U> type,
+                                                                       List<? extends SubstitutedWidget> upValues,
+                                                                       Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDatas) {
         for (SubstitutedWidget ed : upValues) {
+            if (ed instanceof ParentDataWidget)
+                parentDatas.putIfAbsent(ed.getClass().asSubclass(ParentDataWidget.class), (ParentDataWidget) ed);
             if (type.isInstance(ed))
                 return type.cast(ed);
         }

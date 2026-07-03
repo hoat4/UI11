@@ -12,25 +12,30 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
 
     private final Class<P> peerType;
 
-    protected PeerCreationRequest(Class<P> peerType) {
+    // TODO ennek kéne számítania WidgetResolverek kiválasztásában?
+    final List<Class<? extends ParentDataWidget>> auxiliaryTypes;
+
+    protected PeerCreationRequest(Class<P> peerType, Class<? extends ParentDataWidget>... auxiliaryTypes) {
         this.peerType = peerType;
+        this.auxiliaryTypes = List.of(auxiliaryTypes);
     }
 
     public final Class<P> peerType() {
         return peerType;
     }
 
-    public final Widget executedOn(Widget widget, Function<P, Widget> then) {
+    public final Widget executedOn(Widget widget, Function<ResolutionResult<P>, Widget> then) {
         return new CreatePeerForSingle(widget, then);
     }
 
-    public final Widget executedOn(List<? extends Widget> widgets, Function<List<? extends P>, Widget> then) {
+    public final Widget executedOn(List<? extends Widget> widgets,
+                                   Function<List<? extends ResolutionResult<P>>, Widget> then) {
         widgets = List.copyOf(widgets);
         return new CreatePeersForList<>(widgets, Collections.nCopies(widgets.size(), this), then);
     }
 
     public final <K> Widget executedOn(Map<K, ? extends Widget> widgets,
-                                       Function<Map<K, ? extends P>, Widget> then) {
+                                       Function<Map<K, ? extends ResolutionResult<P>>, Widget> then) {
         widgets = Map.copyOf(widgets);
         return new CreatePeersForMap<>(widgets,
                 widgets.entrySet().stream().collect(toMap(
@@ -39,7 +44,7 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
                 then);
     }
 
-    public final Collector<Widget, ?, Widget> executing(Function<Stream<? extends P>, Widget> then) {
+    public final Collector<Widget, ?, Widget> executing(Function<Stream<? extends ResolutionResult<P>>, Widget> then) {
         return Collectors.collectingAndThen(Collectors.toList(),
                 list -> {
                     list = List.copyOf(list);
@@ -53,7 +58,7 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
     public static <P extends SubstitutedWidget> Widget executedMultipleOn(
             List<? extends Widget> widgets,
             List<? extends PeerCreationRequest<P>> requests,
-            Function<List<? extends P>, Widget> then) {
+            Function<List<? extends ResolutionResult<P>>, Widget> then) {
 
         widgets = List.copyOf(widgets);
         requests = List.copyOf(requests);
@@ -64,21 +69,26 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
         return new CreatePeersForList<P>(widgets, requests, then);
     }
 
+    public static record ResolutionResult<P extends SubstitutedWidget>(
+            P peer,
+            Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDatas
+    ) {}
+
     private class CreatePeerForSingle extends Widget {
 
         private final Widget widget;
-        private final Function<P, Widget> f;
+        private final Function<ResolutionResult<P>, Widget> f;
 
         @Inject private Slot slot;
 
-        public CreatePeerForSingle(Widget widget, Function<P, Widget> f) {
+        public CreatePeerForSingle(Widget widget, Function<ResolutionResult<P>, Widget> f) {
             this.widget = widget;
             this.f = f;
         }
 
         @Override
         protected Widget build() {
-            P p = useWidget(slot, widget, PeerCreationRequest.this);
+            ResolutionResult<P> p = useWidget(slot, widget, PeerCreationRequest.this);
             return f.apply(p);
         }
     }
@@ -87,13 +97,13 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
 
         private final List<? extends Widget> widgets;
         private final List<? extends PeerCreationRequest<P>> requests;
-        private final Function<List<? extends P>, Widget> f;
+        private final Function<List<? extends ResolutionResult<P>>, Widget> f;
 
         @Inject private MultiSlot<Integer> slots;
 
         public CreatePeersForList(List<? extends Widget> widgets,
                                   List<? extends PeerCreationRequest<P>> requests,
-                                  Function<List<? extends P>, Widget> f) {
+                                  Function<List<? extends ResolutionResult<P>>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
@@ -101,15 +111,15 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
 
         @Override
         protected Widget build() {
-            SubstitutedWidget[] peers = new SubstitutedWidget[widgets.size()];
+            @SuppressWarnings("unchecked")
+            ResolutionResult<P>[] peers = new ResolutionResult[widgets.size()];
             for (int i = 0; i < widgets.size(); i++) {
                 Slot defaultSlot = slots.get(i);
                 peers[i] = useWidget(defaultSlot, widgets.get(i), requests.get(i));
             }
 
-            @SuppressWarnings("unchecked")
-            List<P> castedList = (List<P>) List.of(peers);
-            return f.apply(castedList);
+            // TODO dokumentálni kéne, hogy f nem null-toleráns mapet kap
+            return f.apply(List.of(peers));
         }
     }
 
@@ -117,13 +127,13 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
 
         private final Map<K, ? extends Widget> widgets;
         private final Map<K, ? extends PeerCreationRequest<P>> requests;
-        private final Function<Map<K, ? extends P>, Widget> f;
+        private final Function<Map<K, ? extends ResolutionResult<P>>, Widget> f;
 
         @Inject private MultiSlot<K> slots;
 
         public CreatePeersForMap(Map<K, ? extends Widget> widgets,
                                  Map<K, ? extends PeerCreationRequest<P>> requests,
-                                 Function<Map<K, ? extends P>, Widget> f) {
+                                 Function<Map<K, ? extends ResolutionResult<P>>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
@@ -131,15 +141,13 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
 
         @Override
         protected Widget build() {
-            Map<K, SubstitutedWidget> peers = new HashMap<>();
+            Map<K, ResolutionResult<P>> peers = new HashMap<>();
             widgets.forEach((k, w) -> {
                 Slot defaultSlot = slots.get(k);
                 peers.put(k, useWidget(defaultSlot, w, requests.get(k)));
             });
 
-            @SuppressWarnings("unchecked")
-            Map<K, P> castedMap = (Map<K, P>) Map.copyOf(peers);
-            return f.apply(castedMap);
+            return f.apply(Map.copyOf(peers));
         }
     }
 }

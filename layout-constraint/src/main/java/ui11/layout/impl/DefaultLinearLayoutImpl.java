@@ -10,7 +10,7 @@ import ui11.geom.Size;
 import ui11.graphics.Surface;
 import ui11.layout.helper.SingleChildLayout;
 import ui11.layout.multichild.LinearLayout;
-import ui11.layout.multichild.LinearLayout.Item;
+import ui11.layout.multichild.LinearLayout.WeightMarker;
 import ui11.layout.multichild.LinearLayout.JustifyContent;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
@@ -51,7 +51,6 @@ public final class DefaultLinearLayoutImpl extends Widget {
             return empty();
 
         items = MultiSlot.assignSlots(slots, items);
-        items = applyCrossAxisAlignment(items);
         items = applyMainAxisAlignment(items);
 
         List<? extends Widget> itemsFinal = items;
@@ -61,31 +60,12 @@ public final class DefaultLinearLayoutImpl extends Widget {
         Axis crossAxis = mainAxis.cross();
         return new BoxLayoutResult.SizeRequest(BoxConstraints.of(
                 mainAxis,
-                0, constraints.min(crossAxis),
-                Double.POSITIVE_INFINITY, constraints.max(crossAxis)
+                /* min width */ 0,
+                /* min height */ linearLayout.crossAxisAlignment() == LinearLayout.AlignChildren.STRETCH ?
+                        constraints.min(crossAxis) : 0,
+                /* max width */ Double.POSITIVE_INFINITY,
+                /* max height */ constraints.max(crossAxis)
         )).executedOn(items, results -> layoutPhase2(itemsFinal, results));
-    }
-
-    private List<? extends Widget> applyCrossAxisAlignment(List<? extends Widget> items) {
-        items = switch (linearLayout.crossAxisAlignment()) {
-            case STRETCH -> {
-                // do nothing
-                yield items;
-            }
-            case START -> alignChildren(items, switch (linearLayout.crossAxis()) {
-                case VERTICAL -> Alignment.TOP;
-                case HORIZONTAL -> Alignment.LEFT;
-            });
-            case CENTER -> alignChildren(items, switch (linearLayout.crossAxis()) {
-                case VERTICAL -> Alignment.VCENTER;
-                case HORIZONTAL -> Alignment.HCENTER;
-            });
-            case END -> alignChildren(items, switch (linearLayout.crossAxis()) {
-                case VERTICAL -> Alignment.BOTTOM;
-                case HORIZONTAL -> Alignment.RIGHT;
-            });
-        };
-        return items;
     }
 
     private List<? extends Widget> applyMainAxisAlignment(List<? extends Widget> items) {
@@ -96,19 +76,19 @@ public final class DefaultLinearLayoutImpl extends Widget {
             }
             case SPACE_EVENLY -> {
                 List<Widget> l = new ArrayList<>();
-                l.add(new Item(1, empty()));
+                l.add(new WeightMarker(1, empty()));
                 for (Widget w : items) {
-                    l.add(new Item(0, Item.content(w)));
-                    l.add(new Item(1, empty()));
+                    l.add(new WeightMarker(0, w));
+                    l.add(new WeightMarker(1, empty()));
                 }
                 yield l;
             }
             case SPACE_AROUND -> {
                 List<Widget> l = new ArrayList<>();
                 for (Widget w : items) {
-                    l.add(new Item(1, empty()));
-                    l.add(new Item(0, Item.content(w)));
-                    l.add(new Item(1, empty()));
+                    l.add(new WeightMarker(1, empty()));
+                    l.add(new WeightMarker(0, w));
+                    l.add(new WeightMarker(1, empty()));
                 }
                 yield l;
             }
@@ -116,11 +96,11 @@ public final class DefaultLinearLayoutImpl extends Widget {
                 List<Widget> l = new ArrayList<>();
                 Iterator<? extends Widget> iterator = items.iterator();
 
-                l.add(new Item(0, Item.content(iterator.next())));
+                l.add(new WeightMarker(0, iterator.next()));
                 while (iterator.hasNext()) {
                     Widget w = iterator.next();
-                    l.add(new Item(1, empty()));
-                    l.add(new Item(0, Item.content(w)));
+                    l.add(new WeightMarker(1, empty()));
+                    l.add(new WeightMarker(0, w));
                 }
                 yield l;
             }
@@ -129,7 +109,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
                 if (linearLayout.mainAxisAlignment() != JustifyContent.START)
                     l.add(expanded(empty()));
                 for (Widget w : items)
-                    l.add(withWeight(0, Item.content(w)));
+                    l.add(withWeight(0, w));
                 if (linearLayout.mainAxisAlignment() != JustifyContent.END)
                     l.add(expanded(empty()));
                 yield l;
@@ -138,10 +118,27 @@ public final class DefaultLinearLayoutImpl extends Widget {
         return items;
     }
 
-    private Widget layoutPhase2(List<? extends Widget> items, List<? extends BoxLayoutResult> boxLayoutResults) {
+    private Widget layoutPhase2(List<? extends Widget> items,
+                                List<? extends PeerCreationRequest.ResolutionResult<BoxLayoutResult>> boxLayoutResults) {
         BoxConstraints constraints = containerConstraints();
         Axis mainAxis = linearLayout.mainAxis();
         Axis crossAxis = mainAxis.cross();
+
+        Alignment crossAxisAlignment = switch (linearLayout.crossAxisAlignment()) {
+            case STRETCH -> null;
+            case START -> switch (linearLayout.crossAxis()) {
+                case VERTICAL -> Alignment.TOP;
+                case HORIZONTAL -> Alignment.LEFT;
+            };
+            case CENTER -> switch (linearLayout.crossAxis()) {
+                case VERTICAL -> Alignment.VCENTER;
+                case HORIZONTAL -> Alignment.HCENTER;
+            };
+            case END -> switch (linearLayout.crossAxis()) {
+                case VERTICAL -> Alignment.BOTTOM;
+                case HORIZONTAL -> Alignment.RIGHT;
+            };
+        };
 
         // TODO gap figyelembe vétele
 
@@ -155,8 +152,12 @@ public final class DefaultLinearLayoutImpl extends Widget {
         int i = 0;
         for (int indexInWidgets = 0; indexInWidgets < items.size(); indexInWidgets++) {
             Widget widget = items.get(indexInWidgets);
-            double weight = Item.weight(widget);
-            switch (boxLayoutResults.get(indexInWidgets)) {
+            PeerCreationRequest.ResolutionResult<BoxLayoutResult> resolutionResult = boxLayoutResults.get(indexInWidgets);
+
+            WeightMarker weightMarker = (WeightMarker) resolutionResult.parentDatas().get(WeightMarker.class);
+            double weight = weightMarker == null ? 0 : weightMarker.weight;
+
+            switch (resolutionResult.peer()) {
                 case BoxLayoutResult.OfGone _ -> {
                     continue;
                 }
@@ -164,7 +165,9 @@ public final class DefaultLinearLayoutImpl extends Widget {
                     throw new RuntimeException("unexpected " +
                             BoxLayoutResult.class.getSimpleName() + ": " + boxLayoutResults);
                 }
-                case BoxLayoutResult.OfChosenSize r ->{
+                case BoxLayoutResult.OfChosenSize r -> {
+                    if (crossAxisAlignment != null)
+                        widget = Align.align(crossAxisAlignment, widget);
                     placeables[i] = widget;
                     weights[i] = weight;
                     if (weight == 0 || !canFlex) {
@@ -231,19 +234,19 @@ public final class DefaultLinearLayoutImpl extends Widget {
                 }
                 double heightFinal = height;
                 int itemCountFinal = itemCount;
-                return PeerCreationRequest.executedMultipleOn(reqWidgets, reqs, boxLayoutResults1 -> {
+                return PeerCreationRequest.executedMultipleOn(reqWidgets, reqs, resolutionResults -> {
                     double height2 = heightFinal;
-                    for (BoxLayoutResult layoutResult : boxLayoutResults) {
-                        switch (layoutResult) {
+                    for (PeerCreationRequest.ResolutionResult<BoxLayoutResult> layoutResult : resolutionResults) {
+                        switch (layoutResult.peer()) {
                             case BoxLayoutResult.OfGone _ -> { // TODO ez legális?
                                 // 0x0-nak tekintjük, ezért nem kell height-ot változtatni
                             }
-                            case BoxLayoutResult.OfNoConstraints _ ->  {
+                            case BoxLayoutResult.OfNoConstraints _ -> {
                                 throw new RuntimeException("unexpected " +
                                         BoxLayoutResult.class.getSimpleName() + ": " + boxLayoutResults);
                             }
-                            case BoxLayoutResult.OfChosenSize r-> {
-                                height2 = Math.max(height2,r.size().length(crossAxis));
+                            case BoxLayoutResult.OfChosenSize r -> {
+                                height2 = Math.max(height2, r.size().length(crossAxis));
                             }
                         }
                     }
@@ -261,7 +264,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
 
         Size containerSize = Size.of(mainAxis, containerWidth, height);
 
-        Widget widgetResult = overlay(o->{
+        Widget widgetResult = overlay(o -> {
             double x = 0;
             for (int i = 0; i < itemCount; i++) {
                 double w = widths[i];
@@ -275,16 +278,6 @@ public final class DefaultLinearLayoutImpl extends Widget {
             widgetResult = new BoxLayoutResult.OfChosenSize(containerSize, widgetResult);
 
         return widgetResult;
-    }
-
-
-    private static List<? extends Widget> alignChildren(List<? extends Widget> items, Alignment alignment) {
-        return items.stream().map(w -> {
-            if (w instanceof Item item)
-                return withWeight(Item.weight(item), Align.align(alignment, item));
-            else
-                return Align.align(alignment, w);
-        }).toList();
     }
 
     private BoxConstraints containerConstraints() {

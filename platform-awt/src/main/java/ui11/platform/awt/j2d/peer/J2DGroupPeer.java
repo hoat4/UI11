@@ -1,6 +1,8 @@
 package ui11.platform.awt.j2d.peer;
 
 import ui11.MultiSlot;
+import ui11.PeerCreationRequest;
+import ui11.PeerCreationRequest.ResolutionResult;
 import ui11.Widget;
 import ui11.graphics.Surface;
 import ui11.graphics.effect.Overlay;
@@ -59,13 +61,14 @@ public class J2DGroupPeer extends Widget {
         return new J2DPeerCreationRequest().executedOn(items, this::doBuild);
     }
 
-    private Widget doBuild(List<? extends J2DNodeHolder> children) {
+    private Widget doBuild(List<? extends ResolutionResult<J2DNodeHolder>> childrenResolutionResults) {
         List<RenderNode> childRenderNodes = new ArrayList<>();
         List<InputNode> childInputNodes = new ArrayList<>();
 
         Shape shape = ((J2DSurface) parentSurface).shape();
 
-        for (J2DNodeHolder h : children) {
+        for (ResolutionResult<J2DNodeHolder> r : childrenResolutionResults) {
+            J2DNodeHolder h = r.peer();
             if (!(h.renderNode() instanceof EmptyRenderNode))
                 childRenderNodes.add(h.renderNode());
             if (!(h.inputNode() instanceof TransparentInputNode)) {

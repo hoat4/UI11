@@ -177,9 +177,9 @@ public class DOMEnvironment implements Shell, Scheduler {
                 }
 
                 Widget contentRoot = new RootWidgetWrapper(new DOMWidgetWrapper(widget));
-                return new DOMPeerBase.DOMPeerCreationRequest().executedOn(contentRoot, rootPeer -> {
+                return new DOMPeerBase.DOMPeerCreationRequest().executedOn(contentRoot, result -> {
                     element.setInnerHTML("");
-                    element.appendChild(rootPeer.element());
+                    element.appendChild(result.peer().element());
                     return new SubstitutedWidget() {
                     };
                 });

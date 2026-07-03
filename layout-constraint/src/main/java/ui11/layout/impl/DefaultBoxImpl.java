@@ -85,7 +85,7 @@ public class DefaultBoxImpl extends Widget {
             );
             BoxConstraints childConstraints = constraints.subtract(allPadding);
             return new BoxLayoutResult.SizeRequest(childConstraints).executedOn(box.content().withSlot(contentSlot), r -> {
-                Size childSize = switch (r) {
+                Size childSize = switch (r.peer()) {
                     case BoxLayoutResult.OfGone _ -> Size.ZERO;
                     case BoxLayoutResult.OfNoConstraints _ -> {
                         throw new RuntimeException("unexpected " +

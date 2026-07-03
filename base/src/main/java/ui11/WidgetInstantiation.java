@@ -1,5 +1,6 @@
 package ui11;
 
+import ui11.PeerCreationRequest.ResolutionResult;
 import ui11.observable.ObserverHolder;
 
 import org.jspecify.annotations.NonNull;
@@ -68,30 +69,15 @@ final class WidgetInstantiation {
      * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő Widgetet vagy Elementet a
      *                                delegate láncban
      */
-    public <U extends SubstitutedWidget> @NonNull U lookup(Class<U> type) {
+    public <U extends SubstitutedWidget> @NonNull ResolutionResult<U> lookup(PeerCreationRequest<U> request) {
+        Class<U> type = request.peerType();
+
         Objects.requireNonNull(type);
         if (type == SubstitutedWidget.class || !SubstitutedWidget.class.isAssignableFrom(type))
             throw new IllegalArgumentException("not an " + SubstitutedWidget.class.getSimpleName() + " subtype: " + type.getName());
 
-        return doLookup(type, false);
-    }
+        Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDatas = new HashMap<>();
 
-    /**
-     * A delegate láncon végighaladva keres egy olyan Widgetet vagy Elementet, mely implementálja a megadott osztályt
-     * vagy interface-t, és visszaadja azt. Ha több ilyen is van, akkor a legelsőt.
-     *
-     * @return {@linkplain Optional#empty()}, ha nem találtunk a keresési feltételnek megfelelő Widgetet vagy Elementet
-     * a delegate láncban
-     * @throws IllegalStateException ha már vége lett annak a {@linkplain ui11.Element.RefreshID refreshSelfnek}, mely
-     *                               során ez az WidgetInstantiation keletkezett, vagy ha időközben az ezt a widgetet
-     *                               példányosító Element egy leszármazottja is példányosított és ugyanaz az Element
-     *                               keletkezett
-     */
-    public <U extends SubstitutedWidget> Optional<U> lookupOptional(Class<U> type) {
-        return Optional.ofNullable(doLookup(type, true));
-    }
-
-    private <U extends SubstitutedWidget> U doLookup(Class<U> type, boolean optional) {
         checkIsValid();
         if (element != null) {
             // mivel épp most frissítjük a parentet, ezért nem kell külön értesíteni próbálni őt a változásokról,
@@ -101,22 +87,30 @@ final class WidgetInstantiation {
             ensureFresh();
         }
 
-        container.upValuesIP.subscribe();
-        U t = Element.findInUpValueList(type, upValues);
-        if (t != null)
-            // ha nem a child provideolta ezt az upValuet, akkor ne rakjuk be parentInterestedUpValuesba
-            return t;
-        if (element == null) {
-            if (!optional)
+        boolean putIntoInterested;
+        U peer = Element.findInUpValueList(type, upValues, parentDatas);
+        if (peer != null)
+            // ha nem a child provideolta ezt az upValuet, akkor ne rakjuk be parentInterestedUpValuesba,
+            // mert úgyse fog megváltozni
+            putIntoInterested = false;
+        else {
+            if (element == null) {
                 throw new NoSuchElementException(type.getName() + " not found in delegate chain of " + this +
                         "\nDirect up values: " + upValues);
-            else
-                return null;
-        } else {
-            U value = element.lookupImpl(type, false, optional);
-            element.parentInterestedUpValues.put(type, value);
-            return value;
+            } else {
+                peer = element.lookupImpl(type, false, false, parentDatas);
+                putIntoInterested = true;
+            }
         }
+
+        Objects.requireNonNull(peer);
+        parentDatas.keySet().retainAll(Set.copyOf(request.auxiliaryTypes));
+        ResolutionResult<U> resolutionResult = new ResolutionResult<>(peer, parentDatas);
+        if (putIntoInterested) {
+            container.upValuesIP.subscribe();
+            element.parentInterestedUpValues.put(request, resolutionResult);
+        }
+        return resolutionResult;
     }
 
     private void checkIsValid() {

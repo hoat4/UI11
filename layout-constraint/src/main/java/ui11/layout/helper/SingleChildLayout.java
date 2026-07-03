@@ -40,7 +40,7 @@ public class SingleChildLayout extends Widget {
 
         Widget childWithSlot = child.withSlot(childSlot);
         return new BoxLayoutResult.SizeRequest(childConstraints).executedOn(childWithSlot, result -> {
-            return switch (result) {
+            return switch (result.peer()) {
                 case BoxLayoutResult.OfGone _ -> empty(); // mert overlay(gone()) is ugyanaz mint empty()
                 case BoxLayoutResult.OfChosenSize r -> {
                     Size childSize = r.size();

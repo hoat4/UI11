@@ -108,8 +108,8 @@ public class AWTWindow {
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
-            return new J2DPeerCreationRequest().executedOn(content, contentPeer->{
-                rootNodeHolder.set(contentPeer);
+            return new J2DPeerCreationRequest().executedOn(content, result->{
+                rootNodeHolder.set(result.peer());
                 // TODO repaint kéne, ha rootPeer megváltozik
 
                 if (!frame.isVisible()) // TODO onResume kéne, csak az túl korán van

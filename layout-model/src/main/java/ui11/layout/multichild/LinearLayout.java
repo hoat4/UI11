@@ -2,6 +2,7 @@ package ui11.layout.multichild;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.ParentDataWidget;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Axis;
@@ -289,27 +290,27 @@ public final class LinearLayout extends SubstitutedWidget {
     // TODO Gone-nál mit jelent a withWeight?
     // ez annyiban különbözik flex-growtól, hogy ott justify-content != stretch esetén is működik, gondolom ekkor
     // a justify-content értéke ignorálva van
-    public static @Nullable Item withWeight(double weight, @Nullable Widget w) {
+    public static @Nullable WeightMarker withWeight(double weight, @Nullable Widget w) {
         // ha e == null de weight érvénytelen, akkor kéne exceptiont dobni?
         if (w == null)
             return null;
-        // lehetne ellenőrizni hogy w instanceof Item és akkor el lehet dobni a belsőt, de valszeg kevésszer fordul
+        // lehetne ellenőrizni hogy w instanceof WeightMarker és akkor el lehet dobni a belsőt, de valszeg kevésszer fordul
         // elő ilyen
-        return new Item(weight, w);
+        return new WeightMarker(weight, w);
     }
 
     // TODO legális expanded-et használni több childre? és ha van már weight beállítva?
 
     /**
      * If no other widgets have a set weight and this method is only applied for one of the widgets in a LinearLayout,
-     * then the {@linkplain Item} produced by this method will have the same behavior as
+     * then the {@linkplain WeightMarker} produced by this method will have the same behavior as
      * {@link #withWeight(double, Widget)} with any positive finite number as weight.
      *
      * @param w if {@code null}, this method will return {@code null}
      */
     // TODO sok helyen talán meg lehetne szüntetni az expanded-et. pl. RunningMatchRow.player2 esetén
     //      a playerimageview nem tud nyúlni, de az alignchildrenes column viszont igen.
-    public static @Nullable Item expanded(@Nullable Widget w) {
+    public static @Nullable WeightMarker expanded(@Nullable Widget w) {
         return withWeight(1, w);
     }
 
@@ -358,7 +359,7 @@ public final class LinearLayout extends SubstitutedWidget {
     }
 
     /**
-     * A megadott hossz lesz az elemek közti egyenkénti helyköz is, és az elemeket körülvevő szegély is.
+     * A megadott hossz lesz az elemek közti egyenkénti helyköz is, és az elemek összességét körülvevő szegély is.
      */
     // TODO ez biztos jó ide? belekever cross-axis irányú paddingot is
     public Widget withPadAndGap(Length padAndGap) {
@@ -570,35 +571,21 @@ public final class LinearLayout extends SubstitutedWidget {
         }
     }
 
-    public static final class Item extends Widget {
+    public static final class WeightMarker extends ParentDataWidget {
 
-        private final double weight;
-        private final Widget content;
+        public final double weight;
 
-        public Item(double weight, Widget content) {
-            Objects.requireNonNull(content);
+        public WeightMarker(double weight, Widget content) {
+            super(content);
             if (weight < 0 || !Double.isFinite(weight))
                 throw new IllegalArgumentException("invalid weight: " + weight + " for " + content);
             this.weight = weight;
-            this.content = content;
         }
 
         public static double weight(@NonNull Widget e) {
             Objects.requireNonNull(e);
             // TODO ehelyett ParentDataWidgetet kéne használni
-            return e instanceof Item item ? item.weight : 0;
-        }
-
-        public static @NonNull Widget content(@NonNull Widget potentiallyItem) {
-            Objects.requireNonNull(potentiallyItem);
-            while (potentiallyItem instanceof Item item)
-                potentiallyItem = item.content;
-            return potentiallyItem;
-        }
-
-        @Override
-        protected Widget build() {
-            return content;
+            return e instanceof WeightMarker item ? item.weight : 0;
         }
     }
 

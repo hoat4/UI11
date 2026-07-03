@@ -57,7 +57,7 @@ public abstract class SubstitutedWidget extends Widget {
             resolved = fallbackContent();
             if (resolved == null)
                 throw new RuntimeException("no " + WidgetResolver.class.getSimpleName() + " supports " +
-                        getClass().getName() + " and " + ReflectionUtil.internalName(getClass()) +
+                        getClass().getName() + " and " + ReflectionUtil.simpleName(getClass()) +
                         ".fallbackContent() returned null");
         }
 

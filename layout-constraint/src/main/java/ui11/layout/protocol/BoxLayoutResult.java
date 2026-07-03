@@ -6,6 +6,7 @@ import ui11.Widget;
 import ui11.geom.Size;
 import ui11.ParentDataWidget;
 import ui11.PeerCreationRequest;
+import ui11.layout.multichild.LinearLayout;
 
 import java.util.Objects;
 
@@ -52,7 +53,7 @@ public sealed abstract class BoxLayoutResult extends ParentDataWidget {
          * @param constraints ez null, ha még csak az érdekel hogy gone-e
          */
         public SizeRequest(@Nullable BoxConstraints constraints) {
-            super(BoxLayoutResult.class);
+            super(BoxLayoutResult.class, LinearLayout.WeightMarker.class);
             this.constraints = constraints;
         }
 

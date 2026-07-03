@@ -16,8 +16,10 @@ import ui11.text.TextStyle;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
 
@@ -77,11 +79,20 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected Widget makePeer(Widget widget, Function<DOMElementHolder, Widget> f) {
-        return new DOMPeerCreationRequest().executedOn(new DOMWidgetWrapper(widget), f);
+        return new DOMPeerCreationRequest().executedOn(new DOMWidgetWrapper(widget), result ->
+                f.apply(result.peer()));
     }
 
+    @SuppressWarnings("SimplifyStreamApiCallChains")
     protected Widget makePeers(List<? extends Widget> widgets,
                                Function<List<? extends DOMElementHolder>, Widget> f) {
+        return makePeers2(widgets, results ->
+                f.apply(results.stream().map(PeerCreationRequest.ResolutionResult::peer).
+                        collect(Collectors.toUnmodifiableList())));
+    }
+
+    protected Widget makePeers2(List<? extends Widget> widgets,
+                                Function<List<? extends PeerCreationRequest.ResolutionResult<DOMElementHolder>>, Widget> f) {
         return new DOMPeerCreationRequest().executedOn(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(), f);
     }
@@ -92,12 +103,18 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
                 Map.Entry::getKey,
                 e -> new DOMWidgetWrapper(e.getValue()))
         );
-        return new DOMPeerCreationRequest().executedOn(widgets, f);
+        return new DOMPeerCreationRequest().executedOn(widgets, results ->
+                f.apply(results.entrySet().stream().
+                        collect(toUnmodifiableMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().peer())
+                        )));
     }
 
     protected Widget makePeer_sameSurface(Widget widget, Function<DOMElementHolder, Widget> f) {
         // TODO ez most ugyanaz mint a sima makePeer
-        return new DOMPeerCreationRequest().executedOn(new DOMWidgetWrapper(widget), f);
+        return new DOMPeerCreationRequest().executedOn(new DOMWidgetWrapper(widget),
+                result -> f.apply(result.peer()));
     }
 
     protected Widget wrapResult(DOMElementHolder h) {

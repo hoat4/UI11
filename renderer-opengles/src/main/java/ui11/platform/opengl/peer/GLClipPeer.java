@@ -44,10 +44,10 @@ public class GLClipPeer extends Widget {
 
         Widget widget = clip.content();
         widget = new Provider<>(Surface.class, childSurface, widget);
-        return new GLNodeHolder.GLNodeRequest().executedOn(widget, peer -> {
+        return new GLNodeHolder.GLNodeRequest().executedOn(widget, result -> {
             return new GLNodeHolder(
-                    makeRenderNode(peer.renderNode(), childSurface.shape()),
-                    makeInputNode(peer.inputNode(), childSurface.shape())
+                    makeRenderNode(result.peer().renderNode(), childSurface.shape()),
+                    makeInputNode(result.peer().inputNode(), childSurface.shape())
             );
         });
     }

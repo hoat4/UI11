@@ -1,23 +1,15 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.MultiSlot;
 import ui11.Widget;
 import ui11.geom.Length;
 import ui11.layout.multichild.LinearLayout;
-import ui11.layout.multichild.LinearLayout.Item;
 import ui11.layout.multichild.LinearLayout.JustifyContent;
-import ui11.layout.singlechild.Align;
-import ui11.layout.singlechild.Alignment;
 import ui11.platform.dom.DOMElementHolder;
 import ui11.platform.dom.DOMEnvironment;
 import ui11.platform.dom.DOMLayoutPeerBase;
 
 import java.util.*;
-
-import static ui11.graphics.Empty.empty;
-import static ui11.layout.multichild.LinearLayout.expanded;
-import static ui11.layout.multichild.LinearLayout.withWeight;
 
 public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
 
@@ -95,7 +87,7 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
 
         boolean everyWeightIsZero = true;
         for (Widget item : linearLayout.items()) {
-            if (Item.weight(item) != 0) { // TODO ez most Gone-okat is figyelembe veszi
+            if (LinearLayout.WeightMarker.weight(item) != 0) { // TODO ez most Gone-okat is figyelembe veszi
                 everyWeightIsZero = false;
                 break;
             }
@@ -146,7 +138,7 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
 
             Widget item = linearLayout.items().get(i);
 
-            double weight = e.mainAxisAlignment() == JustifyContent.STRETCH ? Item.weight(item) : 0;
+            double weight = e.mainAxisAlignment() == JustifyContent.STRETCH ? LinearLayout.WeightMarker.weight(item) : 0;
             HTMLElement childPeer = childElements.get(j++);
             if (weight == 0)
                 childPeer.getStyle().removeProperty("flex-grow");

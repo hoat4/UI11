@@ -234,7 +234,8 @@ public abstract class Widget implements Cloneable {
      *
      * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő UpValuet
      */
-    <U extends SubstitutedWidget> U useWidget(Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
+    <U extends SubstitutedWidget> PeerCreationRequest.ResolutionResult<U> useWidget(
+            Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
         Objects.requireNonNull(defaultSlot);
         Objects.requireNonNull(widget);
         Objects.requireNonNull(request);
@@ -265,7 +266,7 @@ public abstract class Widget implements Cloneable {
         if (Element.TRACE_REFRESH)
             Element.TraceRefresh.TL.get().print("lookup " + request + ": " + decoratedWidget);
 
-        return widgetInstantiation.lookup(request.peerType());
+        return widgetInstantiation.lookup(request);
     }
 
     // equals/hashCodera final kell?

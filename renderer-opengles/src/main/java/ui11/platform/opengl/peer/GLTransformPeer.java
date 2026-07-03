@@ -62,13 +62,13 @@ public class GLTransformPeer extends Widget {
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
-        return new GLNodeHolder.GLNodeRequest().executedOn(transformedContent, peer -> {
+        return new GLNodeHolder.GLNodeRequest().executedOn(transformedContent, result -> {
             return new GLNodeHolder(
                     nonDegenerateTransform ?
-                            makeRenderNode(peer.renderNode()) :
+                            makeRenderNode(result.peer().renderNode()) :
                             EmptyRenderNode.INSTANCE,
                     nonDegenerateTransform ?
-                            makeInputNode(peer.inputNode()) :
+                            makeInputNode(result.peer().inputNode()) :
                             TransparentInputNode.INSTANCE
             );
         });

@@ -1,6 +1,5 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.Slot;
 import ui11.Widget;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Mat4;
@@ -58,13 +57,13 @@ public class J2DTransformPeer extends Widget {
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
         Widget content = new Provider<>(Surface.class, surface, transform.content());
-        return new J2DPeerCreationRequest().executedOn(content, peer -> {
+        return new J2DPeerCreationRequest().executedOn(content, result -> {
             return new J2DNodeHolder(
                     nonDegenerateTransform ?
-                            makeRenderNode(peer.renderNode()) :
+                            makeRenderNode(result.peer().renderNode()) :
                             EmptyRenderNode.INSTANCE,
                     nonDegenerateTransform ?
-                            makeInputNode(peer.inputNode()) :
+                            makeInputNode(result.peer().inputNode()) :
                             TransparentInputNode.INSTANCE
             );
         });
