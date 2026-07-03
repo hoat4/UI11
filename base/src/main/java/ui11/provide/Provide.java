@@ -16,8 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 //      nem értesít observert
 
 /**
- * Az annotált metódust tartalmazó {@linkplain Widget} vagy
- * {@linkplain ui11.Component} minden leszármazotta megkapja
+ * Az annotált metódust tartalmazó {@linkplain Widget} minden leszármazotta megkapja
  * egy inherited value-t, aminek a típusa
  * az annotált metódus visszatérési típusa (vagy a mező típusa), és értéke az annotált metódus visszatérési értéke
  * (vagy a mező esetén a mezőben található {@linkplain ui11.observable.Observable}-ben lévő érték).

@@ -1,14 +1,15 @@
 package ui11.animation;
 
+import ui11.Widget;
 import ui11.observable.MutableObservable;
-import ui11.Component;
 
 import java.time.Duration;
+import java.util.function.Function;
 
 /**
  * Egy kiinduló érték/állapot és egy célérték/állapot között mozgat egy értéket. A kiindulástól a célig.
  */
-public class ValueAnimation<T> extends Component<T> {
+public class ValueAnimation<T> extends Widget {
 
     private final T begin;
     private final T end;
@@ -16,29 +17,31 @@ public class ValueAnimation<T> extends Component<T> {
     private final Tween<T> tween;
     private final boolean infinite; // megfordul ha vége lett
     private final Runnable onFinished;
+    private final Function<T, Widget> contentFunction;
 
     @Inject private Scheduler scheduler;
 
     @Remember private boolean dir; // csak végtelenített esetén értelmezett
     @Remember private MutableObservable<Long> beginTime;
 
-    public ValueAnimation(T begin, T end, Duration duration, Tween<T> tween) {
-        this(begin, end, duration, tween, false);
+    public ValueAnimation(T begin, T end, Duration duration, Tween<T> tween, Function<T, Widget> contentFunction) {
+        this(begin, end, duration, tween, false, contentFunction);
     }
 
     public ValueAnimation(T begin, T end, Duration duration, Tween<T> tween,
-                          boolean infinite) {
-        this(begin, end, duration, tween, infinite, null);
+                          boolean infinite, Function<T, Widget> contentFunction) {
+        this(begin, end, duration, tween, infinite, null, contentFunction);
     }
 
     public ValueAnimation(T begin, T end, Duration duration, Tween<T> tween,
-                          boolean infinite, Runnable onFinished) {
+                          boolean infinite, Runnable onFinished, Function<T, Widget> contentFunction) {
         this.duration = duration;
         this.tween = tween;
         this.begin = begin;
         this.end = end;
         this.infinite = infinite;
         this.onFinished = listenerProxy(onFinished);
+        this.contentFunction = contentFunction;
     }
 
     @Override
@@ -52,8 +55,8 @@ public class ValueAnimation<T> extends Component<T> {
     }
 
     @Override
-    protected T update() {
-        return value();
+    protected Widget build() {
+        return contentFunction.apply(value());
     }
 
     /**

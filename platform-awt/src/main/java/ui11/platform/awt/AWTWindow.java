@@ -2,7 +2,6 @@ package ui11.platform.awt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.Component;
 import ui11.Widget;
 import ui11.animation.Scheduler;
 import ui11.geom.*;
@@ -41,6 +40,8 @@ import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+
+import static ui11.graphics.Empty.empty;
 
 public class AWTWindow {
 
@@ -129,9 +130,9 @@ public class AWTWindow {
         }
     }
 
-    class Repainter extends Component<Void> {
+    class Repainter extends Widget {
         @Override
-        protected Void update() {
+        protected Widget build() {
             repaintInvalidationPoint.subscribe();
             if (!frame.isVisible()) {
                 logger.warn("Skip repaint because frame is invisible");
@@ -144,7 +145,7 @@ public class AWTWindow {
                 // végtelen rekurzió lesz belőle
                 logger.error("Repaint failed", e);
             }
-            return null;
+            return empty();
         }
     }
 

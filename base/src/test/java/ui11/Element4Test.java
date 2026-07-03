@@ -25,11 +25,10 @@ public class Element4Test {
     public void testStartSimpleRoot() {
         int[] a = {0};
 
-        WidgetTree.create(new Component<>() {
+        WidgetTree.create(new Component() {
             @Override
-            protected Void update() {
+            protected void update() {
                 a[0]++;
-                return null;
             }
         }, executor);
 
@@ -44,22 +43,19 @@ public class Element4Test {
             @Inject private Observable<Integer> i;
 
             @Override
-            protected Void update() {
+            protected void update() {
                 a[0]++;
                 a[1] = i.get();
-                return null;
             }
         }
 
-        WidgetTree.create(new Component<>() {
+        WidgetTree.create(new Component() {
 
             @Inject private Slot slot;
 
             @Override
-            protected Void update() {
-                useWidget(slot, new Provider<>(Integer.class, 1347,
-                        new E()), ComponentResultRequest.instance());
-                return null;
+            protected void update() {
+                useComponent(slot, new Provider<>(Integer.class, 1347, new E()));
             }
         }, executor);
 

@@ -3,6 +3,7 @@ package ui11.platform.awt.j2d.peer;
 import com.github.weisj.jsvg.SVGDocument;
 import com.github.weisj.jsvg.parser.SVGLoader;
 import com.github.weisj.jsvg.view.FloatSize;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.MultiSlot;
@@ -32,7 +33,7 @@ public class J2DSVGImageViewPeer extends Widget {
     private final SVGImageView svgImageView;
 
     @Inject private TextStyle textStyle;
-    @Inject private URLResolver urlResolver;
+    @Inject(required = false) private URLResolver urlResolver;
     @Inject private Surface surface;
     @Inject private MultiSlot<URI> loadTaskSlot;
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
@@ -55,38 +56,48 @@ public class J2DSVGImageViewPeer extends Widget {
     protected Widget build() {
         URI uri = svgImageView.source().toURI();
         if (!uri.isAbsolute())
-            uri = urlResolver.toAbsoluteURL(uri);
+            if (urlResolver == null)
+                throw new RuntimeException("can't resolve URL because no " + URLResolver.class.getName() + " present: " + uri);
+            else
+                uri = urlResolver.toAbsoluteURL(uri);
 
-        TaskStatus<SVGDocument> loadStatus = useComponent(loadTaskSlot.get(uri),
-                new BackgroundTask<>(new SVGDocumentLoadTask(uri)));
-
-        return switch (loadStatus) {
-            case TaskStatus.InProgress<SVGDocument> _ -> {
-                // TODO
-                yield new Text("Loading SVG...");
-            }
-            case TaskStatus.Failure<SVGDocument> _ -> {
-                // TODO
-                yield new Text("SVG load error");
-            }
-            case TaskStatus.Success<SVGDocument>(SVGDocument loadedDocument) -> {
-                if (!textStyle.equals(prevTextStyle)) {
-                    node.font.set(J2DTextPeer.awtFont(textStyle));
-                    prevTextStyle = textStyle;
+        return new BackgroundTask<>(
+                new SVGDocumentLoadTask(uri),
+                loadStatus -> {
+                    return switch (loadStatus) {
+                        case TaskStatus.InProgress<SVGDocument> _ -> {
+                            // TODO
+                            yield new Text("Loading SVG...");
+                        }
+                        case TaskStatus.Failure<SVGDocument> _ -> {
+                            // TODO
+                            yield new Text("SVG load error");
+                        }
+                        case TaskStatus.Success<SVGDocument>(SVGDocument loadedDocument) -> {
+                            final Widget result = displayLoadedDocument(loadedDocument);
+                            yield result;
+                        }
+                    };
                 }
+        ).withSlot(loadTaskSlot.get(uri));
+    }
 
-                node.svgDocument.set(loadedDocument);
-                Size size = surface.size();
-                node.size.set(size);
-                inputNode.shape.set(new Rectangle2D.Double(0, 0, size.width(), size.height()));
-                FloatSize docSize = loadedDocument.size();
-                Widget result = new J2DNodeHolder(node, inputNode);
-                if (sizeRequest != null)
-                    // TODO constraintset figyelembe kéne venni
-                    result = new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height), result);
-                yield result;
-            }
-        };
+    private @NonNull Widget displayLoadedDocument(SVGDocument loadedDocument) {
+        if (!textStyle.equals(prevTextStyle)) {
+            node.font.set(J2DTextPeer.awtFont(textStyle));
+            prevTextStyle = textStyle;
+        }
+
+        node.svgDocument.set(loadedDocument);
+        Size size = surface.size();
+        node.size.set(size);
+        inputNode.shape.set(new Rectangle2D.Double(0, 0, size.width(), size.height()));
+        FloatSize docSize = loadedDocument.size();
+        Widget result = new J2DNodeHolder(node, inputNode);
+        if (sizeRequest != null)
+            // TODO constraintset figyelembe kéne venni
+            result = new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height), result);
+        return result;
     }
 
     private static class SVGDocumentLoadTask implements Callable<SVGDocument> {

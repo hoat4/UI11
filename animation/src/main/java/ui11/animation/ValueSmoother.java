@@ -1,23 +1,24 @@
 package ui11.animation;
 
-import ui11.observable.Observable;
+import ui11.Widget;
 import ui11.observable.ObservableList;
-import ui11.Component;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Olyan animáció, aminek nem egy előre kitalált kezdete és vége van, hanem egy érték változását próbáljuk elsimítani.
  */
-public final class ValueSmoother<T> extends Component<T> {
+public final class ValueSmoother<T> extends Widget {
 
     private final T targetValue;
     private final Duration duration;
     private final Tween<T> tween;
+    private final Function<T, Widget> contentFunction;
 
     @Inject private Scheduler scheduler;
 
@@ -25,10 +26,11 @@ public final class ValueSmoother<T> extends Component<T> {
     @Remember private T value;
     @Remember private boolean notFirst;
 
-    public ValueSmoother(T targetValue, Duration duration, Tween<T> tween) {
+    public ValueSmoother(T targetValue, Duration duration, Tween<T> tween, Function<T, Widget> contentFunction) {
         this.targetValue = targetValue;
         this.duration = duration;
         this.tween = tween;
+        this.contentFunction = contentFunction;
     }
 
     @Override
@@ -37,8 +39,8 @@ public final class ValueSmoother<T> extends Component<T> {
     }
 
     @Override
-    protected T update() {
-        // TODO duration és tween menet közbeni valszeg nem supportáljuk
+    protected Widget build() {
+        // TODO duration és tween menet közbeni állítását valszeg nem supportáljuk
 
         set(targetValue);
         T t = get();
@@ -46,7 +48,8 @@ public final class ValueSmoother<T> extends Component<T> {
         if (!transitions.isEmpty()) {
             scheduler.requestAnimationFrame();
         }
-        return t;
+
+        return contentFunction.apply(t);
     }
 
     private void set(T value) {

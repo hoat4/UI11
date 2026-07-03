@@ -16,7 +16,6 @@ public class Faded extends Widget {
     private final boolean visible;
 
     @Inject private Slot contentSlot;
-    @Inject private Slot valueSmootherSlot;
 
     // lehet hogy kétféle Tween kéne megjelenéshez és bezáráshoz.
     // persze akkor meg kérdés, hogyha megjelenés közben zárjuk be, akkor hogy nézzen ki a bezárás.
@@ -31,13 +30,14 @@ public class Faded extends Widget {
     protected Widget build() {
         Widget content = this.content.withSlot(contentSlot);
 
-        double animatedValue = useComponent(valueSmootherSlot,
-                new ValueSmoother<>(visible ? 1.0 : 0.0,
-                        Duration.ofMillis(300),
-                        Tween.ease(Tween.ofDouble())));
-        if (animatedValue == 0)
-            return empty();
-        else
-            return new Opacity(animatedValue, visible ? content : new PointerTransparent(content));
+        return new ValueSmoother<>(visible ? 1.0 : 0.0,
+                Duration.ofMillis(300),
+                Tween.ease(Tween.ofDouble()),
+                animatedValue -> {
+                    if (animatedValue == 0)
+                        return empty();
+                    else
+                        return new Opacity(animatedValue, visible ? content : new PointerTransparent(content));
+                });
     }
 }

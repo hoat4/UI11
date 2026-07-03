@@ -228,11 +228,6 @@ public abstract class Widget implements Cloneable {
         return new KeyWrapper(slot, this);
     }
 
-    @SuppressWarnings("unchecked")
-    protected final <R> R useComponent(Slot slot, Component<R> component) {
-        return (R) useWidget(slot, component, Component.ComponentResultRequest.instance()).result;
-    }
-
     /**
      * A delegate láncon végighaladva keres egy olyan UpValuet, mely típusa a megadott típus vagy annak egy altípusa, és
      * visszaadja azt. Ha több ilyen is van, akkor a legelsőt.

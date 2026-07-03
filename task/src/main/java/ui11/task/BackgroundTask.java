@@ -2,28 +2,30 @@ package ui11.task;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.Component;
-import ui11.observable.InvalidationPoint;
+import ui11.Widget;
 import ui11.observable.MutableObservable;
 
 import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
-public class BackgroundTask<T> extends Component<TaskStatus<T>> {
+public class BackgroundTask<T> extends Widget {
 
     private static final Logger logger = LoggerFactory.getLogger(BackgroundTask.class);
     private static final ExecutorService executor = Executors.newCachedThreadPool(
             Thread.ofPlatform().daemon().name("BackgroundTask thread pool - ", 1).factory());
 
     private final Callable<T> callable;
+    private final Function<TaskStatus<T>, Widget> contentFunction;
 
     // TODO ennek invalidálása nem thread-safe
     @Remember private MutableObservable<TaskStatus<T>> status;
 
-    public BackgroundTask(@NonNull Callable<T> callable) {
+    public BackgroundTask(@NonNull Callable<T> callable, Function<TaskStatus<T>, Widget> contentFunction) {
         this.callable = Objects.requireNonNull(callable);
+        this.contentFunction = contentFunction;
     }
 
     // TODO ez így fura hogy Callable-nek csak az első értékét vesszük figyelembe, de nem tudom hogy mit kéne vele
@@ -56,7 +58,7 @@ public class BackgroundTask<T> extends Component<TaskStatus<T>> {
     }
 
     @Override
-    protected TaskStatus<T> update() {
-        return status.get();
+    protected Widget build() {
+        return contentFunction.apply(status.get());
     }
 }

@@ -27,7 +27,7 @@ public class TestStealDelegate2 {
 
         // lásd még TestStealDelegate osztály
 
-        WidgetTree.create(new Component<>() {
+        WidgetTree.create(new Component() {
 
             @Inject private Slot outerSlot1;
             @Inject private Slot outerSlot2;
@@ -37,18 +37,17 @@ public class TestStealDelegate2 {
             @Inject private Slot w3Slot;
 
             @Override
-            protected Void update() {
+            protected void update() {
                 Widget w1 = new W1().withSlot(innerSlot);
                 Widget w3 = new W3(new W2(w1)).withSlot(w3Slot);
                 useComponent(outerSlot1, new T(w3));
                 useComponent(outerSlot2, new T(w1));
                 useComponent(outerSlot3, new T(w3));
-                return null;
             }
         }, Runnable::run);
     }
 
-    private static class T extends Component<Void> {
+    private static class T extends Component {
 
         private final Widget w;
 
@@ -59,9 +58,8 @@ public class TestStealDelegate2 {
         }
 
         @Override
-        protected Void update() {
+        protected void update() {
             System.out.println(useWidget(slot, w, TestStealDelegate.UV.UVRequest.INSTANCE));
-            return null;
         }
     }
 

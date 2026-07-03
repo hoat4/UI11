@@ -11,7 +11,7 @@ public class TestStealDelegate {
         // a parent layout először adott neki constraintset, majd nem.
         // majd ablakátméretezéskor újra adott neki constraintset.
 
-        WidgetTree.create(new Component<>() {
+        WidgetTree.create(new Component() {
 
             @Inject private Slot outerSlot1;
             @Inject private Slot outerSlot2;
@@ -21,18 +21,17 @@ public class TestStealDelegate {
             @Inject private Slot w2Slot;
 
             @Override
-            protected Void update() {
+            protected void update() {
                 Widget w1 = new W1().withSlot(innerSlot);
                 Widget w2 = new W2(w1).withSlot(w2Slot);
                 useComponent(outerSlot1, new T(w2));
                 useComponent(outerSlot2, new T(w1));
                 useComponent(outerSlot3, new T(w2));
-                return null;
             }
         }, Runnable::run);
     }
 
-    private static class T extends Component<Void> {
+    private static class T extends Component {
 
         private final Widget w;
 
@@ -43,9 +42,8 @@ public class TestStealDelegate {
         }
 
         @Override
-        protected Void update() {
+        protected void update() {
             System.out.println(useWidget(slot, w, UV.UVRequest.INSTANCE));
-            return null;
         }
     }
 

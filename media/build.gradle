@@ -3,4 +3,8 @@ dependencies {
     api project(":animation") // PlaybackController
 
     implementation "org.teavm:teavm-core:${teavmVersion}" // ClasspathResourceImageTeaVMPlugin
+
+    testImplementation project(":desktop")
+    testImplementation project(":platform-awt")
+    testImplementation "io.github.jycr:java-data-url-handler:0.0.1"
 }

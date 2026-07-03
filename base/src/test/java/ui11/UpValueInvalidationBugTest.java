@@ -24,17 +24,16 @@ public class UpValueInvalidationBugTest {
             }
         }
 
-        WidgetTree.create(new Component<>() {
+        WidgetTree.create(new Component() {
 
             @Inject private Slot slot;
 
             @Override
-            protected Void update() {
+            protected void update() {
                 // szándékosan ugyanaz a slot
                 useWidget(slot, new W1(1), U2.U2Request.INSTANCE);
                 useWidget(slot, new W1(2), U2.U2Request.INSTANCE);
                 System.out.println("done");
-                return null;
             }
         }, Runnable::run);
     }
