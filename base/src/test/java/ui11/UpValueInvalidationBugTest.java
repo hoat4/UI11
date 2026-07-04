@@ -31,9 +31,8 @@ public class UpValueInvalidationBugTest {
             @Override
             protected void update() {
                 // szándékosan ugyanaz a slot
-                useWidget(slot, new W1(1), U2.U2Request.INSTANCE);
-                useWidget(slot, new W1(2), U2.U2Request.INSTANCE);
-                System.out.println("done");
+                useComponent(slot, new W1(1), U2.U2Request.INSTANCE);
+                useComponent(slot, new W1(2), U2.U2Request.INSTANCE);
             }
         }, Runnable::run);
     }

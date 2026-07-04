@@ -154,7 +154,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
             Widget widget = items.get(indexInWidgets);
             PeerCreationRequest.ResolutionResult<BoxLayoutResult> resolutionResult = boxLayoutResults.get(indexInWidgets);
 
-            WeightMarker weightMarker = (WeightMarker) resolutionResult.parentDatas().get(WeightMarker.class);
+            WeightMarker weightMarker = (WeightMarker) resolutionResult.parentDataList().get(WeightMarker.class);
             double weight = weightMarker == null ? 0 : weightMarker.weight;
 
             switch (resolutionResult.peer()) {

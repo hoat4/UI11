@@ -13,11 +13,11 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
     private final Class<P> peerType;
 
     // TODO ennek kéne számítania WidgetResolverek kiválasztásában?
-    final List<Class<? extends ParentDataWidget>> auxiliaryTypes;
+    final Set<Class<? extends ParentDataWidget>> auxiliaryTypes;
 
     protected PeerCreationRequest(Class<P> peerType, Class<? extends ParentDataWidget>... auxiliaryTypes) {
         this.peerType = peerType;
-        this.auxiliaryTypes = List.of(auxiliaryTypes);
+        this.auxiliaryTypes = Set.of(auxiliaryTypes);
     }
 
     public final Class<P> peerType() {
@@ -25,19 +25,19 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
     }
 
     public final Widget executedOn(Widget widget, Function<ResolutionResult<P>, Widget> then) {
-        return new CreatePeerForSingle(widget, then);
+        return new ResolutionRequestWidget.CreatePeerForSingle(widget, this, then);
     }
 
     public final Widget executedOn(List<? extends Widget> widgets,
                                    Function<List<? extends ResolutionResult<P>>, Widget> then) {
         widgets = List.copyOf(widgets);
-        return new CreatePeersForList<>(widgets, Collections.nCopies(widgets.size(), this), then);
+        return new ResolutionRequestWidget.CreatePeersForList<>(widgets, Collections.nCopies(widgets.size(), this), then);
     }
 
     public final <K> Widget executedOn(Map<K, ? extends Widget> widgets,
                                        Function<Map<K, ? extends ResolutionResult<P>>, Widget> then) {
         widgets = Map.copyOf(widgets);
-        return new CreatePeersForMap<>(widgets,
+        return new ResolutionRequestWidget.CreatePeersForMap<>(widgets,
                 widgets.entrySet().stream().collect(toMap(
                         Map.Entry::getKey,
                         e -> this)),
@@ -48,7 +48,7 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
         return Collectors.collectingAndThen(Collectors.toList(),
                 list -> {
                     list = List.copyOf(list);
-                    return new CreatePeersForList<>(
+                    return new ResolutionRequestWidget.CreatePeersForList<>(
                             list,
                             Collections.nCopies(list.size(), this),
                             l -> then.apply(l.stream()));
@@ -66,88 +66,12 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
         if (widgets.size() != requests.size())
             throw new IllegalArgumentException();
 
-        return new CreatePeersForList<P>(widgets, requests, then);
+        return new ResolutionRequestWidget.CreatePeersForList<P>(widgets, requests, then);
     }
 
-    public static record ResolutionResult<P extends SubstitutedWidget>(
+    public record ResolutionResult<P extends SubstitutedWidget>(
             P peer,
-            Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDatas
+            Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDataList
+            // TODO ennek a mapnek értelmesebb nevet kéne. parentDatas nem lehet, mert data már többes szám elvileg
     ) {}
-
-    private class CreatePeerForSingle extends Widget {
-
-        private final Widget widget;
-        private final Function<ResolutionResult<P>, Widget> f;
-
-        @Inject private Slot slot;
-
-        public CreatePeerForSingle(Widget widget, Function<ResolutionResult<P>, Widget> f) {
-            this.widget = widget;
-            this.f = f;
-        }
-
-        @Override
-        protected Widget build() {
-            ResolutionResult<P> p = useWidget(slot, widget, PeerCreationRequest.this);
-            return f.apply(p);
-        }
-    }
-
-    private static class CreatePeersForList<P extends SubstitutedWidget> extends Widget {
-
-        private final List<? extends Widget> widgets;
-        private final List<? extends PeerCreationRequest<P>> requests;
-        private final Function<List<? extends ResolutionResult<P>>, Widget> f;
-
-        @Inject private MultiSlot<Integer> slots;
-
-        public CreatePeersForList(List<? extends Widget> widgets,
-                                  List<? extends PeerCreationRequest<P>> requests,
-                                  Function<List<? extends ResolutionResult<P>>, Widget> f) {
-            this.widgets = widgets;
-            this.requests = requests;
-            this.f = f;
-        }
-
-        @Override
-        protected Widget build() {
-            @SuppressWarnings("unchecked")
-            ResolutionResult<P>[] peers = new ResolutionResult[widgets.size()];
-            for (int i = 0; i < widgets.size(); i++) {
-                Slot defaultSlot = slots.get(i);
-                peers[i] = useWidget(defaultSlot, widgets.get(i), requests.get(i));
-            }
-
-            // TODO dokumentálni kéne, hogy f nem null-toleráns mapet kap
-            return f.apply(List.of(peers));
-        }
-    }
-
-    private static class CreatePeersForMap<P extends SubstitutedWidget, K> extends Widget {
-
-        private final Map<K, ? extends Widget> widgets;
-        private final Map<K, ? extends PeerCreationRequest<P>> requests;
-        private final Function<Map<K, ? extends ResolutionResult<P>>, Widget> f;
-
-        @Inject private MultiSlot<K> slots;
-
-        public CreatePeersForMap(Map<K, ? extends Widget> widgets,
-                                 Map<K, ? extends PeerCreationRequest<P>> requests,
-                                 Function<Map<K, ? extends ResolutionResult<P>>, Widget> f) {
-            this.widgets = widgets;
-            this.requests = requests;
-            this.f = f;
-        }
-
-        @Override
-        protected Widget build() {
-            Map<K, ResolutionResult<P>> peers = new HashMap<>();
-            widgets.forEach((k, w) -> {
-                Slot defaultSlot = slots.get(k);
-                peers.put(k, useWidget(defaultSlot, w, requests.get(k)));
-            });
-
-            return f.apply(Map.copyOf(peers));
-        }
-    }
 }

@@ -3,6 +3,8 @@ package ui11;
 import org.jspecify.annotations.Nullable;
 import ui11.reflectutil.ReflectionUtil;
 
+import java.util.List;
+
 import static java.util.stream.Collectors.joining;
 
 // időnként felmerül, hogy ezt jó lenne külön package-be vinni, WidgetResolver és GlobalWidgetResolvers mellé.
@@ -24,7 +26,10 @@ import static java.util.stream.Collectors.joining;
 public abstract class SubstitutedWidget extends Widget {
 
     @Inject(required = false) private WidgetResolver widgetResolver;
-    @Inject private PeerCreationRequestCollection peerCreationRequestCollection;
+    @Inject private ResolutionRequest.ResolutionRequestCollection peerCreationRequestCollection;
+
+    // TODO ezt csak akkor kéne lekérdezni és observálni, ha resolutionRequest.requestData.peerType().isInstance(this)
+    @Inject(required = false) private ParentDataWidget.ParentDataCollection parentDataCollection;
 
     /**
      * It is final because there are no {@link Remember state fields} permitted in the subclasses, so it not sensible
@@ -41,9 +46,15 @@ public abstract class SubstitutedWidget extends Widget {
     @SuppressWarnings("ConstantValue")
     @Override
     protected final Widget build() {
-        PeerCreationRequest<?> peerCreationRequest = peerCreationRequestCollection.request;
-        if (peerCreationRequest.peerType().isInstance(this))
+        ResolutionRequest<?> resolutionRequest = peerCreationRequestCollection.request;
+        SubstitutedWidget potentialPeer =
+                this instanceof ParentDataWidget.CombinerParentDataWidget c ? c.parentData : this;
+        if (resolutionRequest.requestData.peerType().isInstance(potentialPeer)) {
+            List<? extends ParentDataWidget> parentDataList =
+                    parentDataCollection == null ? List.of() : parentDataCollection.parentDataList;
+            resolutionRequest.setResultUnchecked(potentialPeer, parentDataList);
             return null; // Elementben special case-elve van SubstitutedWidget, hogy build adhat vissza nullt
+        }
 
         Widget resolved = null;
 
@@ -58,7 +69,8 @@ public abstract class SubstitutedWidget extends Widget {
             if (resolved == null)
                 throw new RuntimeException("no " + WidgetResolver.class.getSimpleName() + " supports " +
                         getClass().getName() + " and " + ReflectionUtil.simpleName(getClass()) +
-                        ".fallbackContent() returned null");
+                        ".fallbackContent() returned null (" + PeerCreationRequest.class.getSimpleName() + " is " +
+                        resolutionRequest.requestData + ")");
         }
 
         resolved = GlobalWidgetResolvers.instance().resolveAdditional(this, resolved, peerCreationRequestCollection);

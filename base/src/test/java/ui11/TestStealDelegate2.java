@@ -47,19 +47,20 @@ public class TestStealDelegate2 {
         }, Runnable::run);
     }
 
-    private static class T extends Component {
+    private static class T extends Widget {
 
         private final Widget w;
-
-        @Inject private Slot slot;
 
         public T(Widget w) {
             this.w = w;
         }
 
         @Override
-        protected void update() {
-            System.out.println(useWidget(slot, w, TestStealDelegate.UV.UVRequest.INSTANCE));
+        protected Widget build() {
+            return TestStealDelegate.UV.UVRequest.INSTANCE.executedOn(w, result -> {
+                System.out.println(result.peer());
+                return Component.ComponentResult.INSTANCE;
+            });
         }
     }
 

@@ -228,47 +228,6 @@ public abstract class Widget implements Cloneable {
         return new KeyWrapper(slot, this);
     }
 
-    /**
-     * A delegate láncon végighaladva keres egy olyan UpValuet, mely típusa a megadott típus vagy annak egy altípusa, és
-     * visszaadja azt. Ha több ilyen is van, akkor a legelsőt.
-     *
-     * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő UpValuet
-     */
-    <U extends SubstitutedWidget> PeerCreationRequest.ResolutionResult<U> useWidget(
-            Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
-        Objects.requireNonNull(defaultSlot);
-        Objects.requireNonNull(widget);
-        Objects.requireNonNull(request);
-
-
-        // TODO egyszerre több request
-        // egyelőre így adjuk át, majd kéne valami hatékonyabb megoldás
-        widget = new Provider<>(PeerCreationRequestCollection.class,
-                new PeerCreationRequestCollection(request), widget);
-
-        Element element = element();
-        if (element == null || element.refreshID == null)
-            // TODO így initStateből is lehet hívni
-            throw new IllegalStateException(Slot.class.getSimpleName() +
-                    ".instantiate can only be called inside " + Widget.class.getSimpleName() + ".build()");
-
-        Widget decoratedWidget = accessor().decorate(this, widget);
-        if (decoratedWidget == null)
-            throw new RuntimeException("decorator returned null on " + this + " for " + widget
-                    + " (default slot: " + defaultSlot + ")");
-
-        if (Element.TRACE_REFRESH)
-            Element.TraceRefresh.TL.get().print("useWidget " + request + ": " + decoratedWidget);
-
-        WidgetInstantiation widgetInstantiation = element.instantiate(
-                defaultSlot, decoratedWidget, element.refreshID, List.of());
-
-        if (Element.TRACE_REFRESH)
-            Element.TraceRefresh.TL.get().print("lookup " + request + ": " + decoratedWidget);
-
-        return widgetInstantiation.lookup(request);
-    }
-
     // equals/hashCodera final kell?
     // valszeg érdemes hagyni felülírhatóra. de akkor meg kéne csinálni egy másik felülírhatót, amit
     // a modellváltozás észlelésének módosítására lehet felülírni.

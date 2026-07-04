@@ -1,9 +1,7 @@
 package ui11;
 
-import ui11.PeerCreationRequest.ResolutionResult;
 import ui11.observable.ObserverHolder;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
@@ -14,28 +12,20 @@ import java.util.*;
 final class WidgetInstantiation {
 
     private final Element container;
-    final Element.RefreshID refresh;
 
     /**
      * akkor null, ha a lánc végén nem Element van, hanem ending widget (pl. J2DColorPrimitive)
      */
     @Nullable final Element element;
 
-    final List<? extends SubstitutedWidget> upValues;
-
-    WidgetInstantiation(Element container, Element.RefreshID refresh, @Nullable Element element,
-                        List<? extends SubstitutedWidget> upValues) {
-        Objects.requireNonNull(upValues);
+    WidgetInstantiation(Element container, @Nullable Element element) {
         this.container = container;
-        this.refresh = refresh;
         this.element = element;
-        this.upValues = upValues;
     }
 
     // és meddig maradjon aktív a megadott elem?
 
     void ensureFresh() {
-        checkIsValid();
         switch (element.elementState) {
             // itt jó volt hogy volt REFRESH_REQUESTED_FOR_CHILDREN is.
             // lehet hogy majd vissza kéne rakni
@@ -56,68 +46,6 @@ final class WidgetInstantiation {
                         "(" + element + ", " + element.elementState + ")");
             }
         }
-    }
-
-    /**
-     * A delegate láncon végighaladva keres egy olyan Widgetet vagy Elementet, mely implementálja a megadott osztályt
-     * vagy interface-t, és visszaadja azt. Ha több ilyen is van, akkor a legelsőt.
-     *
-     * @throws IllegalStateException  ha már vége lett annak a {@linkplain ui11.Element.RefreshID refreshSelfnek}, mely
-     *                                során ez az WidgetInstantiation keletkezett, vagy ha időközben az ezt a widgetet
-     *                                példányosító Element egy leszármazottja is példányosított és ugyanaz az Element
-     *                                keletkezett
-     * @throws NoSuchElementException ha nem találtunk a keresési feltételnek megfelelő Widgetet vagy Elementet a
-     *                                delegate láncban
-     */
-    public <U extends SubstitutedWidget> @NonNull ResolutionResult<U> lookup(PeerCreationRequest<U> request) {
-        Class<U> type = request.peerType();
-
-        Objects.requireNonNull(type);
-        if (type == SubstitutedWidget.class || !SubstitutedWidget.class.isAssignableFrom(type))
-            throw new IllegalArgumentException("not an " + SubstitutedWidget.class.getSimpleName() + " subtype: " + type.getName());
-
-        Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDatas = new HashMap<>();
-
-        checkIsValid();
-        if (element != null) {
-            // mivel épp most frissítjük a parentet, ezért nem kell külön értesíteni próbálni őt a változásokról,
-            // mert értesülni fog róluk az e függvény által visszaadott értékből
-            element.parentInterestedUpValues.clear();
-
-            ensureFresh();
-        }
-
-        boolean putIntoInterested;
-        U peer = Element.findInUpValueList(type, upValues, parentDatas);
-        if (peer != null)
-            // ha nem a child provideolta ezt az upValuet, akkor ne rakjuk be parentInterestedUpValuesba,
-            // mert úgyse fog megváltozni
-            putIntoInterested = false;
-        else {
-            if (element == null) {
-                throw new NoSuchElementException(type.getName() + " not found in delegate chain of " + this +
-                        "\nDirect up values: " + upValues);
-            } else {
-                peer = element.lookupImpl(type, false, false, parentDatas);
-                putIntoInterested = true;
-            }
-        }
-
-        Objects.requireNonNull(peer);
-        parentDatas.keySet().retainAll(Set.copyOf(request.auxiliaryTypes));
-        ResolutionResult<U> resolutionResult = new ResolutionResult<>(peer, parentDatas);
-        if (putIntoInterested) {
-            container.upValuesIP.subscribe();
-            element.parentInterestedUpValues.put(request, resolutionResult);
-        }
-        return resolutionResult;
-    }
-
-    private void checkIsValid() {
-        if (refresh != container.refreshID) // ellenőrzi, hogy REFRESH_SELF-e
-            throw new IllegalStateException();
-        if (element != null && element.parent != container)
-            throw new IllegalStateException();
     }
 
  /*

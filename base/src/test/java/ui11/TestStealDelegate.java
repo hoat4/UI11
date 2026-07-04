@@ -5,6 +5,8 @@ public class TestStealDelegate {
         // azt az esetet teszteljük, ha elvesszük egy W2 widgetnek a delegatejét (W1), majd újra refresheljük W2-t.
         // akkor sikeres a teszt, ha nem dobódnak exceptionök, hanem kiír 3 db X betűt.
 
+        // TODO itt valami nem stimmel, mert ez most nem írhat ki X-eket, mert UV::toStringet hívjuk meg
+
         // ebben az esetben merült fel:
         // DefaultOverlayLayoutImpl ha nem kap constraintset a delegateje a natív peer, ha
         // viszont kap constraintset, akkor a UpValueWrapperbe wrappeli a natív peert.
@@ -31,19 +33,20 @@ public class TestStealDelegate {
         }, Runnable::run);
     }
 
-    private static class T extends Component {
+    private static class T extends Widget {
 
         private final Widget w;
-
-        @Inject private Slot slot;
 
         public T(Widget w) {
             this.w = w;
         }
 
         @Override
-        protected void update() {
-            System.out.println(useWidget(slot, w, UV.UVRequest.INSTANCE));
+        protected Widget build() {
+            return UV.UVRequest.INSTANCE.executedOn(w, result->{
+                System.out.println(result.peer());
+                return Component.ComponentResult.INSTANCE;
+            });
         }
     }
 

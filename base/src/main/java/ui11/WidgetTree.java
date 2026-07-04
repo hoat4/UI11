@@ -110,10 +110,11 @@ public final class WidgetTree {
         }
 
         @Provide
-        PeerCreationRequestCollection peerCreationRequestCollection() {
+        ResolutionRequest.ResolutionRequestCollection peerCreationRequestCollection() {
             // tetszőleges SubstitutedWidgetnél megállunk
-            return new PeerCreationRequestCollection(new PeerCreationRequest<>(SubstitutedWidget.class) {
-            });
+            return new ResolutionRequest.ResolutionRequestCollection(new ResolutionRequest<>(
+                    new PeerCreationRequest<>(SubstitutedWidget.class) {
+                    }));
         }
     }
 

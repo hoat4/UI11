@@ -2,6 +2,7 @@ package ui11;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.ResolutionRequest.ResolutionRequestCollection;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,16 +38,16 @@ public abstract class WidgetResolver {
     }
 
     @Nullable Widget resolveOrNull(@NonNull Widget widget,
-                                   PeerCreationRequestCollection peerCreationRequestCollection) {
-        if (supportedTargetType().isAssignableFrom(peerCreationRequestCollection.request.peerType()))
+                                   ResolutionRequestCollection peerCreationRequestCollection) {
+        if (supportedTargetType().isAssignableFrom(peerCreationRequestCollection.request.requestData.peerType()))
             return resolveOrNull(widget);
         else
             return null;
     }
 
     @Nullable Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content,
-                                       PeerCreationRequestCollection peerCreationRequestCollection) {
-        if (supportedTargetType().isAssignableFrom(peerCreationRequestCollection.request.peerType()))
+                                       ResolutionRequestCollection peerCreationRequestCollection) {
+        if (supportedTargetType().isAssignableFrom(peerCreationRequestCollection.request.requestData.peerType()))
             return resolveAdditional(widget, content);
         else
             return null;
@@ -67,7 +68,7 @@ public abstract class WidgetResolver {
         }
 
         @Override
-        @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull PeerCreationRequestCollection peerCreationRequest) {
+        @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull ResolutionRequestCollection peerCreationRequest) {
             Objects.requireNonNull(widget);
             Objects.requireNonNull(peerCreationRequest);
 
@@ -81,7 +82,7 @@ public abstract class WidgetResolver {
 
         @Override
         @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content,
-                                          @NonNull PeerCreationRequestCollection peerCreationRequest) {
+                                          @NonNull ResolutionRequestCollection peerCreationRequest) {
             Objects.requireNonNull(widget);
             Objects.requireNonNull(content);
             Objects.requireNonNull(peerCreationRequest);
