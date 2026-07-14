@@ -31,6 +31,7 @@ public final class DefaultOverlayLayoutImpl extends Widget {
             // TODO ha csak Gone van az Overlayben, akkor mi a teendő?
             return new BoxLayoutResult.OfNoConstraints(peerWithSlot);
         BoxLayoutResult.SizeRequest req = new BoxLayoutResult.SizeRequest(constraints);
+        // TODO slotok? reuse?
         return req.executedOn(overlay.items(), results -> {
             Size s = results.stream().
                     filter(result -> switch (result.peer()) {

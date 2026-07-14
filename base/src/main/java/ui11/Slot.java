@@ -19,17 +19,11 @@ package ui11;
  */
 public final class Slot {
 
-    // azért nem Element, hogy lehessen ellenőrizni, hogy még aktív-e
-    final WidgetState<?> slotContainerWidget;
+    final WidgetTree tree;
 
-    // TODO lazy
-    final Element element = new Element();
+    WidgetState<?> content;
 
-    /**
-     *
-     * @param w csak akkor null, ha {@link Element#delegateSlot}-ban használjuk
-     */
-    Slot(WidgetState<?> w) {
-        this.slotContainerWidget = w;
+    Slot(WidgetTree tree) {
+        this.tree = tree;
     }
 }

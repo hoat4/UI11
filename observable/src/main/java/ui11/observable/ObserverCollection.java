@@ -4,9 +4,7 @@ import java.util.function.Supplier;
 
 public interface ObserverCollection {
 
-    void invalidate(int observerMask, Supplier<String> debugMessageSupplier);
+    void invalidate(Supplier<String> debugMessageSupplier);
 
     void subscribedTo(ObservableBase observable);
-
-    void checkObserver(int mask);
 }

@@ -10,9 +10,7 @@ import ui11.reflectutil.ReflectionUtil;
 import ui11.reflectutil.Types;
 
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @org.teavm.metaprogramming.CompileTime
 class WidgetDefinitionParser {
@@ -24,6 +22,8 @@ class WidgetDefinitionParser {
     List<InjectionFieldInfo> injectFields;
 
     List<ProviderMethodInfo<?>> providers;
+
+    Class<?>[] ivCollectorTypes;
 
     public WidgetDefinitionParser(Class<? extends Widget> clazz) {
         if (!Widget.class.isAssignableFrom(clazz) || clazz == Widget.class) // TODO lehet hogy abstractot is kéne nézni
@@ -47,6 +47,8 @@ class WidgetDefinitionParser {
         this.inputFields = new ArrayList<>();
         this.injectFields = new ArrayList<>();
         this.stateFields = new ArrayList<>();
+
+        Map<Class<?>, Integer> ivTypeSet = LinkedHashMap.newLinkedHashMap(injectFields.size());
 
         for (Field f : ReflectionUtil.fieldsIn(edClass)) {
             if (f.getDeclaringClass() == Widget.class)
@@ -187,7 +189,16 @@ class WidgetDefinitionParser {
                             " on an interface proxy field: " + ReflectionUtil.memberToShortString(f));
 
                 String debugFieldName = ReflectionUtil.memberToShortString2(f);
-                injectFields.add(new InjectionFieldInfo(f, ivType, kind, optional, debugFieldName));
+
+                int collectorIndex;
+                if (kind == InjectedFieldKind.SLOT_OR_MULTI_SLOT)
+                    collectorIndex = -1;
+                else {
+                    ivTypeSet.putIfAbsent(ivType, ivTypeSet.size());
+                    collectorIndex = ivTypeSet.get(ivType);
+                }
+
+                injectFields.add(new InjectionFieldInfo(f, ivType, kind, optional, collectorIndex, debugFieldName));
             } else {
                 assert isState;
 
@@ -219,6 +230,8 @@ class WidgetDefinitionParser {
                 stateFields.add(new StateFieldInfo(f, zeroValue, isObservable, zeroValueOfObservable));
             }
         }
+
+        ivCollectorTypes = ivTypeSet.keySet().toArray(Class[]::new);
     }
 
     private void processProviderFieldsAndMethods() {
@@ -270,7 +283,8 @@ class WidgetDefinitionParser {
         return ReflectionUtil.memberToShortString(clazz);
     }
 
-    record InjectionFieldInfo(Field field, Class<?> type, InjectedFieldKind kind, boolean optional, String debugName) {
+    record InjectionFieldInfo(Field field, Class<?> type, InjectedFieldKind kind, boolean optional,
+                              int collectorIndex, String debugName) {
 
         @Override
         public String toString() {

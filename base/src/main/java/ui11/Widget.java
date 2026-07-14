@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.observable.ObservableBase;
 import ui11.observable.Scope;
-import ui11.provide.Provider;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -61,9 +60,9 @@ public abstract class Widget implements Cloneable {
      * Ennek lehetséges értékei:
      * <ul>
      *     <li>{@code null} vagy {@linkplain WidgetAccessor} detached marker nélkül: nincs attacholva
-     *     {@linkplain Element}hez, és
+     *     {@linkplain WidgetState}hez, és
      *     nem is volt még</li>
-     *     <li>{@linkplain Element}: attacholva van</li>
+     *     <li>{@linkplain WidgetState}: attacholva van</li>
      *     <li>{@linkplain WidgetAccessor} detached markerrel: volt attacholva, de már nincs</li>
      * </ul>
      */
@@ -157,7 +156,7 @@ public abstract class Widget implements Cloneable {
     // TODO pontosítsuk, hogy mikor záródik be
     // TODO nézzük meg, hogy tényleg csak buildből hívható-e
     protected final Scope untilNextRebuild() throws IllegalStateException {
-        return element().untilWidgetStateNextRebuild(this);
+        return widgetState().untilNextRebuild();
     }
 
     /**
@@ -173,7 +172,7 @@ public abstract class Widget implements Cloneable {
      */
     // init()-ben lehetne engedni, de nem tudok rá use-caset
     protected final Scope untilPause() throws IllegalStateException {
-        return element().untilWidgetStatePause(this);
+        return widgetState().untilPause();
     }
 
     // @Listenernél volt egy komment:
@@ -183,6 +182,7 @@ public abstract class Widget implements Cloneable {
     //      mindenképp generál javac egy másik synthetic fieldet a captureölt változónak,
     //      hiába nem használjuk a field initializer blokkon kívül sehol
 
+    // TODO javadocban "element" kifejezésre hivatkozás
     /**
      * The specified object will be replaced by a proxy object, which implements the interface, and forwards all method
      * calls to the element's current widget's value of the annotated field. This allows to change event listener
@@ -312,7 +312,7 @@ public abstract class Widget implements Cloneable {
         if (stateHolderOrNull() == null)
             sb.append("no state holder");
         else
-            sb.append(element().elementState);
+            sb.append(widgetState());
         sb.append(") {");
         if (props.length == 0)
             sb.append("}");
@@ -354,8 +354,9 @@ public abstract class Widget implements Cloneable {
             result = ElementAccessorFactory.accessorFor(getClass());
             stateHolderOrDef = result;
             Objects.requireNonNull(result);
-        } else if (stateHolderOrDef instanceof Element e) {
-            result = e.accessor(this);
+        } else if (stateHolderOrDef instanceof WidgetState<?> e) {
+            assert e.stateWidget == this;
+            result = e.accessor;
             Objects.requireNonNull(result);
         } else {
             result = (WidgetAccessor<?>) stateHolderOrDef;
@@ -368,50 +369,58 @@ public abstract class Widget implements Cloneable {
         return casted;
     }
 
-    Element element() {
-        if (!(stateHolderOrDef instanceof Element sh))
+    WidgetState<?> widgetState() {
+        if (!(stateHolderOrDef instanceof WidgetState<?> sh))
             // toStringet lehet hogy felülírják egy olyannal ami inherited valuet olvasna (pl. MultiChildLayout)
             // ami nem fog működni ha element() exceptiont dob
             throw new IllegalStateException("RSW no SH: " + super.toString() + ", " + stateHolderOrDef);
+
+        if (sh.stateWidget != this)
+            // elvileg nem lehetséges ilyen
+            throw new RuntimeException("W wS");
+
         return sh;
     }
 
-    @SuppressWarnings("unchecked")
-    Element stateHolderOrNull() {
-        if (stateHolderOrDef instanceof Element sh)
+    WidgetState<?> stateHolderOrNull() {
+        if (stateHolderOrDef instanceof WidgetState<?> sh) {
+            if (sh.stateWidget != this)
+                // elvileg nem lehetséges ilyen
+                throw new RuntimeException("W sHON");
             return sh;
-        else
+        } else
             return null;
     }
 
     /**
-     * Lecserélődik az adott {@linkplain Element}ben lévő widget state, ezért ez az objektum nem lesz használva
+     * Lecserélődik az adott {@linkplain Slot}ban lévő {@linkplain WidgetState}, ezért ez az objektum nem lesz használva
      * többé.
      */
-    final void disposeFromStateRole(Element stateHolder) {
-        if (!(this.stateHolderOrDef instanceof Element prevHolder))
+    final void disposeFromStateRole(WidgetState<?> stateHolder) {
+        if (!(this.stateHolderOrDef instanceof WidgetState<?> prevHolder))
             throw new IllegalStateException("not has state holder: " + this + ", expected: " + stateHolder);
         if (prevHolder != stateHolder)
             throw new IllegalStateException("has different state holder: " + this + ", expected: " + stateHolder + ", " +
                     "actual: " + prevHolder);
 
-        this.stateHolderOrDef = stateHolder.currentState.accessor.asDetachedMarker(true);
+        this.stateHolderOrDef = stateHolder.accessor.asDetachedMarker(true);
 
         // TODO ilyenkor a state/inject fieldeket ki lehetne nullozni, mert pl. MultiChildLayout toStringje az
         //      inject fieldet akar olvasni ha nem null, így IllegalStateExceptionre lyukad
     }
 
     /*protected*/ String debug_getRefreshStack() {
-        return element().refreshStackToString(Map.of());
+        //return widgetState().refreshStackToString(Map.of());
+        return "TODO debug_getRefreshStack";
     }
 
     boolean roleIsState() {
-        return stateHolderOrDef instanceof Element ||
+        return stateHolderOrDef instanceof WidgetState<?> ||
                 stateHolderOrDef instanceof WidgetAccessor<?> acc &&
                         acc == acc.asDetachedMarker(true);
     }
 
-    Widget makeCloneToBeStateRole(Element e) {
+    Widget makeCloneToBeStateRole(WidgetState<?> e) {
         Widget clone = makeClone();
         clone.stateHolderOrDef = e;
         return clone;

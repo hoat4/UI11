@@ -39,7 +39,7 @@ public final class SimpleScope implements Scope {
         onClose = null;
         l.forEach(r -> {
             try {
-                r.run();
+                ObserverHolder.withoutObserver(r);
             } catch (RuntimeException | AssertionError e) {
                 logger.error("Scope close handler " + r + " failed with an exception", e);
             }

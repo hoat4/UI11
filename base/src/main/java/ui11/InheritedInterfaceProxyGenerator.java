@@ -145,8 +145,7 @@ class InheritedInterfaceProxyGenerator {
                 FACTORY_METHOD_NAME,
                 MethodTypeDesc.of(
                         ClassDesc.ofInternalName(interfaceName),
-                        WidgetState.class.describeConstable().get(),
-                        Class.class.describeConstable().get(),
+                        WidgetState.IVCollector.class.describeConstable().get(),
                         boolean.class.describeConstable().get(),
                         String.class.describeConstable().get()
                 )
@@ -163,9 +162,9 @@ class InheritedInterfaceProxyGenerator {
 
     static class InheritedInterfaceProxyBase<T> extends InheritedPropBase<T> {
 
-        public InheritedInterfaceProxyBase(WidgetState<?> stateWidget, Class<T> type, boolean optional,
+        public InheritedInterfaceProxyBase(WidgetState.IVCollector<T> ivCollector, boolean optional,
                                            String fieldDebugName) {
-            super(stateWidget, type, optional, fieldDebugName);
+            super(ivCollector, optional, fieldDebugName);
         }
 
         protected final Object getDelegate(Dummy dummy) {

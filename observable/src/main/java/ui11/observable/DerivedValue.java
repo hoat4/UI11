@@ -42,15 +42,11 @@ class DerivedValue<T> implements Observable<T> {
 
     private void updateValueWithObserver() {
         ObserverHolder h = ObserverHolder.current();
-        ObserverCollection prevC = h.obsC;
-        int prevI = h.obsI;
+        ObserverCollection prevC = h.pushObserver(obs);
         try {
-            h.obsC = obs;
-            h.obsI = 1;
             val = supplier.get();
         } finally {
-            h.obsC = prevC;
-            h.obsI = prevI;
+            h.popObserver(obs, prevC);
         }
     }
 
@@ -59,11 +55,12 @@ class DerivedValue<T> implements Observable<T> {
         private final Set<ObservableBase> observables = new HashSet<>();
 
         @Override
-        public void invalidate(int observerMask, Supplier<String> debugMessageSupplier) {
+        public void invalidate(Supplier<String> debugMessageSupplier) {
             removeObservers();
             if (!watched)
                 throw new IllegalStateException();
             T prev = val;
+            // TODO mi legyen ha updateValueWithObserver közben még egy invalidálódik?
             updateValueWithObserver();
             if (!Objects.equals(prev, val))
                 changes.post(new ChangeEvent<>(prev, val));
@@ -72,10 +69,6 @@ class DerivedValue<T> implements Observable<T> {
         @Override
         public void subscribedTo(ObservableBase observable) {
             observables.add(observable);
-        }
-
-        @Override
-        public void checkObserver(int mask) {
         }
 
         void removeObservers() {

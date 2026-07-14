@@ -9,6 +9,7 @@ import org.teavm.dependency.*;
 import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
 import org.teavm.jso.core.JSArray;
+import org.teavm.jso.core.JSNumber;
 import org.teavm.jso.core.JSString;
 import org.teavm.jso.impl.JS;
 import org.teavm.jso.impl.JSWrapper;
@@ -22,7 +23,7 @@ import org.teavm.vm.spi.TeaVMPlugin;
 import ui11.WidgetDefinitionParser.InjectionFieldInfo;
 import ui11.WidgetDefinitionParser.ProviderMethodInfo;
 import ui11.WidgetDefinitionParser.StateFieldInfo;
-import ui11.WidgetState.InheritedProp;
+import ui11.WidgetState.InheritedPropObservable;
 import ui11.WidgetState.InheritedPropBase;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
@@ -70,6 +71,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
      * bitmask
      */
     private final int injectFieldsOptional, injectFieldsInherited, injectFieldsObservableWrapped;
+    private final JSArray<JSNumber> injectFieldToCollectorIndex;
     private final JSArray<JSString> stateFieldNames;
     // most ebbe vannak belekódolva az observable-s zero-k is. lehet hogy jobb lenne annak egy külön mező.
     private final JSArray<JSObject> stateFieldZeroes;
@@ -94,6 +96,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                                 int injectFieldsOptional,
                                 int injectFieldsInherited,
                                 int injectFieldsObservableWrapped,
+                                JSArray<JSNumber> injectFieldToCollectorIndex,
                                 JSArray<JSString> stateFieldNames,
                                 JSArray<JSObject> stateFieldZeroes,
                                 JSArray<JSString> providerFieldNames,
@@ -109,6 +112,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
         this.injectFieldsOptional = injectFieldsOptional;
         this.injectFieldsInherited = injectFieldsInherited;
         this.injectFieldsObservableWrapped = injectFieldsObservableWrapped;
+        this.injectFieldToCollectorIndex = injectFieldToCollectorIndex;
         this.stateFieldNames = stateFieldNames;
         this.stateFieldZeroes = stateFieldZeroes;
         this.providerFieldNames = providerFieldNames;
@@ -132,6 +136,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
         this.injectFieldsOptional = other.injectFieldsOptional;
         this.injectFieldsInherited = other.injectFieldsInherited;
         this.injectFieldsObservableWrapped = other.injectFieldsObservableWrapped;
+        this.injectFieldToCollectorIndex = other.injectFieldToCollectorIndex;
         this.stateFieldNames = other.stateFieldNames;
         this.stateFieldZeroes = other.stateFieldZeroes;
         this.providerFieldNames = other.providerFieldNames;
@@ -157,6 +162,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
             int injectFieldsOptional,
             int injectFieldsInherited,
             int injectFieldsObservableWrapped,
+            JSArray<JSNumber> injectFieldToCollectorIndex,
             JSArray<JSString> stateFieldNames,
             JSArray<JSObject> stateFieldZeroes,
             JSArray<JSString> providerFieldNames,
@@ -187,6 +193,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                 injectFieldsOptional,
                 injectFieldsInherited,
                 injectFieldsObservableWrapped,
+                injectFieldToCollectorIndex,
                 stateFieldNames,
                 stateFieldZeroes,
                 providerFieldNames,
@@ -237,6 +244,13 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
             }
         }
 
+        if (widgetState.ivCollectors != null)
+            throw new IllegalStateException();
+        WidgetState.IVCollector<?>[] ivCollectors = new WidgetState.IVCollector[injectFieldTypes.getLength()];
+        for (int i = 0; i < ivCollectors.length; i++)
+            ivCollectors[i] = new WidgetState.IVCollector<>(widgetState, injectFieldTypes.get(i));
+        widgetState.ivCollectors = ivCollectors;
+
         for (int i = 0; i < injectFieldNames.getLength(); i++) {
             JSString injectFieldName = injectFieldNames.get(i);
 
@@ -257,12 +271,13 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                         JSWrapper.dependencyJavaToJs(injectFieldName.stringValue()));
             else {
                 if (type == Slot.class)
-                    wrapper = new Slot(widgetState);
+                    wrapper = new Slot(widgetState.tree);
                 else if (type == MultiSlot.class)
                     wrapper = new MultiSlot<>(widgetState);
                 else if ((injectFieldsObservableWrapped >>> i & 1) != 0)
                     // ha ezt megváltoztatjuk, akkor lent változtassuk meg propagateType-nak átadott classnevet is
-                    wrapper = new InheritedProp(widgetState, type,
+                    wrapper = new InheritedPropObservable<>(
+                            widgetState.ivCollectors[injectFieldToCollectorIndex.get(i).intValue()],
                             (injectFieldsOptional & 1 << i) != 0, injectFieldName.stringValue());
                 else
                     continue;
@@ -337,7 +352,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
     }
 
     @Override
-    public void retrieveInheritedValues(W w) {
+    public void copyIVValuesToFields(W w) {
         for (int i = 0; i < injectFieldNames.getLength(); i++) {
             if ((injectFieldsObservableWrapped & 1 << i) == 0 && injectFieldInterfaceProxyFactories.get(i) == null) {
                 Class<?> type = injectFieldTypes.get(i);
@@ -346,7 +361,10 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
 
                     boolean optional = (injectFieldsOptional >>> i & 1) != 0;
                     JSString fieldName = injectFieldNames.get(i);
-                    Object value = w.element().findInheritedValueForInjection(type, optional, fieldName.stringValue());
+
+                    int collectorIndex = injectFieldToCollectorIndex.get(i).intValue();
+                    Object value = w.widgetState().ivCollectors[collectorIndex].
+                            currentValue(optional, fieldName.stringValue());
                     fieldSet(w, fieldName, value);
                 } else {
                     // InjectedFieldKind.SLOT_OR_MULTI_SLOT
@@ -561,6 +579,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                 int.class, // injectFieldsOptional
                 int.class, // injectFieldsInherited
                 int.class, // injectFieldsObservableWrapped
+                JSArray.class, // injectFieldToCollectorIndex
                 JSArray.class, // stateFieldNames
                 JSArray.class, // stateFieldZeroes
                 JSArray.class, // providerFieldNames
@@ -657,7 +676,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                                 }
                                 case OBSERVABLE -> {
                                     fieldDependency.getValue().propagate(agent.getType(
-                                            ValueType.object(InheritedProp.class.getName())));
+                                            ValueType.object(InheritedPropObservable.class.getName())));
                                 }
                                 case INTERFACE_PROXY -> {
                                     if (!interfaceProxyFactories.containsKey(f.type())) {
@@ -679,12 +698,12 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                             }
 
                             if (f.kind() != InjectionFieldInfo.InjectedFieldKind.SLOT_OR_MULTI_SLOT) {
-                                DependencyNode inheritedPropConstructorTypeParam =
-                                        agent.linkMethod(new MethodReference(InheritedProp.class, "<init>",
-                                                        WidgetState.class, Class.class, boolean.class, String.class,
+                                DependencyNode ivCollectorConstructorTypeParam =
+                                        agent.linkMethod(new MethodReference(WidgetState.IVCollector.class, "<init>",
+                                                        WidgetState.class, Class.class,
                                                         void.class)).
                                                 getVariable(2 /* type paraméter */);
-                                inheritedPropConstructorTypeParam.getClassValueNode().propagate(type);
+                                ivCollectorConstructorTypeParam.getClassValueNode().propagate(type);
                             }
 
                             DependencyNode getInjectFieldValue =
@@ -695,7 +714,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                             fieldDependency.getValue().connect(getInjectFieldValue);
                         }
 
-                        // lehetne Element.findInheritedValue#RESULT-ba, és akkor nem szemetelnénk tele mindent
+                        // lehetne IVCollector.value-ba, és akkor nem szemetelnénk tele mindent
                         // ami Map.get-et használ
                         DependencyNode ivValueDepNode =
                                 agent.linkMethod(new MethodReference(Provider.class, "<init>",

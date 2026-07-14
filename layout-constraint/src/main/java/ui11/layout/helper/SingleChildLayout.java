@@ -24,7 +24,6 @@ public class SingleChildLayout extends Widget {
 
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
     @Inject(required = false) private Surface surface;
-    @Inject private Slot childSlot;
 
     public SingleChildLayout(@NonNull Widget child, @NonNull SingleChildLayoutDelegate delegate) {
         this.child = Objects.requireNonNull(child);
@@ -38,8 +37,7 @@ public class SingleChildLayout extends Widget {
         BoxConstraints childConstraints = delegate.computeChildConstraints(containerConstraints);
         Objects.requireNonNull(childConstraints);
 
-        Widget childWithSlot = child.withSlot(childSlot);
-        return new BoxLayoutResult.SizeRequest(childConstraints).executedOn(childWithSlot, result -> {
+        return new BoxLayoutResult.SizeRequest(childConstraints).executedOn(child, result -> {
             return switch (result.peer()) {
                 case BoxLayoutResult.OfGone _ -> empty(); // mert overlay(gone()) is ugyanaz mint empty()
                 case BoxLayoutResult.OfChosenSize r -> {
@@ -57,7 +55,7 @@ public class SingleChildLayout extends Widget {
 
                     Rect childBounds = new Rect(childTopLeft, childSize);
                     childBounds = snapToPixels(childBounds);
-                    Widget resultWidget = transformWidgetToBounds(childWithSlot, childBounds);
+                    Widget resultWidget = transformWidgetToBounds(result.reuse(), childBounds);
 
                     if (sizeRequest != null)
                         resultWidget = new BoxLayoutResult.OfChosenSize(containerSize, resultWidget);

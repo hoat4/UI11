@@ -35,7 +35,7 @@ class ObservableImpl<T> implements MutableObservable<T> {
         if (!Objects.equals(value, prev)) {
             this.value = value;
             T valueFinal = value;
-            ip.invalidate(() -> "Change value of " + this + " from " + prev + " to " + valueFinal);
+            ip.invalidate(() -> "value change of " + this + " from " + prev + " to " + valueFinal);
             afterChange(prev, value);
             if (changes != null)
                 changes.post(new ChangeEvent<>(prev, value));

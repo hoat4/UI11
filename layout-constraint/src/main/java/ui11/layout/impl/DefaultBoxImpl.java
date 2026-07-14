@@ -94,13 +94,13 @@ public class DefaultBoxImpl extends Widget {
                     case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size();
                 };
                 Size newContainerSize = childSize.add(allPadding);
-                return layoutPhase2(newContainerSize);
+                return layoutPhase2(newContainerSize, r.reuse());
             });
         } else
-            return layoutPhase2(containerSize);
+            return layoutPhase2(containerSize, box.content().withSlot(contentSlot));
     }
 
-    private Widget layoutPhase2(Size containerSize) {
+    private Widget layoutPhase2(Size containerSize, Widget content) {
         BoxConstraints constraints = containerConstraints();
 
         containerSize = constraints.clamp(containerSize);
@@ -138,7 +138,6 @@ public class DefaultBoxImpl extends Widget {
             canvas.add(background.withSlot(backgroundSlot), contentBounds);
         }
 
-        Widget content = box.content().withSlot(contentSlot);
         if (cornerRadius >= 0.001)
             content = RoundedCorners.withRoundedCorners(px(cornerRadius), content);
 

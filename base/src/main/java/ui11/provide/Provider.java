@@ -1,6 +1,7 @@
 package ui11.provide;
 
 
+import org.jspecify.annotations.Nullable;
 import ui11.Widget;
 
 // ~ Flutter InheritedWidget
@@ -24,6 +25,11 @@ public final class Provider<T> extends Widget {
 
     public Provider(Class<T> type, T value,
                     Widget content /* ez lehet null? */) {
+        if (type.isPrimitive())
+            // typeargban nem lehet rá hivatkozni
+            throw new IllegalArgumentException("Type of inherited value must " +
+                    "not be a primitive type: " + type.getName());
+
         this.type = type;
         this.value = value;
         this.content = content;
@@ -49,7 +55,7 @@ public final class Provider<T> extends Widget {
     }
 
     // ha ennek a nevét vagy signaturejét megváltoztatjuk, írjuk át TeaVMWidgetAccessorban is
-    public T value() {
+    public @Nullable T value() {
         return value;
     }
 

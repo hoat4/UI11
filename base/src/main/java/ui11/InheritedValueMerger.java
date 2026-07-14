@@ -1,8 +1,6 @@
 package ui11;
 
 import org.jspecify.annotations.Nullable;
-import ui11.Element.IVNotProvided;
-import ui11.Element.InheritedValueHolder.IVUsage;
 import ui11.provide.DynamicProvider;
 import ui11.provide.Provider;
 import ui11.provide.Provider.Mergeable;
@@ -10,6 +8,8 @@ import ui11.provide.Provider.Mergeable;
 import java.util.Objects;
 
 class InheritedValueMerger<T> extends Widget {
+
+    private static final Object IV_NOT_PROVIDED = new Object();
 
     private final Class<T> type;
     private final T newValue;
@@ -26,10 +26,11 @@ class InheritedValueMerger<T> extends Widget {
         if (newValue == null)
             return content;
 
-        Object prevVal = element().findInheritedValue(type, IVUsage.USED_BY_SELF);
+        WidgetState<?> widgetState = widgetState();
+        Object prevVal = widgetState.tree.getAndSubscribeIVForCurrentWidget(widgetState, type, IV_NOT_PROVIDED);
         T val;
 
-        if (prevVal != IVNotProvided.IV_NOT_PROVIDED) {
+        if (prevVal != IV_NOT_PROVIDED) {
             // DynamicProvider "kvázi-mergeable"
             if (type == DynamicProvider.class)
                 val = type.cast(mergeDynamicProviders((DynamicProvider) prevVal, (DynamicProvider) newValue));

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.WidgetDefinitionParser.InjectionFieldInfo;
 import ui11.WidgetDefinitionParser.StateFieldInfo;
+import ui11.WidgetState.IVCollector;
 import ui11.WidgetState.InheritedPropBase;
 import ui11.observable.MutableObservable;
 import ui11.reflectutil.ReflectionUtil;
@@ -31,6 +32,8 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
     private final List<StateFieldInfo> stateFields;
     private final List<ProviderMethodDecorator<T, ?>> decorators;
 
+    private final Class<?>[] ivTypes;
+
     // detachedmarkeres kavarás
     private final RegularWidgetAccessor<T> other;
     private final boolean isDetachedMarker;
@@ -53,6 +56,8 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
         injectFields = reflector.injectFields;
         stateFields = reflector.stateFields;
 
+        this.ivTypes = reflector.ivCollectorTypes;
+
         this.isDetachedMarker = false;
         this.other = new RegularWidgetAccessor<>(this);
     }
@@ -67,6 +72,7 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
         this.injectFields = other.injectFields;
         this.stateFields = other.stateFields;
         this.decorators = other.decorators;
+        this.ivTypes = other.ivTypes;
         this.isDetachedMarker = true;
         this.other = other;
     }
@@ -105,6 +111,13 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
         // exceptiont dobtunk, de úgy a TeaVM-es implementációt bonyolítaná.
         // esetleg lehet csinálni rollbacket (tehát kinullázzuk a már beírt observable-ket).
 
+        if (widgetState.ivCollectors != null)
+            throw new IllegalStateException();
+        IVCollector<?>[] ivCollectors = new IVCollector[ivTypes.length];
+        for (int i = 0; i < ivCollectors.length; i++)
+            ivCollectors[i] = new IVCollector<>(widgetState, ivTypes[i]);
+        widgetState.ivCollectors = ivCollectors;
+
         for (InjectionFieldInfo f : injectFields) {
             // primitív típus nem lehet egy @Inject mező típusa
             if (fieldGet(newState, f.field()) != null)
@@ -126,15 +139,19 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
                 }
                 case SLOT_OR_MULTI_SLOT -> {
                     if (f.type() == Slot.class)
-                        yield new Slot(widgetState);
+                        yield new Slot(widgetState.tree);
                     else if (f.type() == MultiSlot.class)
                         yield new MultiSlot<>(widgetState);
                     else
                         throw new RuntimeException("unknown field type if kind is " +
                                 InjectionFieldInfo.InjectedFieldKind.SLOT_OR_MULTI_SLOT);
                 }
-                case OBSERVABLE -> new WidgetState.InheritedProp<>(
-                        widgetState, f.type(), f.optional(), f.debugName());
+                case OBSERVABLE -> {
+                    IVCollector<?> collector = ivCollectors[f.collectorIndex()];
+                    assert collector.type == f.type();
+                    yield new WidgetState.InheritedPropObservable<>(
+                            collector, f.optional(), f.debugName());
+                }
             };
 
             fieldSet(newState, f.field(), wrapper);
@@ -206,11 +223,13 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
     }
 
     @Override
-    public void retrieveInheritedValues(T t) {
-        for (InjectionFieldInfo f : injectFields) {
+    public void copyIVValuesToFields(T t) {
+        for (int i = 0; i < injectFields.size(); i++) {
+            InjectionFieldInfo f = injectFields.get(i);
             switch (f.kind()) {
                 case NORMAL -> {
-                    Object value = t.element().findInheritedValueForInjection(f.type(), f.optional(), f.debugName());
+                    Object value = t.widgetState().ivCollectors[f.collectorIndex()].
+                            currentValue(f.optional(), f.debugName());
                     fieldSet(t, f.field(), value);
                 }
                 case OBSERVABLE, INTERFACE_PROXY -> {

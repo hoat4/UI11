@@ -18,7 +18,7 @@ interface WidgetAccessor<W extends Widget> {
 
     void transferState(W fromState, W toState);
 
-    void retrieveInheritedValues(W w);
+    void copyIVValuesToFields(W w);
 
     /**
      * Listener proxy-khoz van használva, azért tudjuk hogy nem primitív.

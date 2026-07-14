@@ -1,61 +1,69 @@
 package ui11;
 
-import ui11.provide.Provider;
+import org.jspecify.annotations.Nullable;
+import ui11.PeerCreationRequest.ResolutionResult;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-abstract sealed class ResolutionRequestWidget<P> extends Widget {
+abstract sealed class ResolutionRequestWidget extends Widget {
 
-    /**
-     * A delegate láncon végighaladva keres egy olyan UpValuet, mely típusa a megadott típus vagy annak egy altípusa, és
-     * visszaadja azt. Ha több ilyen is van, akkor a legelsőt.
-     */
-    <U extends SubstitutedWidget> PeerCreationRequest.ResolutionResult<U> useWidget(
-            Slot defaultSlot, Widget widget, PeerCreationRequest<U> request) {
-        Objects.requireNonNull(defaultSlot);
-        Objects.requireNonNull(widget);
-        Objects.requireNonNull(request);
+    // TODO ehhez nem is kéne WidgetState (kivéve a Mapes változathoz),
+    //      csak akkor csinálni kéne valamit az egymásba ágyazottakkal.
+    //      mivel úgyis ritka (még nem láttam rá use caset), ezért
+    //      lehet pl. csak bewrappelni egy másik widgetbe, aminek már van WidgetStateje.
 
-        ResolutionRequest<U> req = new ResolutionRequest<>(request);
+    abstract WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren);
 
-        widget = new Provider<>(ResolutionRequest.ResolutionRequestCollection.class,
-                new ResolutionRequest.ResolutionRequestCollection(req), widget);
-        widget = new Provider<>(ParentDataWidget.ParentDataCollection.class,
-                ParentDataWidget.ParentDataCollection.CLEAR, widget);
-
-        if (Element.TRACE_REFRESH)
-            Element.TraceRefresh.TL.get().print("useWidget " + request + ": " + widget);
-
-        Element element = element();
-        element.instantiate(defaultSlot, widget).ensureFresh();
-
-        PeerCreationRequest.ResolutionResult<U> result = req.result.get();
-        // TODO ha nem tud továbbhaladni a delegate láncon a refresh, akkor azt valahogy jelezni kéne itt is gondolom
-        if (result == null)
-            throw new RuntimeException("Resolution failed for " + widget + ", " + request);
-        else
-            return result;
+    @Override
+    protected final Widget build() {
+        throw new RuntimeException("should not reach here (RRW.b)");
     }
 
-    static final class CreatePeerForSingle<P extends SubstitutedWidget> extends ResolutionRequestWidget<P> {
+    static final class CreatePeerForSingle<P extends SubstitutedWidget> extends ResolutionRequestWidget {
 
         private final Widget widget;
         private final PeerCreationRequest<P> request;
-        private final Function<PeerCreationRequest.ResolutionResult<P>, Widget> f;
+        private final Function<ResolutionResult<P>, Widget> f;
 
-        @Inject private Slot slot;
-
-        public CreatePeerForSingle(Widget widget, PeerCreationRequest<P> request, Function<PeerCreationRequest.ResolutionResult<P>, Widget> f) {
+        public CreatePeerForSingle(Widget widget, PeerCreationRequest<P> request, Function<ResolutionResult<P>, Widget> f) {
             this.widget = widget;
             this.request = request;
             this.f = f;
         }
 
         @Override
-        protected Widget build() {
-            PeerCreationRequest.ResolutionResult<P> p = useWidget(slot, widget, request);
-            return new Finisher<>(p, f);
+        WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren) {
+            ResolutionRequest<P> req = new ResolutionRequest<>(
+                    widgetState, widgetState.tree, request, widget);
+            WidgetInstantiation reqW = widgetState.tree.findOrCreateWidgetState(
+                    req.primaryWrapper(),
+                    widgetState,
+                    existingChildren == null ? null : existingChildren[0]);
+            req.setWidgetInstantiation(reqW);
+            WidgetInstantiation finisher = widgetState.tree.findOrCreateWidgetState(
+                    new SingleRRFinisher<>(req, f),
+                    widgetState,
+                    existingChildren == null ? null : existingChildren[1]);
+            req.finisherWidget = finisher.widgetState();
+            return new WidgetInstantiation[]{reqW, finisher};
+        }
+
+        private static class SingleRRFinisher<P extends SubstitutedWidget> extends Widget {
+
+            private final ResolutionRequest<P> req;
+            private final Function<ResolutionResult<P>, Widget> f;
+
+            public SingleRRFinisher(ResolutionRequest<P> req, Function<ResolutionResult<P>, Widget> f) {
+                this.req = req;
+                this.f = f;
+            }
+
+            @Override
+            protected Widget build() {
+                return f.apply(req.resultOrFail());
+            }
         }
     }
 
@@ -63,75 +71,155 @@ abstract sealed class ResolutionRequestWidget<P> extends Widget {
 
         private final List<? extends Widget> widgets;
         private final List<? extends PeerCreationRequest<P>> requests;
-        private final Function<List<? extends PeerCreationRequest.ResolutionResult<P>>, Widget> f;
-
-        @Inject private MultiSlot<Integer> slots;
+        private final Function<List<? extends ResolutionResult<P>>, Widget> f;
 
         public CreatePeersForList(List<? extends Widget> widgets,
                                   List<? extends PeerCreationRequest<P>> requests,
-                                  Function<List<? extends PeerCreationRequest.ResolutionResult<P>>, Widget> f) {
+                                  Function<List<? extends ResolutionResult<P>>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
         }
 
         @Override
-        protected Widget build() {
+        WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren) {
             @SuppressWarnings("unchecked")
-            PeerCreationRequest.ResolutionResult<P>[] peers = new PeerCreationRequest.ResolutionResult[widgets.size()];
+            ResolutionRequest<P>[] requests = new ResolutionRequest[widgets.size()];
+            WidgetInstantiation[] children = new WidgetInstantiation[widgets.size() + 1];
+
+            WidgetState<?> finisher = (children[widgets.size()] = widgetState.tree.findOrCreateWidgetState(
+                    new ListRRFinisher<>(requests, f),
+                    widgetState,
+                    existingChildren == null ? null : existingChildren[existingChildren.length - 1]
+            )).widgetState();
+
             for (int i = 0; i < widgets.size(); i++) {
-                Slot defaultSlot = slots.get(i);
-                peers[i] = useWidget(defaultSlot, widgets.get(i), requests.get(i));
+                ResolutionRequest<P> req = new ResolutionRequest<>(
+                        widgetState, widgetState.tree,
+                        this.requests.get(i), widgets.get(i));
+                req.finisherWidget = finisher;
+                requests[i] = req;
+                WidgetInstantiation existingWidgetState =
+                        existingChildren != null && existingChildren.length - 1 > i ?
+                                existingChildren[i] : null;
+                req.setWidgetInstantiation(children[i] = widgetState.tree.findOrCreateWidgetState(
+                        req.primaryWrapper(),
+                        widgetState,
+                        existingWidgetState
+                ));
             }
 
-            // TODO dokumentálni kéne, hogy f nem null-toleráns mapet kap
-            return new Finisher<>(List.of(peers), f);
+            return children;
+        }
+
+        private static class ListRRFinisher<P extends SubstitutedWidget> extends Widget {
+
+            private final ResolutionRequest<P>[] reqs;
+            private final Function<List<? extends ResolutionResult<P>>, Widget> f;
+
+            public ListRRFinisher(ResolutionRequest<P>[] reqs,
+                                  Function<List<? extends ResolutionResult<P>>, Widget> f) {
+                this.reqs = reqs;
+                this.f = f;
+            }
+
+            @Override
+            protected Widget build() {
+                @SuppressWarnings("unchecked")
+                ResolutionResult<P>[] results = new ResolutionResult[reqs.length];
+                for (int i = 0; i < results.length; i++)
+                    results[i] = reqs[i].resultOrFail();
+                // TODO dokumentálni kéne, hogy f nem null-toleráns mapet kap
+                return f.apply(List.of(results));
+            }
         }
     }
 
-    static final class CreatePeersForMap<P extends SubstitutedWidget, K> extends ResolutionRequestWidget<P> {
+    static final class CreatePeersForMap<P extends SubstitutedWidget, K> extends ResolutionRequestWidget {
 
         private final Map<K, ? extends Widget> widgets;
         private final Map<K, ? extends PeerCreationRequest<P>> requests;
-        private final Function<Map<K, ? extends PeerCreationRequest.ResolutionResult<P>>, Widget> f;
+        private final Function<Map<K, ? extends ResolutionResult<P>>, Widget> f;
 
         @Inject private MultiSlot<K> slots;
 
         public CreatePeersForMap(Map<K, ? extends Widget> widgets,
                                  Map<K, ? extends PeerCreationRequest<P>> requests,
-                                 Function<Map<K, ? extends PeerCreationRequest.ResolutionResult<P>>, Widget> f) {
+                                 Function<Map<K, ? extends ResolutionResult<P>>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
         }
 
         @Override
-        protected Widget build() {
-            Map<K, PeerCreationRequest.ResolutionResult<P>> peers = new HashMap<>();
-            widgets.forEach((k, w) -> {
-                Slot defaultSlot = slots.get(k);
-                peers.put(k, useWidget(defaultSlot, w, requests.get(k)));
-            });
+        WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren) {
+            WidgetState<?> thisWidgetState = widgetState();
+            int reqCount = widgets.size();
+            Map<K, ResolutionRequest<P>> reqs = HashMap.newHashMap(reqCount);
 
-            return new Finisher<>(Map.copyOf(peers), f);
+            WidgetInstantiation[] children = new WidgetInstantiation[reqCount + 1];
+
+            WidgetState<?> finisher = (children[reqCount] = thisWidgetState.tree.findOrCreateWidgetState(
+                    new MapRRFinisher<>(reqs, f),
+                    thisWidgetState,
+                    existingChildren == null ? null : existingChildren[existingChildren.length - 1]
+            )).widgetState();
+
+            int i = 0;
+
+            // TODO jelenteni kéne IntelliJ-seknek, hogy Map.forEach-ben lévő lambda esetén
+            //      nem látszik a "Replace lambda with anonymous class"
+            // TODO JDK-nak jelenteni kéne, hogy MapN.forEach feleslegesen vacakol entrySettel, miközben
+            //      egy lapos Object[]-ben vannak a key/value párjai
+            for (Map.Entry<K, ? extends Widget> entry : widgets.entrySet()) {
+                K key = entry.getKey();
+                Widget widget = entry.getValue();
+                Slot slot = slots.get(key);
+
+                ResolutionRequest<P> req = new ResolutionRequest<>(
+                        widgetState, widgetState.tree,
+                        requests.get(key), widget.withSlot(slot));
+                req.finisherWidget = finisher;
+                reqs.put(key, req);
+
+                // sorrend itt remélhetőleg mindegy
+                req.setWidgetInstantiation(children[i++] = thisWidgetState.tree.findOrCreateWidgetState(
+                        req.primaryWrapper(),
+                        widgetState,
+                        null
+                ));
+            }
+
+            return children;
         }
-    }
 
-    // ResolutionRequestWidgetnek mindenképpen fut a refreshSelf-je, ezért f hívását
-    // külön widgetbe hozzuk, hogy csak a szükséges esetekben fusson
-    private static class Finisher<R> extends Widget {
+        private static class MapRRFinisher<K, P extends SubstitutedWidget> extends Widget {
 
-        final R result;
-        final Function<R, Widget> f;
+            private final Map<K, ResolutionRequest<P>> reqs;
+            private final Function<Map<K, ? extends ResolutionResult<P>>, Widget> f;
 
-        public Finisher(R result, Function<R, Widget> f) {
-            this.result = result;
-            this.f = f;
-        }
+            public MapRRFinisher(Map<K, ResolutionRequest<P>> reqs,
+                                 Function<Map<K, ? extends ResolutionResult<P>>, Widget> f) {
+                this.reqs = reqs;
+                this.f = f;
+            }
 
-        @Override
-        protected Widget build() {
-            return f.apply(result);
+            @Override
+            protected Widget build() {
+                @SuppressWarnings("unchecked")
+                Map.Entry<K, ResolutionResult<P>>[] results = new Map.Entry[reqs.size()];
+                reqs.forEach(new BiConsumer<>() {
+
+                    private int i = 0;
+
+                    @Override
+                    public void accept(K k, ResolutionRequest<P> req) {
+                        results[i++] = Map.entry(k, req.resultOrFail());
+                    }
+                });
+                // TODO dokumentálni kéne, hogy f nem null-toleráns mapet kap
+                return f.apply(Map.ofEntries(results));
+            }
         }
     }
 }

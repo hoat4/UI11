@@ -1,5 +1,7 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -69,9 +71,56 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
         return new ResolutionRequestWidget.CreatePeersForList<P>(widgets, requests, then);
     }
 
-    public record ResolutionResult<P extends SubstitutedWidget>(
-            P peer,
-            Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDataList
-            // TODO ennek a mapnek értelmesebb nevet kéne. parentDatas nem lehet, mert data már többes szám elvileg
-    ) {}
+    public static final class ResolutionResult<P extends SubstitutedWidget> {
+
+        private final @NonNull ResolutionRequest<P> req;
+        private final @NonNull P peer;
+        // TODO ennek a mapnek értelmesebb nevet kéne. parentDatas nem lehet, mert data már többes szám elvileg
+        private final @NonNull Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDataList;
+
+        ResolutionResult(@NonNull ResolutionRequest<P> req,
+                         @NonNull P peer,
+                         @NonNull Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDataList) {
+            this.req = req;
+            this.peer = peer;
+            this.parentDataList = parentDataList;
+        }
+
+        public Widget reuse() {
+            return req.secondaryWrapper();
+        }
+
+        public P peer() {
+            return peer;
+        }
+
+        public Map<Class<? extends ParentDataWidget>, ParentDataWidget> parentDataList() {
+            return parentDataList;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ResolutionResult<?> that = (ResolutionResult<?>) o;
+            return req.equals(that.req) && peer.equals(that.peer) && parentDataList.equals(that.parentDataList);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = req.hashCode();
+            result = 31 * result + peer.hashCode();
+            result = 31 * result + parentDataList.hashCode();
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "ResolutionResult{" +
+                    "req=" + req +
+                    ", peer=" + peer +
+                    ", parentDataList=" + parentDataList +
+                    '}';
+        }
+    }
 }

@@ -47,7 +47,7 @@ public final class MultiSlot<K> {
         Objects.requireNonNull(item);
         Slot result = slots.get(item);
         if (result == null)
-            slots.put(item, result = new Slot(ownerWidgetState));
+            slots.put(item, result = new Slot(ownerWidgetState.tree));
         return result;
     }
 
