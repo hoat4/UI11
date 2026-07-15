@@ -6,6 +6,7 @@ import ui11.window.Desktop;
 import ui11.window.Shell;
 
 import org.jspecify.annotations.Nullable;
+
 import java.awt.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -28,10 +29,7 @@ public class AWTDesktop implements Desktop {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
-            if (e.getCause() instanceof RuntimeException e2)
-                throw new RuntimeException("Can't open window: " + e, e);
-            else
-                throw (Error) e.getCause();
+            throw new RuntimeException("Can't open window: " + e.getCause(), e.getCause());
         }
     }
 
@@ -53,8 +51,8 @@ public class AWTDesktop implements Desktop {
         public void openURL(URI target) {
             if (!target.isAbsolute()) {
                 if (urlResolver == null)
-                    throw new RuntimeException("no "+URLResolver.class.getSimpleName()+" " +
-                            "but URL is relative: "+target);
+                    throw new RuntimeException("no " + URLResolver.class.getSimpleName() + " " +
+                            "but URL is relative: " + target);
                 target = urlResolver.toAbsoluteURL(target);
             }
             if (!target.isAbsolute())

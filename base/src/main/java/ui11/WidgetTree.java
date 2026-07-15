@@ -159,8 +159,6 @@ public final class WidgetTree {
                         prevChild.widgetState().removeParent(w);
                 }
 
-                w.removeFlag(WidgetState.FLAG_NEEDS_REBUILD);
-
                 findNextToRefresh(false);
             }
 
@@ -200,7 +198,6 @@ public final class WidgetTree {
 
     private void findNextToRefresh(boolean skipDescendantsOfCurrent) {
         WidgetState<?> w = refreshStack.peekWidget();
-        assert w.descendantsInterestedIVs != null || !skipDescendantsOfCurrent;
 
         if (!skipDescendantsOfCurrent && w.hasChildren()) {
             // enter children
@@ -218,11 +215,15 @@ public final class WidgetTree {
                     break;
 
                 // ennek semmi köze a kereséshez, csak pop utáni teendő
-                current.child().widgetState().descendantsInterestedIVs.forEach((ivType, val) -> {
-                    if (!current.child().directIVs().containsKey(ivType)) {
-                        current.parent().addDescendantInterestedIV(ivType, val);
-                    }
-                });
+                Map<Class<?>, Object> descendantsInterestedIVs = current.child().widgetState().descendantsInterestedIVs;
+                if (descendantsInterestedIVs == null)
+                    assert current.child().widgetState() == w;
+                else
+                    descendantsInterestedIVs.forEach((ivType, val) -> {
+                        if (!current.child().directIVs().containsKey(ivType)) {
+                            current.parent().addDescendantInterestedIV(ivType, val);
+                        }
+                    });
 
                 WidgetInstantiation nextSibling = current.parent().child(current.childIndex() + 1);
                 if (nextSibling != null) {
@@ -342,6 +343,8 @@ public final class WidgetTree {
             widgetState.parent.addDescendantInterestedIV(type,
                     value == ifNotProvided ? null : value);
         }
+
+        assert value == null || value == ifNotProvided || type.isInstance(value);
 
         return value;
     }

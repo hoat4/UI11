@@ -12,6 +12,7 @@ final class RefreshStack {
 
     RefreshStack(@NonNull WidgetInstantiation root) {
         Objects.requireNonNull(root);
+        pushIVs(root);
         stack.push(new Item(null, -100 /* érvénytelen érték */, root));
     }
 
@@ -34,8 +35,11 @@ final class RefreshStack {
     }
 
     Object getIV(Class<?> type, Object ifNotExists) {
-        // getOrDefault nem jó, mert az containsKey-t néz, miközben nullt is át akarjuk írni ifNotExists-re
-        return Objects.requireNonNullElse(ivs.get(type), ifNotExists);
+        Deque<@Nullable Object> ivStack = ivs.get(type);
+        if (ivStack == null || ivStack.isEmpty())
+            return ifNotExists;
+        else
+            return ivStack.element();
     }
 
     boolean ivsMatch(Map<Class<?>, @Nullable Object> b) {
@@ -47,11 +51,15 @@ final class RefreshStack {
     }
 
     void push(@NonNull WidgetState<?> parent, int childIndex, @NonNull WidgetInstantiation child) {
+        pushIVs(child);
+
+        stack.push(new Item(parent, childIndex, child));
+    }
+
+    private void pushIVs(@NonNull WidgetInstantiation child) {
         child.directIVs().forEach((type, val) -> {
             ivs.computeIfAbsent(type, __ -> new ArrayDeque<>()).push(val);
         });
-
-        stack.push(new Item(parent, childIndex, child));
     }
 
     @NonNull Item pop() {
@@ -86,5 +94,12 @@ final class RefreshStack {
 
         // az itteni parent helyett child.widgetState().parent nem jó,
         // mert WidgetState.parent lehet hogy még nincs beállítva
+
+
+        @Override
+        public String toString() {
+            // debuggerhez hasznos
+            return child.widgetState().modelWidget.toString();
+        }
     }
 }
