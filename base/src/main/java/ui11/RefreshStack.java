@@ -2,17 +2,17 @@ package ui11;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.reflectutil.ReflectionUtil;
 
 import java.util.*;
 
 final class RefreshStack {
 
     private final Deque<Item> stack = new LinkedList<>();
-    private final Map<Class<?>, @NonNull Deque<@Nullable Object>> ivs = new HashMap<>();
+    private final Map<Class<?>, Deque<IVValueWrapper>> ivs = new HashMap<>();
 
     RefreshStack(@NonNull WidgetInstantiation root) {
         Objects.requireNonNull(root);
-        pushIVs(root);
         stack.push(new Item(null, -100 /* érvénytelen érték */, root));
     }
 
@@ -22,84 +22,127 @@ final class RefreshStack {
         return empty;
     }
 
-    @NonNull WidgetState<?> peekWidget() throws NoSuchElementException {
-        return stack.element().child.widgetState();
+    boolean isRoot() {
+        return stack.size() == 1;
     }
 
-    @Nullable WidgetState<?> peekParent() {
-        return stack.element().parent;
+    @NonNull WidgetState<?> peekWidget() throws NoSuchElementException {
+        return stack.element().widgetInstantiation.child();
     }
 
     @NonNull WidgetInstantiation peekWidgetInstantiation() {
-        return stack.element().child;
+        return stack.element().widgetInstantiation;
     }
 
-    Object getIV(Class<?> type, Object ifNotExists) {
-        Deque<@Nullable Object> ivStack = ivs.get(type);
+    IVValueWrapper getIV(Class<?> type) {
+        Deque<IVValueWrapper> ivStack = ivs.get(type);
         if (ivStack == null || ivStack.isEmpty())
-            return ifNotExists;
-        else
-            return ivStack.element();
+            return null;
+        else {
+            IVValueWrapper result = ivStack.element();
+            assert result.value == null || type.isInstance(result.value);
+            return result;
+        }
     }
 
     boolean ivsMatch(Map<Class<?>, @Nullable Object> b) {
         for (Map.Entry<Class<?>, Object> entry : b.entrySet()) {
-            if (!Objects.equals(ivs.get(entry.getKey()), entry.getValue()))
+            IVValueWrapper actual = getIV(entry.getKey());
+            // TODO ez a null jó?
+            if (!Objects.equals(actual == null ? null : actual.valueForComparison, entry.getValue()))
                 return false;
         }
         return true;
     }
 
     void push(@NonNull WidgetState<?> parent, int childIndex, @NonNull WidgetInstantiation child) {
-        pushIVs(child);
-
         stack.push(new Item(parent, childIndex, child));
     }
 
-    private void pushIVs(@NonNull WidgetInstantiation child) {
-        child.directIVs().forEach((type, val) -> {
-            ivs.computeIfAbsent(type, __ -> new ArrayDeque<>()).push(val);
+    void pushIVs(@NonNull WidgetState<?> expectedW, @NonNull Map<Class<?>, IVValueWrapper> ivs) {
+        Item item = stack.element();
+        assert item.widgetInstantiation.child() == expectedW;
+        assert item.pushedIVs == null;
+        item.pushedIVs = ivs;
+        ivs.forEach((type, val) -> {
+            this.ivs.computeIfAbsent(type, __ -> new ArrayDeque<>()).push(val);
         });
     }
 
     @NonNull Item pop() {
         Item item = stack.pop();
-        item.child.directIVs().forEach((type, val) -> {
-            Object popped = ivs.get(type).pop();
+        item.pushedIVs.forEach((type, val) -> {
+            IVValueWrapper popped = ivs.get(type).pop();
             assert popped == val;
         });
         return item;
     }
 
-    /**
-     * @return csak akkor {@code null}, ha a verem nem tartalmazza a megadott widgetet
-     */
-    @Nullable Map<Class<?>, Object> ivsUntil(@NonNull WidgetState<?> until) {
-        if (peekWidget() == until)
-            throw new IllegalArgumentException();
-
-        Map<Class<?>, Object> ivs = new HashMap<>();
+    public String toDebugString() {
+        if (stack.isEmpty())
+            return "EMPTY";
+        StringBuilder sb = new StringBuilder();
         for (Item item : stack) {
-            if (item.child.widgetState() == until)
-                return ivs;
-            item.child.directIVs().forEach(ivs::putIfAbsent);
+            sb.append("\n- ").append(item.widgetInstantiation.child().stateWidget.getClass().getName());
+            sb.append(" (needsRebuild=").append(item.needsRebuild).append(')');
+            item.widgetInstantiation.directIVs().forEach((type, val) -> {
+                sb.append("\n    ").append(ReflectionUtil.simpleName(type)).append(" = ").append(val);
+            });
         }
-        return null;
+        return sb.toString();
     }
 
-    record Item(
-            @Nullable WidgetState<?> parent,
-            int childIndex,
-            @NonNull WidgetInstantiation child) {
+    void setDebugValuesOfCurrentWidget(boolean needsRebuild) {
+        Item top = stack.element();
+        top.needsRebuild = needsRebuild;
+    }
+
+    static final class Item {
 
         // az itteni parent helyett child.widgetState().parent nem jó,
         // mert WidgetState.parent lehet hogy még nincs beállítva
 
+        public final @Nullable WidgetState<?> parent;
+        public final int childIndex;
+        public final @NonNull WidgetInstantiation widgetInstantiation;
+
+        private Boolean needsRebuild;
+
+        private Map<Class<?>, IVValueWrapper> pushedIVs;
+
+        Item(@Nullable WidgetState<?> parent,
+             int childIndex,
+             @NonNull WidgetInstantiation widgetInstantiation) {
+            this.parent = parent;
+            this.childIndex = childIndex;
+            this.widgetInstantiation = widgetInstantiation;
+        }
 
         @Override
         public String toString() {
             // debuggerhez hasznos
-            return child.widgetState().modelWidget.toString();
+            return widgetInstantiation.child().modelWidget.toString();
+        }
+    }
+
+    static class IVValueWrapper {
+
+        final @Nullable Object value;
+        final @Nullable Object valueForComparison;
+
+        /**
+         * ha {@code null}, az azért van nem kell rá feliratkozni, mert mergeölt érték ami
+         * ancestorból jött és ott már feliratkoztunk rá
+         */
+        final @Nullable WidgetInstantiation origin;
+        final boolean isFromDescendant;
+
+        IVValueWrapper(@Nullable Object value, @Nullable Object valueForComparison,
+                       @Nullable WidgetInstantiation origin, boolean isFromDescendant) {
+            this.value = value;
+            this.valueForComparison = valueForComparison;
+            this.origin = origin;
+            this.isFromDescendant = isFromDescendant;
         }
     }
 }

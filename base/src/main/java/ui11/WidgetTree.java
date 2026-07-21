@@ -35,7 +35,7 @@ public final class WidgetTree {
 
     long beganRefreshID, finishedRefreshID = -1;
 
-    public WidgetTree(Widget rootWidget, Executor executor) {
+    private WidgetTree(Widget rootWidget, Executor executor) {
         this.rootWidget = rootWidget;
         this.executor = executor;
     }
@@ -65,8 +65,7 @@ public final class WidgetTree {
                     new PeerCreationRequest<>(SubstitutedWidget.class) {
                     },
                     rootWidget);
-            root = findOrCreateWidgetState(rootReq.primaryWrapper(), null, root);
-            rootReq.setWidgetInstantiation(root);
+            root = findOrCreateWidgetState(rootReq.widget, null, root, rootReq);
             refreshStack = new RefreshStack(root);
 
             while (!refreshStack.isEmpty()) {
@@ -87,7 +86,9 @@ public final class WidgetTree {
 
                 assert !w.hasFlag(WidgetState.FLAG_NEEDS_INIT) || needsRebuild;
 
-                w.setParent(refreshStack.peekParent());
+                Map<Class<?>, RefreshStack.IVValueWrapper> newIVs =
+                        w.registerParent(refreshStack.peekWidgetInstantiation(), refreshStack);
+                refreshStack.pushIVs(w, newIVs);
 
                 w.refreshedAt = beganRefreshID;
 
@@ -99,6 +100,9 @@ public final class WidgetTree {
                 }
 
                 needsRebuild |= w.retrieveIVValues();
+
+                if (w.stateWidget instanceof ResolutionRequestWidget)
+                    needsRebuild = true; // ivsFromSecondaryLocation lehetséges megváltozása miatt
 
                 if (needsRebuild) {
                     w.closeUntilNextRebuildScope();
@@ -113,6 +117,8 @@ public final class WidgetTree {
                     needsDescendantRefresh = true;
                 }
                 needsDescendantRefresh |= hasStolenChildren;
+
+                refreshStack.setDebugValuesOfCurrentWidget(needsRebuild);
 
                 if (!needsRebuild) {
                     if (!needsDescendantRefresh && w.descendantsInterestedIVs != null &&
@@ -130,7 +136,7 @@ public final class WidgetTree {
                     w.children = newChildren;
 
                     if (wasActive)
-                        removeDisappearedChildren(prevChildren, newChildren, w);
+                        removeFromParentListFromRemovedChildren(prevChildren, newChildren, w);
                 } else {
                     WidgetInstantiation prevChild = (WidgetInstantiation) w.children;
 
@@ -150,13 +156,13 @@ public final class WidgetTree {
 
                     WidgetInstantiation newChild;
                     if (content != null)
-                        newChild = findOrCreateWidgetState(content, w, prevChild);
+                        newChild = findOrCreateWidgetState(content, w, prevChild, null);
                     else
                         newChild = null;
                     w.children = newChild;
 
                     if (wasActive && newChild != prevChild && prevChild != null)
-                        prevChild.widgetState().removeParent(w);
+                        prevChild.child().removeParent(w);
                 }
 
                 findNextToRefresh(false);
@@ -181,18 +187,18 @@ public final class WidgetTree {
      * Az új childeket hozzáadjuk a parentjükhöz, az eltűnteket töröljük a parentjükből,
      * valamint az összes esetén berakjuk a refresh queueba, amelyeknek kell refresh.
      */
-    private static void removeDisappearedChildren(WidgetInstantiation[] prevChildren,
-                                                  WidgetInstantiation[] newChildren,
-                                                  WidgetState<?> parent) {
+    private static void removeFromParentListFromRemovedChildren(WidgetInstantiation[] prevChildren,
+                                                                WidgetInstantiation[] newChildren,
+                                                                WidgetState<?> parent) {
         for (WidgetInstantiation prevChild : prevChildren)
-            prevChild.widgetState().removeFlagIfPresent(WidgetState.FLAG_USAGE_CHECK);
+            prevChild.child().removeFlagIfPresent(WidgetState.FLAG_USAGE_CHECK);
         for (WidgetInstantiation newChild : newChildren)
-            newChild.widgetState().addFlagIfNotPresent(WidgetState.FLAG_USAGE_CHECK);
+            newChild.child().addFlagIfNotPresent(WidgetState.FLAG_USAGE_CHECK);
         for (WidgetInstantiation prevChild : prevChildren) {
-            if (prevChild.widgetState().hasFlag(WidgetState.FLAG_USAGE_CHECK))
-                prevChild.widgetState().removeFlag(WidgetState.FLAG_USAGE_CHECK);
+            if (prevChild.child().hasFlag(WidgetState.FLAG_USAGE_CHECK))
+                prevChild.child().removeFlag(WidgetState.FLAG_USAGE_CHECK);
             else
-                prevChild.widgetState().removeParent(parent);
+                prevChild.child().removeParent(parent);
         }
     }
 
@@ -207,27 +213,34 @@ public final class WidgetTree {
             assert child != null;
             refreshStack.push(w, 0, child);
         } else {
+            if (!skipDescendantsOfCurrent) {
+                // fenti if feltétele miatt ekkor w-nek nincs gyereke.
+                // ha nincs gyereke, akkor viszont elavult információkat tartalmaz a descendantsInterestedIVs map,
+                // ha még létezik, ezért töröljük.
+                w.descendantsInterestedIVs = null;
+            }
+
             // find next sibling of current or next sibling of ancestor
             while (true) {
                 RefreshStack.Item current = refreshStack.pop();
-                assert (current.parent() == null) == refreshStack.isEmpty();
-                if (current.parent() == null)
+                assert (current.parent == null) == refreshStack.isEmpty();
+                if (current.parent == null)
                     break;
 
                 // ennek semmi köze a kereséshez, csak pop utáni teendő
-                Map<Class<?>, Object> descendantsInterestedIVs = current.child().widgetState().descendantsInterestedIVs;
+                Map<Class<?>, Object> descendantsInterestedIVs = current.widgetInstantiation.child().descendantsInterestedIVs;
                 if (descendantsInterestedIVs == null)
-                    assert current.child().widgetState() == w;
+                    assert current.widgetInstantiation.child() == w;
                 else
                     descendantsInterestedIVs.forEach((ivType, val) -> {
-                        if (!current.child().directIVs().containsKey(ivType)) {
-                            current.parent().addDescendantInterestedIV(ivType, val);
+                        if (!current.widgetInstantiation.directIVs().containsKey(ivType)) {
+                            current.parent.addDescendantInterestedIV(ivType, val);
                         }
                     });
 
-                WidgetInstantiation nextSibling = current.parent().child(current.childIndex() + 1);
+                WidgetInstantiation nextSibling = current.parent.child(current.childIndex + 1);
                 if (nextSibling != null) {
-                    refreshStack.push(current.parent(), current.childIndex() + 1, nextSibling);
+                    refreshStack.push(current.parent, current.childIndex + 1, nextSibling);
                     break;
                 }
             }
@@ -243,14 +256,19 @@ public final class WidgetTree {
      */
     WidgetInstantiation findOrCreateWidgetState(@NonNull Widget widget,
                                                 @Nullable WidgetState<?> parent,
-                                                @Nullable WidgetInstantiation previous) {
+                                                @Nullable WidgetInstantiation previous,
+                                                @Nullable ResolutionRequest<?> req) {
         Objects.requireNonNull(widget, "widget");
         if (parent != null && !parent.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalArgumentException("parent not active: " + parent);
 
         Slot slot = null;
+
         Map<Class<?>, Object> ivs = new HashMap<>();
-        WidgetState<?> w = previous == null ? null : previous.widgetState();
+        if (req != null)
+            ivs.put(ParentDataWidget.ParentDataCollection.class, ParentDataWidget.ParentDataCollection.CLEAR);
+
+        WidgetState<?> w = previous == null ? null : previous.child();
 
         processProxyWidgets:
         while (true) {
@@ -281,9 +299,6 @@ public final class WidgetTree {
                     slot = kw.slot;
                     widget = kw.content;
                     w = slot.content;
-                }
-                case ResolutionRequest.Reuse r -> {
-                    return r.make(this, refreshStack, ivs);
                 }
                 default -> {
                     break processProxyWidgets;
@@ -326,7 +341,10 @@ public final class WidgetTree {
             }
         }
 
-        return new WidgetInstantiation(w, ivs, true);
+        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs, req);
+        if (req != null)
+            req.reqWI = wi;
+        return wi;
     }
 
     Object getAndSubscribeIVForCurrentWidget(WidgetState<?> widgetState, Class<?> type, @NonNull Object ifNotProvided) {
@@ -334,19 +352,33 @@ public final class WidgetTree {
             throw new IllegalStateException("not active");
 
         WidgetInstantiation w = refreshStack.peekWidgetInstantiation();
-        assert w.widgetState() == widgetState;
+        assert w.child() == widgetState;
 
-        Object value = refreshStack.getIV(type, ifNotProvided);
-
-        if (!refreshStack.peekWidgetInstantiation().directIVs().containsKey(type) &&
-                widgetState.parent != null) {
-            widgetState.parent.addDescendantInterestedIV(type,
-                    value == ifNotProvided ? null : value);
+        RefreshStack.IVValueWrapper iv = refreshStack.getIV(type);
+        if (iv == null) {
+            WidgetState<?> ancestor = widgetState.parents.getLast().parent();
+            for (; ancestor != w.parent(); ancestor = ancestor.parents.getLast().parent()) {
+                assert ancestor != null;
+                ancestor.addDescendantInterestedIV(type, null);
+            }
+            if (ancestor != null)
+                ancestor.addDescendantInterestedIV(type, null);
+            return ifNotProvided;
         }
 
-        assert value == null || value == ifNotProvided || type.isInstance(value);
+        if (iv.origin != null)
+            if (iv.isFromDescendant) {
+                WidgetState<?> ancestor = widgetState.parents.getLast().parent();
+                for (; ancestor != iv.origin.parent(); ancestor = ancestor.parents.getLast().parent()) {
+                    assert ancestor != null;
+                    ancestor.addDescendantInterestedIV(type, iv.valueForComparison);
+                }
+            } else {
+                if (iv.origin != w && w.parent() != null)
+                    w.parent().addDescendantInterestedIV(type, iv.valueForComparison);
+            }
 
-        return value;
+        return iv.value;
     }
 
     void addToInactivationQueue(@NonNull WidgetState<?> w) {
@@ -365,11 +397,19 @@ public final class WidgetTree {
         inactivationQueue.remove(w);
     }
 
+    boolean isRefreshScheduled() {
+        return refreshScheduled;
+    }
+
     void scheduleRefresh() {
         if (refreshScheduled)
             return;
         executor.execute(this::refresh);
         refreshScheduled = true;
+    }
+
+    String refreshStackToDebugString() {
+        return refreshStack.toDebugString();
     }
 
     // TODO milyen API kéne ide?

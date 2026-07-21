@@ -39,7 +39,8 @@ public abstract class WidgetResolver {
 
     @Nullable Widget resolveOrNull(@NonNull Widget widget,
                                    ResolutionRequestCollection peerCreationRequestCollection) {
-        if (supportedTargetType().isAssignableFrom(peerCreationRequestCollection.request.requestData.peerType()))
+        if (peerCreationRequestCollection.requests.keySet().stream().anyMatch(peerType->
+                supportedTargetTypeInternal().isAssignableFrom(peerType)))
             return resolveOrNull(widget);
         else
             return null;
@@ -47,7 +48,8 @@ public abstract class WidgetResolver {
 
     @Nullable Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content,
                                        ResolutionRequestCollection peerCreationRequestCollection) {
-        if (supportedTargetType().isAssignableFrom(peerCreationRequestCollection.request.requestData.peerType()))
+        if (peerCreationRequestCollection.requests.keySet().stream().anyMatch(peerType->
+                supportedTargetTypeInternal().isAssignableFrom(peerType)))
             return resolveAdditional(widget, content);
         else
             return null;

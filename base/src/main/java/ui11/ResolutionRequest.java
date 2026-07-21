@@ -16,22 +16,20 @@ class ResolutionRequest<P extends SubstitutedWidget> {
     final @Nullable WidgetState<?> container;
     final @NonNull Widget widget;
     final @NonNull PeerCreationRequest<P> requestData;
+
+    /**
+     * amikor ezt megváltoztatjuk, írjuk át {@link #resultSetAt}-et is
+     */
     final @NonNull MutableObservable<@Nullable ResolutionResult<P>> result =
             MutableObservable.ofNullable();
+    long resultSetAt;
 
+    WidgetInstantiation reqWI;
     @Nullable WidgetState<?> finisherWidget;
-
-    // a következő kettőt együtt állítjuk be
-    private WidgetState<?> widgetState;
-    private Map<Class<?>, Object> directIVsAtPrimaryLocation;
-
-    // a következő kettőt együtt állítjuk be
-    private long refreshIDOfIVsFromSecondaryLocation;
-    private Map<Class<?>, Object> ivsFromSecondaryLocation;
 
     /**
      * létrehozás után állítsuk be {@link #finisherWidget}-et ha van (rooton kívül mindig van),
-     * illetve a {@linkplain #setWidgetInstantiation létrehozott WidgetStateet}
+     * és {@link #reqWI}-et
      *
      * @param container root esetén null
      */
@@ -46,15 +44,9 @@ class ResolutionRequest<P extends SubstitutedWidget> {
         this.widget = widget;
     }
 
-    void setWidgetInstantiation(WidgetInstantiation widgetInstantiation) {
-        assert this.widgetState == null && this.directIVsAtPrimaryLocation == null;
-        assert widgetInstantiation.shouldSetParent();
-        this.widgetState = widgetInstantiation.widgetState();
-        this.directIVsAtPrimaryLocation = widgetInstantiation.directIVs();
-    }
-
     void setResultUnchecked(@NonNull SubstitutedWidget peer,
-                            @NonNull List<? extends ParentDataWidget> parentDataWidgets) {
+                            @NonNull List<? extends ParentDataWidget> parentDataWidgets,
+                            long refreshID) {
         Objects.requireNonNull(peer);
         Objects.requireNonNull(parentDataWidgets);
 
@@ -69,32 +61,29 @@ class ResolutionRequest<P extends SubstitutedWidget> {
 
         @SuppressWarnings("unchecked") final P castedPeer = (P) peer;
         this.result.set(new ResolutionResult<>(this, castedPeer, Map.copyOf(parentDataMap)));
+        resultSetAt = refreshID;
     }
 
     ResolutionResult<P> resultOrFail() {
         ResolutionResult<P> value = result.get();
         if (value == null)
-            throw new RuntimeException("resolution failed");
+            throw makeResolutionFailedException();
         else
             return value;
     }
 
-    Widget primaryWrapper() {
-        Widget w = widget;
-
-        if (ivsFromSecondaryLocation != null)
-            for (Map.Entry<Class<?>, Object> entry : ivsFromSecondaryLocation.entrySet())
-                if (entry.getKey() != ResolutionRequestCollection.class &&
-                        entry.getKey() != ParentDataWidget.ParentDataCollection.class)
-                    w = wrapWithProvide(entry, w);
-
-        // ezt tartsuk szinkronvan Reuse.make-belivel
-        w = new Provider<>(ResolutionRequest.ResolutionRequestCollection.class,
-                new ResolutionRequest.ResolutionRequestCollection(this), w);
-        w = new Provider<>(ParentDataWidget.ParentDataCollection.class,
-                ParentDataWidget.ParentDataCollection.CLEAR, w, true);
-
-        return w;
+    private RuntimeException makeResolutionFailedException() {
+        StringBuilder sb = new StringBuilder("Resolution failed for " + this);
+        // TODO itt az exception messagenek más formátuma van mint a másiknak
+        WidgetState<?> w = reqWI.child();
+        while (true) {
+            sb.append("\n- ").append(String.valueOf(w.stateWidget).replace("\n", "\n  "));
+            if (w.stateWidget instanceof ResolutionRequestWidget || w.children == null)
+                break;
+            else
+                w = ((WidgetInstantiation) w.children).child();
+        }
+        return new RuntimeException(sb.toString());
     }
 
     private static <T> Provider<T> wrapWithProvide(Map.Entry<Class<?>, Object> e, Widget w) {
@@ -102,73 +91,53 @@ class ResolutionRequest<P extends SubstitutedWidget> {
         return new Provider<>(key, key.cast(e.getValue()), w);
     }
 
-    Widget secondaryWrapper() {
-        return new Reuse(this);
+    Widget widget() {
+        return widget;
     }
 
+    @Override
+    public String toString() {
+        return super.toString() + " [requestData=" + requestData + "]";
+    }
 
     static final class ResolutionRequestCollection {
 
-        // for now, only one request at a time
-        public final ResolutionRequest<?> request;
+        /**
+         * key: {@linkplain PeerCreationRequest#peerType() peer type}
+         */
+        public final Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests;
 
-        public ResolutionRequestCollection(ResolutionRequest<?> request) {
-            this.request = request;
+        public ResolutionRequestCollection(ResolutionRequest<?> initialRequest) {
+            this.requests = Map.of(initialRequest.requestData.peerType(), initialRequest);
+        }
+
+        private ResolutionRequestCollection(Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests) {
+            this.requests = requests;
+        }
+
+        public static ResolutionRequestCollection of(List<ResolutionRequest<?>> reqs) {
+            Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests = new HashMap<>();
+            reqs.forEach(req->{
+                if (requests.putIfAbsent(req.requestData.peerType(), req) != null)
+                    throw new RuntimeException("Multiple requests with peer type " + req.requestData.peerType());
+            });
+            return new ResolutionRequestCollection(requests);
         }
 
         // TODO equals?
-    }
 
-    static class Reuse extends Widget {
-
-        final ResolutionRequest<?> req;
-
-        public Reuse(ResolutionRequest<?> req) {
-            this.req = req;
-        }
-
-        // TODO ha egy IV a primary helyen nincs, de secondary helyen van, viszont
-        //      nem olvassa egyik helyen sem, majd secondary helyen megváltozik, majd
-        //      primary helyen elkezdi olvasni, akkor ott a régi értéket fogja olvasni,
-        //      és nem is lesz feltétlen refreshelve a secondary helyen
-
-        WidgetInstantiation make(WidgetTree widgetTree, RefreshStack refreshStack, Map<Class<?>, Object> directIVs) {
-            if (req.finisherWidget == null)
-                throw new UnsupportedOperationException("finisher widget not specified");
-            if (req.widgetState == null)
-                throw new RuntimeException("RR wS null");
-
-            Map<Class<?>, Object> ivsUntilFinisher = refreshStack.ivsUntil(req.finisherWidget);
-            if (ivsUntilFinisher == null)
-                throw new RuntimeException("Return value of " +
-                        PeerCreationRequest.ResolutionResult.class.getSimpleName() + ".reuse() " +
-                        "was put outside of a resolution finisher");
-            ivsUntilFinisher.putAll(directIVs);
-
-            if (req.refreshIDOfIVsFromSecondaryLocation == widgetTree.beganRefreshID)
-                throw new RuntimeException("Return value of " +
-                        PeerCreationRequest.ResolutionResult.class.getSimpleName() + ".reuse() " +
-                        "was used multiple times in the widget tree");
-            req.ivsFromSecondaryLocation = ivsUntilFinisher;
-            req.refreshIDOfIVsFromSecondaryLocation = widgetTree.beganRefreshID;
-
-            Map<Class<?>, Object> combined = new HashMap<>();
-
-            combined.putAll(ivsUntilFinisher);
-            combined.putAll(req.directIVsAtPrimaryLocation);
-
-            // ezt tartsuk szinkronban ResolutionRequest.primaryWrapper-rel
-            combined.put(ResolutionRequestCollection.class,
-                    new ResolutionRequest.ResolutionRequestCollection(req));
-            combined.put(ParentDataWidget.ParentDataCollection.class,
-                    ParentDataWidget.ParentDataCollection.CLEAR);
-
-            return new WidgetInstantiation(req.widgetState, combined, false);
+        @NonNull ResolutionRequestCollection combineWith(@NonNull ResolutionRequestCollection c) {
+            Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests = new HashMap<>(this.requests);
+            c.requests.forEach((peerType, req) -> {
+                if (requests.putIfAbsent(peerType, req) != null)
+                    throw new RuntimeException("Multiple requests with peer type " + peerType.getName());
+            });
+            return new ResolutionRequestCollection(requests);
         }
 
         @Override
-        protected Widget build() {
-            throw new RuntimeException("should not reach here");
+        public String toString() {
+            return getClass().getSimpleName() + requests.toString();
         }
     }
 }

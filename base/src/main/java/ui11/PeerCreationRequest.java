@@ -86,8 +86,14 @@ public abstract class PeerCreationRequest<P extends SubstitutedWidget> {
             this.parentDataList = parentDataList;
         }
 
-        public Widget reuse() {
-            return req.secondaryWrapper();
+        /**
+         *
+         * @return the widget that the query was executed on
+         */
+        public Widget widget() {
+            // TODO ha nincs slotja a widgethez, ennek hozzá kéne rendelnie egyet, ami a
+            //      ResolutionRequestWidget megfelelő childjére mutat
+            return req.widget();
         }
 
         public P peer() {

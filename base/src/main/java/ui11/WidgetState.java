@@ -2,6 +2,8 @@ package ui11;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.RefreshStack.IVValueWrapper;
+import ui11.ResolutionRequest.ResolutionRequestCollection;
 import ui11.observable.*;
 import ui11.observable.Observable;
 
@@ -26,7 +28,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     static final int FLAG_ACTIVE = 8;
     static final int FLAG_IN_INACTIVATION_QUEUE = 16;
     /**
-     * a refresh során a gyerekein megpróbálja setParentet meghívni
+     * Megtiltja a refresh során a descendantok skippelését, hogy meghívódjon minden gyerekén a
+     * {@link #registerParent(WidgetInstantiation, RefreshStack)}.
      */
     static final int FLAG_HAS_STOLEN_CHILDREN = 32;
 
@@ -66,9 +69,10 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     private SimpleScope untilNextRebuild;
 
     /**
-     * Ha ez null, akkor vagy root, vagy invalidation queue-ban vagyunk.
+     * Ha egyszerre vagyunk egy {@link ResolutionRequestWidget}-ben és a finishernek egy descendantjában, akkor előbbi
+     * ennek a listának az első eleme, az utóbbi pedig a második eleme.
      */
-    WidgetState<?> parent;
+    final List<WidgetInstantiation> parents = new ArrayList<>();
 
     /**
      * Ezt csak ezen WidgetState refreshjekor módosítjuk
@@ -90,7 +94,16 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
     /**
      * Azon IV-k vannak benne, amit ezen widget ancestorai providolnak és ezen widget descendantjai fogyasztanak.
-     * Amit ez provideol, azok azért nincsenek benne, mert rebuild után úgyis lesz refresh a childokon.
+     * Arra van használva, hogy átugorjuk a descendantokat (más feltételekkel együtt, pl.
+     * {@link #FLAG_DESCENDANT_NEEDS_REFRESH}).
+     * Amit ez a widget provideol, azok azért nincsenek benne, mert rebuild után úgyis lesz refresh a childokon.
+     * <p>
+     * Akkor lesz nem-nullra beállítva az értéke, amikor bekerül a refresh stackba az első child.
+     * Ha nincs child, akkor null lesz.
+     * Ha átugorjuk a descendatokat, akkor nem változtatjuk az értékét.
+     * Pop esetén kiolvassuk a tartalmát és a szülőhoz ugyanezen mezőjéhez hozzáfűzzük.
+     * Továbbá amikor descendant-of-finisherből olvassunk ki egy IV-t, akkor az forrás és a fogyasztó közötti
+     * mindegyik widgethez hozzáadjuk.
      */
     Map<Class<?>, Object> descendantsInterestedIVs;
 
@@ -243,8 +256,10 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
     // reaktiválásra nincs itt külön függvény, hanem a refresh folyamat részeként történik meg
     void inactivate() {
+        System.out.println("inactivate " + stateWidget);
         if (!hasFlag(FLAG_ACTIVE))
             throw new IllegalStateException("already inactive");
+        assert parents.isEmpty();
         removeFlag(FLAG_ACTIVE);
 
         // reaktiváláskor úgyis az egész részfán végigmegyünk
@@ -258,10 +273,10 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
             case null -> {
                 // nop
             }
-            case WidgetState<?> child -> child.removeParent(this);
+            case WidgetInstantiation child -> child.child().removeParent(this);
             default -> {
-                for (WidgetState<?> child : (WidgetState<?>[]) children)
-                    child.removeParent(this);
+                for (WidgetInstantiation child : (WidgetInstantiation[]) children)
+                    child.child().removeParent(this);
             }
         }
     }
@@ -321,36 +336,160 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
     /**
      * Ezt csak akkor lehet meghívni, ha a parent {@linkplain #NEEDS_REFRESH refreshelve lett már}
-     *
-     * @param newParent ez pontosan akkor {@code null}, ha a root widget ez
      */
-    void setParent(@Nullable WidgetState<?> newParent) {
+    @NonNull Map<Class<?>, IVValueWrapper> registerParent(@NonNull WidgetInstantiation wi,
+                                                          RefreshStack refreshStack) {
+        assert wi.child() == this;
+
+        WidgetState<?> newParent = wi.parent();
         if (newParent != null && newParent.hasFlag(NEEDS_REFRESH))
             // mert akkor nem lehet iv consumereket bejegyezni
             throw new IllegalArgumentException("Can't add parent which is not fresh");
 
-        WidgetState<?> oldParent = this.parent;
-        if (oldParent != null) {
-            if (oldParent == newParent)
-                return;
+        int parentIndex = 0;
+        for (; parentIndex < parents.size(); parentIndex++) {
+            if (parents.get(parentIndex).parent() == newParent) {
+                parents.set(parentIndex, wi);
+                break;
+            }
+            if (isDescendantOfFinisherOf(parents.get(parentIndex).parent(), newParent))
+                continue;
 
-            // inaktív WS elvileg nem lehet this.parentben.
-            // az invalidate() exceptiont dob, ha már elkéstünk
-            oldParent.invalidate(FLAG_HAS_STOLEN_CHILDREN, () ->
-                    "steal " + this + " from " + oldParent + " by " + newParent);
+            // i-től parents.size()-ig cserélni kell a parenteket kezdve cserélni
+            List<WidgetInstantiation> parentsToBeRemoved = parents.subList(parentIndex, parents.size());
+            for (WidgetInstantiation p : parentsToBeRemoved)
+                // ha az n-edik invalidate sikeres lesz, akkor az n+1-edik is sikeres lesz,
+                // ezért nem kell visszacsinálni, ha valamelyik exceptiont dob
+                if (p.parent() != null)
+                    p.parent().invalidate(FLAG_HAS_STOLEN_CHILDREN, () ->
+                            "steal " + this + " from " + parentsToBeRemoved + " by " + newParent);
+            // a clear az invalidateek után legyen, hogy csak akkor történjen, ha nem dob exceptiont
+            parentsToBeRemoved.clear();
+            assert parentIndex == parents.size();
         }
-        this.parent = newParent;
 
-        if (hasFlag(FLAG_IN_INACTIVATION_QUEUE))
-            tree.removeFromInactivationQueue(this);
+        if (parents.size() == parentIndex) {
+            assert parents.stream().noneMatch(wi2 -> wi2.child() == this);
+            parents.add(wi);
+
+            if (hasFlag(FLAG_IN_INACTIVATION_QUEUE))
+                tree.removeFromInactivationQueue(this);
+        }
+
+        assert parents.get(parentIndex) == wi;
+
+        Map<Class<?>, IVValueWrapper> newIVs = new HashMap<>();
+        wi.directIVs().forEach((type, val) -> {
+            newIVs.put(type, new IVValueWrapper(val, val, wi, false));
+        });
+        if (parentIndex < parents.size() - 1) {
+            assert wi.parent() != null;
+            Map<Class<?>, IVWithOrigin> fromBottom = ivsUntilFinisherOf(wi.parent(), this);
+            fromBottom.forEach((type, val) -> {
+                newIVs.putIfAbsent(type, new IVValueWrapper(
+                        val.value, val.value, val.origin, true));
+            });
+        }
+
+        List<ResolutionRequest<?>> reqs = new ArrayList<>();
+        for (int i = 0; i < parents.size(); i++) {
+            WidgetInstantiation parent = parents.get(i);
+            ResolutionRequest<?> req = parent.directReq();
+            if (req == null)
+                assert i == parents.size() - 1;
+            else
+                reqs.add(req);
+            // ezekre nem kell feliratkozni, mert a directIV/directReq megváltozásából úgyis következik a refresh
+        }
+        if (parents.size() - 1 == parentIndex) {
+            IVValueWrapper inheritedReqCollIV = refreshStack.getIV(ResolutionRequestCollection.class);
+            if (inheritedReqCollIV == null)
+                assert refreshStack.isRoot();
+            else {
+                ResolutionRequestCollection inheritedReqs = (ResolutionRequestCollection) inheritedReqCollIV.value;
+                assert inheritedReqs != null; // nem provideolunk nullt ResolutionRequestCollection típussal
+                reqs.addAll(inheritedReqs.requests.values());
+            }
+            ResolutionRequestCollection reqColl = ResolutionRequestCollection.of(reqs);
+            newIVs.put(ResolutionRequestCollection.class,
+                    new IVValueWrapper(reqColl, reqColl, wi, false));
+        } else {
+            throw new RuntimeException("TODO");
+            /*
+            newIVs.put(ResolutionRequestCollection.class,
+                    new IVValueWrapper());
+             */
+        }
+
+        return newIVs;
     }
 
+    /**
+     * ha már nem a parentünk a megadott widget, akkor nem csinál semmit
+     */
     void removeParent(WidgetState<?> parent) {
-        if (this.parent != parent)
-            return;
-        this.parent = null;
-        if (hasFlag(FLAG_ACTIVE) && !hasFlag(FLAG_IN_INACTIVATION_QUEUE))
-            tree.addToInactivationQueue(this);
+        for (int i = 0; i < parents.size(); i++) {
+            if (parents.get(i).parent() == parent) {
+                parents.subList(i, parents.size()).clear();
+                if (i == 0 && hasFlag(FLAG_ACTIVE) && !hasFlag(FLAG_IN_INACTIVATION_QUEUE))
+                    tree.addToInactivationQueue(this);
+                break;
+            }
+        }
+    }
+
+    /**
+     * azért nullablek, mert a null jelenti a "gyökér parentjét" is.
+     *
+     * @return true akkor, ha a felmenője b-nek (ha a kettő ugyanaz, akkor az nem számít felmenőnek)
+     */
+    static boolean isDescendantOfFinisherOf(@Nullable WidgetState<?> a, @Nullable WidgetState<?> b) {
+        if (a == null || b == null)
+            // ha a == null, akkor azért nem lehetséges, mert az ál-gyökér sosem egy RequestResolutionWidget.
+            // ha b == null, akkor azért nem lehetséges, mert akkor legfeljebb az a lehet a b-nek descendantja.
+            return false;
+        if (!(a.stateWidget instanceof ResolutionRequestWidget rrw))
+            return false;
+        a = rrw.finisher();
+        if (a == null)
+            return false;
+        for (b = b.parents.getLast().parent(); b != null; b = b.parents.getLast().parent())
+            if (a == b)
+                return true;
+        return false;
+    }
+
+    static boolean isDescendantOfOrSame(WidgetState<?> a, WidgetState<?> b) {
+        for (; b != null; b = b.parents.getLast().parent())
+            if (a == b)
+                return true;
+        return false;
+    }
+
+    /**
+     *
+     * @return nem {@code null}, ha {@code base} egy RRW, van finisherje és annak {@code b} egy descendantja
+     */
+    static Map<Class<?>, IVWithOrigin> ivsUntilFinisherOf(
+            @NonNull WidgetState<?> base, @NonNull WidgetState<?> b) {
+        if (!(base.stateWidget instanceof ResolutionRequestWidget rrw))
+            throw new RuntimeException("not RRW");
+        WidgetState<?> finisher = rrw.finisher();
+        if (finisher == null)
+            throw new RuntimeException("finisher not populated");
+        Map<Class<?>, IVWithOrigin> ivs = new HashMap<>();
+        do {
+            assert b != null : finisher + " not found in ancestors";
+            WidgetInstantiation wi = b.parents.getLast();
+            wi.directIVs().forEach((type, val) -> ivs.putIfAbsent(type, new IVWithOrigin(val, wi)));
+            b = wi.parent();
+        } while (finisher != b);
+        // TODO lehet hogy ezt két lépésben kéne, és
+        //      ha nem descendant, akkor nem is építeni fel a mapet
+        return ivs;
+    }
+
+    record IVWithOrigin(@Nullable Object value, @NonNull WidgetInstantiation origin) {
     }
 
     void closeUntilPauseScope() {
@@ -420,7 +559,11 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      */
     boolean hasFlag(int flag) {
         if (flags < 0)
-            throw new IllegalStateException();
+            throw new IllegalStateException("Widget is in " + switch (flags) {
+                case DISPOSED -> "disposed";
+                case NOT_YET_CREATED -> "not yet created";
+                default -> Integer.toString(flags);
+            } + " state: " + this);
         return (flags & flag) != 0;
     }
 
@@ -438,6 +581,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         if (refreshedAt > tree.finishedRefreshID) {
             // régi kódban logger.error volt. mi legyen?
             // valamint ott refresh stack is ki volt írva
+            // TODO legalább widgeteket írjuk ki (most WidgetState.toString inheritelt Objectből)
             throw new RuntimeException("Can't invalidate widget" +
                     (debugMessageSupplier == null ? "" : " after " + debugMessageSupplier.get()) +
                     ", because it has been already " +
@@ -446,10 +590,12 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
         addFlag(invalidationFlag);
 
-        for (WidgetState<?> ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.hasFlag(FLAG_DESCENDANT_NEEDS_REFRESH))
-                break;
-            else
+        for (WidgetState<?> ancestor = parents.getLast().parent();
+             ancestor != null; ancestor = ancestor.parents.getLast().parent()) {
+            if (ancestor.hasFlag(FLAG_DESCENDANT_NEEDS_REFRESH)) {
+                assert tree.isRefreshScheduled();
+                return;
+            } else
                 ancestor.addFlag(FLAG_DESCENDANT_NEEDS_REFRESH);
         }
 
@@ -613,14 +759,41 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         }
 
         boolean retrieveValue() {
-            Object newValue = widgetState.tree.getAndSubscribeIVForCurrentWidget(
-                    widgetState, type, IV_NOT_PROVIDED);
+            Object newValue;
+
+            if (PeerCreationRequest.class.isAssignableFrom(type) && PeerCreationRequest.class != type) {
+                newValue = widgetState.tree.getAndSubscribeIVForCurrentWidget(
+                        widgetState, ResolutionRequestCollection.class, IV_NOT_PROVIDED);
+                if (newValue != IV_NOT_PROVIDED) {
+                    ResolutionRequestCollection coll =
+                            (ResolutionRequestCollection) newValue;
+                    newValue = findResolutionRequest(coll);
+                }
+            } else
+                newValue = widgetState.tree.getAndSubscribeIVForCurrentWidget(
+                        widgetState, type, IV_NOT_PROVIDED);
 
             if (!Objects.equals(value, newValue)) {
                 this.value = newValue;
                 return true;
             } else
                 return false;
+        }
+
+        private @NonNull Object findResolutionRequest(ResolutionRequestCollection coll) {
+            Object newValue;
+            List<ResolutionRequest<?>> reqs = coll.requests.values().stream().
+                    filter(r -> type.isInstance(r.requestData)).
+                    toList();
+            newValue = switch (reqs.size()) {
+                case 0 -> IV_NOT_PROVIDED;
+                case 1 -> type.cast(reqs.getFirst().requestData);
+                default -> {
+                    // TODO
+                    throw new RuntimeException("Multiple requests corresponds to " + type.getName());
+                }
+            };
+            return newValue;
         }
 
         /**

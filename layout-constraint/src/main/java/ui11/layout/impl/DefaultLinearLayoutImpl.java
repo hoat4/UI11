@@ -52,6 +52,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
 
         items = MultiSlot.assignSlots(slots, items);
         items = applyMainAxisAlignment(items);
+        List<? extends Widget> itemsFinal = items;
 
         BoxConstraints constraints = containerConstraints();
         Axis mainAxis = linearLayout.mainAxis();
@@ -63,7 +64,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
                         constraints.min(crossAxis) : 0,
                 /* max width */ Double.POSITIVE_INFINITY,
                 /* max height */ constraints.max(crossAxis)
-        )).executedOn(items, this::layoutPhase2);
+        )).executedOn(items, results->layoutPhase2(itemsFinal, results));
     }
 
     private List<? extends Widget> applyMainAxisAlignment(List<? extends Widget> items) {
@@ -116,7 +117,8 @@ public final class DefaultLinearLayoutImpl extends Widget {
         return items;
     }
 
-    private Widget layoutPhase2(List<? extends PeerCreationRequest.ResolutionResult<BoxLayoutResult>> boxLayoutResults) {
+    private Widget layoutPhase2(List<? extends Widget> items,
+            List<? extends PeerCreationRequest.ResolutionResult<BoxLayoutResult>> boxLayoutResults) {
         BoxConstraints constraints = containerConstraints();
         Axis mainAxis = linearLayout.mainAxis();
         Axis crossAxis = mainAxis.cross();
@@ -138,9 +140,6 @@ public final class DefaultLinearLayoutImpl extends Widget {
         };
 
         // TODO gap figyelembe vétele
-
-        List<? extends Widget> items = boxLayoutResults.stream().
-                map(r -> r.reuse()).toList();
 
         int itemCount = items.size();
         double[] weights = new double[itemCount];
@@ -251,7 +250,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
                         }
                     }
                     Widget[] placeables2 = resolutionResults.stream().
-                            map(PeerCreationRequest.ResolutionResult::reuse).toArray(Widget[]::new);
+                            map(PeerCreationRequest.ResolutionResult::widget).toArray(Widget[]::new);
                     return layoutPhase3(itemCountFinal, placeables2, widths, height2, containerWidth);
                 });
             }

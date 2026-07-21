@@ -6,11 +6,23 @@ import org.jspecify.annotations.Nullable;
 import java.util.Map;
 import java.util.Objects;
 
-record WidgetInstantiation(@NonNull WidgetState<?> widgetState,
-                           @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs,
-                           boolean shouldSetParent) {
+// parentet azért kell, mert ezt használjuk akkor WidgetState.parents listában is,
+// hogy lehessen ismerni IV-ket RefreshStack.pushIVs-ben.
+// Az eredeti elképzelés az lett volna, hogy RefreshStack.ivs-t másoljuk le,
+// de nem jó, mert annak csak az RRW alatti része kell, ráadásul ezt RRW-nként külön kéne tárolni.
+
+/**
+ * @param parent akkor null, ha a gyökér a {@linkplain #child()}
+ * @param child
+ * @param directIVs
+ */
+record WidgetInstantiation(
+        @Nullable WidgetState<?> parent,
+        @NonNull WidgetState<?> child,
+        @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs,
+        @Nullable ResolutionRequest<?> directReq) {
     WidgetInstantiation {
-        Objects.requireNonNull(widgetState);
+        Objects.requireNonNull(child);
         Objects.requireNonNull(directIVs);
     }
 }
