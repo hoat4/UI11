@@ -52,6 +52,7 @@ public final class WidgetTree {
     void refresh() {
         try {
             beganRefreshID++;
+            refreshScheduled = false;
 
             if (refreshStack != null)
                 throw new RuntimeException("refresh stack already exists");
