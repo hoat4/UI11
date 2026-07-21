@@ -87,9 +87,7 @@ public final class WidgetTree {
 
                 assert !w.hasFlag(WidgetState.FLAG_NEEDS_INIT) || needsRebuild;
 
-                Map<Class<?>, RefreshStack.IVValueWrapper> newIVs =
-                        w.registerParent(refreshStack.peekWidgetInstantiation(), refreshStack);
-                refreshStack.pushIVs(w, newIVs);
+                w.registerParentAndPushIVs(refreshStack.peekWidgetInstantiation(), refreshStack);
 
                 w.refreshedAt = beganRefreshID;
 
@@ -101,6 +99,7 @@ public final class WidgetTree {
                 }
 
                 needsRebuild |= w.retrieveIVValues();
+                needsDescendantRefresh |= w.compareAndSetComputedReqs(refreshStack.computedReqs());
 
                 if (w.stateWidget instanceof ResolutionRequestWidget)
                     needsRebuild = true; // ivsFromSecondaryLocation lehetséges megváltozása miatt
@@ -352,6 +351,10 @@ public final class WidgetTree {
         if (!widgetState.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalStateException("not active");
 
+        if (type == ResolutionRequest.ResolutionRequestCollection.class)
+            // erre nem kell feliratkozni, mert egész subtree refreshelődni fog
+            return refreshStack.computedReqs();
+
         WidgetInstantiation w = refreshStack.peekWidgetInstantiation();
         assert w.child() == widgetState;
 
@@ -372,11 +375,11 @@ public final class WidgetTree {
                 WidgetState<?> ancestor = widgetState.parents.getLast().parent();
                 for (; ancestor != iv.origin.parent(); ancestor = ancestor.parents.getLast().parent()) {
                     assert ancestor != null;
-                    ancestor.addDescendantInterestedIV(type, iv.valueForComparison);
+                    ancestor.addDescendantInterestedIV(type, iv.value);
                 }
             } else {
                 if (iv.origin != w && w.parent() != null)
-                    w.parent().addDescendantInterestedIV(type, iv.valueForComparison);
+                    w.parent().addDescendantInterestedIV(type, iv.value);
             }
 
         return iv.value;

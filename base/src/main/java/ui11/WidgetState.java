@@ -29,7 +29,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     static final int FLAG_IN_INACTIVATION_QUEUE = 16;
     /**
      * Megtiltja a refresh során a descendantok skippelését, hogy meghívódjon minden gyerekén a
-     * {@link #registerParent(WidgetInstantiation, RefreshStack)}.
+     * {@link #registerParentAndPushIVs(WidgetInstantiation, RefreshStack)}.
      */
     static final int FLAG_HAS_STOLEN_CHILDREN = 32;
 
@@ -106,6 +106,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      * mindegyik widgethez hozzáadjuk.
      */
     Map<Class<?>, Object> descendantsInterestedIVs;
+
+    private ResolutionRequestCollection computedReqs;
 
     @SuppressWarnings("unchecked")
     WidgetState(W modelWidget, WidgetTree tree) {
@@ -265,6 +267,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         // reaktiváláskor úgyis az egész részfán végigmegyünk
         removeFlagIfPresent(FLAG_DESCENDANT_NEEDS_REFRESH);
 
+        computedReqs = null;
+
         pauseObservables();
         closeUntilPauseScope();
         closeUntilNextRebuildScope();
@@ -337,8 +341,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     /**
      * Ezt csak akkor lehet meghívni, ha a parent {@linkplain #NEEDS_REFRESH refreshelve lett már}
      */
-    @NonNull Map<Class<?>, IVValueWrapper> registerParent(@NonNull WidgetInstantiation wi,
-                                                          RefreshStack refreshStack) {
+    void registerParentAndPushIVs(@NonNull WidgetInstantiation wi,
+                                                                    RefreshStack refreshStack) {
         assert wi.child() == this;
 
         WidgetState<?> newParent = wi.parent();
@@ -369,27 +373,30 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         }
 
         if (parents.size() == parentIndex) {
-            assert parents.stream().noneMatch(wi2 -> wi2.child() == this);
+            assert parents.stream().noneMatch(wi2 -> wi2.parent() == this);
             parents.add(wi);
 
             if (hasFlag(FLAG_IN_INACTIVATION_QUEUE))
                 tree.removeFromInactivationQueue(this);
         }
 
-        assert parents.get(parentIndex) == wi;
+        assert parents.get(parentIndex).parent() == wi.parent();
 
         Map<Class<?>, IVValueWrapper> newIVs = new HashMap<>();
         wi.directIVs().forEach((type, val) -> {
-            newIVs.put(type, new IVValueWrapper(val, val, wi, false));
+            assert type != ResolutionRequestCollection.class && type != ResolutionRequest.class;
+            newIVs.put(type, new IVValueWrapper(val, wi, false));
         });
         if (parentIndex < parents.size() - 1) {
             assert wi.parent() != null;
             Map<Class<?>, IVWithOrigin> fromBottom = ivsUntilFinisherOf(wi.parent(), this);
             fromBottom.forEach((type, val) -> {
+                assert type != ResolutionRequestCollection.class && type != ResolutionRequest.class;
                 newIVs.putIfAbsent(type, new IVValueWrapper(
-                        val.value, val.value, val.origin, true));
+                        val.value, val.origin, true));
             });
         }
+        refreshStack.pushIVs(this, newIVs);
 
         List<ResolutionRequest<?>> reqs = new ArrayList<>();
         for (int i = 0; i < parents.size(); i++) {
@@ -401,27 +408,23 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                 reqs.add(req);
             // ezekre nem kell feliratkozni, mert a directIV/directReq megváltozásából úgyis következik a refresh
         }
+
         if (parents.size() - 1 == parentIndex) {
-            IVValueWrapper inheritedReqCollIV = refreshStack.getIV(ResolutionRequestCollection.class);
-            if (inheritedReqCollIV == null)
-                assert refreshStack.isRoot();
-            else {
-                ResolutionRequestCollection inheritedReqs = (ResolutionRequestCollection) inheritedReqCollIV.value;
-                assert inheritedReqs != null; // nem provideolunk nullt ResolutionRequestCollection típussal
-                reqs.addAll(inheritedReqs.requests.values());
+            ResolutionRequestCollection inheritedReqs = refreshStack.inheritedReqs();
+            if (inheritedReqs == null) {
+                assert parents.size() == 1 && parents.getFirst() == wi; // hogy origin egyértelmű legyen
+                assert reqs.size() == 1;
+            } else {
+                // ha legalsó parentnek van directReq-ja, akkor az overrideolja az öröklötteket
+                if (wi.directReq() == null)
+                    reqs.addAll(inheritedReqs.requests.values());
             }
-            ResolutionRequestCollection reqColl = ResolutionRequestCollection.of(reqs);
-            newIVs.put(ResolutionRequestCollection.class,
-                    new IVValueWrapper(reqColl, reqColl, wi, false));
         } else {
             throw new RuntimeException("TODO");
-            /*
-            newIVs.put(ResolutionRequestCollection.class,
-                    new IVValueWrapper());
-             */
         }
 
-        return newIVs;
+        ResolutionRequestCollection reqColl = ResolutionRequestCollection.of(reqs);
+        refreshStack.setComputedReqs(this, reqColl);
     }
 
     /**
@@ -667,7 +670,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     void addDescendantInterestedIV(Class<?> ivType, Object val) {
         assert descendantsInterestedIVs != null;
         assert !descendantsInterestedIVs.containsKey(ivType) ||
-                descendantsInterestedIVs.get(ivType) == val;
+                descendantsInterestedIVs.get(ivType) == val : ivType + ", " + val + ", " + descendantsInterestedIVs;
         descendantsInterestedIVs.putIfAbsent(ivType, val);
     }
 
@@ -676,6 +679,19 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         for (IVCollector<?> collector : ivCollectors)
             changed |= collector.retrieveValue();
         return changed;
+    }
+
+    // ha előrehaladottabb állapotban lesz a resolution rendszer, akkor lehetne szűrni,
+    // hogy csak azokat a részfákat refresheljük, amiket érdekelnek az adott típusú PeerCreationRequestek
+    boolean compareAndSetComputedReqs(@NonNull ResolutionRequestCollection newReqs) {
+        if (this.computedReqs == null) {
+            this.computedReqs = newReqs;
+            return false;
+        }
+        if (this.computedReqs.equals(newReqs))
+            return false;
+        this.computedReqs = newReqs;
+        return true;
     }
 
     static abstract class InheritedPropBase<T> {

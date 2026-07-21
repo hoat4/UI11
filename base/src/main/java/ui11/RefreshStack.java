@@ -2,6 +2,7 @@ package ui11;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.ResolutionRequest.ResolutionRequestCollection;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.util.*;
@@ -13,7 +14,7 @@ final class RefreshStack {
 
     RefreshStack(@NonNull WidgetInstantiation root) {
         Objects.requireNonNull(root);
-        stack.push(new Item(null, -100 /* érvénytelen érték */, root));
+        stack.push(new Item(null, -100 /* érvénytelen érték */, root, null));
     }
 
     boolean isEmpty() {
@@ -49,14 +50,16 @@ final class RefreshStack {
         for (Map.Entry<Class<?>, Object> entry : b.entrySet()) {
             IVValueWrapper actual = getIV(entry.getKey());
             // TODO ez a null jó?
-            if (!Objects.equals(actual == null ? null : actual.valueForComparison, entry.getValue()))
+            if (!Objects.equals(actual == null ? null : actual.value, entry.getValue()))
                 return false;
         }
         return true;
     }
 
     void push(@NonNull WidgetState<?> parent, int childIndex, @NonNull WidgetInstantiation child) {
-        stack.push(new Item(parent, childIndex, child));
+        ResolutionRequestCollection inheritedReqs = stack.element().computedReqs;
+        assert inheritedReqs != null;
+        stack.push(new Item(parent, childIndex, child, inheritedReqs));
     }
 
     void pushIVs(@NonNull WidgetState<?> expectedW, @NonNull Map<Class<?>, IVValueWrapper> ivs) {
@@ -67,6 +70,25 @@ final class RefreshStack {
         ivs.forEach((type, val) -> {
             this.ivs.computeIfAbsent(type, __ -> new ArrayDeque<>()).push(val);
         });
+    }
+
+    void setComputedReqs(@NonNull WidgetState<?> expectedW, @NonNull ResolutionRequestCollection reqColl) {
+        Item item = stack.element();
+        assert item.widgetInstantiation.child() == expectedW;
+        assert item.computedReqs == null;
+        item.computedReqs = reqColl;
+    }
+
+    ResolutionRequestCollection inheritedReqs() {
+        ResolutionRequestCollection inheritedReqs = stack.element().inheritedReqs;
+        assert inheritedReqs != null || isRoot();
+        return inheritedReqs;
+    }
+
+    @NonNull ResolutionRequestCollection computedReqs() {
+        ResolutionRequestCollection computedReqs = stack.element().computedReqs;
+        assert  computedReqs != null;
+        return computedReqs;
     }
 
     @NonNull Item pop() {
@@ -105,17 +127,27 @@ final class RefreshStack {
         public final @Nullable WidgetState<?> parent;
         public final int childIndex;
         public final @NonNull WidgetInstantiation widgetInstantiation;
+        /**
+         * csak root esetén null
+         */
+        public final @Nullable ResolutionRequestCollection inheritedReqs;
 
         private Boolean needsRebuild;
 
         private Map<Class<?>, IVValueWrapper> pushedIVs;
+        ResolutionRequestCollection computedReqs;
 
+        /**
+         * @param inheritedReqs csak root esetén null
+         */
         Item(@Nullable WidgetState<?> parent,
              int childIndex,
-             @NonNull WidgetInstantiation widgetInstantiation) {
+             @NonNull WidgetInstantiation widgetInstantiation,
+             @Nullable ResolutionRequestCollection inheritedReqs) {
             this.parent = parent;
             this.childIndex = childIndex;
             this.widgetInstantiation = widgetInstantiation;
+            this.inheritedReqs = inheritedReqs;
         }
 
         @Override
@@ -128,7 +160,6 @@ final class RefreshStack {
     static class IVValueWrapper {
 
         final @Nullable Object value;
-        final @Nullable Object valueForComparison;
 
         /**
          * ha {@code null}, az azért van nem kell rá feliratkozni, mert mergeölt érték ami
@@ -137,10 +168,8 @@ final class RefreshStack {
         final @Nullable WidgetInstantiation origin;
         final boolean isFromDescendant;
 
-        IVValueWrapper(@Nullable Object value, @Nullable Object valueForComparison,
-                       @Nullable WidgetInstantiation origin, boolean isFromDescendant) {
+        IVValueWrapper(@Nullable Object value, @Nullable WidgetInstantiation origin, boolean isFromDescendant) {
             this.value = value;
-            this.valueForComparison = valueForComparison;
             this.origin = origin;
             this.isFromDescendant = isFromDescendant;
         }
