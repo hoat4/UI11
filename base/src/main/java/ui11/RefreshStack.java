@@ -86,7 +86,7 @@ final class RefreshStack {
 
     @NonNull ResolutionRequestCollection computedReqs() {
         ResolutionRequestCollection computedReqs = stack.element().computedReqs;
-        assert  computedReqs != null;
+        assert computedReqs != null;
         return computedReqs;
     }
 
@@ -109,6 +109,10 @@ final class RefreshStack {
             item.widgetInstantiation.directIVs().forEach((type, val) -> {
                 sb.append("\n    ").append(ReflectionUtil.simpleName(type)).append(" = ").append(val);
             });
+            if (item.widgetInstantiation.directReq() != null)
+                sb.append("\n    New req: ").append(item.widgetInstantiation.directReq());
+            for (ResolutionRequest<?> req : item.widgetInstantiation.directCompletedRequests())
+                sb.append("\n    Completed req: ").append(req);
         }
         return sb.toString();
     }

@@ -833,9 +833,9 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
         private @NonNull Object findResolutionRequest(ResolutionRequestCollection coll) {
             Object newValue;
-            List<ResolutionRequest<?>> reqs = coll.requests.values().stream().
-                    filter(r -> type.isInstance(r.requestData)).
-                    toList();
+            @SuppressWarnings("unchecked") Class<? extends PeerCreationRequest<?>> castedType =
+                    (Class<? extends PeerCreationRequest<?>>) type.asSubclass(PeerCreationRequest.class);
+            List<ResolutionRequest<?>> reqs = coll.byType(castedType);
             newValue = switch (reqs.size()) {
                 case 0 -> IV_NOT_PROVIDED;
                 case 1 -> type.cast(reqs.getFirst().requestData);

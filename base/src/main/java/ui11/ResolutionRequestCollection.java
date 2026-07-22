@@ -11,15 +11,15 @@ final class ResolutionRequestCollection {
      * key: {@linkplain PeerCreationRequest#peerType() peer type}
      */
     public final @NonNull Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests;
-    private final @NonNull Set<Class<? extends SubstitutedWidget>> completed;
+    private final @NonNull Set<ResolutionRequest<?>> completed;
 
     private ResolutionRequestCollection(
             @NonNull Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests,
-            @NonNull Set<Class<? extends SubstitutedWidget>> completed) {
+            @NonNull Set<ResolutionRequest<?>> completed) {
         this.requests = requests;
         this.completed = completed;
 
-        assert requests.keySet().containsAll(completed);
+        assert requests.values().containsAll(completed);
     }
 
     @Override
@@ -28,15 +28,13 @@ final class ResolutionRequestCollection {
     }
 
     public Collection<? extends ResolutionRequest<?>> remainingRequests() {
-        Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> m = new HashMap<>(requests);
-        m.keySet().removeAll(completed);
-        return m.values();
+        Set<ResolutionRequest<?>> remaining = new HashSet<>(requests.values());
+        remaining.removeAll(completed);
+        return remaining;
     }
 
     public Collection<? extends ResolutionRequest<?>> completedRequests() {
-        Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> m = new HashMap<>(requests);
-        m.keySet().retainAll(completed);
-        return m.values();
+        return completed;
     }
 
     @Override
@@ -56,6 +54,12 @@ final class ResolutionRequestCollection {
 
     static Builder builder() {
         return new Builder();
+    }
+
+    public List<ResolutionRequest<?>> byType(Class<? extends PeerCreationRequest<?>> type) {
+        return requests.values().stream().
+                filter(r -> type.isInstance(r.requestData) && !completed.contains(r)).
+                toList();
     }
 
     static class Builder {
@@ -88,19 +92,11 @@ final class ResolutionRequestCollection {
 
         public void addInherited(ResolutionRequestCollection reqColl) {
             reqColl.requests.values().forEach(this::addReq);
-            addCompletions(reqColl.completed.stream().
-                    map(reqColl.requests::get).collect(Collectors.toUnmodifiableSet()));
+            addCompletions(reqColl.completed);
         }
 
         public ResolutionRequestCollection build() {
-            Set<Class<? extends SubstitutedWidget>> completed2 = new HashSet<>();
-            for (ResolutionRequest<?> completion : this.completed) {
-                Class<? extends SubstitutedWidget> peerType = completion.requestData.peerType();
-                assert requests.get(peerType) == completion;
-                boolean added = completed2.add(peerType);
-                assert added;
-            }
-            return new ResolutionRequestCollection(requests, completed2);
+            return new ResolutionRequestCollection(requests, completed);
         }
     }
 }
