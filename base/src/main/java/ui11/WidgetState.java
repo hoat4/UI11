@@ -695,6 +695,14 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         return changed;
     }
 
+    void propagateDescendantInterestedIVs() {
+        descendantsInterestedIVs.forEach((ivType, val) -> {
+            Object actual = tree.getAndSubscribeIVForCurrentWidget(
+                    this, ivType, null);
+            assert Objects.equals(val, actual);
+        });
+    }
+
     // ha előrehaladottabb állapotban lesz a resolution rendszer, akkor lehetne szűrni,
     // hogy csak azokat a részfákat refresheljük, amiket érdekelnek az adott típusú PeerCreationRequestek
     boolean compareAndSetComputedReqs(@NonNull ResolutionRequestCollection newReqs) {

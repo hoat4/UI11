@@ -222,21 +222,17 @@ public final class WidgetTree {
 
             // find next sibling of current or next sibling of ancestor
             while (true) {
+                WidgetState<?> peek = refreshStack.peekWidget();
+                if (peek.descendantsInterestedIVs == null)
+                    assert peek == w;
+                else
+                    // ennek semmi köze a kereséshez, csak pop előtti teendő
+                    peek.propagateDescendantInterestedIVs();
+
                 RefreshStack.Item current = refreshStack.pop();
                 assert (current.parent == null) == refreshStack.isEmpty();
                 if (current.parent == null)
                     break;
-
-                // ennek semmi köze a kereséshez, csak pop utáni teendő
-                Map<Class<?>, Object> descendantsInterestedIVs = current.widgetInstantiation.child().descendantsInterestedIVs;
-                if (descendantsInterestedIVs == null)
-                    assert current.widgetInstantiation.child() == w;
-                else
-                    descendantsInterestedIVs.forEach((ivType, val) -> {
-                        if (!current.widgetInstantiation.directIVs().containsKey(ivType)) {
-                            current.parent.addDescendantInterestedIV(ivType, val, current.widgetInstantiation.child());
-                        }
-                    });
 
                 WidgetInstantiation nextSibling = current.parent.child(current.childIndex + 1);
                 if (nextSibling != null) {
@@ -347,7 +343,7 @@ public final class WidgetTree {
         return wi;
     }
 
-    Object getAndSubscribeIVForCurrentWidget(WidgetState<?> widgetState, Class<?> type, @NonNull Object ifNotProvided) {
+    Object getAndSubscribeIVForCurrentWidget(WidgetState<?> widgetState, Class<?> type, Object ifNotProvided) {
         if (!widgetState.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalStateException("not active");
 
