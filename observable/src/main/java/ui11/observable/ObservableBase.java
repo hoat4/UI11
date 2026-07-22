@@ -38,10 +38,12 @@ public class ObservableBase {
             if (obs3 != null && ObserverHolder.current().obsC != obs3)
                 obs3.invalidate(debugMessageSupplier);
         } else {
-            observers.forEach(o -> {
+            ObserverCollection[] c = observers.toArray(ObserverCollection[]::new);
+            // invalidate-ek törlik általában magukat az observable-kből
+            for (ObserverCollection o : c)
                 if (o != ObserverHolder.current().obsC)
                     o.invalidate(debugMessageSupplier);
-            });
+
                     /*System.err.println("BEGIN "+observer);
                     for (Exception e : e.getOrDefault(observer, Collections.emptyList()))
                         e.printStackTrace();
