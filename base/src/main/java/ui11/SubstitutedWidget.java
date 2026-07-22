@@ -3,8 +3,8 @@ package ui11;
 import org.jspecify.annotations.Nullable;
 import ui11.reflectutil.ReflectionUtil;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.stream.Collectors.joining;
 
@@ -27,7 +27,7 @@ import static java.util.stream.Collectors.joining;
 public abstract class SubstitutedWidget extends Widget {
 
     @Inject(required = false) private WidgetResolver widgetResolver;
-    @Inject private ResolutionRequest.ResolutionRequestCollection peerCreationRequestCollection;
+    @Inject private ResolutionRequestCollection peerCreationRequestCollection;
 
     // TODO ezt csak akkor kéne lekérdezni és observálni, ha resolutionRequest.requestData.peerType().isInstance(this)
     @Inject(required = false) private ParentDataWidget.ParentDataCollection parentDataCollection;
@@ -44,33 +44,29 @@ public abstract class SubstitutedWidget extends Widget {
     protected final void onResume() {
     }
 
-    @SuppressWarnings("ConstantValue")
     @Override
     protected final Widget build() {
-        for (ResolutionRequest<?> resolutionRequest : peerCreationRequestCollection.requests.values()) {
-            SubstitutedWidget potentialPeer =
-                    this instanceof ParentDataWidget.CombinerParentDataWidget c ? c.parentData : this;
+        throw new UnsupportedOperationException();
+    }
+
+    @SuppressWarnings("ConstantValue")
+    Widget build2(Set<ResolutionRequest<?>> completedReqsDst) {
+        SubstitutedWidget potentialPeer =
+                this instanceof ParentDataWidget.CombinerParentDataWidget c ? c.parentData : this;
+        boolean allCompleted = true;
+        for (ResolutionRequest<?> resolutionRequest : peerCreationRequestCollection.remainingRequests()) {
             if (resolutionRequest.requestData.peerType().isInstance(potentialPeer)) {
                 List<? extends ParentDataWidget> parentDataList =
                         parentDataCollection == null ? List.of() : parentDataCollection.parentDataList;
-                // TODO ha már kapott resultot, akkor az újabbakat ignorálnia kéne vagy beraknia?
+                // TODO ha már kapott resultot ebben a refreshben, akkor az újabbakat ignorálnia kéne vagy beraknia?
                 resolutionRequest.setResultUnchecked(potentialPeer, parentDataList,
                         widgetState().tree.beganRefreshID);
-            }
+                completedReqsDst.add(resolutionRequest);
+            } else
+                allCompleted = false;
         }
-
-        List<ResolutionRequest<?>> remainingReqs = new ArrayList<>();
-        List<ResolutionRequest<?>> completedReqs = new ArrayList<>();
-        peerCreationRequestCollection.requests.forEach((peerType, req) -> {
-            if (req.resultSetAt != widgetState().tree.beganRefreshID)
-                remainingReqs.add(req);
-            else {
-                assert req.result.snoop() != null;
-                completedReqs.add(req);
-            }
-        });
-        if (remainingReqs.isEmpty())
-            return null; // Elementben special case-elve van SubstitutedWidget, hogy build adhat vissza nullt
+        if (allCompleted)
+            return null;
 
         Widget resolved = null;
 
@@ -86,7 +82,7 @@ public abstract class SubstitutedWidget extends Widget {
                 // nem sikerült peert létrehozni. abban bízunk, hogy resolveAdditional-ök által berakott
                 // ParentDataWidgetek egyike jó lesz, ezért "halogatjuk" az exception dobását.
                 // ha tényleg jó lesz az egyik, akkor ott megszakad a lánc refreshe.
-                resolved = new NoPeerFactoryAvailable(getClass(), remainingReqs, completedReqs);
+                resolved = new NoPeerFactoryAvailable(getClass(), peerCreationRequestCollection);
         }
 
         resolved = GlobalWidgetResolvers.instance().resolveAdditional(this, resolved, peerCreationRequestCollection);
@@ -116,15 +112,12 @@ public abstract class SubstitutedWidget extends Widget {
     private static class NoPeerFactoryAvailable extends Widget {
 
         private final Class<? extends SubstitutedWidget> widgetType;
-        private final List<ResolutionRequest<?>> remainingRequests;
-        private final List<ResolutionRequest<?>> completedRequests;
+        private final ResolutionRequestCollection requests;
 
         NoPeerFactoryAvailable(Class<? extends SubstitutedWidget> widgetType,
-                               List<ResolutionRequest<?>> remainingRequests,
-                               List<ResolutionRequest<?>> completedRequests) {
+                               ResolutionRequestCollection requests) {
             this.widgetType = widgetType;
-            this.remainingRequests = remainingRequests;
-            this.completedRequests = completedRequests;
+            this.requests = requests;
         }
 
         @Override
@@ -132,8 +125,8 @@ public abstract class SubstitutedWidget extends Widget {
             throw new RuntimeException("no " + WidgetResolver.class.getSimpleName() + " supports " +
                     widgetType.getName() + " and " + ReflectionUtil.simpleName(widgetType) +
                     ".fallbackContent() returned null\n" +
-                    "Remaining requests: " + remainingRequests + "\n" +
-                    "Completed requests: " + completedRequests + "\n" +
+                    "Remaining requests: " + requests.remainingRequests() + "\n" +
+                    "Completed requests: " + requests.completedRequests() + "\n" +
                     "Refresh stack: " + widgetState().tree.refreshStackToDebugString());
         }
     }

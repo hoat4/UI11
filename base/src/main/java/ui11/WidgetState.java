@@ -3,7 +3,6 @@ package ui11;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.RefreshStack.IVValueWrapper;
-import ui11.ResolutionRequest.ResolutionRequestCollection;
 import ui11.observable.*;
 import ui11.observable.Observable;
 
@@ -398,14 +397,15 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         }
         refreshStack.pushIVs(this, newIVs);
 
-        List<ResolutionRequest<?>> reqs = new ArrayList<>();
+        ResolutionRequestCollection.Builder reqs = ResolutionRequestCollection.builder();
         for (int i = 0; i < parents.size(); i++) {
             WidgetInstantiation parent = parents.get(i);
             ResolutionRequest<?> req = parent.directReq();
             if (req == null)
                 assert i == parents.size() - 1;
             else
-                reqs.add(req);
+                reqs.addReq(req);
+            reqs.addCompletions(parent.directCompletedRequests());
             // ezekre nem kell feliratkozni, mert a directIV/directReq megváltozásából úgyis következik a refresh
         }
 
@@ -419,21 +419,19 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
         if (inheritedReqs == null) {
             assert parents.size() == 1 && parents.getFirst() == wi; // root
-            assert reqs.size() == 1;
+            assert reqs.requestCount() == 1;
         } else {
             // ha legalsó parentnek van directReq-ja, akkor az overrideolja az öröklötteket
             if (parents.getLast().directReq() == null)
-                reqs.addAll(inheritedReqs.requests.values());
+                reqs.addInherited(inheritedReqs);
         }
 
-        ResolutionRequestCollection reqColl = ResolutionRequestCollection.of(reqs);
-        // azért ilyen későn, hogy duplicate időben legyen észrevéve (ResolutionRequestCollection.of exceptiont dob
-        // olyankor), és akkor ne legyen belerakva this.inheritedReqs-ban.
-        // így this.inheritedReqs-be nem keveredhetnek bele direct reqs-ból dolgok
+        ResolutionRequestCollection reqColl = reqs.build();
+
         this.inheritedReqs = inheritedReqs;
         refreshStack.setComputedReqs(this, reqColl);
 
-        // (computedReqs = inheritedReqs + direct reqs)
+        // computedReqs = inheritedReqs + direct reqs
     }
 
     /**

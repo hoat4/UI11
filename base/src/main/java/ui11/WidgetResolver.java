@@ -2,7 +2,6 @@ package ui11;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.ResolutionRequest.ResolutionRequestCollection;
 
 import java.util.List;
 import java.util.Objects;

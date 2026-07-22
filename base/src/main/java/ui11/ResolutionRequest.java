@@ -6,10 +6,8 @@ import ui11.PeerCreationRequest.ResolutionResult;
 import ui11.observable.MutableObservable;
 import ui11.provide.Provider;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Stream;
 
 class ResolutionRequest<P extends SubstitutedWidget> {
 
@@ -17,12 +15,8 @@ class ResolutionRequest<P extends SubstitutedWidget> {
     final @NonNull Widget widget;
     final @NonNull PeerCreationRequest<P> requestData;
 
-    /**
-     * amikor ezt megváltoztatjuk, írjuk át {@link #resultSetAt}-et is
-     */
     final @NonNull MutableObservable<@Nullable ResolutionResult<P>> result =
             MutableObservable.ofNullable();
-    long resultSetAt;
 
     WidgetInstantiation reqWI;
     @Nullable WidgetState<?> finisherWidget;
@@ -61,7 +55,6 @@ class ResolutionRequest<P extends SubstitutedWidget> {
 
         @SuppressWarnings("unchecked") final P castedPeer = (P) peer;
         this.result.set(new ResolutionResult<>(this, castedPeer, Map.copyOf(parentDataMap)));
-        resultSetAt = refreshID;
     }
 
     ResolutionResult<P> resultOrFail() {
@@ -98,46 +91,5 @@ class ResolutionRequest<P extends SubstitutedWidget> {
     @Override
     public String toString() {
         return super.toString() + " [requestData=" + requestData + "]";
-    }
-
-    static final class ResolutionRequestCollection {
-
-        /**
-         * key: {@linkplain PeerCreationRequest#peerType() peer type}
-         */
-        public final Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests;
-
-        public ResolutionRequestCollection(ResolutionRequest<?> initialRequest) {
-            this.requests = Map.of(initialRequest.requestData.peerType(), initialRequest);
-        }
-
-        private ResolutionRequestCollection(Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests) {
-            this.requests = requests;
-        }
-
-        public static ResolutionRequestCollection of(List<ResolutionRequest<?>> reqs) {
-            Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests = new HashMap<>();
-            reqs.forEach(req->{
-                if (requests.putIfAbsent(req.requestData.peerType(), req) != null)
-                    throw new RuntimeException("Multiple requests with peer type " + req.requestData.peerType());
-            });
-            return new ResolutionRequestCollection(requests);
-        }
-
-        // TODO equals?
-
-        @NonNull ResolutionRequestCollection combineWith(@NonNull ResolutionRequestCollection c) {
-            Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests = new HashMap<>(this.requests);
-            c.requests.forEach((peerType, req) -> {
-                if (requests.putIfAbsent(peerType, req) != null)
-                    throw new RuntimeException("Multiple requests with peer type " + peerType.getName());
-            });
-            return new ResolutionRequestCollection(requests);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + requests.toString();
-        }
     }
 }

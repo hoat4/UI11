@@ -52,12 +52,14 @@ abstract sealed class ResolutionRequestWidget extends Widget {
                     req.widget,
                     widgetState,
                     existingChildren == null ? null : existingChildren[0],
-                    req);
+                    req,
+                    Set.of());
             WidgetInstantiation finisher = widgetState.tree.findOrCreateWidgetState(
                     new SingleRRFinisher<>(req, f),
                     widgetState,
                     existingChildren == null ? null : existingChildren[1],
-                    null);
+                    null,
+                    Set.of());
             req.finisherWidget = finisher.child();
             return new WidgetInstantiation[]{reqW, finisher};
         }
@@ -110,7 +112,8 @@ abstract sealed class ResolutionRequestWidget extends Widget {
                     new ListRRFinisher<>(reqs, f),
                     widgetState,
                     existingChildren == null ? null : existingChildren[existingChildren.length - 1],
-                    null
+                    null,
+                    Set.of()
             )).child();
 
             for (int i = 0; i < widgets.size(); i++) {
@@ -129,7 +132,8 @@ abstract sealed class ResolutionRequestWidget extends Widget {
                         req.widget,
                         widgetState,
                         existingWidgetState,
-                        req
+                        req,
+                        Set.of()
                 );
             }
 
@@ -193,7 +197,8 @@ abstract sealed class ResolutionRequestWidget extends Widget {
                     new MapRRFinisher<>(reqs, f),
                     thisWidgetState,
                     existingChildren == null ? null : existingChildren[existingChildren.length - 1],
-                    null
+                    null,
+                    Set.of()
             )).child();
 
             int i = 0;
@@ -222,7 +227,8 @@ abstract sealed class ResolutionRequestWidget extends Widget {
                         req.widget,
                         widgetState,
                         null,
-                        req
+                        req,
+                        Set.of()
                 );
             }
 

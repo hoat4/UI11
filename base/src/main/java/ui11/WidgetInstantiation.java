@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 // parentet azért kell, mert ezt használjuk akkor WidgetState.parents listában is,
 // hogy lehessen ismerni IV-ket RefreshStack.pushIVs-ben.
@@ -20,7 +21,8 @@ record WidgetInstantiation(
         @Nullable WidgetState<?> parent,
         @NonNull WidgetState<?> child,
         @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs,
-        @Nullable ResolutionRequest<?> directReq) {
+        @Nullable ResolutionRequest<?> directReq,
+        @NonNull Set<ResolutionRequest<?>> directCompletedRequests) {
     WidgetInstantiation {
         Objects.requireNonNull(child);
         Objects.requireNonNull(directIVs);

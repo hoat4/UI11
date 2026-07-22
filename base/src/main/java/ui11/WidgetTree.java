@@ -66,7 +66,7 @@ public final class WidgetTree {
                     new PeerCreationRequest<>(SubstitutedWidget.class) {
                     },
                     rootWidget);
-            root = findOrCreateWidgetState(rootReq.widget, null, root, rootReq);
+            root = findOrCreateWidgetState(rootReq.widget, null, root, rootReq, Set.of());
             refreshStack = new RefreshStack(root);
 
             while (!refreshStack.isEmpty()) {
@@ -141,10 +141,16 @@ public final class WidgetTree {
                     WidgetInstantiation prevChild = (WidgetInstantiation) w.children;
 
                     w.removeObservers();
+
+                    Set<ResolutionRequest<?>> addedReqs = new HashSet<>();
+
                     observerHolder.setObserver(w);
                     Widget content;
                     try {
-                        content = w.stateWidget.build();
+                        if (w.stateWidget instanceof SubstitutedWidget sw)
+                            content = sw.build2(addedReqs);
+                        else
+                            content = w.stateWidget.build();
                         content = w.decorateChild(content);
                     } finally {
                         observerHolder.clearObserver(w);
@@ -156,7 +162,7 @@ public final class WidgetTree {
 
                     WidgetInstantiation newChild;
                     if (content != null)
-                        newChild = findOrCreateWidgetState(content, w, prevChild, null);
+                        newChild = findOrCreateWidgetState(content, w, prevChild, null, addedReqs);
                     else
                         newChild = null;
                     w.children = newChild;
@@ -253,7 +259,8 @@ public final class WidgetTree {
     WidgetInstantiation findOrCreateWidgetState(@NonNull Widget widget,
                                                 @Nullable WidgetState<?> parent,
                                                 @Nullable WidgetInstantiation previous,
-                                                @Nullable ResolutionRequest<?> req) {
+                                                @Nullable ResolutionRequest<?> req,
+                                                @NonNull Set<ResolutionRequest<?>> completedReqs) {
         Objects.requireNonNull(widget, "widget");
         if (parent != null && !parent.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalArgumentException("parent not active: " + parent);
@@ -337,7 +344,7 @@ public final class WidgetTree {
             }
         }
 
-        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs, req);
+        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs, req, completedReqs);
         if (req != null)
             req.reqWI = wi;
         return wi;
@@ -347,7 +354,7 @@ public final class WidgetTree {
         if (!widgetState.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalStateException("not active");
 
-        if (type == ResolutionRequest.ResolutionRequestCollection.class)
+        if (type == ResolutionRequestCollection.class)
             // erre nem kell feliratkozni, mert egész subtree refreshelődni fog
             return refreshStack.computedReqs();
 
