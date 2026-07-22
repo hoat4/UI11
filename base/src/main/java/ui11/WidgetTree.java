@@ -33,6 +33,9 @@ public final class WidgetTree {
      */
     private final SequencedSet<WidgetState<?>> inactivationQueue = new LinkedHashSet<>();
 
+    private SequencedMap<WidgetState<?>, List<LaterValidationCheck>> laterValidationChecks;
+    private long laterValidationCheckGenerator;
+
     long beganRefreshID, finishedRefreshID = -1;
 
     private WidgetTree(Widget rootWidget, Executor executor) {
@@ -57,6 +60,8 @@ public final class WidgetTree {
             if (refreshStack != null)
                 throw new RuntimeException("refresh stack already exists");
 
+            laterValidationChecks = new LinkedHashMap<>();
+
             ObserverHolder observerHolder = ObserverHolder.current();
             observerHolder.ensureNoCurrentObserver();
 
@@ -77,6 +82,8 @@ public final class WidgetTree {
                 if (w.flags < 0)
                     throw new RuntimeException("disposed or invalid widget state appeared");
                 // TODO FLAG_IN_INACTIVATION_QUEUE-et ellenőrizzük (vagy ha nem itt, akkor findNextToRefreshben)
+
+                w.laterValidationCheckActual = w.laterValidationCheckLast;
 
                 // TODO ha lesz a widget feldolgozása közben egy exception,
                 //      akkor nem kéne visszaállítani a flageket?
@@ -179,6 +186,15 @@ public final class WidgetTree {
                 w.removeFlag(WidgetState.FLAG_IN_INACTIVATION_QUEUE);
                 w.inactivate();
             }
+
+            laterValidationChecks.forEach((w, checks) -> {
+                for (LaterValidationCheck check : checks) {
+                    if (w.laterValidationCheckActual < check.required)
+                        // TODO valami értelmesebb kéne a logüzenetbe a w.toString elejére
+                        //      ahelyett hogy "ui11.WidgetState@3dc45957"
+                        logger.error("Missed to refresh " + w + ": " + check.msgIfNotAchieved);
+                }
+            });
         } catch (Throwable e) {
             // executorok gyakran elnyelik, azért naplózzuk
             logger.error("Refresh failed", e);
@@ -186,6 +202,7 @@ public final class WidgetTree {
         } finally {
             finishedRefreshID = beganRefreshID;
             refreshStack = null;
+            laterValidationChecks = null;
         }
     }
 
@@ -404,6 +421,18 @@ public final class WidgetTree {
         inactivationQueue.remove(w);
     }
 
+    void submitForLaterValidationCountCheck(WidgetState<?> w, String msg) {
+        if (beganRefreshID == finishedRefreshID)
+            throw new IllegalStateException();
+
+        // TODO mi legyen ha inactivation queue feldolgozása közben vagyunk?
+
+        long expected = ++laterValidationCheckGenerator;
+        w.laterValidationCheckLast = expected;
+        laterValidationChecks.computeIfAbsent(w, __ -> new ArrayList<>()).
+                add(new LaterValidationCheck(expected, msg));
+    }
+
     boolean isRefreshScheduled() {
         return refreshScheduled;
     }
@@ -432,5 +461,8 @@ public final class WidgetTree {
         public int peerCreations;
         public boolean layoutActive;
         public long layoutTime;
+    }
+
+    private static record LaterValidationCheck(long required, String msgIfNotAchieved) {
     }
 }

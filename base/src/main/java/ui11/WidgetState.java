@@ -86,6 +86,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      * @see WidgetTree#beganRefreshID
      */
     long refreshedAt;
+    long laterValidationCheckLast, laterValidationCheckActual; // ez a kettő mehetne egy külön objektumba, mert ritkák
     private Object observed; // ObservableBase[] vagy Set
     private long[] stateAtPause;
 
@@ -365,7 +366,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                 // ezért nem kell visszacsinálni, ha valamelyik exceptiont dob
                 if (p.parent() != null)
                     p.parent().invalidate(FLAG_HAS_STOLEN_CHILDREN, () ->
-                            "steal " + this + " from " + parentsToBeRemoved + " by " + newParent);
+                            "steal " + this + " from " + parentsToBeRemoved + " by " + newParent,
+                            true /* biztos? */);
             // a clear az invalidateek után legyen, hogy csak akkor történjen, ha nem dob exceptiont
             parentsToBeRemoved.clear();
             assert parentIndex == parents.size();
@@ -580,26 +582,33 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
     @Override
     public void invalidate(Supplier<String> debugMessageSupplier) {
-        invalidate(FLAG_NEEDS_REBUILD, debugMessageSupplier);
+        invalidate(FLAG_NEEDS_REBUILD, debugMessageSupplier, false);
         removeObservers();
     }
 
-    void invalidate(int invalidationFlag, Supplier<String> debugMessageSupplier) {
+    void invalidate(int invalidationFlag, Supplier<String> debugMessageSupplier,
+                    boolean strict) {
         if (!hasFlag(FLAG_ACTIVE))
             throw new IllegalStateException("not active, can't invalidate");
         if (hasFlag(invalidationFlag))
             return;
-        if (refreshedAt > tree.finishedRefreshID) {
-            // régi kódban logger.error volt. mi legyen?
-            // valamint ott refresh stack is ki volt írva
-            // TODO legalább widgeteket írjuk ki (most WidgetState.toString inheritelt Objectből)
-            throw new RuntimeException("Can't invalidate widget" +
-                    (debugMessageSupplier == null ? "" : " after " + debugMessageSupplier.get()) +
-                    ", because it has been already " +
-                    "rebuilt in the current refresh cycle: " + this);
-        }
 
         addFlag(invalidationFlag);
+
+        if (refreshedAt > tree.finishedRefreshID) {
+            if (strict) {
+                // régi kódban logger.error volt. mi legyen?
+                // valamint ott refresh stack is ki volt írva
+                // TODO legalább widgeteket írjuk ki (most WidgetState.toString inheritelt Objectből)
+                throw new RuntimeException("Can't invalidate widget" +
+                        (debugMessageSupplier == null ? "" : " after " + debugMessageSupplier.get()) +
+                        ", because it has been already " +
+                        "rebuilt in the current refresh cycle: " + this);
+            } else {
+                tree.submitForLaterValidationCountCheck(this, debugMessageSupplier.get() /* TODO */);
+                return;
+            }
+        }
 
         for (WidgetState<?> ancestor = parents.getLast().parent();
              ancestor != null; ancestor = ancestor.parents.getLast().parent()) {
