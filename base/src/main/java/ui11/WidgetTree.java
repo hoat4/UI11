@@ -161,7 +161,7 @@ public final class WidgetTree {
                         newChild = null;
                     w.children = newChild;
 
-                    if (wasActive && newChild != prevChild && prevChild != null)
+                    if (wasActive && prevChild != null && (newChild == null || newChild.child() != prevChild.child()))
                         prevChild.child().removeParent(w);
                 }
 
@@ -234,7 +234,7 @@ public final class WidgetTree {
                 else
                     descendantsInterestedIVs.forEach((ivType, val) -> {
                         if (!current.widgetInstantiation.directIVs().containsKey(ivType)) {
-                            current.parent.addDescendantInterestedIV(ivType, val);
+                            current.parent.addDescendantInterestedIV(ivType, val, current.widgetInstantiation.child());
                         }
                     });
 
@@ -363,10 +363,10 @@ public final class WidgetTree {
             WidgetState<?> ancestor = widgetState.parents.getLast().parent();
             for (; ancestor != w.parent(); ancestor = ancestor.parents.getLast().parent()) {
                 assert ancestor != null;
-                ancestor.addDescendantInterestedIV(type, null);
+                ancestor.addDescendantInterestedIV(type, null, null);
             }
             if (ancestor != null)
-                ancestor.addDescendantInterestedIV(type, null);
+                ancestor.addDescendantInterestedIV(type, null, null);
             return ifNotProvided;
         }
 
@@ -375,11 +375,11 @@ public final class WidgetTree {
                 WidgetState<?> ancestor = widgetState.parents.getLast().parent();
                 for (; ancestor != iv.origin.parent(); ancestor = ancestor.parents.getLast().parent()) {
                     assert ancestor != null;
-                    ancestor.addDescendantInterestedIV(type, iv.value);
+                    ancestor.addDescendantInterestedIV(type, iv.value, null);
                 }
             } else {
                 if (iv.origin != w && w.parent() != null)
-                    w.parent().addDescendantInterestedIV(type, iv.value);
+                    w.parent().addDescendantInterestedIV(type, iv.value, null);
             }
 
         return iv.value;

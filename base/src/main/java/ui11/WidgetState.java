@@ -107,7 +107,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      */
     Map<Class<?>, Object> descendantsInterestedIVs;
 
-    private ResolutionRequestCollection computedReqs;
+    private ResolutionRequestCollection inheritedReqs, computedReqs;
 
     @SuppressWarnings("unchecked")
     WidgetState(W modelWidget, WidgetTree tree) {
@@ -342,7 +342,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      * Ezt csak akkor lehet meghívni, ha a parent {@linkplain #NEEDS_REFRESH refreshelve lett már}
      */
     void registerParentAndPushIVs(@NonNull WidgetInstantiation wi,
-                                                                    RefreshStack refreshStack) {
+                                  RefreshStack refreshStack) {
         assert wi.child() == this;
 
         WidgetState<?> newParent = wi.parent();
@@ -409,22 +409,31 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
             // ezekre nem kell feliratkozni, mert a directIV/directReq megváltozásából úgyis következik a refresh
         }
 
+        ResolutionRequestCollection inheritedReqs;
         if (parents.size() - 1 == parentIndex) {
-            ResolutionRequestCollection inheritedReqs = refreshStack.inheritedReqs();
-            if (inheritedReqs == null) {
-                assert parents.size() == 1 && parents.getFirst() == wi; // hogy origin egyértelmű legyen
-                assert reqs.size() == 1;
-            } else {
-                // ha legalsó parentnek van directReq-ja, akkor az overrideolja az öröklötteket
-                if (wi.directReq() == null)
-                    reqs.addAll(inheritedReqs.requests.values());
-            }
+            inheritedReqs = refreshStack.inheritedReqs();
         } else {
-            throw new RuntimeException("TODO");
+            assert this.inheritedReqs != null;
+            inheritedReqs = this.inheritedReqs;
+        }
+
+        if (inheritedReqs == null) {
+            assert parents.size() == 1 && parents.getFirst() == wi; // root
+            assert reqs.size() == 1;
+        } else {
+            // ha legalsó parentnek van directReq-ja, akkor az overrideolja az öröklötteket
+            if (parents.getLast().directReq() == null)
+                reqs.addAll(inheritedReqs.requests.values());
         }
 
         ResolutionRequestCollection reqColl = ResolutionRequestCollection.of(reqs);
+        // azért ilyen későn, hogy duplicate időben legyen észrevéve (ResolutionRequestCollection.of exceptiont dob
+        // olyankor), és akkor ne legyen belerakva this.inheritedReqs-ban.
+        // így this.inheritedReqs-be nem keveredhetnek bele direct reqs-ból dolgok
+        this.inheritedReqs = inheritedReqs;
         refreshStack.setComputedReqs(this, reqColl);
+
+        // (computedReqs = inheritedReqs + direct reqs)
     }
 
     /**
@@ -434,6 +443,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         for (int i = 0; i < parents.size(); i++) {
             if (parents.get(i).parent() == parent) {
                 parents.subList(i, parents.size()).clear();
+                inheritedReqs = null;
                 if (i == 0 && hasFlag(FLAG_ACTIVE) && !hasFlag(FLAG_IN_INACTIVATION_QUEUE))
                     tree.addToInactivationQueue(this);
                 break;
@@ -667,10 +677,14 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     /**
      * @see #descendantsInterestedIVs
      */
-    void addDescendantInterestedIV(Class<?> ivType, Object val) {
+    void addDescendantInterestedIV(Class<?> ivType, Object val, @Nullable WidgetState<?> debugChild) {
         assert descendantsInterestedIVs != null;
         assert !descendantsInterestedIVs.containsKey(ivType) ||
-                descendantsInterestedIVs.get(ivType) == val : ivType + ", " + val + ", " + descendantsInterestedIVs;
+                descendantsInterestedIVs.get(ivType) == val : "Descendant interested IV mismatch in " + this + "\n" +
+                (debugChild == null ? null : "Child: " + debugChild + "\n") +
+                "Type: " + ivType.getName() + "\n" +
+                "Value: " + val + "\n" +
+                "Existing interests: " + descendantsInterestedIVs; // TODO refresh stacket kéne printelni
         descendantsInterestedIVs.putIfAbsent(ivType, val);
     }
 
@@ -692,6 +706,12 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
             return false;
         this.computedReqs = newReqs;
         return true;
+    }
+
+    @SuppressWarnings("ConstantValue")
+    @Override
+    public String toString() {
+        return super.toString() + " (" + (accessor == null ? "unknown type" : accessor.clazz().getName()) + ")";
     }
 
     static abstract class InheritedPropBase<T> {
