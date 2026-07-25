@@ -1,5 +1,7 @@
 package ui11.layout.singlechild;
 
+import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Rect;
@@ -8,17 +10,21 @@ import ui11.geom.Vec2;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
+
 // TODO ha ez active element marad, de nincs a widget fában,
 //      akkor meg kéne maradnia a scroll pozíciónak? DOMScrollablePeer esetén jelenleg eltűnik
 public final class Scrollable extends SubstitutedWidget {
 
-    private final Widget content;
-    @Nullable private final Runnable onScroll;
-    @Nullable private final ScrollController scrollController;
+    private final @NonNull Widget content;
+    private final @Nullable Runnable onScroll;
+    private final @Nullable ScrollController scrollController;
 
-    public Scrollable(Widget content, @Nullable Runnable onScroll, @Nullable ScrollController scrollController) {
-        this.content = content;
-        this.onScroll = onScroll;
+    @Inject private Slot contentSlot;
+
+    public Scrollable(@NonNull Widget content, @Nullable Runnable onScroll, @Nullable ScrollController scrollController) {
+        this.content = Objects.requireNonNull(content);
+        this.onScroll = onScroll; // TODO ez lehetne listener proxy
         this.scrollController = scrollController;
     }
 
@@ -30,8 +36,8 @@ public final class Scrollable extends SubstitutedWidget {
         this(content, onScroll, null);
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Nullable

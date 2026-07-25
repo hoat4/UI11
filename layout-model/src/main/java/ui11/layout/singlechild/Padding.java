@@ -1,5 +1,7 @@
 package ui11.layout.singlechild;
 
+import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
@@ -18,11 +20,11 @@ public final class Padding extends SubstitutedWidget {
     private final Insets insets;
     private final Widget content;
 
-    public Padding(Insets insets, Widget content) {
-        Objects.requireNonNull(content);
-        Objects.requireNonNull(insets);
-        this.insets = insets;
-        this.content = content;
+    @Inject private Slot contentSlot;
+
+    public Padding(@NonNull Insets insets, @NonNull Widget content) {
+        this.insets = Objects.requireNonNull(insets);
+        this.content = Objects.requireNonNull(content);
     }
 
     // TODO ha ez konstruktor és nem factory method, akkor legyen a top,right,bottom,left is konstruktor
@@ -86,11 +88,11 @@ public final class Padding extends SubstitutedWidget {
         return new Padding(new Insets(top, right, bottom, left), content);
     }
 
-    public Insets insets() {
+    public @NonNull Insets insets() {
         return insets;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 }

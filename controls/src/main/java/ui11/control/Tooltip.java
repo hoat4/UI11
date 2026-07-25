@@ -1,9 +1,10 @@
 package ui11.control;
 
+import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
-import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 public final class Tooltip extends SubstitutedWidget {
@@ -11,21 +12,23 @@ public final class Tooltip extends SubstitutedWidget {
     private final String tooltip;
     private final Widget content;
 
-    public Tooltip(String tooltip, Widget content) {
+    @Inject private Slot contentSlot;
+
+    public Tooltip(@NonNull String tooltip, @NonNull Widget content) {
         this.tooltip = Objects.requireNonNull(tooltip);
         this.content = Objects.requireNonNull(content);
     }
 
-    public String tooltip() {
+    public @NonNull String tooltip() {
         return tooltip;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
-    protected @NonNull Widget fallbackContent() {
-        return content;
+    protected Widget fallbackContent() {
+        return content();
     }
 }

@@ -41,8 +41,7 @@ public class DefaultTableImpl<T> extends Widget {
 
             for (T row : rows) {
                 for (Column<? super T> col : cols) {
-                    Widget c = col.cellContentFunction().apply(row);
-                    Objects.requireNonNull(c);
+                    Widget c = col.cellContent(row);
                     // TODO horizontalAlignment?
                     g.add(c);
                 }

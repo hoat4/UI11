@@ -1,5 +1,7 @@
 package ui11.graphics.shaper;
 
+import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Path;
@@ -17,7 +19,9 @@ public final class Stroke extends SubstitutedWidget {
     private final Length thickness;
     private final Path path;
 
-    public Stroke(Widget texture, Length thickness, Path path) {
+    @Inject private Slot textureSlot;
+
+    public Stroke(@NonNull Widget texture, @NonNull Length thickness, @NonNull Path path) {
         this.texture = Objects.requireNonNull(texture);
         this.thickness = Objects.requireNonNull(thickness);
         this.path = Objects.requireNonNull(path);
@@ -26,19 +30,19 @@ public final class Stroke extends SubstitutedWidget {
             throw new RuntimeException("relative size not supported for stroke thickness: " + thickness);
     }
 
-    public Stroke(Color color, Length thickness, Path path) {
+    public Stroke(@NonNull Color color, @NonNull Length thickness, @NonNull Path path) {
         this(new ColorFill(color), thickness, path);
     }
 
-    public Widget texture() {
-        return texture;
+    public @NonNull Widget texture() {
+        return textureSlot == null ? texture : texture.withSlot(textureSlot);
     }
 
-    public Length thickness() {
+    public @NonNull Length thickness() {
         return thickness;
     }
 
-    public Path path() {
+    public @NonNull Path path() {
         return path;
     }
 

@@ -11,11 +11,17 @@ import static ui11.graphics.Empty.empty;
 
 public final class BorderLayout extends SubstitutedWidget {
 
-    @Nullable private final Widget center;
-    @Nullable private final Widget top;
-    @Nullable private final Widget right;
-    @Nullable private final Widget bottom;
-    @Nullable private final Widget left;
+    private final @Nullable Widget center;
+    private final @Nullable Widget top;
+    private final @Nullable Widget right;
+    private final @Nullable Widget bottom;
+    private final @Nullable Widget left;
+
+    @Inject private Slot centerSlot;
+    @Inject private Slot topSlot;
+    @Inject private Slot rightSlot;
+    @Inject private Slot bottomSlot;
+    @Inject private Slot leftSlot;
 
     public BorderLayout(@Nullable Widget center,
                         @Nullable Widget top,
@@ -30,30 +36,30 @@ public final class BorderLayout extends SubstitutedWidget {
     }
 
     public BorderLayout() {
-        this(empty(), empty(), empty(), empty(), empty());
+        this(null, null, null, null, null);
     }
 
-    public BorderLayout center(Widget center) {
+    public BorderLayout center(@Nullable Widget center) {
         return new BorderLayout(center, top, right, bottom, left);
     }
 
-    public BorderLayout top(Widget top) {
+    public BorderLayout top(@Nullable Widget top) {
         return new BorderLayout(center, top, right, bottom, left);
     }
 
-    public BorderLayout right(Widget right) {
+    public BorderLayout right(@Nullable Widget right) {
         return new BorderLayout(center, top, right, bottom, left);
     }
 
-    public BorderLayout bottom(Widget bottom) {
+    public BorderLayout bottom(@Nullable Widget bottom) {
         return new BorderLayout(center, top, right, bottom, left);
     }
 
-    public BorderLayout left(Widget left) {
+    public BorderLayout left(@Nullable Widget left) {
         return new BorderLayout(center, top, right, bottom, left);
     }
 
-    public BorderLayout with(Side side, Widget content) {
+    public BorderLayout with(@NonNull Side side, @Nullable Widget content) {
         return switch (side) {
             case TOP -> top(content);
             case RIGHT -> right(content);
@@ -62,29 +68,24 @@ public final class BorderLayout extends SubstitutedWidget {
         };
     }
 
-    @Nullable
-    public Widget center() {
-        return center;
+    public @Nullable Widget center() {
+        return center == null || centerSlot == null ? center : center.withSlot(centerSlot);
     }
 
-    @Nullable
-    public Widget top() {
-        return top;
+    public @Nullable Widget top() {
+        return top == null || topSlot == null ? top : top.withSlot(topSlot);
     }
 
-    @Nullable
-    public Widget right() {
-        return right;
+    public @Nullable Widget right() {
+        return right == null || rightSlot == null ? right : right.withSlot(rightSlot);
     }
 
-    @Nullable
-    public Widget bottom() {
-        return bottom;
+    public @Nullable Widget bottom() {
+        return bottom == null || bottomSlot == null ? bottom : bottom.withSlot(bottomSlot);
     }
 
-    @Nullable
-    public Widget left() {
-        return left;
+    public @Nullable Widget left() {
+        return left == null || leftSlot == null ? left : left.withSlot(leftSlot);
     }
 
     @Override
@@ -112,12 +113,6 @@ class DefaultBorderLayoutImpl extends Widget {
 
     private final BorderLayout l;
 
-    @Inject private Slot topSlot;
-    @Inject private Slot rightSlot;
-    @Inject private Slot bottomSlot;
-    @Inject private Slot leftSlot;
-    @Inject private Slot centerSlot;
-
     public DefaultBorderLayoutImpl(BorderLayout l) {
         this.l = l;
     }
@@ -131,11 +126,11 @@ class DefaultBorderLayoutImpl extends Widget {
         //      add(center == null ? empty() : center).
         //      add(bottom == null ? empty() : bottom).
         return Grid.builder(3).
-                add(l.top() == null ? empty() : l.top().withSlot(topSlot), 3, 1).
-                add(l.left() == null ? empty() : l.left().withSlot(leftSlot)).
-                add(l.center() == null ? empty() : l.center().withSlot(centerSlot)).
-                add(l.right() == null ? empty() : l.right().withSlot(rightSlot)).
-                add(l.bottom() == null ? empty() : l.bottom().withSlot(bottomSlot), 3, 1).
+                add(l.top() == null ? empty() : l.top(), 3, 1).
+                add(l.left() == null ? empty() : l.left()).
+                add(l.center() == null ? empty() : l.center()).
+                add(l.right() == null ? empty() : l.right()).
+                add(l.bottom() == null ? empty() : l.bottom(), 3, 1).
                 rowWeights(0, 1, 0).
                 columnWeights(0, 1, 0).
                 build();

@@ -23,23 +23,26 @@ public final class PointerStateDependent extends SubstitutedWidget {
     private final Widget pressedContent;
 
     public PointerStateDependent(
-            Widget defaultContent,
-            Widget hoverContent,
-            Widget pressedContent) {
+            @NonNull Widget defaultContent,
+            @NonNull Widget hoverContent,
+            @NonNull Widget pressedContent) {
         this.defaultContent = defaultContent;
         this.hoverContent = hoverContent;
         this.pressedContent = pressedContent;
     }
 
-    public Widget defaultContent() {
+    // TODO itt most szándékosan nincsenek slotok, mert elvileg ezek a tartalmak egymás helyébe lépnének,
+    //      de ez így inkonzisztens többi SubstitutedWidgettel. mi legyen ezzel?
+
+    public @NonNull Widget defaultContent() {
         return defaultContent;
     }
 
-    public Widget hoverContent() {
+    public @NonNull Widget hoverContent() {
         return hoverContent;
     }
 
-    public Widget pressedContent() {
+    public @NonNull Widget pressedContent() {
         return pressedContent;
     }
 
@@ -50,10 +53,10 @@ public final class PointerStateDependent extends SubstitutedWidget {
 
     // TODO ennek megtévesztő a neve, mert a tartalom lesz pointer transparent, nem a háttér
     public static Widget withPointerStateDependentBackground(
-            Widget defaultBackground,
-            Widget hoverBackground,
-            Widget pressedBackground,
-            Widget content) {
+            @NonNull Widget defaultBackground,
+            @NonNull Widget hoverBackground,
+            @NonNull Widget pressedBackground,
+            @NonNull Widget content) {
 
         return overlay(
                 new PointerStateDependent( // TODO ez helyesen működik, ha empty a háttér?

@@ -1,28 +1,30 @@
 package ui11.text.formatted;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import ui11.MultiSlot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.layout.Gone;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class OrderedList extends SubstitutedWidget {
 
-    private final List<? extends Widget> items;
+    private final @NonNull List<? extends @NonNull Widget> items;
 
-    public OrderedList(List<? extends Widget> items) {
-        this.items = List.copyOf(items);
+    @Inject private MultiSlot<Integer> slots;
+
+    public OrderedList(@NonNull List<? extends @Nullable Widget> items) {
+        this.items = Gone.replaceNullsWithGone(items);
     }
 
-    public OrderedList(Widget... items) {
-        // TODO itt .collect(toUnmodifiableList()) van, míg LinearLayoutban .toList()
-        this(Arrays.stream(items).map(Gone::goneIfNull).collect(Collectors.toUnmodifiableList()));
+    public OrderedList(@Nullable Widget @NonNull ... items) {
+        this.items = Gone.replaceNullsWithGone(items);
     }
 
-    public List<? extends Widget> items() {
-        return items;
+    public @NonNull List<? extends @NonNull Widget> items() {
+        return slots == null ? items : MultiSlot.assignSlots(slots, items);
     }
 
     // TODO default impl

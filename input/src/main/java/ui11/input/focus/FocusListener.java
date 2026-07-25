@@ -1,6 +1,7 @@
 package ui11.input.focus;
 
 import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
@@ -13,8 +14,12 @@ public final class FocusListener extends SubstitutedWidget {
     private final Runnable onFocused;
     private final Runnable onFocusLost;
 
-    public FocusListener(Widget content, Runnable onFocused, Runnable onFocusLost) {
+    @Inject private Slot contentSlot;
+
+    public FocusListener(@NonNull Widget content, @NonNull Runnable onFocused, @NonNull Runnable onFocusLost) {
         this.content = Objects.requireNonNull(content);
+
+        // TODO ezek lehetnének listenerProxy-k
         this.onFocused = Objects.requireNonNull(onFocused);
         this.onFocusLost = Objects.requireNonNull(onFocusLost);
     }
@@ -25,7 +30,7 @@ public final class FocusListener extends SubstitutedWidget {
     }
 
     public @NonNull Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     public @NonNull Runnable onFocused() {
@@ -38,6 +43,6 @@ public final class FocusListener extends SubstitutedWidget {
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 }

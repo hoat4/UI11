@@ -1,10 +1,12 @@
 package ui11.input.gesture;
 
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
 import org.jspecify.annotations.NonNull;
+
 import java.util.Objects;
 
 /**
@@ -14,6 +16,8 @@ public final class CloseRequestListener extends SubstitutedWidget {
 
     private final @NonNull Runnable onClose;
     private final @NonNull Widget content;
+
+    @Inject private Slot contentSlot;
 
     public CloseRequestListener(@NonNull Runnable onClose, @NonNull Widget content) {
         this.onClose = listenerProxy(Objects.requireNonNull(onClose));
@@ -25,11 +29,16 @@ public final class CloseRequestListener extends SubstitutedWidget {
     }
 
     public @NonNull Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
+
+    // TODO valamit kéne csinálni hogy egy ki/be rakosgadása egy widgetnek egy CloseRequestListenerbe
+    //      ne okozzon problémát, hanem jöjjön rá valahogy magától hogy annak az előző állapot folytatásának kéne
+    //      lennie
+    //      (meg nyilván ugyanez a többi listenereknél)
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 }

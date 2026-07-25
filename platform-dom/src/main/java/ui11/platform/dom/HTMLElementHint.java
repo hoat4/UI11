@@ -1,6 +1,7 @@
 package ui11.platform.dom;
 
 import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -13,6 +14,8 @@ public final class HTMLElementHint extends SubstitutedWidget {
     private final @NonNull String htmlElementName;
     private final @NonNull Widget content;
 
+    @Inject private Slot contentSlot;
+
     public HTMLElementHint(String htmlElementName, Widget content) {
         this.htmlElementName = Objects.requireNonNull(htmlElementName);
         this.content = Objects.requireNonNull(content);
@@ -23,11 +26,11 @@ public final class HTMLElementHint extends SubstitutedWidget {
     }
 
     public @NonNull Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 }

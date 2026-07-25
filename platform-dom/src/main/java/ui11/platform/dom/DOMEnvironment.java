@@ -1,6 +1,5 @@
 package ui11.platform.dom;
 
-import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.teavm.jso.browser.Window;
@@ -11,51 +10,16 @@ import org.teavm.jso.dom.html.HTMLElement;
 import ui11.*;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
-import ui11.control.*;
-import ui11.css.CSSClassTag;
-import ui11.css.WrapWithCSSClassTag;
-import ui11.decoration.Box;
-import ui11.layout.Gone;
-import ui11.media.ImageSource.InlineStringSource;
-import ui11.media.JPEGImageView;
-import ui11.media.SVGImageView;
 import ui11.geom.Location.CoordinateSpaceRoot;
-import ui11.graphics.Empty;
-import ui11.graphics.effect.Mask;
-import ui11.graphics.effect.Opacity;
-import ui11.graphics.effect.Overlay;
-import ui11.graphics.fill.ColorFill;
-import ui11.graphics.fill.ConicGradient;
-import ui11.graphics.fill.LinearGradient;
-import ui11.graphics.fill.RasterImageView;
-import ui11.graphics.shaper.RoundedCorners;
-import ui11.input.focus.FocusListener;
-import ui11.input.gesture.ClickListener;
-import ui11.input.gesture.CloseRequestListener;
-import ui11.input.pointer.PointerRegion;
-import ui11.input.pointer.PointerTransparent;
-import ui11.input.pointer.WithCursor;
-import ui11.layout.multichild.Grid;
-import ui11.layout.multichild.LinearLayout;
-import ui11.layout.multichild.flow.Flow;
-import ui11.layout.singlechild.*;
-import ui11.media.Video;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.Scope;
-import ui11.platform.dom.peers.*;
 import ui11.provide.Provide;
-import ui11.provide.Provider;
 import ui11.WidgetResolver;
-import ui11.text.Text;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 import ui11.text.TextStyle.FontWeight;
-import ui11.text.formatted.OrderedList;
-import ui11.webcontent.WebContentFrame;
 import ui11.window.FileChooserProvider;
 import ui11.window.Shell;
-
-import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
 import java.time.Duration;
@@ -64,7 +28,6 @@ import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
 
 import static ui11.css.CSSClassTag.cssClass;
-import static ui11.graphics.Empty.empty;
 import static ui11.graphics.effect.Overlay.overlay;
 
 public class DOMEnvironment implements Shell, Scheduler {

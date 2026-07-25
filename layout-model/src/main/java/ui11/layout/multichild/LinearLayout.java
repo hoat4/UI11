@@ -2,6 +2,7 @@ package ui11.layout.multichild;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.MultiSlot;
 import ui11.ParentDataWidget;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
@@ -57,6 +58,8 @@ public final class LinearLayout extends SubstitutedWidget {
     private final @NonNull JustifyContent mainAxisAlignment;
     private final @NonNull AlignChildren crossAxisAlignment;
 
+    @Inject private MultiSlot<Integer> slots;
+
     /**
      * @param items ebben nullok helyett {@link Gone Gone-ok} szerepeljenek
      */
@@ -80,7 +83,7 @@ public final class LinearLayout extends SubstitutedWidget {
      */
     public static @NonNull LinearLayout row(@Nullable Widget @NonNull ... children) {
         Objects.requireNonNull(children, "children");
-        return new LinearLayout(Axis.HORIZONTAL, makeImmutableListWithoutNulls(children), Length.zero(),
+        return new LinearLayout(Axis.HORIZONTAL, Gone.replaceNullsWithGone(children), Length.zero(),
                 JustifyContent.STRETCH, AlignChildren.STRETCH);
     }
 
@@ -88,7 +91,7 @@ public final class LinearLayout extends SubstitutedWidget {
                                             @Nullable Widget @NonNull ... children) {
         Objects.requireNonNull(children, "justifyContent");
         Objects.requireNonNull(children, "children");
-        return new LinearLayout(Axis.HORIZONTAL, makeImmutableListWithoutNulls(children), Length.zero(),
+        return new LinearLayout(Axis.HORIZONTAL, Gone.replaceNullsWithGone(children), Length.zero(),
                 justifyContent, AlignChildren.STRETCH);
     }
 
@@ -97,7 +100,7 @@ public final class LinearLayout extends SubstitutedWidget {
             @Nullable Widget @NonNull ... children) {
         Objects.requireNonNull(gap, "gap size");
         Objects.requireNonNull(children, "children");
-        return new LinearLayout(Axis.HORIZONTAL, makeImmutableListWithoutNulls(children), gap,
+        return new LinearLayout(Axis.HORIZONTAL, Gone.replaceNullsWithGone(children), gap,
                 JustifyContent.STRETCH, AlignChildren.STRETCH);
     }
 
@@ -105,7 +108,7 @@ public final class LinearLayout extends SubstitutedWidget {
                                             @Nullable Widget @NonNull ... children) {
         Objects.requireNonNull(crossAxisAlignment, "crossAxisAlignment");
         Objects.requireNonNull(children, "children");
-        return new LinearLayout(Axis.HORIZONTAL, makeImmutableListWithoutNulls(children), Length.zero(),
+        return new LinearLayout(Axis.HORIZONTAL, Gone.replaceNullsWithGone(children), Length.zero(),
                 JustifyContent.STRETCH, crossAxisAlignment);
     }
 
@@ -116,7 +119,7 @@ public final class LinearLayout extends SubstitutedWidget {
         Objects.requireNonNull(justifyContent, "justifyContent");
         Objects.requireNonNull(alignChildren, "alignChildren");
         Objects.requireNonNull(children, "children");
-        return new LinearLayout(Axis.HORIZONTAL, makeImmutableListWithoutNulls(children), Length.zero(),
+        return new LinearLayout(Axis.HORIZONTAL, Gone.replaceNullsWithGone(children), Length.zero(),
                 justifyContent, alignChildren);
     }
 
@@ -127,7 +130,7 @@ public final class LinearLayout extends SubstitutedWidget {
         Objects.requireNonNull(gap, "gap size");
         Objects.requireNonNull(crossAxisAlignment, "crossAxisAlignment");
         Objects.requireNonNull(children, "children");
-        return new LinearLayout(Axis.HORIZONTAL, makeImmutableListWithoutNulls(children), gap,
+        return new LinearLayout(Axis.HORIZONTAL, Gone.replaceNullsWithGone(children), gap,
                 JustifyContent.STRETCH, crossAxisAlignment);
     }
 
@@ -140,7 +143,7 @@ public final class LinearLayout extends SubstitutedWidget {
      */
     public static @NonNull LinearLayout column(@Nullable Widget @NonNull ... children) {
         Objects.requireNonNull(children, "children");
-        return new LinearLayout(Axis.VERTICAL, makeImmutableListWithoutNulls(children), Length.zero(),
+        return new LinearLayout(Axis.VERTICAL, Gone.replaceNullsWithGone(children), Length.zero(),
                 JustifyContent.STRETCH, AlignChildren.STRETCH);
     }
 
@@ -148,7 +151,7 @@ public final class LinearLayout extends SubstitutedWidget {
                                                @Nullable Widget @NonNull ... children) {
         Objects.requireNonNull(children, "children");
         Objects.requireNonNull(justifyContent, "justifyContent");
-        return new LinearLayout(Axis.VERTICAL, makeImmutableListWithoutNulls(children), Length.zero(),
+        return new LinearLayout(Axis.VERTICAL, Gone.replaceNullsWithGone(children), Length.zero(),
                 justifyContent, AlignChildren.STRETCH);
     }
 
@@ -156,7 +159,7 @@ public final class LinearLayout extends SubstitutedWidget {
                                                @Nullable Widget @NonNull ... children) {
         Objects.requireNonNull(children, "children");
         Objects.requireNonNull(gap, "gap size");
-        return new LinearLayout(Axis.VERTICAL, makeImmutableListWithoutNulls(children), gap,
+        return new LinearLayout(Axis.VERTICAL, Gone.replaceNullsWithGone(children), gap,
                 JustifyContent.STRETCH, AlignChildren.STRETCH);
     }
 
@@ -164,7 +167,7 @@ public final class LinearLayout extends SubstitutedWidget {
                                                @Nullable Widget @NonNull ... children) {
         Objects.requireNonNull(children, "children");
         Objects.requireNonNull(crossAxisAlignment, "crossAxisAlignment");
-        return new LinearLayout(Axis.VERTICAL, makeImmutableListWithoutNulls(children), Length.zero(),
+        return new LinearLayout(Axis.VERTICAL, Gone.replaceNullsWithGone(children), Length.zero(),
                 JustifyContent.STRETCH, crossAxisAlignment);
     }
 
@@ -174,7 +177,7 @@ public final class LinearLayout extends SubstitutedWidget {
         Objects.requireNonNull(children, "children");
         Objects.requireNonNull(justifyContent, "justifyContent");
         Objects.requireNonNull(crossAxisAlignment, "crossAxisAlignment");
-        return new LinearLayout(Axis.VERTICAL, makeImmutableListWithoutNulls(children), Length.zero(),
+        return new LinearLayout(Axis.VERTICAL, Gone.replaceNullsWithGone(children), Length.zero(),
                 justifyContent, crossAxisAlignment);
     }
 
@@ -184,7 +187,7 @@ public final class LinearLayout extends SubstitutedWidget {
         Objects.requireNonNull(children, "children");
         Objects.requireNonNull(gap, "gap size");
         Objects.requireNonNull(crossAxisAlignment, "crossAxisAlignment");
-        return new LinearLayout(Axis.VERTICAL, makeImmutableListWithoutNulls(children), gap,
+        return new LinearLayout(Axis.VERTICAL, Gone.replaceNullsWithGone(children), gap,
                 JustifyContent.STRETCH, crossAxisAlignment);
     }
 
@@ -237,21 +240,6 @@ public final class LinearLayout extends SubstitutedWidget {
     public static @NonNull Builder withCrossAxis(@NonNull Axis crossAxis) {
         Objects.requireNonNull(crossAxis, "crossAxis");
         return new Builder(crossAxis.cross());
-    }
-
-    @SuppressWarnings("NullableProblems") // List.of-ra reklamál, de lecseréltük a nullokat
-    private static @NonNull List<? extends Widget> makeImmutableListWithoutNulls(@Nullable Widget @NonNull [] array) {
-        for (int i = 0; i < array.length; i++) {
-            Widget w = array[i];
-            if (w == null) {
-                array = array.clone(); // nem illik módosítani a bejövő tömböt, főleg ha varargs
-                array[i] = gone();
-                for (int j = i + 1; j < array.length; j++)
-                    array[j] = Gone.goneIfNull(array[j]);
-                break;
-            }
-        }
-        return List.of(array);
     }
 
     /**
@@ -348,7 +336,7 @@ public final class LinearLayout extends SubstitutedWidget {
      * @return an {@link List#of() unmodifiable list} of non-null Widgets
      */
     public @NonNull List<? extends Widget> items() { // név inkább "children"?
-        return items;
+        return slots == null ? items : MultiSlot.assignSlots(slots, items);
     }
 
     /**

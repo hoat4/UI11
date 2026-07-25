@@ -1,11 +1,13 @@
 package ui11.layout.multichild.flow;
 
 import org.jspecify.annotations.Nullable;
+import ui11.MultiSlot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
-import ui11.layout.Gone;
 
 import org.jspecify.annotations.NonNull;
+import ui11.layout.Gone;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,15 +24,16 @@ import static java.util.stream.Collectors.joining;
 
 public final class Flow extends SubstitutedWidget {
 
-    private final @NonNull List<? extends Widget> items;
+    private final @NonNull List<? extends @NonNull Widget> items;
 
-    public Flow(@NonNull List<? extends Widget> items) {
-        Objects.requireNonNull(items);
-        this.items = items.stream().map(Gone::goneIfNull).collect(Collectors.toUnmodifiableList());
+    @Inject private MultiSlot<Integer> slots;
+
+    public Flow(@NonNull List<? extends @Nullable Widget> items) {
+        this.items = Gone.replaceNullsWithGone(items);
     }
 
-    public @NonNull List<? extends Widget> items() {
-        return items;
+    public @NonNull List<? extends @NonNull Widget> items() {
+        return slots == null ? items : MultiSlot.assignSlots(slots, items);
     }
 
     public static Flow flow(@Nullable Widget @NonNull... elements) {

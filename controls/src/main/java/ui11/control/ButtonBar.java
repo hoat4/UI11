@@ -21,6 +21,8 @@ public final class ButtonBar<T> extends SubstitutedWidget {
 
     @Override
     protected @NonNull Widget fallbackContent() {
+        // TODO ide lehet hogy kellenének slotok, mert possibleValues sorrendje megváltozhat.
+        //      csak akkor meg vavlamit kéne csinálni azzal, ha duplán vannak az elemek benne
         return model.possibleValues.stream().
                 map(t -> new Button(String.valueOf(t), () -> model.selectedValue.set(t))).
                 collect(LinearLayout.toRow());

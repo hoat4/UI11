@@ -1,5 +1,7 @@
 package ui11.layout.singlechild;
 
+import org.jspecify.annotations.Nullable;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box;
@@ -15,14 +17,14 @@ public final class FixedSize extends SubstitutedWidget {
     private final LayoutSize size;
     private final Widget content;
 
-    public FixedSize(LayoutSize size, Widget content) {
-        Objects.requireNonNull(size);
-        Objects.requireNonNull(content);
-        this.size = size;
-        this.content = content;
+    @Inject private Slot contentSlot;
+
+    public FixedSize(@NonNull LayoutSize size, @NonNull Widget content) {
+        this.size = Objects.requireNonNull(size);
+        this.content = Objects.requireNonNull(content);
     }
 
-    public FixedSize(Length width, Length height, Widget content) {
+    public FixedSize(@Nullable Length width, @Nullable Length height, @NonNull Widget content) {
         this(new LayoutSize(width, height), content);
     }
 
@@ -46,17 +48,17 @@ public final class FixedSize extends SubstitutedWidget {
         return withSize(null, prefHeight, content);
     }
 
-    public LayoutSize size() {
+    public @NonNull LayoutSize size() {
         return size;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return new Box(content).withFixedSize(size);
+        return new Box(content()).withFixedSize(size);
     }
 
     @Override

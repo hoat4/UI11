@@ -1,5 +1,6 @@
 package ui11.decoration;
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box.BorderSpec;
@@ -22,6 +23,9 @@ public final class Border extends SubstitutedWidget {
     private final @NonNull Insets thicknesses;
     private final @NonNull Widget stroke;
     private final @NonNull Widget content;
+
+    @Inject private Slot strokeSlot;
+    @Inject private Slot contentSlot;
 
     public Border(@NonNull Insets thicknesses, @NonNull Widget stroke, @NonNull Widget content) {
         this.thicknesses = Objects.requireNonNull(thicknesses);
@@ -54,11 +58,11 @@ public final class Border extends SubstitutedWidget {
     }
 
     public Widget stroke() {
-        return stroke;
+        return strokeSlot == null ? stroke : stroke.withSlot(strokeSlot);
     }
 
     public Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
@@ -69,8 +73,8 @@ public final class Border extends SubstitutedWidget {
         // cornerRadius == 0-t azért kell nézni, mert ha RoundedCorners-en kívülre
         // rakunk egy Bordert, akkor a bordernek nem lekerítettnek kell lennie
         return content instanceof Box b && b.border() == null && b.cornerRadius().isZero() ?
-                b.withBorder(new BorderSpec(thicknesses, stroke)) :
-                new Box(content).withBorder(new BorderSpec(thicknesses, stroke));
+                b.withBorder(new BorderSpec(thicknesses, stroke())).withSlot(contentSlot) :
+                new Box(content()).withBorder(new BorderSpec(thicknesses, stroke()));
     }
 
     public static Widget atTop(Color stroke, Widget content) {

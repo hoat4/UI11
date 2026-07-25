@@ -1,7 +1,11 @@
 package ui11.layout.singlechild;
 
+import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
+
+import java.util.Objects;
 
 /**
  * Resizes the child widget (while keeping its aspect ratio) to the smallest possible size to fill the container (that
@@ -19,11 +23,13 @@ public final class Cover extends SubstitutedWidget {
 
     private final Widget content;
 
-    public Cover(Widget content) {
-        this.content = content;
+    @Inject private Slot contentSlot;
+
+    public Cover(@NonNull Widget content) {
+        this.content = Objects.requireNonNull(content);
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 }

@@ -1,5 +1,6 @@
 package ui11.graphics.effect;
 
+import ui11.MultiSlot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -28,8 +29,11 @@ public final class Overlay extends SubstitutedWidget {
 
     private final List<? extends Widget> items;
 
+    @Inject private MultiSlot<Integer> slots;
+
     public Overlay(List<? extends Widget> items) {
         // TODO items = items.stream().map(Gone::goneIfNull).toList();
+        //      de itt nem a layout-model modulban vagyunk, tehát nincsen Gone
         this.items = items.stream().
                 map(w -> w == null ? empty() : w).
                 collect(Collectors.toUnmodifiableList());
@@ -46,7 +50,7 @@ public final class Overlay extends SubstitutedWidget {
     }
 
     public List<? extends Widget> items() {
-        return items;
+        return slots == null ? items : MultiSlot.assignSlots(slots, items);
     }
 
     @Override

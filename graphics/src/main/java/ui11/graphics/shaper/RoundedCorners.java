@@ -1,8 +1,12 @@
 package ui11.graphics.shaper;
 
+import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
+
+import java.util.Objects;
 
 public final class RoundedCorners extends SubstitutedWidget {
 
@@ -12,38 +16,42 @@ public final class RoundedCorners extends SubstitutedWidget {
     private final Length bottomLeftRadius;
     private final Widget content;
 
-    public RoundedCorners(Length topLeftRadius, Length topRightRadius,
-                          Length bottomRightRadius, Length bottomLeftRadius,
-                          Widget content) {
-        this.topLeftRadius = topLeftRadius;
-        this.topRightRadius = topRightRadius;
-        this.bottomRightRadius = bottomRightRadius;
-        this.bottomLeftRadius = bottomLeftRadius;
-        this.content = content;
+    @Inject private Slot contentSlot;
+
+    public RoundedCorners(@NonNull Length topLeftRadius,
+                          @NonNull Length topRightRadius,
+                          @NonNull Length bottomRightRadius,
+                          @NonNull Length bottomLeftRadius,
+                          @NonNull Widget content) {
+        this.topLeftRadius = Objects.requireNonNull(topLeftRadius);
+        this.topRightRadius = Objects.requireNonNull(topRightRadius);
+        this.bottomRightRadius = Objects.requireNonNull(bottomRightRadius);
+        this.bottomLeftRadius = Objects.requireNonNull(bottomLeftRadius);
+        this.content = Objects.requireNonNull(content);
     }
 
-    public static RoundedCorners withRoundedCorners(Length radii, Widget content) {
+    public static RoundedCorners withRoundedCorners(@NonNull Length radii, @NonNull Widget content) {
         return new RoundedCorners(radii, radii, radii, radii, content);
     }
 
-    public Length topLeftRadius() {
+    public @NonNull Length topLeftRadius() {
         return topLeftRadius;
     }
 
-    public Length topRightRadius() {
+    public @NonNull Length topRightRadius() {
         return topRightRadius;
     }
 
-    public Length bottomRightRadius() {
+    public @NonNull Length bottomRightRadius() {
         return bottomRightRadius;
     }
 
-    public Length bottomLeftRadius() {
+    public @NonNull Length bottomLeftRadius() {
         return bottomLeftRadius;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override

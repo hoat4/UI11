@@ -1,11 +1,14 @@
 package ui11.decoration;
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.geom.Length;
 
 import org.jspecify.annotations.NonNull;
+
+import java.util.Objects;
 
 public final class BoxShadow extends SubstitutedWidget {
 
@@ -14,16 +17,18 @@ public final class BoxShadow extends SubstitutedWidget {
     private final Length xOffset;
     private final Length yOffset;
     private final Length spread;
-    private final Widget content;
+    private final @NonNull Widget content;
+
+    @Inject private Slot contentSlot;
 
     public BoxShadow(Color color, Length blur, Length xOffset, Length yOffset, Length spread,
-                     Widget content) {
+                     @NonNull Widget content) {
         this.color = color;
         this.blur = blur;
         this.xOffset = xOffset;
         this.yOffset = yOffset;
         this.spread = spread;
-        this.content = content;
+        this.content = Objects.requireNonNull(content);
     }
 
     public Color color() {
@@ -46,12 +51,12 @@ public final class BoxShadow extends SubstitutedWidget {
         return spread;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return new Box(content).withBoxShadow(new Box.BoxShadow(color, blur, xOffset, yOffset, spread));
+        return new Box(content()).withBoxShadow(new Box.BoxShadow(color, blur, xOffset, yOffset, spread));
     }
 }

@@ -69,11 +69,13 @@ class WidgetDefinitionParser {
             // transientek lehetnek a mezők?
 
             boolean isSubstitutedWidget = SubstitutedWidget.class.isAssignableFrom(edClass);
-            if ((isInject || isState) && isSubstitutedWidget && f.getDeclaringClass() != SubstitutedWidget.class)
+            boolean isSlotOrMultiSlot = f.getType() == Slot.class || f.getType() == MultiSlot.class;
+            if ((isInject || isState) && isSubstitutedWidget && f.getDeclaringClass() != SubstitutedWidget.class &&
+                    !(isInject && isSlotOrMultiSlot))
                 throw new InvalidWidgetDefinitionException("@" + Inject.class.getSimpleName() + " and @" +
                         Remember.class.getSimpleName() + " " +
                         "cannot be used on fields in a " + SubstitutedWidget.class.getSimpleName() + " subtype: " +
-                        ReflectionUtil.memberToShortString(edClass));
+                        ReflectionUtil.memberToShortString(edClass)+", except or Slot or MultiSlot injected fields");
 
             // TODO ezekben az exception messageekben nincs szó slotokról, pedig azok is lehetnek @Inject-esek
 
@@ -143,7 +145,7 @@ class WidgetDefinitionParser {
 
                     // TODO ez most nincs rendesen megcsinálva, mert akkor is folyton invalidálunk, ha nem is használjuk
                     //      az értékét
-                } else if (f.getType() == Slot.class || f.getType() == MultiSlot.class) {
+                } else if (isSlotOrMultiSlot) {
                     ivType = f.getType();
                     kind = InjectedFieldKind.SLOT_OR_MULTI_SLOT;
                 } else {

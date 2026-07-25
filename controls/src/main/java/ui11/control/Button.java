@@ -1,10 +1,14 @@
 package ui11.control;
 
+import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.text.Text;
 
 import org.jspecify.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
  *
@@ -14,11 +18,13 @@ public final class Button extends SubstitutedWidget {
     private final Widget content;
     @Nullable private final Runnable actionHandler;
 
+    @Inject private Slot contentSlot;
+
     /**
      * @param actionHandler ha ez null, akkor disablednek számít a gomb
      */
-    public Button(Widget content, @Nullable Runnable actionHandler) {
-        this.content = content;
+    public Button(@NonNull Widget content, @Nullable Runnable actionHandler) {
+        this.content = Objects.requireNonNull(content);
         this.actionHandler = listenerProxy(actionHandler);
     }
 
@@ -33,8 +39,8 @@ public final class Button extends SubstitutedWidget {
         return actionHandler != null;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Nullable

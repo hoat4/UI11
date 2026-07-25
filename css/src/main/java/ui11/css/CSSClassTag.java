@@ -1,5 +1,6 @@
 package ui11.css;
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.graphics.Empty;
@@ -22,6 +23,8 @@ public final class CSSClassTag extends SubstitutedWidget {
     private final String className;
     private final Widget content;
 
+    @Inject private Slot contentSlot;
+
     public CSSClassTag(String className, Widget content) {
         Objects.requireNonNull(content);
         Objects.requireNonNull(className);
@@ -35,12 +38,12 @@ public final class CSSClassTag extends SubstitutedWidget {
     }
 
     public Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 
     public static Widget cssClass(String className, Widget widget) {

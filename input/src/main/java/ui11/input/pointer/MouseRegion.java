@@ -16,6 +16,8 @@ public final class MouseRegion extends SubstitutedWidget {
     private final @NonNull Button acceptedButton;
     private final @NonNull MouseListener listener;
 
+    @Inject private Slot contentSlot;
+
     public MouseRegion(@NonNull Widget content, @NonNull Button acceptedButton, @NonNull MouseListener listener) {
         this.content = Objects.requireNonNull(content);
         this.acceptedButton = Objects.requireNonNull(acceptedButton);
@@ -23,7 +25,7 @@ public final class MouseRegion extends SubstitutedWidget {
     }
 
     public @NonNull Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     public @NonNull Button acceptedButton() {

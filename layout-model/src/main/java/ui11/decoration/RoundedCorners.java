@@ -1,10 +1,13 @@
 package ui11.decoration;
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
 
 import org.jspecify.annotations.NonNull;
+
+import java.util.Objects;
 
 // TODO ez duplikálva van, van ez, meg graphics.RoundedCorners is
 
@@ -17,28 +20,30 @@ public final class RoundedCorners extends SubstitutedWidget {
     private final Length radius;
     private final Widget content;
 
-    public RoundedCorners(Length radius, Widget content) {
-        this.radius = radius;
-        this.content = content;
+    @Inject private Slot contentSlot;
+
+    public RoundedCorners(@NonNull Length radius, @NonNull Widget content) {
+        this.radius = Objects.requireNonNull(radius);
+        this.content = Objects.requireNonNull(content);
     }
 
-    public static RoundedCorners withCorners(Length radius, Widget content) {
+    public static RoundedCorners withCorners(@NonNull Length radius, @NonNull Widget content) {
         return new RoundedCorners(radius, content);
     }
 
-    public Length radius() {
+    public @NonNull Length radius() {
         return radius;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
         if (content instanceof Box b && b.cornerRadius().isZero())
-            return b.withCornerRadius(radius);
+            return b.withCornerRadius(radius).withSlot(contentSlot);
         else
-            return new Box(content).withCornerRadius(radius);
+            return new Box(content()).withCornerRadius(radius);
     }
 }

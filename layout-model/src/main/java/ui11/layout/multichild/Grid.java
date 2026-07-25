@@ -1,5 +1,6 @@
 package ui11.layout.multichild;
 
+import ui11.MultiSlot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Axis;
@@ -9,6 +10,7 @@ import ui11.layout.singlechild.Alignment;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -27,6 +29,8 @@ public class Grid extends SubstitutedWidget {
     // TODO ki kéne találni, hogy hogyan lehet enélkül passiveHeight-ot megcsinálni
     private final Axis orientationBias;
 
+    @Inject private MultiSlot<GridItemKey> slots;
+
     private Grid(Builder b) {
         items = b.items;
         columnSettings = b.columnSettings;
@@ -44,13 +48,13 @@ public class Grid extends SubstitutedWidget {
         return new Builder(autoWrap);
     }
 
-    public static Grid grid(Consumer<Builder> gridBuilderConsumer){
+    public static Grid grid(Consumer<Builder> gridBuilderConsumer) {
         Builder b = builder();
         gridBuilderConsumer.accept(b);
         return b.build();
     }
 
-    public static Grid grid(int autoWrap, Consumer<Builder> gridBuilderConsumer){
+    public static Grid grid(int autoWrap, Consumer<Builder> gridBuilderConsumer) {
         Builder b = builder(autoWrap);
         gridBuilderConsumer.accept(b);
         return b.build();
@@ -100,7 +104,23 @@ public class Grid extends SubstitutedWidget {
     }
 
     public List<Item> items() {
-        return items;
+        if (slots == null)
+            return items;
+
+        // TODO ez a kód most duplikálva van itt és DOMGridPeerben
+        record GridPos(int col, int row) {
+        }
+        Item[] itemsArray = new Item[this.items.size()];
+        Map<GridPos, Integer> overlayCounts = new HashMap<>();
+        for (int i = 0; i < itemsArray.length; i++) {
+            Item item = items.get(i);
+            int overlayIndex = overlayCounts.compute(new GridPos(item.col(), item.row()),
+                    (p, j) -> j == null ? 0 : j + 1);
+            GridItemKey key = new GridItemKey(item.col(), item.row(), overlayIndex);
+            itemsArray[i] = new Item(item.widget.withSlot(slots.get(key)),
+                    item.col, item.row, item.colspan, item.rowspan);
+        }
+        return List.of(itemsArray);
     }
 
     public Map<Integer, TrackSettings> tracks(@NonNull Axis axis) {
@@ -136,10 +156,13 @@ public class Grid extends SubstitutedWidget {
                 items.stream().
                         map(item ->
                                 "  (" + item.col() + ", " + item.row() + " " +
-                                item.rowspan() + "×" + item.colspan() + ") " +
-                                item.widget().toString().replace("\n", "\n " + " ")).
+                                        item.rowspan() + "×" + item.colspan() + ") " +
+                                        item.widget().toString().replace("\n", "\n " + " ")).
                         collect(joining(", \n"))
                 + "\n}");
+    }
+
+    private record GridItemKey(int col, int row, int overlayIndex) {
     }
 
     public static final record Item(@NonNull Widget widget, int col, int row,
@@ -148,10 +171,10 @@ public class Grid extends SubstitutedWidget {
         public Item {
             if (col < 0 || row < 0)
                 throw new RuntimeException("negative column or row number: " + widget + ", " +
-                        col + ", " +row + ", " + colspan + ", " + rowspan);
+                        col + ", " + row + ", " + colspan + ", " + rowspan);
             if (colspan <= 0 || rowspan <= 0)
                 throw new RuntimeException("non-positive column or row span: " + widget + ", " +
-                        col + ", " +row + ", " + colspan + ", " + rowspan);
+                        col + ", " + row + ", " + colspan + ", " + rowspan);
             Objects.requireNonNull(widget);
         }
 

@@ -1,5 +1,6 @@
 package ui11.input.pointer;
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.input.pointer.Pointer.Button;
@@ -10,20 +11,21 @@ import java.util.Objects;
 
 public abstract class PointerRegion extends SubstitutedWidget {
 
-    private final Widget content;
+    private final @NonNull Widget content;
+
+    @Inject private Slot contentSlot;
 
     public PointerRegion(Widget content) {
-        Objects.requireNonNull(content);
-        this.content = content;
+        this.content = Objects.requireNonNull(content);
     }
 
-    public final Widget content() {
-        return content;
+    public final @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 
     /**

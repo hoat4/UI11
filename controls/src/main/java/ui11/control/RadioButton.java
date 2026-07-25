@@ -1,11 +1,13 @@
 package ui11.control;
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 public final class RadioButton<T> extends SubstitutedWidget {
@@ -14,6 +16,8 @@ public final class RadioButton<T> extends SubstitutedWidget {
     private final T value;
     private final @Nullable Widget graphic;
     private final boolean disabled;
+
+    @Inject private Slot graphicSlot;
 
     // TODO disabled lehetne inherited
 
@@ -37,9 +41,8 @@ public final class RadioButton<T> extends SubstitutedWidget {
         return value;
     }
 
-    @Nullable
-    public Widget graphic() {
-        return graphic;
+    public @Nullable Widget graphic() {
+        return graphic == null || graphicSlot == null ? graphic : graphic.withSlot(graphicSlot);
     }
 
     public boolean disabled() {

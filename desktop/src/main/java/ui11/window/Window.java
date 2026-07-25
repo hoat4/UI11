@@ -1,5 +1,6 @@
 package ui11.window;
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -11,24 +12,25 @@ public final class Window extends SubstitutedWidget {
     private final String title;
     private final Widget content;
 
-    public Window(String title, Widget content) {
-        Objects.requireNonNull(content);
+    @Inject private Slot contentSlot;
+
+    public Window(String title, @NonNull Widget content) {
         // TODO title nullable?
         this.title = title;
-        this.content = content;
+        this.content = Objects.requireNonNull(content);
     }
 
     public String title() {
         return title;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 
     // TODO return type pl. WidgetInstantiation?

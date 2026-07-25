@@ -1,5 +1,6 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
 import ui11.provide.Provider;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public abstract class ParentDataWidget extends SubstitutedWidget {
 
     private final Widget next;
 
-    protected ParentDataWidget(Widget next) {
+    protected ParentDataWidget(@NonNull Widget next) {
         this.next = Objects.requireNonNull(next);
     }
 

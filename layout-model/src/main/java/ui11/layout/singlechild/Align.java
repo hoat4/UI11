@@ -1,10 +1,12 @@
 package ui11.layout.singlechild;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
 
-import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 
 /**
@@ -16,27 +18,27 @@ import java.util.Objects;
  */
 public final class Align extends SubstitutedWidget {
 
-    private final Widget content;
-    @Nullable private final Alignment alignment;
+    private final @NonNull Widget content;
+    private final @Nullable Alignment alignment;
     private final boolean allowExpandOutside;
 
-    public Align(Widget content, Alignment alignment) {
+    @Inject private Slot contentSlot;
+
+    public Align(@NonNull Widget content, Alignment alignment) {
         this(content, alignment, false);
     }
 
-    public Align(Widget content, @Nullable Alignment alignment, boolean allowExpandOutside) {
-        Objects.requireNonNull(content);
-        this.content = content;
+    public Align(@NonNull Widget content, @Nullable Alignment alignment, boolean allowExpandOutside) {
+        this.content = Objects.requireNonNull(content);
         this.alignment = alignment;
         this.allowExpandOutside = allowExpandOutside;
     }
 
-    public Widget content() {
-        return content;
+    public @NonNull Widget content() {
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
-    @Nullable
-    public Alignment alignment() {
+    public @Nullable Alignment alignment() {
         return alignment;
     }
 

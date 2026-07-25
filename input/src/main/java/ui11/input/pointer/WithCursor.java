@@ -1,6 +1,7 @@
 package ui11.input.pointer;
 
 import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -11,7 +12,9 @@ public final class WithCursor extends SubstitutedWidget {
     private final @NonNull Cursor cursor;
     private final @NonNull Widget content;
 
-    public WithCursor(Cursor cursor, Widget content) {
+    @Inject private Slot contentSlot;
+
+    public WithCursor(Cursor cursor, @NonNull Widget content) {
         this.cursor = Objects.requireNonNull(cursor);
         this.content = Objects.requireNonNull(content);
     }
@@ -21,12 +24,12 @@ public final class WithCursor extends SubstitutedWidget {
     }
 
     public @NonNull Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 
     public interface Cursor {

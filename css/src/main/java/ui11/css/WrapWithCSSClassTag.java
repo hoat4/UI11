@@ -1,5 +1,6 @@
 package ui11.css;
 
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -8,13 +9,14 @@ import java.util.Objects;
 
 public final class WrapWithCSSClassTag extends SubstitutedWidget {
 
-    private final String className;
+    private final @NonNull String className;
     private final @NonNull Widget content;
 
-    public WrapWithCSSClassTag(String className, @NonNull Widget content) {
-        Objects.requireNonNull(className);
-        this.className = className;
-        this.content = content;
+    @Inject private Slot contentSlot;
+
+    public WrapWithCSSClassTag(@NonNull String className, @NonNull Widget content) {
+        this.className = Objects.requireNonNull(className);
+        this.content = Objects.requireNonNull(content);
     }
 
     public static Widget wrapWithCssClass(String className, Widget element) {
@@ -30,16 +32,16 @@ public final class WrapWithCSSClassTag extends SubstitutedWidget {
         return CSSClassTag.cssClass(className2, new WrapWithCSSClassTag(className1, element));
     }
 
-    public String className() {
+    public @NonNull String className() {
         return className;
     }
 
     public @NonNull Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 }

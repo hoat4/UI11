@@ -1,6 +1,7 @@
 package ui11.input.gesture;
 
 import org.jspecify.annotations.Nullable;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -16,6 +17,8 @@ public final class LogicalScrollRegion extends SubstitutedWidget {
     private final @Nullable Consumer<LogicalScroll> consumer; // ez lehetne nemnull
     private final @NonNull Widget content;
 
+    @Inject private Slot contentSlot;
+
     public LogicalScrollRegion(Consumer<LogicalScroll> consumer, @NonNull Widget content) {
         this.consumer = listenerProxy(consumer);
         this.content = Objects.requireNonNull(content);
@@ -26,12 +29,12 @@ public final class LogicalScrollRegion extends SubstitutedWidget {
     }
 
     public @NonNull Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        return content;
+        return content();
     }
 
     public record LogicalScroll(Unit unit, int delta) {

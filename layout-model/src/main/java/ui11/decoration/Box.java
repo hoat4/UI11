@@ -1,5 +1,7 @@
 package ui11.decoration;
 
+import org.jspecify.annotations.NonNull;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
@@ -11,6 +13,7 @@ import ui11.layout.LayoutSize;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import static ui11.geom.Length.px;
 
@@ -19,13 +22,17 @@ import static ui11.geom.Length.px;
 @Deprecated
 public final class Box extends SubstitutedWidget {
 
-    private final Widget content;
-    @Nullable private final Widget background;
-    @Nullable private final BorderSpec border;
-    @Nullable private final BoxShadow boxShadow;
-    @Nullable private final LayoutSize minSize;
-    @Nullable private final LayoutSize fixedSize;
-    private final Length cornerRadius;
+    private final @NonNull Widget content;
+    private final @Nullable Widget background;
+    private final @Nullable BorderSpec border;
+    private final @Nullable BoxShadow boxShadow;
+    private final @Nullable LayoutSize minSize;
+    private final @Nullable LayoutSize fixedSize;
+    private final @NonNull Length cornerRadius;
+
+    @Inject private Slot contentSlot;
+    @Inject private Slot backgroundSlot;
+    @Inject private Slot borderFillSlot;
 
     /**
      * @param content
@@ -36,11 +43,14 @@ public final class Box extends SubstitutedWidget {
      * @param fixedSize    ez magában foglalja a bordert is
      * @param cornerRadius
      */
-    public Box(Widget content, @Nullable Widget background,
-               @Nullable BorderSpec border, @Nullable BoxShadow boxShadow,
-               @Nullable LayoutSize minSize, @Nullable LayoutSize fixedSize,
-               Length cornerRadius) {
-        this.content = content;
+    public Box(@NonNull Widget content,
+               @Nullable Widget background,
+               @Nullable BorderSpec border,
+               @Nullable BoxShadow boxShadow,
+               @Nullable LayoutSize minSize,
+               @Nullable LayoutSize fixedSize,
+               @NonNull Length cornerRadius) {
+        this.content = Objects.requireNonNull(content);
         this.background = background;
         this.border = border;
         this.boxShadow = boxShadow;
@@ -49,22 +59,23 @@ public final class Box extends SubstitutedWidget {
         this.cornerRadius = cornerRadius;
     }
 
-    public Box(Widget content) {
+    public Box(@NonNull Widget content) {
         this(content, null, null, null, null, null, Length.zero());
     }
 
     public Widget content() {
-        return content;
+        return contentSlot == null ? content : content.withSlot(contentSlot);
     }
 
     @Nullable
     public Widget background() {
-        return background;
+        return background == null || backgroundSlot == null ? background : background.withSlot(backgroundSlot);
     }
 
     @Nullable
     public BorderSpec border() {
-        return border;
+        return border == null || borderFillSlot == null ? border :
+                new BorderSpec(border.thickness, border.fill.withSlot(borderFillSlot));
     }
 
     @Nullable
@@ -82,7 +93,7 @@ public final class Box extends SubstitutedWidget {
         return fixedSize;
     }
 
-    public Length cornerRadius() {
+    public @NonNull Length cornerRadius() {
         return cornerRadius;
     }
 
@@ -160,12 +171,13 @@ public final class Box extends SubstitutedWidget {
         return new Box(widget).withFixedSize(size).withCornerRadius(cornerRadius);
     }
 
-    public record BorderSpec(Insets thickness, Widget fill) {
+    public record BorderSpec(@NonNull Insets thickness, @NonNull Widget fill) {
         public BorderSpec {
             Objects.requireNonNull(fill);
             Objects.requireNonNull(thickness);
         }
     }
 
-    public record BoxShadow(Color color, Length blur, Length xOffset, Length yOffset, Length spread) {}
+    public record BoxShadow(Color color, Length blur, Length xOffset, Length yOffset, Length spread) {
+    }
 }

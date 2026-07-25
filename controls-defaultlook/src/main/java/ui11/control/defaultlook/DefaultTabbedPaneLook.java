@@ -13,6 +13,7 @@ import ui11.observable.MutableObservable;
 
 import java.util.List;
 import java.util.stream.Collector;
+import java.util.stream.IntStream;
 
 import static ui11.css.CSSClassTag.cssClass;
 import static ui11.graphics.Empty.empty;
@@ -77,8 +78,8 @@ public class DefaultTabbedPaneLook extends Widget {
 
         // TODO minek kell a collectorba a kaszt?
 
-        LinearLayout tabHeaders = tabs.stream().
-                map(tab -> new TabHeader(this, tab)).
+        LinearLayout tabHeaders = IntStream.range(0, tabs.size()).
+                mapToObj(i -> new TabHeader(this, i)).
                 collect((Collector<Widget, ?, LinearLayout>) switch (tabSide) {
                     case TOP, BOTTOM -> LinearLayout.toRow();
                     case LEFT, RIGHT -> LinearLayout.toColumn();
@@ -100,19 +101,19 @@ public class DefaultTabbedPaneLook extends Widget {
     static final class TabHeader extends Widget {
 
         private final DefaultTabbedPaneLook l;
-        private final Tab tab;
+        private final int tabIndex;
 
-        TabHeader(DefaultTabbedPaneLook l, Tab tab) {
+        TabHeader(DefaultTabbedPaneLook l, int tabIndex) {
             this.l = l;
-            this.tab = tab;
+            this.tabIndex = tabIndex;
         }
 
         @Override
         protected Widget build() {
             TabbedPane tabbedPane = l.tabbedPane;
-            int i = tabbedPane.tabs().indexOf(tab);
-            boolean active = l.selectedTabIndex.get() == i;
-            System.out.println("th " + tab.title() + ": " + l.selectedTabIndex.snoop() + " vs " + i);
+            Tab tab = tabbedPane.tabs().get(tabIndex);
+            boolean active = l.selectedTabIndex.get() == tabIndex;
+            System.out.println("th " + tab.title() + ": " + l.selectedTabIndex.snoop() + " vs " + tabIndex);
             Widget c = Align.center(tab.title());
             if (active)
                 c = cssClass("tab-button-active", c);

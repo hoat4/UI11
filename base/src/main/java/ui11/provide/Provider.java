@@ -1,8 +1,11 @@
 package ui11.provide;
 
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.Widget;
+
+import java.util.Objects;
 
 // ~ Flutter InheritedWidget
 
@@ -23,8 +26,17 @@ public final class Provider<T> extends Widget {
     @Deprecated
     public final boolean ignoreMergeableType;
 
-    public Provider(Class<T> type, T value,
-                    Widget content /* ez lehet null? */) {
+    public Provider(@NonNull Class<T> type, @Nullable T value, @NonNull Widget content) {
+        this(type, value, content, false);
+    }
+
+    /**
+     * ideiglenesen publikus
+     */
+    @Deprecated
+    public Provider(@NonNull Class<T> type, @Nullable T value, @NonNull Widget content, boolean ignoreMergeableType) {
+        Objects.requireNonNull(content);
+
         if (type.isPrimitive())
             // typeargban nem lehet rá hivatkozni
             throw new IllegalArgumentException("Type of inherited value must " +
@@ -33,21 +45,10 @@ public final class Provider<T> extends Widget {
         this.type = type;
         this.value = value;
         this.content = content;
-        this.ignoreMergeableType = false;
-
-        if (content != null && !Widget.class.isInstance(content)) // TeaVM-es kód bugjakor előjött egy ilyen
-            throw new RuntimeException("not a widget (P): " + content);
-    }
-
-    /**
-     * ideiglenesen publikus
-     */
-    @Deprecated
-    public Provider(Class<T> type, T value, Widget content, boolean ignoreMergeableType) {
-        this.type = type;
-        this.value = value;
-        this.content = content;
         this.ignoreMergeableType = ignoreMergeableType;
+
+        if (!Widget.class.isInstance(content)) // TeaVM-es kód bugjakor előjött egy ilyen
+            throw new RuntimeException("not a widget (P): " + content);
     }
 
     public Class<T> type() {
@@ -59,7 +60,7 @@ public final class Provider<T> extends Widget {
         return value;
     }
 
-    public Widget content() {
+    public @NonNull Widget content() {
         return content;
     }
 
