@@ -39,7 +39,7 @@ public final class DefaultOverlayLayoutImpl extends Widget {
             if (!constraints.isSatisfiedBy(s))
                 throw new RuntimeException(constraints + " is not satisfied by " + s + " (returned by " + this + ")");
 
-            return new BoxLayoutResult.OfChosenSize(s, peer);
+            return new BoxLayoutResult.OfChosenSize(s, peer, sizeRequest.constraints());
         });
     }
 }

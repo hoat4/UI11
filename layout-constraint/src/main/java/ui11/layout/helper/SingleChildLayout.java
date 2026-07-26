@@ -57,7 +57,7 @@ public class SingleChildLayout extends Widget {
                     Widget resultWidget = transformWidgetToBounds(result.widget(), childBounds);
 
                     if (sizeRequest != null)
-                        resultWidget = new BoxLayoutResult.OfChosenSize(containerSize, resultWidget);
+                        resultWidget = new BoxLayoutResult.OfChosenSize(containerSize, resultWidget, sizeRequest.constraints());
 
                     yield resultWidget;
                 }

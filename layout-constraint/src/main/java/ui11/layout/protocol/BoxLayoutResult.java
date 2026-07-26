@@ -15,19 +15,24 @@ public sealed abstract class BoxLayoutResult extends ParentDataWidget {
         super(next);
     }
 
-    // TODO ez kb. ugyanaz mint FixedSize. ezzel majd kéne kezdeni valamit, pl. lehet hogy ezt valahogy meg lehetne
-    //      szüntetni, de még nem tudom, hogy hogyan
     public static final class OfChosenSize extends BoxLayoutResult {
 
         private final @NonNull Size size;
+        private final BoxConstraints constraints;
 
-        public OfChosenSize(@NonNull Size size, Widget content) {
+        public OfChosenSize(@NonNull Size size, Widget content, @NonNull BoxConstraints constraints) {
             super(content);
             this.size = Objects.requireNonNull(size);
+            this.constraints = Objects.requireNonNull(constraints);
         }
 
         public @NonNull Size size() {
             return size;
+        }
+
+        @Override
+        protected boolean matches(@NonNull PeerCreationRequest<?> requestData) {
+            return ((SizeRequest) requestData).constraints.equals(constraints);
         }
     }
 

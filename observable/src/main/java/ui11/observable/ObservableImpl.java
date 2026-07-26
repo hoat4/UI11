@@ -35,7 +35,9 @@ class ObservableImpl<T> implements MutableObservable<T> {
         if (!Objects.equals(value, prev)) {
             this.value = value;
             T valueFinal = value;
-            ip.invalidate(() -> "value change of " + this + " from " + prev + " to " + valueFinal);
+            // value toString hosszú lehet, pl. Widget esetén
+            // this-t mondjuk annyiból nincs értelme odaírni, hogy úgyis benne van a new value
+            ip.invalidate(() -> "value change of " + this + "\nOld value: " + prev + "\nNew value: " + valueFinal);
             afterChange(prev, value);
             if (changes != null)
                 changes.post(new ChangeEvent<>(prev, value));

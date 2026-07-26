@@ -48,7 +48,8 @@ public class DefaultLayoutProvider extends WidgetResolver {
         if (peerCreationRequest instanceof BoxLayoutResult.SizeRequest sizeRequest) {
             switch (widget) {
                 case ColorFill _, Empty _ -> {
-                    return new BoxLayoutResult.OfChosenSize(sizeRequest.constraints().min(), peer);
+                    return new BoxLayoutResult.OfChosenSize(
+                            sizeRequest.constraints().min(), peer, sizeRequest.constraints());
                 }
                 case Overlay overlay -> {
                     return new DefaultOverlayLayoutImpl(overlay, sizeRequest, peer);

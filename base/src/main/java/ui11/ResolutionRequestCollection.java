@@ -33,7 +33,10 @@ final class ResolutionRequestCollection {
         return requests.values().stream().
                 flatMap(Set::stream).
                 filter(not(completed::contains)).
-                collect(Collectors.toSet());
+                // ideiglenesen random sorrend hogy jobban megjelenjenek a sorrendfüggő hibák
+                // (nested OfChosenSize miatti Missed to refresh ...). később nyilván .collect(toSet()) lesz.
+                        sorted((a, b) -> new Random().nextInt()).
+                toList();
     }
 
     public Collection<? extends ResolutionRequest<?>> completedRequests() {

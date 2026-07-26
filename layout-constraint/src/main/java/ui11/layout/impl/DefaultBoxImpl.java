@@ -144,7 +144,7 @@ public class DefaultBoxImpl extends Widget {
 
         Widget w = canvas.build();
         if (sizeRequest != null)
-            w = new BoxLayoutResult.OfChosenSize(containerSize, w);
+            w = new BoxLayoutResult.OfChosenSize(containerSize, w, sizeRequest.constraints());
         return w;
     }
 

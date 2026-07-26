@@ -285,7 +285,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
             Axis mainAxis = linearLayout.mainAxis();
             Size containerSize = Size.of(mainAxis, containerWidth, height);
             Widget arranger = new Arranger(linearLayout);
-            return new BoxLayoutResult.OfChosenSize(containerSize, arranger);
+            return new BoxLayoutResult.OfChosenSize(containerSize, arranger, sizeRequest.constraints());
         }
     }
 

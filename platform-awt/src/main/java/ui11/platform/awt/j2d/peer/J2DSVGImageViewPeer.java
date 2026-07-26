@@ -96,7 +96,8 @@ public class J2DSVGImageViewPeer extends Widget {
         Widget result = new J2DNodeHolder(node, inputNode);
         if (sizeRequest != null)
             // TODO constraintset figyelembe kéne venni
-            result = new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height), result);
+            result = new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height), result,
+                    sizeRequest.constraints());
         return result;
     }
 

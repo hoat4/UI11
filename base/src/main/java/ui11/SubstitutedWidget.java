@@ -1,6 +1,8 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.provide.Provider;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.util.*;
@@ -54,10 +56,13 @@ public abstract class SubstitutedWidget extends Widget {
                 this instanceof ParentDataWidget.CombinerParentDataWidget c ? c.parentData : this;
         boolean allCompleted = true;
         for (ResolutionRequest<?> resolutionRequest : peerCreationRequestCollection.remainingRequests()) {
-            if (resolutionRequest.requestData.peerType().isInstance(potentialPeer)) {
+            if (resolutionRequest.requestData.peerType().isInstance(potentialPeer) &&
+                    potentialPeer.matches(resolutionRequest.requestData)) {
                 List<? extends ParentDataWidget> parentDataList =
                         parentDataCollection == null ? List.of() : parentDataCollection.parentDataList;
                 // TODO ha már kapott resultot ebben a refreshben, akkor az újabbakat ignorálnia kéne vagy beraknia?
+                // TODO ha this instanceof ParentDataWidget, akkor értelmetlen hogy setResultUncheckedben
+                //      ellenőrizzük a next widget egyezőségét is
                 resolutionRequest.setResultUnchecked(potentialPeer, parentDataList,
                         widgetState().tree.beganRefreshID);
                 completedReqsDst.add(resolutionRequest);
@@ -99,6 +104,11 @@ public abstract class SubstitutedWidget extends Widget {
         }
 
         return resolved;
+    }
+
+    // to be overriden if necessary
+    protected boolean matches(@NonNull PeerCreationRequest<?> requestData) {
+        return true;
     }
 
     // azért nullable és nem ez dobja az exceptiont hanem build, mert így nem csak típusonként lehet eldönteni

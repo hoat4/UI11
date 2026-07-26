@@ -19,7 +19,7 @@ public class LLChangeWeightTest {
                 new WidgetWithChangeableWeight(w1,new ColorFill(Color.RED)),
                 new WidgetWithChangeableWeight(w2, new ColorFill(Color.GREEN))
         ));
-        Thread.sleep(5000);
+        Thread.sleep(   5000);
         w2.set(2.0);
         System.out.println("most meg kellett nőnie a zöldnek és kicsinyülnie a pirosnak");
     }
