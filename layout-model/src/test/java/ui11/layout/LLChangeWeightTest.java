@@ -10,7 +10,7 @@ import ui11.window.Window;
 import static ui11.layout.multichild.LinearLayout.row;
 import static ui11.layout.multichild.LinearLayout.withWeight;
 
-public class LLChangeWeight {
+public class LLChangeWeightTest {
 
     void main() throws InterruptedException {
         MutableObservable<Double> w1 = MutableObservable.withInitial(1.0);

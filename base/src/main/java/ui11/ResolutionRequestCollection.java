@@ -5,21 +5,23 @@ import org.jspecify.annotations.NonNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.function.Predicate.not;
+
 final class ResolutionRequestCollection {
 
     /**
      * key: {@linkplain PeerCreationRequest#peerType() peer type}
      */
-    public final @NonNull Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests;
+    public final @NonNull Map<Class<? extends SubstitutedWidget>, Set<ResolutionRequest<?>>> requests;
     private final @NonNull Set<ResolutionRequest<?>> completed;
 
     private ResolutionRequestCollection(
-            @NonNull Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests,
+            @NonNull Map<Class<? extends SubstitutedWidget>, Set<ResolutionRequest<?>>> requests,
             @NonNull Set<ResolutionRequest<?>> completed) {
         this.requests = requests;
         this.completed = completed;
 
-        assert requests.values().containsAll(completed);
+        assert requests.values().stream().flatMap(Set::stream).collect(Collectors.toSet()).containsAll(completed);
     }
 
     @Override
@@ -28,9 +30,10 @@ final class ResolutionRequestCollection {
     }
 
     public Collection<? extends ResolutionRequest<?>> remainingRequests() {
-        Set<ResolutionRequest<?>> remaining = new HashSet<>(requests.values());
-        remaining.removeAll(completed);
-        return remaining;
+        return requests.values().stream().
+                flatMap(Set::stream).
+                filter(not(completed::contains)).
+                collect(Collectors.toSet());
     }
 
     public Collection<? extends ResolutionRequest<?>> completedRequests() {
@@ -58,13 +61,15 @@ final class ResolutionRequestCollection {
 
     public List<ResolutionRequest<?>> byType(Class<? extends PeerCreationRequest<?>> type) {
         return requests.values().stream().
+                flatMap(Set::stream).
                 filter(r -> type.isInstance(r.requestData) && !completed.contains(r)).
                 toList();
     }
 
     static class Builder {
 
-        private final @NonNull Map<Class<? extends SubstitutedWidget>, ResolutionRequest<?>> requests = new HashMap<>();
+        private final @NonNull Map<Class<? extends SubstitutedWidget>, Set<ResolutionRequest<?>>>
+                requests = new HashMap<>();
         private final @NonNull Set<ResolutionRequest<?>> completed = new HashSet<>();
 
         private Builder() {
@@ -79,8 +84,10 @@ final class ResolutionRequestCollection {
         }
 
         public void addReq(ResolutionRequest<?> req) {
-            if (requests.putIfAbsent(req.requestData.peerType(), req) != null)
-                throw new RuntimeException("Multiple requests with peer type " + req.requestData.peerType());
+            if (!requests.computeIfAbsent(req.requestData.peerType(),
+                    __ -> new HashSet<>()).add(req))
+                // TODO ilyen mikor lehetséges?
+                throw new RuntimeException("Req already added: " + req);
         }
 
         public void addCompletions(@NonNull Set<? extends ResolutionRequest<?>> completions) {
@@ -91,7 +98,7 @@ final class ResolutionRequestCollection {
         }
 
         public void addInherited(ResolutionRequestCollection reqColl) {
-            reqColl.requests.values().forEach(this::addReq);
+            reqColl.requests.values().stream().flatMap(Set::stream).forEach(this::addReq);
             addCompletions(reqColl.completed);
         }
 

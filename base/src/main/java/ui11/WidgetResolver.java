@@ -22,8 +22,10 @@ public abstract class WidgetResolver {
     protected abstract @Nullable Widget resolveOrNull(@NonNull Widget widget);
 
     // TODO mit csináljon a hívó kód, ha ez nullt ad vissza?
-    protected @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content) {
-        return content;
+    protected @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget,
+                                                @NonNull PeerCreationRequest<?> peerCreationRequest,
+                                                @NonNull Widget peer) {
+        return peer;
     }
 
     // kavarodást okozna, ha supportedTargetType() többször meghívva mást ad vissza, ezért inkább eltároljuk az
@@ -38,18 +40,9 @@ public abstract class WidgetResolver {
 
     @Nullable Widget resolveOrNull(@NonNull Widget widget,
                                    ResolutionRequestCollection peerCreationRequestCollection) {
-        if (peerCreationRequestCollection.requests.keySet().stream().anyMatch(peerType->
+        if (peerCreationRequestCollection.requests.keySet().stream().anyMatch(peerType ->
                 supportedTargetTypeInternal().isAssignableFrom(peerType)))
             return resolveOrNull(widget);
-        else
-            return null;
-    }
-
-    @Nullable Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content,
-                                       ResolutionRequestCollection peerCreationRequestCollection) {
-        if (peerCreationRequestCollection.requests.keySet().stream().anyMatch(peerType->
-                supportedTargetTypeInternal().isAssignableFrom(peerType)))
-            return resolveAdditional(widget, content);
         else
             return null;
     }
@@ -82,22 +75,9 @@ public abstract class WidgetResolver {
         }
 
         @Override
-        @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content,
-                                          @NonNull ResolutionRequestCollection peerCreationRequest) {
-            Objects.requireNonNull(widget);
-            Objects.requireNonNull(content);
-            Objects.requireNonNull(peerCreationRequest);
-
-            for (WidgetResolver resolver : resolvers.reversed()) {
-                content = resolver.resolveAdditional(widget, content, peerCreationRequest);
-                Objects.requireNonNull(content, "WRc rA " + resolver);
-            }
-            return content;
-        }
-
-        @Override
         protected Class<? extends SubstitutedWidget> supportedTargetType() {
-            throw new UnsupportedOperationException();
+            // lehetne LUB-ja a resolverek supportedTargetTypejainak
+            return SubstitutedWidget.class;
         }
 
         @Override
@@ -106,8 +86,19 @@ public abstract class WidgetResolver {
         }
 
         @Override
-        protected @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget, @NonNull Widget content) {
-            throw new UnsupportedOperationException();
+        protected @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget,
+                                                    @NonNull PeerCreationRequest<?> peerCreationRequest,
+                                                    @NonNull Widget peer) {
+            Objects.requireNonNull(widget);
+            Objects.requireNonNull(peerCreationRequest);
+            Objects.requireNonNull(peer);
+
+            for (WidgetResolver resolver : resolvers.reversed()) {
+                if (resolver.supportedTargetTypeInternal().isAssignableFrom(peerCreationRequest.peerType()))
+                    peer = resolver.resolveAdditional(widget, peerCreationRequest, peer);
+                Objects.requireNonNull(peer, "WRc rA " + resolver);
+            }
+            return peer;
         }
     }
 }

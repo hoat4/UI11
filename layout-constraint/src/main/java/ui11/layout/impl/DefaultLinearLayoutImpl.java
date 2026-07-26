@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.MultiSlot;
 import ui11.Widget;
+import ui11.decoration.BoxShadow;
 import ui11.geom.Axis;
 import ui11.geom.Rect;
 import ui11.geom.Size;
@@ -28,14 +29,11 @@ import static ui11.graphics.effect.Overlay.overlay;
 import static ui11.layout.multichild.LinearLayout.expanded;
 import static ui11.layout.multichild.LinearLayout.withWeight;
 
-public final class DefaultLinearLayoutImpl extends Widget {
+public abstract class DefaultLinearLayoutImpl extends Widget {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultLinearLayoutImpl.class);
 
-    private final LinearLayout linearLayout;
-
-    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
-    @Inject(required = false) private Surface surface;
+    protected final LinearLayout linearLayout;
 
     @Inject private MultiSlot<Integer> slots;
 
@@ -64,7 +62,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
                         constraints.min(crossAxis) : 0,
                 /* max width */ Double.POSITIVE_INFINITY,
                 /* max height */ constraints.max(crossAxis)
-        )).executedOn(items, results->layoutPhase2(itemsFinal, results));
+        )).executedOn(items, results -> layoutPhase2(itemsFinal, results));
     }
 
     private List<? extends Widget> applyMainAxisAlignment(List<? extends Widget> items) {
@@ -118,7 +116,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
     }
 
     private Widget layoutPhase2(List<? extends Widget> items,
-            List<? extends PeerCreationRequest.ResolutionResult<BoxLayoutResult>> boxLayoutResults) {
+                                List<? extends PeerCreationRequest.ResolutionResult<BoxLayoutResult>> boxLayoutResults) {
         BoxConstraints constraints = containerConstraints();
         Axis mainAxis = linearLayout.mainAxis();
         Axis crossAxis = mainAxis.cross();
@@ -159,10 +157,6 @@ public final class DefaultLinearLayoutImpl extends Widget {
             switch (resolutionResult.peer()) {
                 case BoxLayoutResult.OfGone _ -> {
                     continue;
-                }
-                case BoxLayoutResult.OfNoConstraints _ -> {
-                    throw new RuntimeException("unexpected " +
-                            BoxLayoutResult.class.getSimpleName() + ": " + boxLayoutResults);
                 }
                 case BoxLayoutResult.OfChosenSize r -> {
                     if (crossAxisAlignment != null)
@@ -240,10 +234,6 @@ public final class DefaultLinearLayoutImpl extends Widget {
                             case BoxLayoutResult.OfGone _ -> { // TODO ez legális?
                                 // 0x0-nak tekintjük, ezért nem kell height-ot változtatni
                             }
-                            case BoxLayoutResult.OfNoConstraints _ -> {
-                                throw new RuntimeException("unexpected " +
-                                        BoxLayoutResult.class.getSimpleName() + ": " + boxLayoutResults);
-                            }
                             case BoxLayoutResult.OfChosenSize r -> {
                                 height2 = Math.max(height2, r.size().length(crossAxis));
                             }
@@ -260,36 +250,71 @@ public final class DefaultLinearLayoutImpl extends Widget {
         }
     }
 
-    private Widget layoutPhase3(int itemCount, Widget[] placeables, double[] widths, double height, double containerWidth) {
-        Axis mainAxis = linearLayout.mainAxis();
+    protected abstract Widget layoutPhase3(int itemCount, Widget[] placeables, double[] widths, double height, double containerWidth);
 
-        Size containerSize = Size.of(mainAxis, containerWidth, height);
+    protected abstract BoxConstraints containerConstraints();
 
-        Widget widgetResult = overlay(o -> {
-            double x = 0;
-            for (int i = 0; i < itemCount; i++) {
-                double w = widths[i];
-                Rect bounds = Rect.of(mainAxis, x, 0, w, height);
-                o.accept(SingleChildLayout.transformWidgetToBounds(placeables[i], bounds));
-                x += w;
-            }
-        });
+    static class Sizer extends DefaultLinearLayoutImpl {
 
-        if (sizeRequest != null)
-            widgetResult = new BoxLayoutResult.OfChosenSize(containerSize, widgetResult);
+        @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
 
-        return widgetResult;
+        public Sizer(LinearLayout linearLayout) {
+            super(linearLayout);
+        }
+
+        @Override
+        protected Widget build() {
+            if (sizeRequest == null)
+                return new Arranger(linearLayout);
+            else
+                return super.build();
+        }
+
+        @Override
+        protected BoxConstraints containerConstraints() {
+            BoxConstraints constraints = sizeRequest.constraints();
+
+            if (constraints == null)
+                return BoxConstraints.unbounded();
+            else
+                return constraints;
+        }
+
+        @Override
+        protected Widget layoutPhase3(int itemCount, Widget[] placeables, double[] widths, double height, double containerWidth) {
+            Axis mainAxis = linearLayout.mainAxis();
+            Size containerSize = Size.of(mainAxis, containerWidth, height);
+            Widget arranger = new Arranger(linearLayout);
+            return new BoxLayoutResult.OfChosenSize(containerSize, arranger);
+        }
     }
 
-    private BoxConstraints containerConstraints() {
-        BoxConstraints constraints = sizeRequest != null ? sizeRequest.constraints() : null;
+    static class Arranger extends DefaultLinearLayoutImpl {
 
-        if (constraints == null) {
-            if (surface == null)
-                throw new IllegalStateException("no " + Surface.class.getSimpleName() + " or " +
-                        BoxConstraints.class.getSimpleName() + " provided for " + this);
-            constraints = BoxConstraints.tight(surface.size());
+        @Inject private Surface surface;
+
+        public Arranger(LinearLayout linearLayout) {
+            super(linearLayout);
         }
-        return constraints;
+
+        @Override
+        protected BoxConstraints containerConstraints() {
+            return BoxConstraints.tight(surface.size());
+        }
+
+        @Override
+        protected Widget layoutPhase3(int itemCount, Widget[] placeables, double[] widths, double height, double containerWidth) {
+            Axis mainAxis = linearLayout.mainAxis();
+
+            return overlay(o -> {
+                double x = 0;
+                for (int i = 0; i < itemCount; i++) {
+                    double w = widths[i];
+                    Rect bounds = Rect.of(mainAxis, x, 0, w, height);
+                    o.accept(SingleChildLayout.transformWidgetToBounds(placeables[i], bounds));
+                    x += w;
+                }
+            });
+        }
     }
 }

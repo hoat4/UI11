@@ -1,12 +1,9 @@
 package ui11;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.util.*;
-import java.util.function.*;
-import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
@@ -87,15 +84,18 @@ public abstract class SubstitutedWidget extends Widget {
                 resolved = new NoPeerFactoryAvailable(getClass(), peerCreationRequestCollection);
         }
 
-        resolved = GlobalWidgetResolvers.instance().resolveAdditional(this, resolved, peerCreationRequestCollection);
 
-        if (widgetResolver != null) {
-            resolved = widgetResolver.resolveAdditional(this, resolved);
+        WidgetResolver wr = GlobalWidgetResolvers.instance();
+        if (widgetResolver != null)
+            wr = WidgetResolver.composite(wr, widgetResolver);
+
+        for (ResolutionRequest<?> req : peerCreationRequestCollection.remainingRequests()) {
+            resolved = wr.resolveAdditional(this, req.requestData, resolved);
             if (resolved == null)
                 throw new NullPointerException(
                         WidgetResolver.class.getSimpleName() + ".resolveAdditional returned null\n" +
                                 "Widget: " + this + "\n" +
-                                "Resolver: " + widgetResolver);
+                                "Resolver: " + wr /* TODO */);
         }
 
         return resolved;

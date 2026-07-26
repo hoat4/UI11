@@ -1,11 +1,10 @@
 package ui11.layout.protocol;
 
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import ui11.Widget;
-import ui11.geom.Size;
 import ui11.ParentDataWidget;
 import ui11.PeerCreationRequest;
+import ui11.Widget;
+import ui11.geom.Size;
 import ui11.layout.multichild.LinearLayout;
 
 import java.util.Objects;
@@ -32,12 +31,6 @@ public sealed abstract class BoxLayoutResult extends ParentDataWidget {
         }
     }
 
-    public static final class OfNoConstraints extends BoxLayoutResult {
-        public OfNoConstraints(Widget content) {
-            super(content);
-        }
-    }
-
     public static final class OfGone extends BoxLayoutResult {
         public OfGone(Widget content) {
             super(content);
@@ -48,16 +41,12 @@ public sealed abstract class BoxLayoutResult extends ParentDataWidget {
 
         private final BoxConstraints constraints;
 
-        /**
-         *
-         * @param constraints ez null, ha még csak az érdekel hogy gone-e
-         */
-        public SizeRequest(@Nullable BoxConstraints constraints) {
+        public SizeRequest(@NonNull BoxConstraints constraints) {
             super(BoxLayoutResult.class, LinearLayout.WeightMarker.class);
-            this.constraints = constraints;
+            this.constraints = Objects.requireNonNull(constraints);
         }
 
-        public BoxConstraints constraints() {
+        public @NonNull BoxConstraints constraints() {
             return constraints;
         }
 

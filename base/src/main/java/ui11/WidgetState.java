@@ -6,6 +6,7 @@ import ui11.RefreshStack.IVValueWrapper;
 import ui11.observable.*;
 import ui11.observable.Observable;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -820,6 +821,14 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                             (ResolutionRequestCollection) newValue;
                     newValue = findResolutionRequest(coll);
                 }
+            } else if (PeerCreationRequest[].class.isAssignableFrom(type) && PeerCreationRequest[].class != type) {
+                newValue = widgetState.tree.getAndSubscribeIVForCurrentWidget(
+                        widgetState, ResolutionRequestCollection.class, IV_NOT_PROVIDED);
+                if (newValue != IV_NOT_PROVIDED) {
+                    ResolutionRequestCollection coll =
+                            (ResolutionRequestCollection) newValue;
+                    newValue = findResolutionRequests(coll);
+                }
             } else
                 newValue = widgetState.tree.getAndSubscribeIVForCurrentWidget(
                         widgetState, type, IV_NOT_PROVIDED);
@@ -845,6 +854,20 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                 }
             };
             return newValue;
+        }
+
+        // tömb
+        private @NonNull Object findResolutionRequests(ResolutionRequestCollection coll) {
+            @SuppressWarnings("unchecked")
+            Class<? extends PeerCreationRequest<?>> pcrType = (Class<? extends PeerCreationRequest<?>>)
+                    type.getComponentType().asSubclass(PeerCreationRequest.class);
+
+            List<ResolutionRequest<?>> reqs = coll.byType(pcrType);
+            Object[] result = (Object[]) Array.newInstance(pcrType, reqs.size());
+            for (int i = 0; i < reqs.size(); i++) {
+                result[i] = pcrType.cast(reqs.get(i).requestData);
+            }
+            return result;
         }
 
         /**

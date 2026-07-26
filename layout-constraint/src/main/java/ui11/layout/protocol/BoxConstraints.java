@@ -29,6 +29,10 @@ public record BoxConstraints(double minWidth, double minHeight,
                 size.width(), size.height());
     }
 
+    public static BoxConstraints unbounded() {
+        return new BoxConstraints(0, 0, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+    }
+
     public boolean isSatisfiedBy(Size size) {
         return size.width() >= minWidth && size.height() >= minHeight &&
                 size.width() <= maxWidth && size.height() <= maxHeight;

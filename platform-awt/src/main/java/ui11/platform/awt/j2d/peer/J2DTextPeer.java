@@ -73,13 +73,10 @@ public class J2DTextPeer extends Widget {
                 inputNode
         );
 
-        if (sizeRequest != null)
-            if (sizeRequest.constraints() != null) {
-                Size size = sizeRequest.constraints().clamp(new Size(w, h));
-                result = new BoxLayoutResult.OfChosenSize(size, result);
-            } else {
-                result = new BoxLayoutResult.OfNoConstraints(result);
-            }
+        if (sizeRequest != null) {
+            Size size = sizeRequest.constraints().clamp(new Size(w, h));
+            result = new BoxLayoutResult.OfChosenSize(size, result);
+        }
 
         return result;
     }

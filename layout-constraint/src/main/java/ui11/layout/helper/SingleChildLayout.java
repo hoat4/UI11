@@ -61,9 +61,6 @@ public class SingleChildLayout extends Widget {
 
                     yield resultWidget;
                 }
-                case BoxLayoutResult.OfNoConstraints _ -> {
-                    throw new RuntimeException("null layout result: " + child + ", " + childConstraints);
-                }
             };
         });
     }
