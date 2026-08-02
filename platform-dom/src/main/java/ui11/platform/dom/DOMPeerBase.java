@@ -1,7 +1,7 @@
 package ui11.platform.dom;
 
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.ParentDataWidget;
+import ui11.ParentData;
 import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.color.RGBColor;
@@ -95,7 +95,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     @SafeVarargs
     protected final Widget makePeers2(List<? extends Widget> widgets,
                                 Function<List<PeerRequestor.Result<DOMElementHolder>>, Widget> f,
-                                Class<? extends ParentDataWidget.ParentData>... interestedParentDataTypes) {
+                                Class<? extends ParentData>... interestedParentDataTypes) {
         return PeerRequestor.ofMultipleWidgets(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
                 new DOMPeerCreationRequest(),

@@ -7,10 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * <a href="https://api.flutter.dev/flutter/widgets/ParentDataWidget-class.html">Same concept in Flutter</a>
- */
-public final class ParentDataWidget extends Widget {
+// https://api.flutter.dev/flutter/widgets/ParentDataWidget-class.html
+final class ParentDataWidget extends Widget {
 
     final ParentData parentData;
     private final Widget next;
@@ -23,9 +21,6 @@ public final class ParentDataWidget extends Widget {
     @Override
     protected Widget build() {
         return new Provider<>(ParentDataCollection.class, new ParentDataCollection(List.of(this)), next);
-    }
-
-    public interface ParentData {
     }
 
     static class ParentDataCollection implements Provider.Mergeable<ParentDataCollection> {

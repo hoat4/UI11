@@ -1,7 +1,7 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.ParentDataWidget;
+import ui11.ParentData;
 import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.geom.Length;
@@ -90,7 +90,7 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
         boolean everyWeightIsZero = true;
         for (PeerRequestor.Result<DOMElementHolder> result : results) {
             LinearLayout.WeightMarker weightM = (LinearLayout.WeightMarker)
-                    result.parentDataList().get(ParentDataWidget.ParentData.class);
+                    result.parentDataList().get(ParentData.class);
             double weight = weightM == null ? 0 : weightM.weight();
             if (weight != 0) { // TODO ez most Gone-okat is figyelembe veszi?
                 everyWeightIsZero = false;

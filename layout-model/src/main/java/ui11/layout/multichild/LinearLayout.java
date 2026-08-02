@@ -15,7 +15,6 @@ import java.util.function.*;
 import java.util.stream.Collector;
 
 import static java.util.stream.Collectors.joining;
-import static ui11.layout.Gone.gone;
 
 // felmerült, hogy 0 db childet nem kéne engedni. De akkor meg special case-elni kéne folyton
 // ha valami adathalmazból mappelünk widgetekre és abból csinálni LinearLayoutot.
@@ -275,14 +274,14 @@ public final class LinearLayout extends SubstitutedWidget {
     // TODO Gone-nál mit jelent a withWeight?
     // ez annyiban különbözik flex-growtól, hogy ott justify-content != stretch esetén is működik, gondolom ekkor
     // a justify-content értéke ignorálva van
-    public static @Nullable ParentDataWidget withWeight(double weight, @Nullable Widget w) {
+    public static @Nullable Widget withWeight(double weight, @Nullable Widget w) {
         // ha e == null de weight érvénytelen, akkor kéne exceptiont dobni?
         if (w == null)
             return null;
         // lehetne ellenőrizni hogy w instanceof WeightMarker és akkor el lehet dobni a belsőt, de valszeg kevésszer fordul
         // elő ilyen.
         // vagy lehetne csinálni egy ilyen factory methodot ParentDataWidgetbe ami ezt csinálja
-        return new ParentDataWidget(new WeightMarker(weight), w);
+        return ParentData.attach(new WeightMarker(weight), w);
     }
 
     // TODO legális expanded-et használni több childre? és ha van már weight beállítva?
@@ -557,7 +556,7 @@ public final class LinearLayout extends SubstitutedWidget {
         }
     }
 
-    public static record WeightMarker(double weight) implements ParentDataWidget.ParentData {
+    public static record WeightMarker(double weight) implements ParentData {
 
         public WeightMarker {
             if (weight < 0 || !Double.isFinite(weight))
@@ -570,7 +569,7 @@ public final class LinearLayout extends SubstitutedWidget {
          */
         public static double weight(PeerRequestor.Result<?> peerResult) {
             LinearLayout.WeightMarker weightM = (LinearLayout.WeightMarker)
-                    peerResult.parentDataList().get(ParentDataWidget.ParentData.class);
+                    peerResult.parentDataList().get(ParentData.class);
             return weightM == null ? 0 : weightM.weight();
         }
     }

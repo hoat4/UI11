@@ -20,9 +20,16 @@ import static java.util.stream.Collectors.toMap;
  * which content to display in it.
  * <p>
  * A {@linkplain SubstitutedWidget} must not contain fields annotated with {@link ui11.Widget.Inject @Inject} or
- * {@link Widget.Remember @Remember}.
+ * {@link Widget.Remember @Remember}, except if a {@code @Inject} field has type {@link Slot} or {@link MultiSlot}.
  * <p>
- * If a {@linkplain SubstitutedWidget} is handled by a {@link PeerRequestor.Request}, then it doesn't build more widgets.
+ * The following resolvers are used:
+ * <ol>
+ *     <li>Global resolvers: these can be defined as {@link ServiceLoader java.util.ServiceLoader} services,
+ *         where the SPI interface is {@link WidgetResolver ui11.WidgetResolver}.
+ *     <li>The value of {@linkplain ui11.provide.Provider inherited value} of type {@link WidgetResolver}.
+ *         Only one can be inherited, but {@link WidgetResolver#composite(WidgetResolver, WidgetResolver)} can be used
+ *         to combine multiple WidgetResolvers.
+ * </ol>
  */
 public abstract class SubstitutedWidget extends Widget {
 
@@ -30,17 +37,39 @@ public abstract class SubstitutedWidget extends Widget {
     @Inject private ResolutionRequestCollection peerCreationRequestCollection;
 
     /**
-     * It is final because there are no {@link Remember state fields} permitted in the subclasses, so it not sensible
-     * for the subclasses to do anything in this method.
+     * Creates a new instance of SubstitutedWidget.
+     */
+    protected SubstitutedWidget() {
+    }
+
+    /**
+     * It is final because there are no {@linkplain Remember state fields} permitted in the subclasses, so it is
+     * not sensible for the subclasses to do anything in this method.
+     * <p>
+     * The implementation in this class also does nothing.
      */
     @Override
     protected final void initState() {
     }
 
+    /**
+     * It is final because there are no {@linkplain Remember state fields} permitted in the subclasses, so it is
+     * not sensible for the subclasses to do anything in this method.
+     * <p>
+     * The implementation in this class also does nothing.
+     */
     @Override
     protected final void onResume() {
     }
 
+    /**
+     * Asks the available {@linkplain WidgetResolver WidgetResolvers} to create a peer for each
+     * {@linkplain ui11.PeerRequestor.Request request}. This method is not intended to be called by an application,
+     * instead it will be called by the {@linkplain WidgetTree widget tree refresher} as any other widget.
+     * <p>
+     * If no peer could be created for a request, then it will be
+     * forwarded to a {@linkplain WidgetResolver#tryResolveGeneric(SubstitutedWidget) generic peer}.
+     */
     @Override
     protected final Widget build() {
         // GlobalWidgetResolversről feltesszük hogy composite
@@ -132,9 +161,15 @@ public abstract class SubstitutedWidget extends Widget {
                 });
             });
             return new WidgetTree.ChainEnd();
-        }).withClearParentData(false).withInterestedParentDataType(ParentDataWidget.ParentData.class);
+        }).withClearParentData(false).withInterestedParentDataType(ParentData.class);
     }
 
+    /**
+     * Subclasses can override this to provide a fallback widget which will be used if the available
+     * {@linkplain WidgetResolver WidgetResolvers} can't provide a peer.
+     * <p>
+     * If not overridden, it always returns {@code null}.
+     */
     // azért nullable és nem ez dobja az exceptiont hanem build, mert így nem csak típusonként lehet eldönteni
     // hogy kell-e fallbackContent, hanem az input mezők értékei alapján is dönthet úgy a subclass
     // hogy tud fallback contentet vagy nem.
