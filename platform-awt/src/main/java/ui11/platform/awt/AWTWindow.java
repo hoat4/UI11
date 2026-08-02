@@ -1,10 +1,9 @@
 package ui11.platform.awt;
 
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.PeerRequestor;
-import ui11.Widget;
-import ui11.WidgetTree;
+import ui11.*;
 import ui11.animation.Scheduler;
 import ui11.geom.*;
 import ui11.geom.Location.CoordinateSpaceRoot;
@@ -26,7 +25,6 @@ import ui11.platform.awt.j2d.inputtree.InputNode.PickContext.PickStackItem;
 import ui11.platform.awt.j2d.rendertree.RenderNode.RenderTreePrinter;
 import ui11.provide.Provide;
 import ui11.provide.Provider;
-import ui11.WidgetResolver;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 import ui11.text.TextStyle.FontStyle;
@@ -146,7 +144,8 @@ public class AWTWindow {
                 // végtelen rekurzió lesz belőle
                 logger.error("Repaint failed", e);
             }
-            return new WidgetTree.ChainEnd();
+            return new SubstitutedWidget() {
+            };
         }
     }
 

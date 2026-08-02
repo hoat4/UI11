@@ -75,14 +75,7 @@ public final class WidgetTree {
             ObserverHolder observerHolder = ObserverHolder.current();
             observerHolder.ensureNoCurrentObserver();
 
-            ResolutionRequest<SubstitutedWidget> rootReq = new ResolutionRequest<>(
-                    null,
-                    new PeerRequestor.Request<>(SubstitutedWidget.class) {
-                    },
-                    rootWidget,
-                    /* interestedParentDataTypes */ Set.of()
-            );
-            root = findOrCreateWidgetState(rootReq.widget, null, root, Set.of(rootReq), false);
+            root = findOrCreateWidgetState(rootWidget, null, root, Set.of(), false);
             refreshStack = new RefreshStack(root);
 
             while (!refreshStack.isEmpty()) {
@@ -548,7 +541,7 @@ public final class WidgetTree {
                                                List<ObservableBase> toBeRestored) {
     }
 
-    public static final class ChainEnd extends Widget {
+    static final class ChainEnd extends Widget {
 
         @Override
         protected Widget build() {
