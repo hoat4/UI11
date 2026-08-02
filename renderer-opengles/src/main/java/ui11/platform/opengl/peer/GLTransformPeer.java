@@ -1,5 +1,6 @@
 package ui11.platform.opengl.peer;
 
+import ui11.PeerRequestor;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.geom.Location.CoordinateSpace;
@@ -62,7 +63,7 @@ public class GLTransformPeer extends Widget {
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
-        return new GLNodeHolder.GLNodeRequest().executedOn(transformedContent, result -> {
+        return PeerRequestor.ofSingle(transformedContent, new GLNodeHolder.GLNodeRequest(), result -> {
             return new GLNodeHolder(
                     nonDegenerateTransform ?
                             makeRenderNode(result.peer().renderNode()) :

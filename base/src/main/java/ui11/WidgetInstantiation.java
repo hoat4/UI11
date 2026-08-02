@@ -13,16 +13,14 @@ import java.util.Set;
 // de nem jó, mert annak csak az RRW alatti része kell, ráadásul ezt RRW-nként külön kéne tárolni.
 
 /**
- * @param parent akkor null, ha a gyökér a {@linkplain #child()}
+ * @param parent     akkor null, ha a gyökér a {@linkplain #child()}
  * @param child
  * @param directIVs
  */
 record WidgetInstantiation(
         @Nullable WidgetState<?> parent,
         @NonNull WidgetState<?> child,
-        @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs,
-        @Nullable ResolutionRequest<?> directReq,
-        @NonNull Set<ResolutionRequest<?>> directCompletedRequests) {
+        @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs) {
     WidgetInstantiation {
         Objects.requireNonNull(child);
         Objects.requireNonNull(directIVs);

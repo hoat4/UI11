@@ -10,33 +10,22 @@ import java.util.Objects;
 /**
  * <a href="https://api.flutter.dev/flutter/widgets/ParentDataWidget-class.html">Same concept in Flutter</a>
  */
-public abstract class ParentDataWidget extends SubstitutedWidget {
+public final class ParentDataWidget extends Widget {
 
+    final ParentData parentData;
     private final Widget next;
 
-    protected ParentDataWidget(@NonNull Widget next) {
+    public ParentDataWidget(@NonNull ParentData parentData, @NonNull Widget next) {
+        this.parentData = Objects.requireNonNull(parentData);
         this.next = Objects.requireNonNull(next);
     }
 
-    public static ParentDataWidget of(SubstitutedWidget parentData, Widget content) {
-        if (parentData instanceof ParentDataWidget)
-            throw new IllegalArgumentException("already a " + ParentDataWidget.class.getSimpleName() + ": " + parentData);
-        return new CombinerParentDataWidget(parentData, content);
-    }
-
     @Override
-    protected final Widget fallbackContent() {
+    protected Widget build() {
         return new Provider<>(ParentDataCollection.class, new ParentDataCollection(List.of(this)), next);
     }
 
-    static class CombinerParentDataWidget extends ParentDataWidget {
-
-        final SubstitutedWidget parentData;
-
-        protected CombinerParentDataWidget(SubstitutedWidget parentData, Widget next) {
-            super(next);
-            this.parentData = parentData;
-        }
+    public interface ParentData {
     }
 
     static class ParentDataCollection implements Provider.Mergeable<ParentDataCollection> {

@@ -1,18 +1,18 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.Slot;
+import ui11.PeerRequestor;
 import ui11.Widget;
-import ui11.graphics.Surface;
 import ui11.graphics.effect.Clip;
 import ui11.platform.awt.j2d.J2DNodeHolder;
-import ui11.platform.awt.j2d.J2DPeerCreationRequest;
 import ui11.platform.awt.j2d.J2DSurface;
 import ui11.platform.awt.j2d.J2DSurface.ShapeInheritingJ2DSurface;
 import ui11.platform.awt.j2d.inputtree.ClipPathInputNode;
 import ui11.platform.awt.j2d.inputtree.InputNode;
 import ui11.platform.awt.j2d.inputtree.TransparentInputNode;
-import ui11.platform.awt.j2d.rendertree.*;
-import ui11.provide.Provider;
+import ui11.platform.awt.j2d.rendertree.ClipPathRenderNode;
+import ui11.platform.awt.j2d.rendertree.EmptyRenderNode;
+import ui11.platform.awt.j2d.rendertree.FillPathRenderNode;
+import ui11.platform.awt.j2d.rendertree.RenderNode;
 
 import java.awt.*;
 import java.awt.geom.Area;
@@ -20,17 +20,16 @@ import java.awt.geom.Area;
 public class J2DClipPeer extends Widget {
 
     private final Clip clip;
-
-    @Inject private Slot contentSlot;
-    @Inject private Surface parentSurface;
+    private final J2DSurface parentSurface;
 
     @Remember private ClipPathRenderNode clipNode;
     @Remember private FillPathRenderNode fillPathNode;
     @Remember private ClipPathInputNode clipInputNode;
     @Remember private J2DSurface childSurface;
 
-    public J2DClipPeer(Clip clip) {
+    public J2DClipPeer(Clip clip, J2DSurface surface) {
         this.clip = clip;
+        this.parentSurface = surface;
     }
 
     @Override
@@ -43,15 +42,13 @@ public class J2DClipPeer extends Widget {
 
     @Override
     protected Widget build() {
-        childSurface.parent.set((J2DSurface) parentSurface);
+        childSurface.parent.set(parentSurface);
 
-        Widget widget = clip.content();
-        widget = new Provider<>(Surface.class, childSurface, widget);
-        return new J2DPeerCreationRequest().executedOn(widget, result -> {
-            return new J2DNodeHolder(
+        return PeerRequestor.ofSingle(clip.content(), childSurface, result -> {
+            return parentSurface.createResponse(new J2DNodeHolder(
                     makeRenderNode(result.peer().renderNode(), childSurface.shape()),
                     makeInputNode(result.peer().inputNode(), childSurface.shape())
-            );
+            ));
         });
     }
 

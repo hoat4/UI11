@@ -18,7 +18,7 @@ abstract class Component extends Widget {
         update();
         List<Widget> childComponents2 = childComponents;
         childComponents = null;
-        return ComponentResultRequest.INSTANCE.executedOn(childComponents2,
+        return PeerRequestor.ofMultipleWidgets(childComponents2, ComponentResultRequest.INSTANCE,
                 resolutionResults -> ComponentResult.INSTANCE);
     }
 
@@ -30,12 +30,12 @@ abstract class Component extends Widget {
         childComponents.add(component.withSlot(slot));
     }
 
-    protected void useComponent(Slot slot, Widget component, PeerCreationRequest<?> request) {
+    protected void useComponent(Slot slot, Widget component, PeerRequestor.Request<?> request) {
         Objects.requireNonNull(slot);
         Objects.requireNonNull(component);
         if (childComponents == null)
             throw new IllegalStateException();
-        childComponents.add(request.executedOn(component.withSlot(slot),
+        childComponents.add(PeerRequestor.ofSingle(component.withSlot(slot), request,
                 result -> ComponentResult.INSTANCE));
     }
 
@@ -43,7 +43,7 @@ abstract class Component extends Widget {
         static final ComponentResult INSTANCE = new ComponentResult();
     }
 
-    private static class ComponentResultRequest extends PeerCreationRequest<ComponentResult> {
+    private static class ComponentResultRequest extends PeerRequestor.Request<ComponentResult> {
 
         private static final ComponentResultRequest INSTANCE = new ComponentResultRequest();
 

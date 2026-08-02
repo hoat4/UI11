@@ -1,23 +1,22 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.ParentDataWidget;
-import ui11.Slot;
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.platform.awt.j2d.J2DNodeHolder;
-import ui11.platform.awt.j2d.J2DPeerCreationRequest;
+import ui11.platform.awt.j2d.J2DSurface;
 import ui11.platform.awt.j2d.inputtree.ListenerInputNode;
 
 public class J2DPointerRegionPeer extends Widget {
 
     private final PointerRegion pointerRegion;
-
-    @Inject private Slot contentSlot;
+    private final J2DSurface surface;
 
     @Remember private ListenerInputNode inputNode;
 
-    public J2DPointerRegionPeer(PointerRegion pointerRegion) {
+    public J2DPointerRegionPeer(PointerRegion pointerRegion, J2DSurface surface) {
         this.pointerRegion = pointerRegion;
+        this.surface = surface;
     }
 
     @Override
@@ -27,12 +26,15 @@ public class J2DPointerRegionPeer extends Widget {
 
     @Override
     protected Widget build() {
-        Widget content = pointerRegion.content().withSlot(contentSlot);
-        return new J2DPeerCreationRequest().executedOn(content, result -> {
+        // TODO ezzel valamit csin�lni k�ne, hogy ne J2DWidgetResolver.tryResolveGenericbe
+        //      kelljen be�rni, hogy a t�bbi req t�pus legyen contentnek tov�bb�tva
+
+        Widget content = pointerRegion.content();
+        return PeerRequestor.ofSingle(content, surface, result -> {
             inputNode.child.set(result.peer().inputNode());
             inputNode.listener = pointerRegion;
             J2DNodeHolder h = new J2DNodeHolder(result.peer().renderNode(), inputNode);
-            return ParentDataWidget.of(h, content);
+            return surface.createResponse(h);
         });
     }
 }

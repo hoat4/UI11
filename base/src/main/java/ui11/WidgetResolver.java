@@ -3,8 +3,7 @@ package ui11;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Tartalmat biztosít az általa ismert típusú elemekhez. Megvalósítja egyrészt minden renderer, másrészt a jövőben
@@ -12,42 +11,13 @@ import java.util.Objects;
  */
 public abstract class WidgetResolver {
 
-    private Class<? extends SubstitutedWidget> supportedTargetType;
+    protected abstract @Nullable Widget tryResolveGeneric(@NonNull SubstitutedWidget widget);
 
-    protected abstract Class<? extends SubstitutedWidget> supportedTargetType();
+    protected abstract @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
+                                                                  PeerRequestor.@NonNull Request<?> request);
 
-    /**
-     * @return ha null, az azt jelenti hogy nem tudott vele mit kezdeni, nem azt hogy ürességre decomposeolta
-     */
-    protected abstract @Nullable Widget resolveOrNull(@NonNull Widget widget);
-
-    // TODO mit csináljon a hívó kód, ha ez nullt ad vissza?
-    protected @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget,
-                                                @NonNull PeerCreationRequest<?> peerCreationRequest,
-                                                @NonNull Widget peer) {
-        return peer;
-    }
-
-    // kavarodást okozna, ha supportedTargetType() többször meghívva mást ad vissza, ezért inkább eltároljuk az
-    // elsőre visszaadott eredményt
-    private Class<? extends SubstitutedWidget> supportedTargetTypeInternal() {
-        if (supportedTargetType == null)
-            // TODO multithread miatt lehet hogy kétszer lesz meghívva
-            supportedTargetType = supportedTargetType();
-
-        return supportedTargetType;
-    }
-
-    @Nullable Widget resolveOrNull(@NonNull Widget widget,
-                                   ResolutionRequestCollection peerCreationRequestCollection) {
-        if (peerCreationRequestCollection.requests.keySet().stream().anyMatch(peerType ->
-                supportedTargetTypeInternal().isAssignableFrom(peerType)))
-            return resolveOrNull(widget);
-        else
-            return null;
-    }
-
-    public static WidgetResolver composite(@NonNull WidgetResolver defaults, @NonNull WidgetResolver override) {
+    public static WidgetResolver composite(@NonNull WidgetResolver defaults,
+                                           @NonNull WidgetResolver override) {
         Objects.requireNonNull(defaults, "WRc d");
         Objects.requireNonNull(override, "WRc o");
         return new CompositeWidgetResolver(List.of(override, defaults));
@@ -55,50 +25,68 @@ public abstract class WidgetResolver {
 
     static class CompositeWidgetResolver extends WidgetResolver {
 
-        private final List<? extends WidgetResolver> resolvers;
+        final List<? extends WidgetResolver> resolvers;
 
         public CompositeWidgetResolver(List<? extends WidgetResolver> resolvers) {
-            this.resolvers = resolvers;
+            this.resolvers = List.copyOf(resolvers);
         }
 
         @Override
-        @Nullable Widget resolveOrNull(@NonNull Widget widget, @NonNull ResolutionRequestCollection peerCreationRequest) {
-            Objects.requireNonNull(widget);
-            Objects.requireNonNull(peerCreationRequest);
-
-            for (WidgetResolver resolver : resolvers) {
-                Widget e2 = resolver.resolveOrNull(widget, peerCreationRequest);
-                if (e2 != null)
-                    return e2;
-            }
-            return null;
-        }
-
-        @Override
-        protected Class<? extends SubstitutedWidget> supportedTargetType() {
-            // lehetne LUB-ja a resolverek supportedTargetTypejainak
-            return SubstitutedWidget.class;
-        }
-
-        @Override
-        protected @Nullable Widget resolveOrNull(@NonNull Widget widget) {
+        protected @Nullable Widget tryResolveGeneric(@NonNull SubstitutedWidget widget) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        protected @NonNull Widget resolveAdditional(@NonNull SubstitutedWidget widget,
-                                                    @NonNull PeerCreationRequest<?> peerCreationRequest,
-                                                    @NonNull Widget peer) {
-            Objects.requireNonNull(widget);
-            Objects.requireNonNull(peerCreationRequest);
-            Objects.requireNonNull(peer);
+        protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget, PeerRequestor.@NonNull Request<?> request) {
+            throw new UnsupportedOperationException();
+        }
 
-            for (WidgetResolver resolver : resolvers.reversed()) {
-                if (resolver.supportedTargetTypeInternal().isAssignableFrom(peerCreationRequest.peerType()))
-                    peer = resolver.resolveAdditional(widget, peerCreationRequest, peer);
-                Objects.requireNonNull(peer, "WRc rA " + resolver);
-            }
-            return peer;
+        Iterable<? extends WidgetResolver> leaves() {
+            return () -> {
+                Deque<Iterator<? extends WidgetResolver>> q = new LinkedList<>();
+                Set<WidgetResolver.CompositeWidgetResolver> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+
+                visited.add(this);
+                q.push(this.resolvers.iterator());
+
+                return new Iterator<>() {
+
+                    private WidgetResolver next = findNext();
+
+                    private WidgetResolver findNext() {
+                        while (!q.isEmpty()) {
+                            Iterator<? extends WidgetResolver> iterator = q.element();
+                            if (iterator.hasNext()) {
+                                WidgetResolver r = iterator.next();
+                                assert r != null;
+                                if (r instanceof WidgetResolver.CompositeWidgetResolver c) {
+                                    if (visited.add(c))
+                                        q.push(c.resolvers.iterator());
+                                } else {
+                                    return r;
+                                }
+                            } else {
+                                q.pop();
+                            }
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return next != null;
+                    }
+
+                    @Override
+                    public WidgetResolver next() {
+                        if (!hasNext())
+                            throw new NoSuchElementException();
+                        WidgetResolver r = next;
+                        next = findNext();
+                        return r;
+                    }
+                };
+            };
         }
     }
 }

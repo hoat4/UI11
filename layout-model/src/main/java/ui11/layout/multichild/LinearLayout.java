@@ -2,10 +2,7 @@ package ui11.layout.multichild;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.MultiSlot;
-import ui11.ParentDataWidget;
-import ui11.SubstitutedWidget;
-import ui11.Widget;
+import ui11.*;
 import ui11.geom.Axis;
 import ui11.geom.Length;
 import ui11.layout.Gap;
@@ -278,13 +275,14 @@ public final class LinearLayout extends SubstitutedWidget {
     // TODO Gone-nál mit jelent a withWeight?
     // ez annyiban különbözik flex-growtól, hogy ott justify-content != stretch esetén is működik, gondolom ekkor
     // a justify-content értéke ignorálva van
-    public static @Nullable WeightMarker withWeight(double weight, @Nullable Widget w) {
+    public static @Nullable ParentDataWidget withWeight(double weight, @Nullable Widget w) {
         // ha e == null de weight érvénytelen, akkor kéne exceptiont dobni?
         if (w == null)
             return null;
         // lehetne ellenőrizni hogy w instanceof WeightMarker és akkor el lehet dobni a belsőt, de valszeg kevésszer fordul
-        // elő ilyen
-        return new WeightMarker(weight, w);
+        // elő ilyen.
+        // vagy lehetne csinálni egy ilyen factory methodot ParentDataWidgetbe ami ezt csinálja
+        return new ParentDataWidget(new WeightMarker(weight), w);
     }
 
     // TODO legális expanded-et használni több childre? és ha van már weight beállítva?
@@ -298,7 +296,7 @@ public final class LinearLayout extends SubstitutedWidget {
      */
     // TODO sok helyen talán meg lehetne szüntetni az expanded-et. pl. RunningMatchRow.player2 esetén
     //      a playerimageview nem tud nyúlni, de az alignchildrenes column viszont igen.
-    public static @Nullable WeightMarker expanded(@Nullable Widget w) {
+    public static @Nullable Widget expanded(@Nullable Widget w) {
         return withWeight(1, w);
     }
 
@@ -559,21 +557,21 @@ public final class LinearLayout extends SubstitutedWidget {
         }
     }
 
-    public static final class WeightMarker extends ParentDataWidget {
+    public static record WeightMarker(double weight) implements ParentDataWidget.ParentData {
 
-        public final double weight;
-
-        public WeightMarker(double weight, Widget content) {
-            super(content);
+        public WeightMarker {
             if (weight < 0 || !Double.isFinite(weight))
-                throw new IllegalArgumentException("invalid weight: " + weight + " for " + content);
-            this.weight = weight;
+                throw new IllegalArgumentException("invalid weight: " + weight);
         }
 
-        public static double weight(@NonNull Widget e) {
-            Objects.requireNonNull(e);
-            // TODO ehelyett ParentDataWidgetet kéne használni
-            return e instanceof WeightMarker item ? item.weight : 0;
+        /**
+         * {@link PeerRequestor#withInterestedParentDataType(Class[])}-et meg kell hívni {@link WeightMarker}-rel ahhoz,
+         * hogy ez működjön
+         */
+        public static double weight(PeerRequestor.Result<?> peerResult) {
+            LinearLayout.WeightMarker weightM = (LinearLayout.WeightMarker)
+                    peerResult.parentDataList().get(ParentDataWidget.ParentData.class);
+            return weightM == null ? 0 : weightM.weight();
         }
     }
 

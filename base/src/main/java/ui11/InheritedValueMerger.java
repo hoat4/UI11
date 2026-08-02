@@ -9,8 +9,6 @@ import java.util.Objects;
 
 class InheritedValueMerger<T> extends Widget {
 
-    private static final Object IV_NOT_PROVIDED = new Object();
-
     private final Class<T> type;
     private final T newValue;
     private final Widget content;
@@ -27,10 +25,10 @@ class InheritedValueMerger<T> extends Widget {
             return content;
 
         WidgetState<?> widgetState = widgetState();
-        Object prevVal = widgetState.tree.getAndSubscribeIVForCurrentWidget(widgetState, type, IV_NOT_PROVIDED);
+        Object prevVal = widgetState.tree.getIVForCurrentWidget(widgetState, type, true);
         T val;
 
-        if (prevVal != IV_NOT_PROVIDED) {
+        if (prevVal != WidgetTree.IV_NOT_PROVIDED) {
             // DynamicProvider "kvázi-mergeable"
             if (type == DynamicProvider.class)
                 val = type.cast(mergeDynamicProviders((DynamicProvider) prevVal, (DynamicProvider) newValue));

@@ -1,5 +1,6 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.observable.ObservableBase;
@@ -220,6 +221,7 @@ public abstract class Widget implements Cloneable {
     //     majd lehet hogy ki kell terjeszteni tetszőleges interfacere (pl. mouseeventek esetén a tipikus a
     //     sok függvényes interface, vagy lehet hogy kell visszaadni értéket), de egyelőre elég ez a kettő.
 
+    @NonNull
     public final Widget withSlot(Slot slot) {
         // TODO ha ez egy KeyWrapper, akkor elég lenne csak this-t visszaadni
         //      de akkor végig lehetne menni Provide-okon is végülis

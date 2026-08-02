@@ -11,6 +11,7 @@ import ui11.Widget;
 import ui11.geom.Size;
 import ui11.graphics.Surface;
 import ui11.layout.protocol.BoxLayoutResult;
+import ui11.platform.awt.j2d.J2DSurface;
 import ui11.task.BackgroundTask;
 import ui11.task.TaskStatus;
 import ui11.window.Shell.URLResolver;
@@ -31,19 +32,20 @@ public class J2DSVGImageViewPeer extends Widget {
     private static final Logger logger = LoggerFactory.getLogger(J2DSVGImageViewPeer.class);
 
     private final SVGImageView svgImageView;
+    private final J2DSurface surface;
 
     @Inject private TextStyle textStyle;
     @Inject(required = false) private URLResolver urlResolver;
-    @Inject private Surface surface;
     @Inject private MultiSlot<URI> loadTaskSlot;
-    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
+    @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
 
     @Remember private SVGDocumentRenderNode node;
     @Remember private OpaqueInputNode inputNode;
     @Remember private TextStyle prevTextStyle;
 
-    public J2DSVGImageViewPeer(SVGImageView svgImageView) {
+    public J2DSVGImageViewPeer(SVGImageView svgImageView, J2DSurface surface) {
         this.svgImageView = svgImageView;
+        this.surface = surface;
     }
 
     @Override
@@ -93,11 +95,13 @@ public class J2DSVGImageViewPeer extends Widget {
         node.size.set(size);
         inputNode.shape.set(new Rectangle2D.Double(0, 0, size.width(), size.height()));
         FloatSize docSize = loadedDocument.size();
-        Widget result = new J2DNodeHolder(node, inputNode);
-        if (sizeRequest != null)
+        Widget result = surface.createResponse(new J2DNodeHolder(node, inputNode));
+        for (BoxLayoutResult.SizeRequest sizeRequest  : sizeRequests) {
             // TODO constraintset figyelembe kéne venni
-            result = new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height), result,
-                    sizeRequest.constraints());
+            BoxLayoutResult.OfChosenSize chosenSize =
+                    new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height));
+            result = sizeRequest.createResponse(chosenSize, result);
+        }
         return result;
     }
 

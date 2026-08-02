@@ -1,6 +1,8 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
+import ui11.ParentDataWidget;
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.geom.Length;
 import ui11.layout.multichild.LinearLayout;
@@ -41,16 +43,16 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
 
     @Override
     protected Widget doBuild() {
-        return makePeers(linearLayout.items(), this::doBuild2);
+        return makePeers2(linearLayout.items(), this::doBuild2, LinearLayout.WeightMarker.class);
     }
 
-    private Widget doBuild2(List<? extends DOMElementHolder> hList) {
+    private Widget doBuild2(List<PeerRequestor.Result<DOMElementHolder>> results) {
         LinearLayout e = linearLayout;
         HTMLElement htmlElement = elem();
         List<HTMLElement> childElements = new ArrayList<>();
         gone.clear();
-        for (int i = 0; i < hList.size(); i++) {
-            DOMElementHolder childH = hList.get(i);
+        for (int i = 0; i < results.size(); i++) {
+            DOMElementHolder childH = results.get(i).peer();
             if (childH.isHidden())
                 gone.set(i); // TODO ez így hibás, mert hozzá kéne adni a DOM-hoz
             else if (childH.element().getNodeName().equalsIgnoreCase("img")) {
@@ -86,8 +88,11 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
         }
 
         boolean everyWeightIsZero = true;
-        for (Widget item : linearLayout.items()) {
-            if (LinearLayout.WeightMarker.weight(item) != 0) { // TODO ez most Gone-okat is figyelembe veszi
+        for (PeerRequestor.Result<DOMElementHolder> result : results) {
+            LinearLayout.WeightMarker weightM = (LinearLayout.WeightMarker)
+                    result.parentDataList().get(ParentDataWidget.ParentData.class);
+            double weight = weightM == null ? 0 : weightM.weight();
+            if (weight != 0) { // TODO ez most Gone-okat is figyelembe veszi?
                 everyWeightIsZero = false;
                 break;
             }
@@ -132,13 +137,12 @@ public class DOMLinearLayoutPeer extends DOMLayoutPeerBase {
          */
 
         int j = 0;
-        for (int i = 0; i < linearLayout.items().size(); i++) {
+        for (int i = 0; i < results.size(); i++) {
             if (gone.get(i))
                 continue;
 
-            Widget item = linearLayout.items().get(i);
-
-            double weight = e.mainAxisAlignment() == JustifyContent.STRETCH ? LinearLayout.WeightMarker.weight(item) : 0;
+            double weight = e.mainAxisAlignment() == JustifyContent.STRETCH ?
+                    LinearLayout.WeightMarker.weight(results.get(i)) : 0;
             HTMLElement childPeer = childElements.get(j++);
             if (weight == 0)
                 childPeer.getStyle().removeProperty("flex-grow");

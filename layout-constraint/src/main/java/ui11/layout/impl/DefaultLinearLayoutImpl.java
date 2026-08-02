@@ -3,8 +3,8 @@ package ui11.layout.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.MultiSlot;
+import ui11.PeerRequestor;
 import ui11.Widget;
-import ui11.decoration.BoxShadow;
 import ui11.geom.Axis;
 import ui11.geom.Rect;
 import ui11.geom.Size;
@@ -17,7 +17,6 @@ import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.layout.singlechild.Align;
 import ui11.layout.singlechild.Alignment;
-import ui11.PeerCreationRequest;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -55,14 +54,17 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
         BoxConstraints constraints = containerConstraints();
         Axis mainAxis = linearLayout.mainAxis();
         Axis crossAxis = mainAxis.cross();
-        return new BoxLayoutResult.SizeRequest(BoxConstraints.of(
+        BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(BoxConstraints.of(
                 mainAxis,
                 /* min width */ 0,
                 /* min height */ linearLayout.crossAxisAlignment() == LinearLayout.AlignChildren.STRETCH ?
                         constraints.min(crossAxis) : 0,
                 /* max width */ Double.POSITIVE_INFINITY,
                 /* max height */ constraints.max(crossAxis)
-        )).executedOn(items, results -> layoutPhase2(itemsFinal, results));
+        ));
+        return PeerRequestor.ofMultipleWidgets(items, sizeReq,
+                results -> layoutPhase2(itemsFinal, results)).
+                withInterestedParentDataType(WeightMarker.class);
     }
 
     private List<? extends Widget> applyMainAxisAlignment(List<? extends Widget> items) {
@@ -73,19 +75,19 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
             }
             case SPACE_EVENLY -> {
                 List<Widget> l = new ArrayList<>();
-                l.add(new WeightMarker(1, empty()));
+                l.add(withWeight(1, empty()));
                 for (Widget w : items) {
-                    l.add(new WeightMarker(0, w));
-                    l.add(new WeightMarker(1, empty()));
+                    l.add(withWeight(0, w));
+                    l.add(withWeight(1, empty()));
                 }
                 yield l;
             }
             case SPACE_AROUND -> {
                 List<Widget> l = new ArrayList<>();
                 for (Widget w : items) {
-                    l.add(new WeightMarker(1, empty()));
-                    l.add(new WeightMarker(0, w));
-                    l.add(new WeightMarker(1, empty()));
+                    l.add(withWeight(1, empty()));
+                    l.add(withWeight(0, w));
+                    l.add(withWeight(1, empty()));
                 }
                 yield l;
             }
@@ -93,11 +95,11 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                 List<Widget> l = new ArrayList<>();
                 Iterator<? extends Widget> iterator = items.iterator();
 
-                l.add(new WeightMarker(0, iterator.next()));
+                l.add(withWeight(0, iterator.next()));
                 while (iterator.hasNext()) {
                     Widget w = iterator.next();
-                    l.add(new WeightMarker(1, empty()));
-                    l.add(new WeightMarker(0, w));
+                    l.add(withWeight(1, empty()));
+                    l.add(withWeight(0, w));
                 }
                 yield l;
             }
@@ -116,7 +118,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
     }
 
     private Widget layoutPhase2(List<? extends Widget> items,
-                                List<? extends PeerCreationRequest.ResolutionResult<BoxLayoutResult>> boxLayoutResults) {
+                                List<? extends PeerRequestor.Result<BoxLayoutResult>> boxLayoutResults) {
         BoxConstraints constraints = containerConstraints();
         Axis mainAxis = linearLayout.mainAxis();
         Axis crossAxis = mainAxis.cross();
@@ -149,10 +151,8 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
         int i = 0;
         for (int indexInWidgets = 0; indexInWidgets < items.size(); indexInWidgets++) {
             Widget widget = items.get(indexInWidgets);
-            PeerCreationRequest.ResolutionResult<BoxLayoutResult> resolutionResult = boxLayoutResults.get(indexInWidgets);
-
-            WeightMarker weightMarker = (WeightMarker) resolutionResult.parentDataList().get(WeightMarker.class);
-            double weight = weightMarker == null ? 0 : weightMarker.weight;
+            PeerRequestor.Result<BoxLayoutResult> resolutionResult = boxLayoutResults.get(indexInWidgets);
+            double weight = WeightMarker.weight(resolutionResult);
 
             switch (resolutionResult.peer()) {
                 case BoxLayoutResult.OfGone _ -> {
@@ -227,9 +227,9 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                 }
                 double heightFinal = height;
                 int itemCountFinal = itemCount;
-                return PeerCreationRequest.executedMultipleOn(reqWidgets, reqs, resolutionResults -> {
+                return PeerRequestor.ofMultiple(reqWidgets, reqs, resolutionResults -> {
                     double height2 = heightFinal;
-                    for (PeerCreationRequest.ResolutionResult<BoxLayoutResult> layoutResult : resolutionResults) {
+                    for (PeerRequestor.Result<BoxLayoutResult> layoutResult : resolutionResults) {
                         switch (layoutResult.peer()) {
                             case BoxLayoutResult.OfGone _ -> { // TODO ez legális?
                                 // 0x0-nak tekintjük, ezért nem kell height-ot változtatni
@@ -240,7 +240,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                         }
                     }
                     Widget[] placeables2 = resolutionResults.stream().
-                            map(PeerCreationRequest.ResolutionResult::widget).toArray(Widget[]::new);
+                            map(PeerRequestor.Result::widget).toArray(Widget[]::new);
                     return layoutPhase3(itemCountFinal, placeables2, widths, height2, containerWidth);
                 });
             }
@@ -256,45 +256,34 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
 
     static class Sizer extends DefaultLinearLayoutImpl {
 
-        @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
+        private final BoxLayoutResult.SizeRequest sizeRequest;
 
-        public Sizer(LinearLayout linearLayout) {
+        public Sizer(LinearLayout linearLayout, BoxLayoutResult.SizeRequest sizeRequest) {
             super(linearLayout);
-        }
-
-        @Override
-        protected Widget build() {
-            if (sizeRequest == null)
-                return new Arranger(linearLayout);
-            else
-                return super.build();
+            this.sizeRequest = sizeRequest;
         }
 
         @Override
         protected BoxConstraints containerConstraints() {
-            BoxConstraints constraints = sizeRequest.constraints();
-
-            if (constraints == null)
-                return BoxConstraints.unbounded();
-            else
-                return constraints;
+            return sizeRequest.constraints();
         }
 
         @Override
         protected Widget layoutPhase3(int itemCount, Widget[] placeables, double[] widths, double height, double containerWidth) {
             Axis mainAxis = linearLayout.mainAxis();
             Size containerSize = Size.of(mainAxis, containerWidth, height);
-            Widget arranger = new Arranger(linearLayout);
-            return new BoxLayoutResult.OfChosenSize(containerSize, arranger, sizeRequest.constraints());
+            BoxLayoutResult.OfChosenSize chosenSize = new BoxLayoutResult.OfChosenSize(containerSize);
+            return sizeRequest.createResponse(chosenSize);
         }
     }
 
     static class Arranger extends DefaultLinearLayoutImpl {
 
-        @Inject private Surface surface;
+        private final Surface surface;
 
-        public Arranger(LinearLayout linearLayout) {
+        public Arranger(LinearLayout linearLayout, Surface surface) {
             super(linearLayout);
+            this.surface = surface;
         }
 
         @Override

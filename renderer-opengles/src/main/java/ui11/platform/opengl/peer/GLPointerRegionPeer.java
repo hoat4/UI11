@@ -1,7 +1,6 @@
 package ui11.platform.opengl.peer;
 
-import ui11.ParentDataWidget;
-import ui11.Slot;
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.platform.opengl.GLNodeHolder;
@@ -10,13 +9,13 @@ import ui11.platform.opengl.inputtree.ListenerInputNode;
 public class GLPointerRegionPeer extends Widget {
 
     private final PointerRegion pointerRegion;
-
-    @Inject private Slot contentSlot;
+    private final GLNodeHolder.GLNodeRequest peerReq;
 
     @Remember private ListenerInputNode inputNode;
 
-    public GLPointerRegionPeer(PointerRegion pointerRegion) {
+    public GLPointerRegionPeer(PointerRegion pointerRegion, GLNodeHolder.GLNodeRequest peerReq) {
         this.pointerRegion = pointerRegion;
+        this.peerReq = peerReq;
     }
 
     @Override
@@ -26,12 +25,12 @@ public class GLPointerRegionPeer extends Widget {
 
     @Override
     protected Widget build() {
-        Widget content = pointerRegion.content().withSlot(contentSlot);
-        return new GLNodeHolder.GLNodeRequest().executedOn(content, result -> {
+        Widget content = pointerRegion.content();
+        return PeerRequestor.ofSingle(content, new GLNodeHolder.GLNodeRequest(), result -> {
             inputNode.child.set(result.peer().inputNode());
             inputNode.listener = pointerRegion;
             GLNodeHolder h = new GLNodeHolder(result.peer().renderNode(), inputNode);
-            return ParentDataWidget.of(h, content);
+            return peerReq.createResponse(h);
         });
     }
 }

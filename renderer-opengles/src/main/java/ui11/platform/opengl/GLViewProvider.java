@@ -1,5 +1,8 @@
 package ui11.platform.opengl;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import ui11.PeerRequestor;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.graphics.effect.Overlay;
@@ -14,13 +17,21 @@ import ui11.WidgetResolver;
 
 public class GLViewProvider extends WidgetResolver {
 
-    @Override
-    protected Class<? extends SubstitutedWidget> supportedTargetType() {
-        return GLNodeHolder.class;
+    public static final GLViewProvider INSTANCE = new GLViewProvider();
+
+    private GLViewProvider() {
     }
 
     @Override
-    public Widget resolveOrNull(Widget widget) {
+    protected @Nullable Widget tryResolveGeneric(@NonNull SubstitutedWidget widget) {
+        return null;
+    }
+
+    @Override
+    protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget, PeerRequestor.@NonNull Request<?> request) {
+        if (!(request instanceof GLNodeHolder.GLNodeRequest req))
+            return null;
+
         return switch (widget) {
             case ColorFill colorFill -> new GLColorFillPeer(colorFill);
             case Overlay overlay -> new GLOverlayPeer(overlay);

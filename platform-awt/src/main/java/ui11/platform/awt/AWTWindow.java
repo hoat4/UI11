@@ -2,7 +2,9 @@ package ui11.platform.awt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ui11.PeerRequestor;
 import ui11.Widget;
+import ui11.WidgetTree;
 import ui11.animation.Scheduler;
 import ui11.geom.*;
 import ui11.geom.Location.CoordinateSpaceRoot;
@@ -100,7 +102,6 @@ public class AWTWindow {
                     12D, null, TextAlign.LEFT,
                     FontWeight.NORMAL, TextStyle.Wrapping.BETWEEN_WORDS, false, null, Length.zero(), FontStyle.NORMAL);
             Widget content = new Provider<>(WidgetResolver.class, J2DWidgetResolver.INSTANCE, AWTWindow.this.content);
-            content = new Provider<>(Surface.class, rootSurface, content);
             content = new Provider<>(TextStyle.class, rootTextStyle, content);
             content = new Provider<>(AWTWindow.class, AWTWindow.this, content);
             content = new Provider<>(Shell.class, AWTDesktopProvider.DEFAULT_SHELL, content);
@@ -108,7 +109,7 @@ public class AWTWindow {
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
-            return new J2DPeerCreationRequest().executedOn(content, result->{
+            return PeerRequestor.ofSingle(content, rootSurface, result->{
                 rootNodeHolder.set(result.peer());
                 // TODO repaint kéne, ha rootPeer megváltozik
 
@@ -145,7 +146,7 @@ public class AWTWindow {
                 // végtelen rekurzió lesz belőle
                 logger.error("Repaint failed", e);
             }
-            return empty();
+            return new WidgetTree.ChainEnd();
         }
     }
 

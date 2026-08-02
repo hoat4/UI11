@@ -1,6 +1,5 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.Slot;
 import ui11.Widget;
 import ui11.geom.Path;
 import ui11.geom.Size;
@@ -19,15 +18,15 @@ import java.awt.geom.Rectangle2D;
 public class J2DStrokePeer extends Widget {
 
     private final Stroke stroke;
+    private final J2DSurface parentSurface;
 
-    @Inject private Slot textureSlot;
-    @Inject private Surface parentSurface;
     @Inject private TextStyle textStyle;
 
     @Remember private StrokeSurface surface;
 
-    public J2DStrokePeer(Stroke stroke) {
+    public J2DStrokePeer(Stroke stroke, J2DSurface parentSurface) {
         this.stroke = stroke;
+        this.parentSurface = parentSurface;
     }
 
     @Override
@@ -40,7 +39,7 @@ public class J2DStrokePeer extends Widget {
         double thickness = stroke.thickness().px() + stroke.thickness().em() * textStyle.size();
         // relative része nincs a thicknessnek, ld. Stroke konstruktora
 
-        surface.parent.set((J2DSurface) parentSurface);
+        surface.parent.set(parentSurface);
         surface.updateShape(stroke.path(), new BasicStroke((float) thickness));
 
         return new Provider<>(Surface.class, surface, stroke.texture());

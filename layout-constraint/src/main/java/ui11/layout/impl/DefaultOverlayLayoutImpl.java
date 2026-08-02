@@ -1,23 +1,20 @@
 package ui11.layout.impl;
 
-import ui11.Slot;
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.graphics.effect.Overlay;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
-import ui11.text.Text;
 
 public final class DefaultOverlayLayoutImpl extends Widget {
 
     private final Overlay overlay;
     private final BoxLayoutResult.SizeRequest sizeRequest;
-    private final Widget peer;
 
-    public DefaultOverlayLayoutImpl(Overlay overlay, BoxLayoutResult.SizeRequest sizeRequest, Widget peer) {
+    public DefaultOverlayLayoutImpl(Overlay overlay, BoxLayoutResult.SizeRequest sizeRequest) {
         this.overlay = overlay;
         this.sizeRequest = sizeRequest;
-        this.peer = peer;
     }
 
     @Override
@@ -25,8 +22,8 @@ public final class DefaultOverlayLayoutImpl extends Widget {
         BoxConstraints constraints = sizeRequest.constraints();
         // TODO ha csak Gone van az Overlayben, akkor mi a teendő?
         BoxLayoutResult.SizeRequest req = new BoxLayoutResult.SizeRequest(constraints);
-        // TODO slotok? reuse?
-        return req.executedOn(overlay.items(), results -> {
+        // TODO reuse?
+        return PeerRequestor.ofMultipleWidgets(overlay.items(), req, results -> {
             Size s = results.stream().
                     filter(result -> switch (result.peer()) {
                         case BoxLayoutResult.OfChosenSize _ -> true;
@@ -39,7 +36,7 @@ public final class DefaultOverlayLayoutImpl extends Widget {
             if (!constraints.isSatisfiedBy(s))
                 throw new RuntimeException(constraints + " is not satisfied by " + s + " (returned by " + this + ")");
 
-            return new BoxLayoutResult.OfChosenSize(s, peer, sizeRequest.constraints());
+            return sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(s));
         });
     }
 }

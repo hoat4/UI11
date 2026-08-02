@@ -6,6 +6,7 @@ import ui11.color.Color;
 import ui11.geom.Size;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.platform.awt.j2d.J2DNodeHolder;
+import ui11.platform.awt.j2d.J2DSurface;
 import ui11.platform.awt.j2d.J2DUtil;
 import ui11.platform.awt.j2d.inputtree.OpaqueInputNode;
 import ui11.platform.awt.j2d.rendertree.TextRenderNode;
@@ -19,9 +20,10 @@ public class J2DTextPeer extends Widget {
     private static final Canvas C = new Canvas(); // font metricshez
 
     private final Text text;
+    private final J2DSurface surface;
 
     @Inject private TextStyle textStyle;
-    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
+    @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
 
     @Remember private TextRenderNode node;
     @Remember private OpaqueInputNode inputNode;
@@ -31,8 +33,9 @@ public class J2DTextPeer extends Widget {
     @Remember private Color prevColor;
     @Remember private Font prevFont;
 
-    public J2DTextPeer(Text text) {
+    public J2DTextPeer(Text text, J2DSurface surface) {
         this.text = text;
+        this.surface = surface;
     }
 
     @Override
@@ -68,14 +71,14 @@ public class J2DTextPeer extends Widget {
 
         inputNode.shape.set(new Rectangle(w, h));
 
-        Widget result = new J2DNodeHolder(
+        Widget result = surface.createResponse(new J2DNodeHolder(
                 node,
                 inputNode
-        );
+        ));
 
-        if (sizeRequest != null) {
+        for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             Size size = sizeRequest.constraints().clamp(new Size(w, h));
-            result = new BoxLayoutResult.OfChosenSize(size, result, sizeRequest.constraints());
+            result = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(size), result);
         }
 
         return result;

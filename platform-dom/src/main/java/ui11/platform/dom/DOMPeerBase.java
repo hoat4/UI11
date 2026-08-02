@@ -1,6 +1,8 @@
 package ui11.platform.dom;
 
 import org.teavm.jso.dom.html.HTMLElement;
+import ui11.ParentDataWidget;
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.color.RGBColor;
 import ui11.geom.Length;
@@ -10,7 +12,6 @@ import ui11.layout.Insets;
 import ui11.platform.dom.DOMWidgetWrapper.InheritedTextStyle;
 import ui11.platform.dom.DOMWidgetWrapper.ProxySurface;
 import ui11.platform.dom.peers.DOMCoverPeer;
-import ui11.PeerCreationRequest;
 import ui11.text.TextStyle;
 
 import java.util.List;
@@ -79,22 +80,27 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected Widget makePeer(Widget widget, Function<DOMElementHolder, Widget> f) {
-        return new DOMPeerCreationRequest().executedOn(new DOMWidgetWrapper(widget), result ->
-                f.apply(result.peer()));
+        return PeerRequestor.ofSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(),
+                result -> f.apply(result.peer()));
     }
 
     @SuppressWarnings("SimplifyStreamApiCallChains")
     protected Widget makePeers(List<? extends Widget> widgets,
-                               Function<List<? extends DOMElementHolder>, Widget> f) {
+                               Function<List<DOMElementHolder>, Widget> f) {
         return makePeers2(widgets, results ->
-                f.apply(results.stream().map(PeerCreationRequest.ResolutionResult::peer).
+                f.apply(results.stream().map(PeerRequestor.Result::peer).
                         collect(Collectors.toUnmodifiableList())));
     }
 
-    protected Widget makePeers2(List<? extends Widget> widgets,
-                                Function<List<? extends PeerCreationRequest.ResolutionResult<DOMElementHolder>>, Widget> f) {
-        return new DOMPeerCreationRequest().executedOn(
-                widgets.stream().map(DOMWidgetWrapper::new).toList(), f);
+    @SafeVarargs
+    protected final Widget makePeers2(List<? extends Widget> widgets,
+                                Function<List<PeerRequestor.Result<DOMElementHolder>>, Widget> f,
+                                Class<? extends ParentDataWidget.ParentData>... interestedParentDataTypes) {
+        return PeerRequestor.ofMultipleWidgets(
+                widgets.stream().map(DOMWidgetWrapper::new).toList(),
+                new DOMPeerCreationRequest(),
+                f
+        ).withInterestedParentDataType(interestedParentDataTypes);
     }
 
     protected <K> Widget makePeers(Map<K, ? extends Widget> widgets,
@@ -103,7 +109,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
                 Map.Entry::getKey,
                 e -> new DOMWidgetWrapper(e.getValue()))
         );
-        return new DOMPeerCreationRequest().executedOn(widgets, results ->
+        return PeerRequestor.ofMultipleWidgets(widgets, new DOMPeerCreationRequest(), results ->
                 f.apply(results.entrySet().stream().
                         collect(toUnmodifiableMap(
                                 Map.Entry::getKey,
@@ -113,7 +119,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
 
     protected Widget makePeer_sameSurface(Widget widget, Function<DOMElementHolder, Widget> f) {
         // TODO ez most ugyanaz mint a sima makePeer
-        return new DOMPeerCreationRequest().executedOn(new DOMWidgetWrapper(widget),
+        return PeerRequestor.ofSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(),
                 result -> f.apply(result.peer()));
     }
 
@@ -206,7 +212,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
         return !cumulativePropList.onClick().isEmpty();
     }
 
-    public static final class DOMPeerCreationRequest extends PeerCreationRequest<DOMElementHolder> {
+    public static final class DOMPeerCreationRequest extends PeerRequestor.Request<DOMElementHolder> {
 
         public DOMPeerCreationRequest() {
             super(DOMElementHolder.class);
@@ -223,7 +229,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
         }
     }
 
-    public static final class CSSBackgroundImagePeerCreationRequest extends PeerCreationRequest<DOMCoverPeer.CSSBackgroundImage> {
+    public static final class CSSBackgroundImagePeerCreationRequest extends PeerRequestor.Request<DOMCoverPeer.CSSBackgroundImage> {
 
         public CSSBackgroundImagePeerCreationRequest() {
             super(DOMCoverPeer.CSSBackgroundImage.class);

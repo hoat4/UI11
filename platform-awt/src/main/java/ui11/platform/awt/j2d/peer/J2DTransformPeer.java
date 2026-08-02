@@ -1,14 +1,13 @@
 package ui11.platform.awt.j2d.peer;
 
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Mat4;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
 import ui11.graphics.effect.Transform;
 import ui11.observable.MutableObservable;
 import ui11.platform.awt.j2d.J2DNodeHolder;
-import ui11.platform.awt.j2d.J2DPeerCreationRequest;
 import ui11.platform.awt.j2d.J2DSurface;
 import ui11.platform.awt.j2d.J2DSurface.J2DSurfaceWithOwnShape;
 import ui11.platform.awt.j2d.inputtree.InputNode;
@@ -17,7 +16,6 @@ import ui11.platform.awt.j2d.inputtree.TransparentInputNode;
 import ui11.platform.awt.j2d.rendertree.EmptyRenderNode;
 import ui11.platform.awt.j2d.rendertree.RenderNode;
 import ui11.platform.awt.j2d.rendertree.TransformRenderNode;
-import ui11.provide.Provider;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -26,20 +24,20 @@ import java.awt.geom.NoninvertibleTransformException;
 public class J2DTransformPeer extends Widget {
 
     private final Transform transform;
+    private final J2DSurface parentSurface;
 
-    @Inject private Surface parentSurface;
-
-    @Remember private TransformedSurface surface;
+    @Remember private TransformedSurface childSurface;
     @Remember private TransformRenderNode node;
     @Remember private TransformInputNode inputNode;
 
-    public J2DTransformPeer(Transform transform) {
+    public J2DTransformPeer(Transform transform, J2DSurface surface) {
         this.transform = transform;
+        this.parentSurface = surface;
     }
 
     @Override
     protected void initState() {
-        surface = new TransformedSurface();
+        childSurface = new TransformedSurface();
         node = new TransformRenderNode();
         inputNode = new TransformInputNode();
     }
@@ -49,23 +47,22 @@ public class J2DTransformPeer extends Widget {
         // TODO mi történjen, ha 0-ra scaleelünk egy ColorFillt vagy hasonlót (aminek végtelen a mérete)?
         //      most jelenleg eltüntetjük. ha mégsem kéne eltüntetni, módosítsuk lent a kódot.
 
-        surface.parent.set((J2DSurface) parentSurface);
-        boolean nonDegenerateTransform = surface.update(transform.transformation());
+        childSurface.parent.set(parentSurface);
+        boolean nonDegenerateTransform = childSurface.update(transform.transformation());
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
-        Widget content = new Provider<>(Surface.class, surface, transform.content());
-        return new J2DPeerCreationRequest().executedOn(content, result -> {
-            return new J2DNodeHolder(
+        return PeerRequestor.ofSingle(transform.content(), childSurface, result -> {
+            return parentSurface.createResponse(new J2DNodeHolder(
                     nonDegenerateTransform ?
                             makeRenderNode(result.peer().renderNode()) :
                             EmptyRenderNode.INSTANCE,
                     nonDegenerateTransform ?
                             makeInputNode(result.peer().inputNode()) :
                             TransparentInputNode.INSTANCE
-            );
+            ));
         });
     }
 
@@ -73,7 +70,7 @@ public class J2DTransformPeer extends Widget {
         if (transform.transformation().isIdentity() || childNode instanceof EmptyRenderNode)
             return childNode;
 
-        AffineTransform tx = surface.awtAffineTransformation;
+        AffineTransform tx = childSurface.awtAffineTransformation;
 
         if (childNode instanceof TransformRenderNode childTransformNode) {
             node.child.set(childTransformNode.child.get());
@@ -95,7 +92,7 @@ public class J2DTransformPeer extends Widget {
         if (transform.transformation().isIdentity() || childNode == TransparentInputNode.INSTANCE)
             return childNode;
 
-        AffineTransform tx = surface.awtAffineTransformation;
+        AffineTransform tx = childSurface.awtAffineTransformation;
 
         if (childNode instanceof TransformInputNode childTransformNode) {
             inputNode.child.set(childTransformNode.child.get());

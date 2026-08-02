@@ -1,5 +1,6 @@
 package ui11.platform.awt.j2d.peer;
 
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.geom.Path;
 import ui11.geom.Size;
@@ -17,13 +18,13 @@ import java.awt.geom.Rectangle2D;
 public class J2DPathShapedPeer extends Widget {
 
     private final PathShaped pathShaped;
-
-    @Inject private Surface parentSurface;
+    private final J2DSurface parentSurface;
 
     @Remember private ClippedSurface childSurface;
 
-    public J2DPathShapedPeer(PathShaped pathShaped) {
+    public J2DPathShapedPeer(PathShaped pathShaped, J2DSurface surface) {
         this.pathShaped = pathShaped;
+        this.parentSurface = surface;
     }
 
     @Override
@@ -33,9 +34,10 @@ public class J2DPathShapedPeer extends Widget {
 
     @Override
     protected Widget build() {
-        childSurface.parent.set((J2DSurface) parentSurface);
+        childSurface.parent.set(parentSurface);
         childSurface.updateShape(pathShaped.shape());
-        return new Provider<>(Surface.class, childSurface, pathShaped.content());
+        return PeerRequestor.ofSingle(pathShaped.content(), childSurface,
+                result -> parentSurface.createResponse(result.peer()));
     }
 
     private static class ClippedSurface extends J2DSurfaceWithOwnShape {
@@ -52,6 +54,7 @@ public class J2DPathShapedPeer extends Widget {
             this.shape = path;
             Shape awtShape = J2DUtil.pathToJ2D(path);
             this.awtShape.set(awtShape);
+            //System.err.println("updateShape to "+awtShape);
             Rectangle2D bounds = awtShape.getBounds2D();
             this.size.set(new Size(bounds.getMaxX(), bounds.getMaxY()));
         }

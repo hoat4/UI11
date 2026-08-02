@@ -1,5 +1,6 @@
 package ui11.platform.opengl.peer;
 
+import ui11.PeerRequestor;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.graphics.Surface;
@@ -44,7 +45,7 @@ public class GLClipPeer extends Widget {
 
         Widget widget = clip.content();
         widget = new Provider<>(Surface.class, childSurface, widget);
-        return new GLNodeHolder.GLNodeRequest().executedOn(widget, result -> {
+        return PeerRequestor.ofSingle(widget, new GLNodeHolder.GLNodeRequest(), result -> {
             return new GLNodeHolder(
                     makeRenderNode(result.peer().renderNode(), childSurface.shape()),
                     makeInputNode(result.peer().inputNode(), childSurface.shape())

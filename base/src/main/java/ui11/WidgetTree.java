@@ -4,6 +4,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ui11.observable.ObservableBase;
 import ui11.observable.ObserverHolder;
 import ui11.provide.DynamicProvider;
 import ui11.provide.Provider;
@@ -16,6 +17,10 @@ import java.util.concurrent.Executor;
  * platform-specific windowing system and rendering implementation modules.
  */
 public final class WidgetTree {
+
+    private static final boolean TRACE_REFRESH = false;
+
+    static final Object IV_NOT_PROVIDED = new Object();
 
     // TODO ha nincs slf4j impl, akkor ez NOP logger lesz
     private static final Logger logger = LoggerFactory.getLogger(WidgetTree.class);
@@ -57,6 +62,11 @@ public final class WidgetTree {
             beganRefreshID++;
             refreshScheduled = false;
 
+            if (TRACE_REFRESH)
+                // azért stderr, mert "Missed to refresh" szöveg logger.error, ami stderrre megy általában,
+                // és a sorrend összekavarodna
+                System.err.println("[TRACE_REFRESH] Begin refresh " + beganRefreshID);
+
             if (refreshStack != null)
                 throw new RuntimeException("refresh stack already exists");
 
@@ -67,11 +77,12 @@ public final class WidgetTree {
 
             ResolutionRequest<SubstitutedWidget> rootReq = new ResolutionRequest<>(
                     null,
-                    this,
-                    new PeerCreationRequest<>(SubstitutedWidget.class) {
+                    new PeerRequestor.Request<>(SubstitutedWidget.class) {
                     },
-                    rootWidget);
-            root = findOrCreateWidgetState(rootReq.widget, null, root, rootReq, Set.of());
+                    rootWidget,
+                    /* interestedParentDataTypes */ Set.of()
+            );
+            root = findOrCreateWidgetState(rootReq.widget, null, root, Set.of(rootReq), false);
             refreshStack = new RefreshStack(root);
 
             while (!refreshStack.isEmpty()) {
@@ -94,7 +105,7 @@ public final class WidgetTree {
 
                 assert !w.hasFlag(WidgetState.FLAG_NEEDS_INIT) || needsRebuild;
 
-                w.registerParentAndPushIVs(refreshStack.peekWidgetInstantiation(), refreshStack);
+                w.registerParent(refreshStack.peekWidgetInstantiation());
 
                 w.refreshedAt = beganRefreshID;
 
@@ -106,9 +117,8 @@ public final class WidgetTree {
                 }
 
                 needsRebuild |= w.retrieveIVValues();
-                needsDescendantRefresh |= w.compareAndSetComputedReqs(refreshStack.computedReqs());
 
-                if (w.stateWidget instanceof ResolutionRequestWidget)
+                if (w.stateWidget instanceof PeerRequestor)
                     needsRebuild = true; // ivsFromSecondaryLocation lehetséges megváltozása miatt
 
                 if (needsRebuild) {
@@ -129,14 +139,21 @@ public final class WidgetTree {
 
                 if (!needsRebuild) {
                     if (!needsDescendantRefresh && w.descendantsInterestedIVs != null &&
-                            !refreshStack.ivsMatch(w.descendantsInterestedIVs))
+                            !ivsMatch(w, w.descendantsInterestedIVs))
                         needsDescendantRefresh = true;
+
+                    if (TRACE_REFRESH)
+                        System.err.println("[TRACE_REFRESH] " + w + ": no rebuild, " +
+                                (needsDescendantRefresh ? "but enter children" : "skip children"));
 
                     findNextToRefresh(!needsDescendantRefresh);
                     continue;
                 }
 
-                if (w.stateWidget instanceof ResolutionRequestWidget rrw) {
+                if (TRACE_REFRESH)
+                    System.err.println("[TRACE_REFRESH] " + w + ": rebuild");
+
+                if (w.stateWidget instanceof PeerRequestor rrw) {
                     WidgetInstantiation[] prevChildren = (WidgetInstantiation[]) w.children;
                     WidgetInstantiation[] newChildren = rrw.buildMulti(w, prevChildren);
                     Objects.requireNonNull(newChildren);
@@ -147,29 +164,24 @@ public final class WidgetTree {
                 } else {
                     WidgetInstantiation prevChild = (WidgetInstantiation) w.children;
 
-                    w.removeObservers();
-
-                    Set<ResolutionRequest<?>> addedReqs = new HashSet<>();
+                    w.removeObservers(null);
 
                     observerHolder.setObserver(w);
                     Widget content;
                     try {
-                        if (w.stateWidget instanceof SubstitutedWidget sw)
-                            content = sw.build2(addedReqs);
-                        else
-                            content = w.stateWidget.build();
+                        content = w.stateWidget.build();
                         content = w.decorateChild(content);
                     } finally {
                         observerHolder.clearObserver(w);
                     }
 
-                    if (content == null && !(w.stateWidget instanceof SubstitutedWidget))
+                    if (content == null && !(w.stateWidget instanceof ChainEnd))
                         throw new NullPointerException(w.stateWidget.getClass().getSimpleName() +
                                 ".build() returned null on " + w);
 
                     WidgetInstantiation newChild;
                     if (content != null)
-                        newChild = findOrCreateWidgetState(content, w, prevChild, null, addedReqs);
+                        newChild = findOrCreateWidgetState(content, w, prevChild, null, false);
                     else
                         newChild = null;
                     w.children = newChild;
@@ -189,10 +201,13 @@ public final class WidgetTree {
 
             laterValidationChecks.forEach((w, checks) -> {
                 for (LaterValidationCheck check : checks) {
-                    if (w.laterValidationCheckActual < check.required)
+                    if (w.laterValidationCheckActual < check.required) {
                         // TODO valami értelmesebb kéne a logüzenetbe a w.toString elejére
                         //      ahelyett hogy "ui11.WidgetState@3dc45957"
                         logger.error("Missed to refresh " + w + ": " + check.msgIfNotAchieved);
+                        w.removeFlag(WidgetState.FLAG_NEEDS_REBUILD);
+                        w.restoreObservables(check.toBeRestored);
+                    }
                 }
             });
         } catch (Throwable e) {
@@ -200,23 +215,34 @@ public final class WidgetTree {
             logger.error("Refresh failed", e);
             throw e;
         } finally {
+            if (TRACE_REFRESH)
+                System.err.println("[TRACE_REFRESH] Finished refresh " + beganRefreshID);
             finishedRefreshID = beganRefreshID;
             refreshStack = null;
             laterValidationChecks = null;
         }
     }
 
+    private boolean ivsMatch(WidgetState<?> w, Map<Class<?>, Object> descendantsInterestedIVs) {
+        for (Map.Entry<Class<?>, Object> entry : descendantsInterestedIVs.entrySet()) {
+            if (!Objects.equals(getIVForCurrentWidget(w, entry.getKey(), false), entry.getValue()))
+                return false;
+        }
+        return true;
+    }
+
     /**
      * Az új childeket hozzáadjuk a parentjükhöz, az eltűnteket töröljük a parentjükből,
      * valamint az összes esetén berakjuk a refresh queueba, amelyeknek kell refresh.
      */
-    private static void removeFromParentListFromRemovedChildren(WidgetInstantiation[] prevChildren,
-                                                                WidgetInstantiation[] newChildren,
+    private static void removeFromParentListFromRemovedChildren(WidgetInstantiation @NonNull [] prevChildren,
+                                                                WidgetInstantiation @Nullable [] newChildren,
                                                                 WidgetState<?> parent) {
         for (WidgetInstantiation prevChild : prevChildren)
             prevChild.child().removeFlagIfPresent(WidgetState.FLAG_USAGE_CHECK);
-        for (WidgetInstantiation newChild : newChildren)
-            newChild.child().addFlagIfNotPresent(WidgetState.FLAG_USAGE_CHECK);
+        if (newChildren != null)
+            for (WidgetInstantiation newChild : newChildren)
+                newChild.child().addFlagIfNotPresent(WidgetState.FLAG_USAGE_CHECK);
         for (WidgetInstantiation prevChild : prevChildren) {
             if (prevChild.child().hasFlag(WidgetState.FLAG_USAGE_CHECK))
                 prevChild.child().removeFlag(WidgetState.FLAG_USAGE_CHECK);
@@ -248,9 +274,6 @@ public final class WidgetTree {
                 WidgetState<?> peek = refreshStack.peekWidget();
                 if (peek.descendantsInterestedIVs == null)
                     assert peek == w;
-                else
-                    // ennek semmi köze a kereséshez, csak pop előtti teendő
-                    peek.propagateDescendantInterestedIVs();
 
                 RefreshStack.Item current = refreshStack.pop();
                 assert (current.parent == null) == refreshStack.isEmpty();
@@ -271,13 +294,14 @@ public final class WidgetTree {
      * hozzáadja a parent children listájába, illetve a refreshQueueba is.
      * Ha parent nem null, akkor feltételezi, hogy {@link WidgetState#FLAG_ACTIVE aktív} állapotban van.
      *
-     * @param parent ez csak akkor null, ha a root widgetről van szó
+     * @param parent          ez csak akkor null, ha a root widgetről van szó
+     * @param clearParentData ez csak akkor értelmezhető, ha {@code reqs} nem null
      */
     WidgetInstantiation findOrCreateWidgetState(@NonNull Widget widget,
                                                 @Nullable WidgetState<?> parent,
                                                 @Nullable WidgetInstantiation previous,
-                                                @Nullable ResolutionRequest<?> req,
-                                                @NonNull Set<ResolutionRequest<?>> completedReqs) {
+                                                @Nullable Set<? extends ResolutionRequest<?>> reqs,
+                                                boolean clearParentData) {
         Objects.requireNonNull(widget, "widget");
         if (parent != null && !parent.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalArgumentException("parent not active: " + parent);
@@ -285,8 +309,13 @@ public final class WidgetTree {
         Slot slot = null;
 
         Map<Class<?>, Object> ivs = new HashMap<>();
-        if (req != null)
-            ivs.put(ParentDataWidget.ParentDataCollection.class, ParentDataWidget.ParentDataCollection.CLEAR);
+
+        if (reqs != null) {
+            ivs.put(ResolutionRequestCollection.class, new ResolutionRequestCollection(reqs));
+
+            if (clearParentData)
+                ivs.put(ParentDataWidget.ParentDataCollection.class, ParentDataWidget.ParentDataCollection.CLEAR);
+        }
 
         WidgetState<?> w = previous == null ? null : previous.child();
 
@@ -361,48 +390,100 @@ public final class WidgetTree {
             }
         }
 
-        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs, req, completedReqs);
-        if (req != null)
-            req.reqWI = wi;
+        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs);
+        if (reqs != null)
+            for (ResolutionRequest<?> req : reqs)
+                req.reqWI = wi;
         return wi;
     }
 
-    Object getAndSubscribeIVForCurrentWidget(WidgetState<?> widgetState, Class<?> type, Object ifNotProvided) {
+    /**
+     * @return {@link #IV_NOT_PROVIDED}, ha nincs
+     */
+    Object getIVForCurrentWidget(WidgetState<?> widgetState, Class<?> type, boolean subscribe) {
         if (!widgetState.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalStateException("not active");
 
-        if (type == ResolutionRequestCollection.class)
-            // erre nem kell feliratkozni, mert egész subtree refreshelődni fog
-            return refreshStack.computedReqs();
+        class Item {
+            final WidgetState<?> w;
+            final Object value;
+            int parentIndex;
 
-        WidgetInstantiation w = refreshStack.peekWidgetInstantiation();
-        assert w.child() == widgetState;
-
-        RefreshStack.IVValueWrapper iv = refreshStack.getIV(type);
-        if (iv == null) {
-            WidgetState<?> ancestor = widgetState.parents.getLast().parent();
-            for (; ancestor != w.parent(); ancestor = ancestor.parents.getLast().parent()) {
-                assert ancestor != null;
-                ancestor.addDescendantInterestedIV(type, null, null);
+            Item(WidgetState<?> w, Object value) {
+                Objects.requireNonNull(w);
+                this.w = w;
+                this.value = value;
             }
-            if (ancestor != null)
-                ancestor.addDescendantInterestedIV(type, null, null);
-            return ifNotProvided;
         }
 
-        if (iv.origin != null)
-            if (iv.isFromDescendant) {
-                WidgetState<?> ancestor = widgetState.parents.getLast().parent();
-                for (; ancestor != iv.origin.parent(); ancestor = ancestor.parents.getLast().parent()) {
-                    assert ancestor != null;
-                    ancestor.addDescendantInterestedIV(type, iv.value, null);
-                }
-            } else {
-                if (iv.origin != w && w.parent() != null)
-                    w.parent().addDescendantInterestedIV(type, iv.value, null);
+        Map<Object, List<Item>> differentValues = new IdentityHashMap<>();
+
+        Deque<Item> stack = new LinkedList<>();
+        stack.push(new Item(widgetState, IV_NOT_PROVIDED));
+
+        // TODO ez így exponenciálisan lassul, ha sok elágazás van.
+        //      úgy kéne hogy ha egy node-ot már bejártunk és nincs új információ, akkor ne menjünk oda újra.
+        while (!stack.isEmpty()) {
+            Item current = stack.peek();
+
+            // current.w.parents lehet hogy üres (inaktivációs queueban vár),
+            // ekkor skippeljük
+
+            if (current.parentIndex == current.w.parents.size()) {
+                stack.pop();
+                continue;
             }
 
-        return iv.value;
+            WidgetInstantiation edge = current.w.parents.get(current.parentIndex);
+            current.parentIndex++;
+            Object value = edge.directIVs().getOrDefault(type, IV_NOT_PROVIDED);
+
+            if (subscribe && value != IV_NOT_PROVIDED &&
+                    stack.stream().allMatch(item -> item.value == IV_NOT_PROVIDED)) {
+                for (Item item : stack) {
+                    if (item.w != widgetState)
+                        item.w.descendantsInterestedIVs.put(type, value);
+                }
+            }
+
+            if (edge.parent() == null) {
+                assert edge == root;
+                Object visibleValue = IV_NOT_PROVIDED;
+                for (Item item : stack.reversed()) {
+                    if (item.value != IV_NOT_PROVIDED) {
+                        visibleValue = item.value;
+                        break;
+                    }
+                }
+                if (visibleValue == IV_NOT_PROVIDED)
+                    visibleValue = value;
+                if (!differentValues.containsKey(visibleValue))
+                    differentValues.put(visibleValue, List.copyOf(stack));
+            } else {
+                stack.push(new Item(edge.parent(), value));
+            }
+        }
+
+        assert !differentValues.isEmpty();
+        if (differentValues.size() > 1) {
+            if (type == ResolutionRequestCollection.class) {
+                Set<ResolutionRequestCollection> colls =
+                        (Set<ResolutionRequestCollection>) (Set<?>) differentValues.keySet();
+                return ResolutionRequestCollection.combine(colls);
+            }
+
+            StringBuilder sb = new StringBuilder("Different values for inherited value " + type.getName() + ":");
+            for (Map.Entry<Object, List<Item>> e : differentValues.entrySet()) {
+                sb.append("\n- ").append(e.getKey());
+                sb.append("\n  Found at: ");
+                int i = e.getValue().size();
+                for (Item item : e.getValue().reversed())
+                    sb.append("\n   ").append(--i).append(".: ").append(item.w);
+            }
+            throw new RuntimeException(sb.toString());
+        }
+
+        return differentValues.keySet().iterator().next();
     }
 
     void addToInactivationQueue(@NonNull WidgetState<?> w) {
@@ -421,7 +502,7 @@ public final class WidgetTree {
         inactivationQueue.remove(w);
     }
 
-    void submitForLaterValidationCountCheck(WidgetState<?> w, String msg) {
+    void submitForLaterValidationCountCheck(WidgetState<?> w, String msg, List<ObservableBase> toBeRestored) {
         if (beganRefreshID == finishedRefreshID)
             throw new IllegalStateException();
 
@@ -430,7 +511,7 @@ public final class WidgetTree {
         long expected = ++laterValidationCheckGenerator;
         w.laterValidationCheckLast = expected;
         laterValidationChecks.computeIfAbsent(w, __ -> new ArrayList<>()).
-                add(new LaterValidationCheck(expected, msg));
+                add(new LaterValidationCheck(expected, msg, toBeRestored));
     }
 
     boolean isRefreshScheduled() {
@@ -463,6 +544,15 @@ public final class WidgetTree {
         public long layoutTime;
     }
 
-    private static record LaterValidationCheck(long required, String msgIfNotAchieved) {
+    private static record LaterValidationCheck(long required, String msgIfNotAchieved,
+                                               List<ObservableBase> toBeRestored) {
+    }
+
+    public static final class ChainEnd extends Widget {
+
+        @Override
+        protected Widget build() {
+            return null;
+        }
     }
 }

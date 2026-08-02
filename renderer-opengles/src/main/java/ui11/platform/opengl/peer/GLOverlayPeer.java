@@ -1,6 +1,6 @@
 package ui11.platform.opengl.peer;
 
-import ui11.MultiSlot;
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.graphics.Surface;
 import ui11.graphics.effect.Overlay;
@@ -61,7 +61,9 @@ public class GLOverlayPeer extends Widget {
         if (childSurfaces.size() > overlay.items().size())
             childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
 
-        return new GLNodeHolder.GLNodeRequest().executedOn(items, this::doBuild);
+        return PeerRequestor.ofMultipleWidgets(items, new GLNodeHolder.GLNodeRequest(),
+                results -> doBuild(results.stream().
+                        map(PeerRequestor.Result::peer).toList()));
     }
 
     private Widget doBuild(List<? extends GLNodeHolder> children) {

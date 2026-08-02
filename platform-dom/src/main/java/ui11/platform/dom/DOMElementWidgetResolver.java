@@ -2,6 +2,7 @@ package ui11.platform.dom;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.PeerRequestor;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.WidgetResolver;
@@ -46,12 +47,7 @@ import static ui11.graphics.effect.Overlay.overlay;
 class DOMElementWidgetResolver extends WidgetResolver {
 
     @Override
-    protected Class<? extends SubstitutedWidget> supportedTargetType() {
-        return DOMElementHolder.class;
-    }
-
-    @Override
-    public @Nullable Widget resolveOrNull(@NonNull Widget widget) {
+    protected @Nullable Widget tryResolveGeneric(@NonNull SubstitutedWidget widget) {
         return switch (widget) {
             case ColorFill cf -> new ColorFillPeer(cf);
             case Text s -> new TextElementPeer(s);
@@ -130,4 +126,9 @@ class DOMElementWidgetResolver extends WidgetResolver {
         };
     }
 
+    @Override
+    protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
+                                                         PeerRequestor.@NonNull Request<?> request) {
+        return null;
+    }
 }

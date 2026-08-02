@@ -1,19 +1,18 @@
 package ui11;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.provide.Provider;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.util.*;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 
 // időnként felmerül, hogy ezt jó lenne külön package-be vinni, WidgetResolver és GlobalWidgetResolvers mellé.
 // Először azért volt problémás, mert használta findInheritedValueForInjection-t egyrészt a WidgetResolver
 // lookupolásához, másrészt a ResolutionContext::inherited implementálásához. ez megoldódott, át is került
 // ui11.resolution package-be.
-// De aztán jött hogy legyen mint SubstitutedWidget upvalue is egyben, meg az egész PeerCreationRequest dolog,
+// De aztán jött hogy legyen mint SubstitutedWidget upvalue is egyben, meg az egész PeerRequest dolog,
 // és így meg rengeteg hivatkozás lenne package-ek között, ezért inkább visszraktam a root package-be.
 
 /**
@@ -23,15 +22,12 @@ import static java.util.stream.Collectors.joining;
  * A {@linkplain SubstitutedWidget} must not contain fields annotated with {@link ui11.Widget.Inject @Inject} or
  * {@link Widget.Remember @Remember}.
  * <p>
- * If a {@linkplain SubstitutedWidget} is handled by a {@link PeerCreationRequest}, then it doesn't build more widgets.
+ * If a {@linkplain SubstitutedWidget} is handled by a {@link PeerRequestor.Request}, then it doesn't build more widgets.
  */
 public abstract class SubstitutedWidget extends Widget {
 
     @Inject(required = false) private WidgetResolver widgetResolver;
     @Inject private ResolutionRequestCollection peerCreationRequestCollection;
-
-    // TODO ezt csak akkor kéne lekérdezni és observálni, ha resolutionRequest.requestData.peerType().isInstance(this)
-    @Inject(required = false) private ParentDataWidget.ParentDataCollection parentDataCollection;
 
     /**
      * It is final because there are no {@link Remember state fields} permitted in the subclasses, so it not sensible
@@ -47,68 +43,96 @@ public abstract class SubstitutedWidget extends Widget {
 
     @Override
     protected final Widget build() {
-        throw new UnsupportedOperationException();
-    }
+        // GlobalWidgetResolversről feltesszük hogy composite
+        WidgetResolver.CompositeWidgetResolver resolvers = (WidgetResolver.CompositeWidgetResolver)
+                (widgetResolver != null ?
+                        WidgetResolver.composite(GlobalWidgetResolvers.instance(), widgetResolver) :
+                        GlobalWidgetResolvers.instance());
 
-    @SuppressWarnings("ConstantValue")
-    Widget build2(Set<ResolutionRequest<?>> completedReqsDst) {
-        SubstitutedWidget potentialPeer =
-                this instanceof ParentDataWidget.CombinerParentDataWidget c ? c.parentData : this;
-        boolean allCompleted = true;
-        for (ResolutionRequest<?> resolutionRequest : peerCreationRequestCollection.remainingRequests()) {
-            if (resolutionRequest.requestData.peerType().isInstance(potentialPeer) &&
-                    potentialPeer.matches(resolutionRequest.requestData)) {
-                List<? extends ParentDataWidget> parentDataList =
-                        parentDataCollection == null ? List.of() : parentDataCollection.parentDataList;
-                // TODO ha már kapott resultot ebben a refreshben, akkor az újabbakat ignorálnia kéne vagy beraknia?
-                // TODO ha this instanceof ParentDataWidget, akkor értelmetlen hogy setResultUncheckedben
-                //      ellenőrizzük a next widget egyezőségét is
-                resolutionRequest.setResultUnchecked(potentialPeer, parentDataList,
-                        widgetState().tree.beganRefreshID);
-                completedReqsDst.add(resolutionRequest);
-            } else
-                allCompleted = false;
-        }
-        if (allCompleted)
-            return null;
+        Map<ResolverWidgetKey, Widget> childrenWidgets = new HashMap<>();
+        Map<ResolverWidgetKey, Map<PeerRequestor.Request<?>, ResolutionRequest<?>>> childrenReqs = new HashMap<>();
 
-        Widget resolved = null;
+        // peer-specifikus resolvereket előbbre vesszük, mint a nem peer-specifikusakat,
+        // mert ha peer-specifikusakkal ki elégíteni, akkor lehet hogy a nem peer-specifikus nem is kell
+        Set<ResolutionRequest<?>> handledUsingPeerSpecificResolvers = new HashSet<>();
+        for (WidgetResolver resolver : resolvers.leaves()) {
+            for (ResolutionRequest<?> req : peerCreationRequestCollection.requests()) {
+                Widget w = resolver.tryResolveRequestSpecific(this, req.requestData); // TODO exceptionök
+                if (w != null) {
+                    if (!handledUsingPeerSpecificResolvers.add(req))
+                        throw new RuntimeException("Multiple resolvers has applicable " +
+                                "tryResolveRequestSpecific for " + this + " and " + req + ": " + resolvers);
 
-        if (widgetResolver != null)
-            resolved = widgetResolver.resolveOrNull(this);
-
-        if (resolved == null)
-            resolved = GlobalWidgetResolvers.instance().resolveOrNull(this, peerCreationRequestCollection);
-
-        if (resolved == null) {
-            resolved = fallbackContent();
-            if (resolved == null)
-                // nem sikerült peert létrehozni. abban bízunk, hogy resolveAdditional-ök által berakott
-                // ParentDataWidgetek egyike jó lesz, ezért "halogatjuk" az exception dobását.
-                // ha tényleg jó lesz az egyik, akkor ott megszakad a lánc refreshe.
-                resolved = new NoPeerFactoryAvailable(getClass(), peerCreationRequestCollection);
+                    ResolverWidgetKey.OfPeerSpecificResolver key =
+                            new ResolverWidgetKey.OfPeerSpecificResolver(req.requestData);
+                    Object prev = childrenWidgets.putIfAbsent(key, w);
+                    assert prev == null;
+                    childrenReqs.put(key, Map.of(req.requestData, req));
+                }
+            }
         }
 
+        Set<ResolutionRequest<?>> remainedAfterPeerSpecificResolvers =
+                new HashSet<>(peerCreationRequestCollection.requests());
+        remainedAfterPeerSpecificResolvers.removeAll(handledUsingPeerSpecificResolvers);
+        Map<PeerRequestor.Request<?>, ResolutionRequest<?>> remainingForGeneric =
+                remainedAfterPeerSpecificResolvers.stream().
+                        collect(toMap(r -> r.requestData, r -> r));
 
-        WidgetResolver wr = GlobalWidgetResolvers.instance();
-        if (widgetResolver != null)
-            wr = WidgetResolver.composite(wr, widgetResolver);
+        boolean foundGenericResolver = false;
 
-        for (ResolutionRequest<?> req : peerCreationRequestCollection.remainingRequests()) {
-            resolved = wr.resolveAdditional(this, req.requestData, resolved);
-            if (resolved == null)
-                throw new NullPointerException(
-                        WidgetResolver.class.getSimpleName() + ".resolveAdditional returned null\n" +
-                                "Widget: " + this + "\n" +
-                                "Resolver: " + wr /* TODO */);
+        // tryResolveGeneric-eket akkor is végrehajtjuk, ha minden req-t lefednek a peer-specifikusok, hogy
+        // multiple resolvers applicable hibák kijöjjenek
+        for (WidgetResolver resolver : resolvers.leaves()) {
+            Widget w = resolver.tryResolveGeneric(this); // TODO exceptionök
+            if (w == null)
+                continue;
+
+            if (foundGenericResolver)
+                throw new RuntimeException("Multiple resolvers has applicable tryResolveGeneric for " +
+                        this + ": " + resolvers);
+            foundGenericResolver = true;
+
+            if (!remainingForGeneric.isEmpty()) {
+                ResolverWidgetKey.OfGenericResolver key = new ResolverWidgetKey.OfGenericResolver(resolver);
+                childrenWidgets.put(key, w);
+                childrenReqs.put(key, remainingForGeneric);
+            }
         }
 
-        return resolved;
-    }
+        if (peerCreationRequestCollection.requests().size() != handledUsingPeerSpecificResolvers.size()) {
+            // van olyan req, amit a peer-specifikusok nem fednek le
+            if (!foundGenericResolver) {
+                Widget w = fallbackContent(); // TODO exceptionök
+                if (w != null) {
+                    ResolverWidgetKey.OfFallback key = new ResolverWidgetKey.OfFallback();
+                    childrenWidgets.put(key, w);
+                    childrenReqs.put(key, remainingForGeneric);
+                } else {
+                    Set<ResolutionRequest<?>> remainingReqs = new HashSet<>(peerCreationRequestCollection.requests());
+                    remainingReqs.removeAll(handledUsingPeerSpecificResolvers);
+                    throw new RuntimeException("No resolvers supports these and no " +
+                            SubstitutedWidget.class.getSimpleName() + ".fallbackContent is not overriden on " + this + ": " +
+                            remainingReqs + "\n" +
+                            "Refresh stack:" +
+                            widgetState().tree.refreshStackToDebugString());
+                }
+            }
+        }
 
-    // to be overriden if necessary
-    protected boolean matches(@NonNull PeerCreationRequest<?> requestData) {
-        return true;
+        Map<ResolverWidgetKey, Set<PeerRequestor.Request<?>>> childrenReqs2 =
+                childrenReqs.entrySet().stream().collect(toMap(Map.Entry::getKey,
+                        e -> e.getValue().keySet()));
+        return PeerRequestor.ofMultiple(childrenWidgets, childrenReqs2, results -> {
+            results.forEach((req, resultsByKey) -> {
+                resultsByKey.forEach((key, result) -> {
+                    ResolutionRequest<?> parentResolutionRequest = childrenReqs.get(key).get(req);
+                    assert parentResolutionRequest != null;
+                    parentResolutionRequest.setResultFrom(result);
+                });
+            });
+            return new WidgetTree.ChainEnd();
+        }).withClearParentData(false).withInterestedParentDataType(ParentDataWidget.ParentData.class);
     }
 
     // azért nullable és nem ez dobja az exceptiont hanem build, mert így nem csak típusonként lehet eldönteni
@@ -137,9 +161,21 @@ public abstract class SubstitutedWidget extends Widget {
             throw new RuntimeException("no " + WidgetResolver.class.getSimpleName() + " supports " +
                     widgetType.getName() + " and " + ReflectionUtil.simpleName(widgetType) +
                     ".fallbackContent() returned null\n" +
-                    "Remaining requests: " + requests.remainingRequests() + "\n" +
-                    "Completed requests: " + requests.completedRequests() + "\n" +
+                    "Remaining requests: " + requests.requests() + "\n" +
                     "Refresh stack: " + widgetState().tree.refreshStackToDebugString());
+        }
+    }
+
+    private sealed interface ResolverWidgetKey {
+
+        record OfGenericResolver(WidgetResolver widgetResolver) implements ResolverWidgetKey {
+        }
+
+        // TODO ennek jobb key kéne
+        record OfPeerSpecificResolver(PeerRequestor.Request<?> request) implements ResolverWidgetKey {
+        }
+
+        record OfFallback() implements ResolverWidgetKey {
         }
     }
 }

@@ -1,6 +1,7 @@
 package ui11.layout.helper;
 
 import org.jspecify.annotations.NonNull;
+import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.geom.Mat4;
 import ui11.geom.Rect;
@@ -21,7 +22,7 @@ public class SingleChildLayout extends Widget {
     private final Widget child;
     private final SingleChildLayoutDelegate delegate;
 
-    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
+    @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest; // TODO Set<SizeRequest>
     @Inject(required = false) private Surface surface;
 
     public SingleChildLayout(@NonNull Widget child, @NonNull SingleChildLayoutDelegate delegate) {
@@ -36,7 +37,8 @@ public class SingleChildLayout extends Widget {
         BoxConstraints childConstraints = delegate.computeChildConstraints(containerConstraints);
         Objects.requireNonNull(childConstraints);
 
-        return new BoxLayoutResult.SizeRequest(childConstraints).executedOn(child, result -> {
+        BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
+        return PeerRequestor.ofSingle(child, sizeReq, result -> {
             return switch (result.peer()) {
                 case BoxLayoutResult.OfGone _ -> empty(); // mert overlay(gone()) is ugyanaz mint empty()
                 case BoxLayoutResult.OfChosenSize r -> {
@@ -57,7 +59,8 @@ public class SingleChildLayout extends Widget {
                     Widget resultWidget = transformWidgetToBounds(result.widget(), childBounds);
 
                     if (sizeRequest != null)
-                        resultWidget = new BoxLayoutResult.OfChosenSize(containerSize, resultWidget, sizeRequest.constraints());
+                        resultWidget = sizeRequest.createResponse(
+                                new BoxLayoutResult.OfChosenSize(containerSize), resultWidget);
 
                     yield resultWidget;
                 }

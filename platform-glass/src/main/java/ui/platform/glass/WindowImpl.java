@@ -35,7 +35,7 @@ public class WindowImpl {
             TextStyle.Wrapping.NEVER, false, px(12),
             null /* TODO */, TextStyle.FontStyle.NORMAL
     );
-    public static final GLViewProvider DEFAULT_VIEW_PROVIDER = new GLViewProvider();
+    public static final GLViewProvider DEFAULT_VIEW_PROVIDER = GLViewProvider.INSTANCE;
 
     public final Application glassApp;
     private final Window window;
@@ -102,7 +102,7 @@ public class WindowImpl {
                 );
 
 
-                return new GLNodeHolder.GLNodeRequest().executedOn(w, result -> {
+                return PeerRequestor.ofSingle(w, new GLNodeHolder.GLNodeRequest(), result -> {
 
                 /*
                 System.out.println("New render tree. Viewport size: "+innerSize.get());

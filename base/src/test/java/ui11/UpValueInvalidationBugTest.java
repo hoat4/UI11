@@ -45,7 +45,7 @@ public class UpValueInvalidationBugTest {
             this.i = i;
         }
 
-        static class U2Request extends PeerCreationRequest<U2> {
+        static class U2Request extends PeerRequestor.Request<U2> {
 
             static final U2Request INSTANCE = new U2Request();
 

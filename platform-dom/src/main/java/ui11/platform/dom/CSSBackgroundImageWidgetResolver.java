@@ -2,6 +2,7 @@ package ui11.platform.dom;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.PeerRequestor;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.WidgetResolver;
@@ -11,13 +12,21 @@ import ui11.platform.dom.peers.DOMCoverPeer;
 
 class CSSBackgroundImageWidgetResolver extends WidgetResolver {
 
+    public static final CSSBackgroundImageWidgetResolver INSTANCE = new CSSBackgroundImageWidgetResolver();
+
+    private CSSBackgroundImageWidgetResolver() {}
+
     @Override
-    protected Class<? extends SubstitutedWidget> supportedTargetType() {
-        return DOMCoverPeer.CSSBackgroundImage.class;
+    protected @Nullable Widget tryResolveGeneric(@NonNull SubstitutedWidget widget) {
+        return null;
     }
 
     @Override
-    protected @Nullable Widget resolveOrNull(@NonNull Widget widget) {
+    protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
+                                                         PeerRequestor.@NonNull Request<?> request) {
+        if (!(request instanceof DOMPeerBase.CSSBackgroundImagePeerCreationRequest req))
+            return null;
+
         return switch (widget) {
             case SVGImageView svg -> {
                 if (svg.isInteractive())

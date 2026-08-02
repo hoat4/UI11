@@ -1,5 +1,6 @@
 package ui11.layout.impl;
 
+import ui11.PeerRequestor;
 import ui11.Slot;
 import ui11.Widget;
 import ui11.color.Color;
@@ -33,7 +34,6 @@ public class DefaultBoxImpl extends Widget {
     @Inject private TextStyle ts;
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
     @Inject(required = false) private Surface surface;
-    @Inject private Slot contentSlot;
     @Inject private Slot contentWithRoundedCornersSlot;
     @Inject private Slot backgroundSlot;
     @Inject private Slot borderSlot;
@@ -84,7 +84,8 @@ public class DefaultBoxImpl extends Widget {
                     borderSizeSum(Axis.VERTICAL) * 2
             );
             BoxConstraints childConstraints = constraints.subtract(allPadding);
-            return new BoxLayoutResult.SizeRequest(childConstraints).executedOn(box.content().withSlot(contentSlot), r -> {
+            BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
+            return PeerRequestor.ofSingle(box.content(), sizeReq, r -> {
                 Size childSize = switch (r.peer()) {
                     case BoxLayoutResult.OfGone _ -> Size.ZERO;
                     case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size();
@@ -93,7 +94,7 @@ public class DefaultBoxImpl extends Widget {
                 return layoutPhase2(newContainerSize, r.widget());
             });
         } else
-            return layoutPhase2(containerSize, box.content().withSlot(contentSlot));
+            return layoutPhase2(containerSize, box.content());
     }
 
     private Widget layoutPhase2(Size containerSize, Widget content) {
@@ -144,7 +145,7 @@ public class DefaultBoxImpl extends Widget {
 
         Widget w = canvas.build();
         if (sizeRequest != null)
-            w = new BoxLayoutResult.OfChosenSize(containerSize, w, sizeRequest.constraints());
+            w = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(containerSize), w);
         return w;
     }
 

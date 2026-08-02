@@ -1,10 +1,10 @@
 package ui11.platform.opengl;
 
 import org.jspecify.annotations.NonNull;
+import ui11.PeerRequestor;
 import ui11.SubstitutedWidget;
 import ui11.platform.opengl.inputtree.InputNode;
 import ui11.platform.opengl.rendertree.RenderNode;
-import ui11.PeerCreationRequest;
 
 import java.util.Objects;
 
@@ -26,7 +26,7 @@ public final class GLNodeHolder extends SubstitutedWidget {
         return inputNode;
     }
 
-    public static class GLNodeRequest extends PeerCreationRequest<GLNodeHolder> {
+    public static class GLNodeRequest extends PeerRequestor.Request<GLNodeHolder> {
 
         public GLNodeRequest() {
             super(GLNodeHolder.class);

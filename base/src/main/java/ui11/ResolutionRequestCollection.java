@@ -5,108 +5,29 @@ import org.jspecify.annotations.NonNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.function.Predicate.not;
+/**
+ * @param requests the map key is {@linkplain ui11.PeerRequestor.Request#peerType() peer type}
+ */
+record ResolutionRequestCollection(@NonNull Set<? extends ResolutionRequest<?>> requests) {
 
-final class ResolutionRequestCollection {
+    ResolutionRequestCollection {
+        requests = Set.copyOf(requests);
+    }
 
-    /**
-     * key: {@linkplain PeerCreationRequest#peerType() peer type}
-     */
-    public final @NonNull Map<Class<? extends SubstitutedWidget>, Set<ResolutionRequest<?>>> requests;
-    private final @NonNull Set<ResolutionRequest<?>> completed;
-
-    private ResolutionRequestCollection(
-            @NonNull Map<Class<? extends SubstitutedWidget>, Set<ResolutionRequest<?>>> requests,
-            @NonNull Set<ResolutionRequest<?>> completed) {
-        this.requests = requests;
-        this.completed = completed;
-
-        assert requests.values().stream().flatMap(Set::stream).collect(Collectors.toSet()).containsAll(completed);
+    static ResolutionRequestCollection combine(Set<ResolutionRequestCollection> requestCollections) {
+        return new ResolutionRequestCollection(
+                requestCollections.stream().flatMap(c -> c.requests.stream()).
+                        collect(Collectors.toUnmodifiableSet()));
     }
 
     @Override
-    public String toString() {
-        return getClass().getSimpleName() + requests.toString();
+    public @NonNull String toString() {
+        return getClass().getSimpleName() + requests;
     }
 
-    public Collection<? extends ResolutionRequest<?>> remainingRequests() {
-        return requests.values().stream().
-                flatMap(Set::stream).
-                filter(not(completed::contains)).
-                // ideiglenesen random sorrend hogy jobban megjelenjenek a sorrendfüggő hibák
-                // (nested OfChosenSize miatti Missed to refresh ...). később nyilván .collect(toSet()) lesz.
-                        sorted((a, b) -> new Random().nextInt()).
+    public List<? extends ResolutionRequest<?>> byType(Class<? extends PeerRequestor.Request<?>> type) {
+        return requests.stream().
+                filter(r -> type.isInstance(r.requestData)).
                 toList();
-    }
-
-    public Collection<? extends ResolutionRequest<?>> completedRequests() {
-        return completed;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ResolutionRequestCollection that = (ResolutionRequestCollection) o;
-        return requests.equals(that.requests) && completed.equals(that.completed);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = requests.hashCode();
-        result = 31 * result + completed.hashCode();
-        return result;
-    }
-
-    static Builder builder() {
-        return new Builder();
-    }
-
-    public List<ResolutionRequest<?>> byType(Class<? extends PeerCreationRequest<?>> type) {
-        return requests.values().stream().
-                flatMap(Set::stream).
-                filter(r -> type.isInstance(r.requestData) && !completed.contains(r)).
-                toList();
-    }
-
-    static class Builder {
-
-        private final @NonNull Map<Class<? extends SubstitutedWidget>, Set<ResolutionRequest<?>>>
-                requests = new HashMap<>();
-        private final @NonNull Set<ResolutionRequest<?>> completed = new HashSet<>();
-
-        private Builder() {
-        }
-
-        public int requestCount() {
-            return requests.size();
-        }
-
-        public int completedRequestCount() {
-            return completed.size();
-        }
-
-        public void addReq(ResolutionRequest<?> req) {
-            if (!requests.computeIfAbsent(req.requestData.peerType(),
-                    __ -> new HashSet<>()).add(req))
-                // TODO ilyen mikor lehetséges?
-                throw new RuntimeException("Req already added: " + req);
-        }
-
-        public void addCompletions(@NonNull Set<? extends ResolutionRequest<?>> completions) {
-            for (ResolutionRequest<?> completion : completions) {
-                boolean added = completed.add(completion);
-                assert added;
-            }
-        }
-
-        public void addInherited(ResolutionRequestCollection reqColl) {
-            reqColl.requests.values().stream().flatMap(Set::stream).forEach(this::addReq);
-            addCompletions(reqColl.completed);
-        }
-
-        public ResolutionRequestCollection build() {
-            return new ResolutionRequestCollection(requests, completed);
-        }
     }
 }
