@@ -7,7 +7,7 @@ import ui11.window.Window;
 import static ui11.layout.multichild.LinearLayout.column;
 
 // TODO ez egyelőre failol, kéne csinálni normális child modellt SubstitutedWidgetbe hogy ne failoljon.
-//      tehát az lenne a cél, hogy a peer le legyen rebuildelve, amikor a childek változnak, de a childek peerjei nem.
+//      tehát az lenne a cél, hogy a peer ne legyen rebuildelve, amikor a childek változnak, de a childek peerjei nem.
 
 public class TestReplaceLLChild {
     static void main() throws InterruptedException {
