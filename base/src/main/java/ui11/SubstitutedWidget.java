@@ -42,14 +42,20 @@ public abstract class SubstitutedWidget extends Widget {
     protected SubstitutedWidget() {
     }
 
+    // TODO név
+    protected SubstitutedWidget cloneForSubstitution() {
+        return this;
+    }
+
     /**
      * It is final because there are no {@linkplain Remember state fields} permitted in the subclasses, so it is
      * not sensible for the subclasses to do anything in this method.
      * <p>
      * The implementation in this class also does nothing.
      */
+    // TODO ez most ideiglenesen nem-final lett, Slot2 miatt
     @Override
-    protected final void initState() {
+    protected void initState() {
     }
 
     /**
@@ -213,4 +219,5 @@ public abstract class SubstitutedWidget extends Widget {
         record OfFallback() implements ResolverWidgetKey {
         }
     }
+
 }

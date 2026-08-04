@@ -1,6 +1,6 @@
 package ui11.layout.multichild;
 
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -17,11 +17,11 @@ public final class BorderLayout extends SubstitutedWidget {
     private final @Nullable Widget bottom;
     private final @Nullable Widget left;
 
-    @Inject private Slot centerSlot;
-    @Inject private Slot topSlot;
-    @Inject private Slot rightSlot;
-    @Inject private Slot bottomSlot;
-    @Inject private Slot leftSlot;
+    @Remember private Slot2 centerSlot;
+    @Remember private Slot2 topSlot;
+    @Remember private Slot2 rightSlot;
+    @Remember private Slot2 bottomSlot;
+    @Remember private Slot2 leftSlot;
 
     public BorderLayout(@Nullable Widget center,
                         @Nullable Widget top,
@@ -37,6 +37,17 @@ public final class BorderLayout extends SubstitutedWidget {
 
     public BorderLayout() {
         this(null, null, null, null, null);
+    }
+
+    @Override
+    protected BorderLayout cloneForSubstitution() {
+        return new BorderLayout(
+                centerSlot.with(center),
+                topSlot.with(top),
+                rightSlot.with(right),
+                bottomSlot.with(bottom),
+                leftSlot.with(left)
+        );
     }
 
     public BorderLayout center(@Nullable Widget center) {
