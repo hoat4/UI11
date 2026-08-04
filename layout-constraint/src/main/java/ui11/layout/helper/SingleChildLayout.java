@@ -56,7 +56,7 @@ public class SingleChildLayout extends Widget {
 
                     Rect childBounds = new Rect(childTopLeft, childSize);
                     childBounds = snapToPixels(childBounds);
-                    Widget resultWidget = transformWidgetToBounds(result.widget(), childBounds);
+                    Widget resultWidget = transformWidgetToBounds(child, childBounds);
 
                     if (sizeRequest != null)
                         resultWidget = sizeRequest.createResponse(

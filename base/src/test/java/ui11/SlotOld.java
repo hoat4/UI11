@@ -8,12 +8,15 @@ import java.util.function.Supplier;
 
 import static ui11.graphics.Empty.empty;
 
-@Deprecated
 public class SlotOld extends Widget implements MutableObservable<Widget> {
 
     private final MutableObservable<Widget> content = MutableObservable.ofNullable();
 
-    public SlotOld() {} // ideiglenesen publikus, mert LE-nek kell
+    public SlotOld() {}
+
+    public SlotOld(Widget content) {
+        this.content.set(content);
+    }
 
     @Override
     public Widget get() {

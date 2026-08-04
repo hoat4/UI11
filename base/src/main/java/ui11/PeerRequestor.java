@@ -272,6 +272,7 @@ public abstract sealed class PeerRequestor extends Widget {
 
     public static final class Result<P> {
 
+        // TODO ez a req miért kell ide? equalst nem befolyásolja? Request nem lenne elég helyette?
         final @NonNull ResolutionRequest<P> req;
         private final @NonNull P peer;
         private final @NonNull Map<Class<? extends ParentData>, ParentData> parentDataMap;
@@ -282,16 +283,6 @@ public abstract sealed class PeerRequestor extends Widget {
             this.req = req;
             this.peer = peer;
             this.parentDataMap = parentDataMap;
-        }
-
-        /**
-         *
-         * @return the widget that the query was executed on
-         */
-        public Widget widget() {
-            // TODO ha nincs slotja a widgethez, ennek hozzá kéne rendelnie egyet, ami a
-            //      PeerRequestor megfelelő childjére mutat
-            return req.widget();
         }
 
         public P peer() {

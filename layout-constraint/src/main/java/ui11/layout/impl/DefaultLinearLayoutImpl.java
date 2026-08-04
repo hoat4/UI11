@@ -34,8 +34,6 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
 
     protected final LinearLayout linearLayout;
 
-    @Inject private MultiSlot<Integer> slots;
-
     public DefaultLinearLayoutImpl(LinearLayout linearLayout) {
         this.linearLayout = Objects.requireNonNull(linearLayout);
     }
@@ -47,7 +45,6 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
             // heightnak 0-t számolna ki a lenti algoritmus szerint, ha nincs egyetlen elem se az LL-ben
             return empty();
 
-        items = MultiSlot.assignSlots(slots, items);
         items = applyMainAxisAlignment(items);
         List<? extends Widget> itemsFinal = items;
 
@@ -239,8 +236,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                             }
                         }
                     }
-                    Widget[] placeables2 = resolutionResults.stream().
-                            map(PeerRequestor.Result::widget).toArray(Widget[]::new);
+                    Widget[] placeables2 = reqWidgets.toArray(Widget[]::new);
                     return layoutPhase3(itemCountFinal, placeables2, widths, height2, containerWidth);
                 });
             }

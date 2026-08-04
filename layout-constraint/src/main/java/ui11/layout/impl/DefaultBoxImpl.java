@@ -91,7 +91,7 @@ public class DefaultBoxImpl extends Widget {
                     case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size();
                 };
                 Size newContainerSize = childSize.add(allPadding);
-                return layoutPhase2(newContainerSize, r.widget());
+                return layoutPhase2(newContainerSize, box.content());
             });
         } else
             return layoutPhase2(containerSize, box.content());
