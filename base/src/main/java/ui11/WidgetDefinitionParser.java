@@ -68,7 +68,6 @@ class WidgetDefinitionParser {
 
             // transientek lehetnek a mezők?
 
-            boolean isSlotOrMultiSlot = f.getType() == Slot.class || f.getType() == MultiSlot.class;
             /*
             SubstitutedWidgetekre vonatkozó korlátozást cloneForSubstitution miatt egyelőre kivesszük.
 
@@ -78,7 +77,7 @@ class WidgetDefinitionParser {
                 throw new InvalidWidgetDefinitionException("@" + Inject.class.getSimpleName() + " and @" +
                         Remember.class.getSimpleName() + " " +
                         "cannot be used on fields in a " + SubstitutedWidget.class.getSimpleName() + " subtype: " +
-                        ReflectionUtil.memberToShortString(edClass)+", except or Slot or MultiSlot injected fields");
+                        ReflectionUtil.memberToShortString(edClass));
              */
 
             // TODO ezekben az exception messageekben nincs szó slotokról, pedig azok is lehetnek @Inject-esek
@@ -149,17 +148,13 @@ class WidgetDefinitionParser {
 
                     // TODO ez most nincs rendesen megcsinálva, mert akkor is folyton invalidálunk, ha nem is használjuk
                     //      az értékét
-                } else if (isSlotOrMultiSlot) {
-                    ivType = f.getType();
-                    kind = InjectedFieldKind.SLOT_OR_MULTI_SLOT;
                 } else {
                     if (f.getType().isPrimitive())
                         throw new InvalidWidgetDefinitionException(
                                 ReflectionUtil.memberToShortString(f) + " has type " + f.getType().getName() +
                                         " which is a primitive, but the type of a field annotated with " +
                                         "@" + Widget.Inject.class.getSimpleName() + " must be an class or interface (" +
-                                        "including specially treated types " + Slot.class.getSimpleName() + ", " +
-                                        MultiSlot.class.getSimpleName() + ", " + Observable.class.getSimpleName() +
+                                        "including specially treated type " + Observable.class.getSimpleName() +
                                         "), not a primitive type");
 
                     ivType = f.getType();
@@ -196,13 +191,8 @@ class WidgetDefinitionParser {
 
                 String debugFieldName = ReflectionUtil.memberToShortString2(f);
 
-                int collectorIndex;
-                if (kind == InjectedFieldKind.SLOT_OR_MULTI_SLOT)
-                    collectorIndex = -1;
-                else {
-                    ivTypeSet.putIfAbsent(ivType, ivTypeSet.size());
-                    collectorIndex = ivTypeSet.get(ivType);
-                }
+                ivTypeSet.putIfAbsent(ivType, ivTypeSet.size());
+                int collectorIndex = ivTypeSet.get(ivType);
 
                 injectFields.add(new InjectionFieldInfo(f, ivType, kind, optional, collectorIndex, debugFieldName));
             } else {
@@ -301,8 +291,7 @@ class WidgetDefinitionParser {
         public enum InjectedFieldKind {
             OBSERVABLE,
             NORMAL,
-            INTERFACE_PROXY,
-            SLOT_OR_MULTI_SLOT
+            INTERFACE_PROXY
         }
     }
 

@@ -137,15 +137,6 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
                         throw new RuntimeException(e);
                     }
                 }
-                case SLOT_OR_MULTI_SLOT -> {
-                    if (f.type() == Slot.class)
-                        yield new Slot(widgetState.tree);
-                    else if (f.type() == MultiSlot.class)
-                        yield new MultiSlot<>(widgetState);
-                    else
-                        throw new RuntimeException("unknown field type if kind is " +
-                                InjectionFieldInfo.InjectedFieldKind.SLOT_OR_MULTI_SLOT);
-                }
                 case OBSERVABLE -> {
                     IVCollector<?> collector = ivCollectors[f.collectorIndex()];
                     assert collector.type == f.type();
@@ -236,9 +227,6 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
                     Object fieldValue = fieldGet(t, f.field());
                     InheritedPropBase<?> inheritedProp = (InheritedPropBase<?>) fieldValue;
                     inheritedProp.update();
-                }
-                case SLOT_OR_MULTI_SLOT -> {
-                    // nop
                 }
                 default -> {
                     throw new RuntimeException("unknown injection field kind: " + f);

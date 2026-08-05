@@ -1,6 +1,5 @@
 package ui11;
 
-import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.observable.ObservableBase;
@@ -221,15 +220,6 @@ public abstract class Widget implements Cloneable {
     //     majd lehet hogy ki kell terjeszteni tetszőleges interfacere (pl. mouseeventek esetén a tipikus a
     //     sok függvényes interface, vagy lehet hogy kell visszaadni értéket), de egyelőre elég ez a kettő.
 
-    @NonNull
-    public final Widget withSlot(Slot slot) {
-        // TODO ha ez egy KeyWrapper, akkor elég lenne csak this-t visszaadni
-        //      de akkor végig lehetne menni Provide-okon is végülis
-        // régen (Slot.use-ban) ellenőriztük, hogy a slot owner widgetje még aktív volt-e.
-        // de mivel key-ek már megszűntek, ezért végülis nem is kell.
-        return new KeyWrapper(slot, this);
-    }
-
     // equals/hashCodera final kell?
     // valszeg érdemes hagyni felülírhatóra. de akkor meg kéne csinálni egy másik felülírhatót, amit
     // a modellváltozás észlelésének módosítására lehet felülírni.
@@ -395,7 +385,7 @@ public abstract class Widget implements Cloneable {
     }
 
     /**
-     * Lecserélődik az adott {@linkplain Slot}ban lévő {@linkplain WidgetState}, ezért ez az objektum nem lesz használva
+     * Lecserélődik az adott {@linkplain Slot2}ban lévő {@linkplain WidgetState}, ezért ez az objektum nem lesz használva
      * többé.
      */
     final void disposeFromStateRole(WidgetState<?> stateHolder) {
@@ -476,7 +466,7 @@ public abstract class Widget implements Cloneable {
         // https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/annotation/Autowired.html
         boolean required() default true;
 
-        // TODO mit jelent required=false, ha a típus Slot vagy MultiSlot vagy interfaceproxy?
+        // TODO mit jelent required=false, ha a típus interfaceproxy?
 
         // TODO lehetne olyan változat, ami felteszi hogy nem fog változni, és akkor nem kell Observable-be wrappelni
         //      akkor se ha nem interface (és ha mégis változik, akkor nem engedi a widgetet buildelni / exceptiont dob)

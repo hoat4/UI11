@@ -19,9 +19,6 @@ import static java.util.stream.Collectors.toMap;
  * A stateless widget which does not determine its content by itself, instead a {@link WidgetResolver} is asked for
  * which content to display in it.
  * <p>
- * A {@linkplain SubstitutedWidget} must not contain fields annotated with {@link ui11.Widget.Inject @Inject} or
- * {@link Widget.Remember @Remember}, except if a {@code @Inject} field has type {@link Slot} or {@link MultiSlot}.
- * <p>
  * The following resolvers are used:
  * <ol>
  *     <li>Global resolvers: these can be defined as {@link ServiceLoader java.util.ServiceLoader} services,

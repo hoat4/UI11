@@ -7,20 +7,37 @@ import java.util.*;
 
 // TODO név? IdentityPreservingSlot jutott eszembe először, de az nem érthető
 //      esetleg StateHolder?
-public final class Slot2 {
+
+// kommentek régi Slotból:
+
+// LCW-t meg lehetne próbálni, hogy ne legyenek olyan távol a Slot definíciók a használatuktól.
+// StackWalker használatán is gondolkodtam, de nem találtam értelmes felhasználást neki.
+
+// TODO le kéne írni, hogy a tipikus layout konténereknél nem kell ezt használni
+
+/**
+ * A Slot is a widget which have identity: if it is inserted into an other position in the tree,
+ * its state will be retained.
+ */
+// WidgetTree.findOrCreateWidgetState-ben special case-elve van ez a widget, hogyha SlotWidgetet
+// talál, akkor ignorálja a previous WidgetInstantiationt és a KeyWrappereket is
+public final class Slot2 extends Widget {
 
     // IntelliJ IDEA-hoz hack, hogy with-et ne tekintse nullable-nek
-    private static final SlotWidget SLOT_WIDGET_NULL = null;
+    private static final Slot2 SLOT_WIDGET_NULL = null;
 
     final MutableObservable<Widget> content = MutableObservable.ofNullable();
-    private final SlotWidget w;
 
-    WidgetState<SlotWidget> widgetState;
-
+    /**
+     * Creates a new Slot which will be initially empty.
+     */
     public Slot2() {
-        this.w = new SlotWidget(this);
     }
 
+    /**
+     * Changes the content of this slot widget.
+     * @return {@code null} if the parameter is {@code null}, {@code this} otherwise
+     */
     // itt azért nincs return typeon nullability megadva, mert
     // akkor nemnull, ha param type is nemnull
     public Widget with(Widget content) {
@@ -28,7 +45,16 @@ public final class Slot2 {
         //      kéne tudnunk detektálni és jelezni valahogy?
 
         this.content.set(content);
-        return content == null ? SLOT_WIDGET_NULL : w;
+        return content == null ? SLOT_WIDGET_NULL : this;
+    }
+
+    @Override
+    protected Widget build() {
+        Widget w = content.get();
+        if (w == null)
+            // ha soha nem is lett volna, akkor nem lyukadunk ki ide
+            throw new RuntimeException("Content has been removed");
+        return w;
     }
 
     String debugInfo() {
@@ -40,26 +66,12 @@ public final class Slot2 {
                 "containing " + content.snoop().getClass().getName());
     }
 
-    // WidgetTree.findOrCreateWidgetState-ben special case-elve van ez a widget, hogyha SlotWidgetet
-    // talál, akkor ignorálja a previous WidgetInstantiationt és a KeyWrappereket is
-    static class SlotWidget extends Widget {
-
-        final Slot2 slot;
-
-        private SlotWidget(Slot2 slot) {
-            this.slot = slot;
-        }
-
-        @Override
-        protected Widget build() {
-            Widget w = slot.content.get();
-            if (w == null)
-                // ha soha nem is lett volna, akkor nem lyukadunk ki ide
-                throw new RuntimeException("Content has been removed");
-            return w;
-        }
-    }
-
+    /**
+     * A collections of {@linkplain Slot2 Slots} that are indexed by an int.
+     * <p>
+     * This is usually used when a widget needs to show a list of items: each row gets a different slot, so when some row
+     * changes, only the changed row refreshed, not the container of all items.
+     */
     public static final class SlotList {
 
         private final List<Slot2> slots = new ArrayList<>();
@@ -88,6 +100,13 @@ public final class Slot2 {
 
     // TODO ennek az API-ján még vacakolni kell, mert gyakorlati célokra (pl. adattáblán belüli key-ek)
     //      most elég nehézkesen használható, csak SubstitutedWidgetekre használható könnyen
+
+    /**
+     * A collection of {@linkplain Slot2 Slots} that are indexed by an arbitrary typed key.
+     * <p>
+     * This is usually used when a widget needs to show a list of items: each item gets a different slot, so when some
+     * row changes, only the changed row refreshed, not the container of all items.
+     */
     public static final class SlotMap<K> {
 
         private final Map<K, Slot2> slots = new HashMap<>();
@@ -114,4 +133,25 @@ public final class Slot2 {
             return Collections.unmodifiableSequencedMap(m);
         }
     }
+
+    /**
+     * A collections of {@link Slot2 Slots} that are cached by a key.
+     * <p>
+     * This is usually used when a widget needs to show a list of items: each row gets a different slot, so when some row
+     * changes, only the changed row refreshed, not all items.
+     *
+     * @param <K> the type of the cache keys
+     *
+    public static final class SlotCache<K> {
+    ...
+    }
+     */
+
+    // 2025-11-08-ból megjegyzés keyekről (akkor még Elementben voltak):
+    //      withKey dobjon exceptiont ha duplicate
+    //      De ez nem olyan egyszerű. Mit tekintünk duplicate-nek?
+    //      - ha többször hívják meg ugyanazzal a kulccsal. De mi van, ha refreshSelf-en kívül van meghívva?
+    //      - többször van felhasználva a KeyWrapper. Ez se jó, mert ez lehet legális is:
+    //        pl. MultiChildLayoutImpl első alkalommal instantiateeli mérésre, második alkalommal meg berakja
+    //        Overlay/Transform-ba childnak.
 }

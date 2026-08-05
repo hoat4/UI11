@@ -306,8 +306,6 @@ public final class WidgetTree {
         if (parent != null && !parent.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalArgumentException("parent not active: " + parent);
 
-        Slot slot = null;
-
         Map<Class<?>, Object> ivs = new HashMap<>();
 
         if (reqs != null) {
@@ -344,11 +342,6 @@ public final class WidgetTree {
                         widget = p.content();
                     }
                 }
-                case KeyWrapper kw -> {
-                    slot = kw.slot;
-                    widget = kw.content;
-                    w = slot.content;
-                }
                 default -> {
                     break processProxyWidgets;
                 }
@@ -356,8 +349,8 @@ public final class WidgetTree {
         }
         Objects.requireNonNull(widget, "nextWidget");
 
-        if (widget instanceof Slot2.SlotWidget slotWidget)
-            w = slotWidget.slot.widgetState;
+        if (widget instanceof Slot2 slotWidget)
+            w = slotWidget.stateHolderOrNull();
 
         if (w == null || w.effectiveModel() != widget) {
             widget.initListenerProxyData();
@@ -377,16 +370,6 @@ public final class WidgetTree {
                         prevState.dispose();
 
                     w = new WidgetState<>(widget, this);
-
-                    if (widget instanceof Slot2.SlotWidget slotWidget) {
-                        @SuppressWarnings("unchecked")
-                        WidgetState<Slot2.SlotWidget> castedW = (WidgetState<Slot2.SlotWidget>) w;
-                        assert prevState == null;
-                        assert slotWidget.slot.widgetState == null;
-                        slotWidget.slot.widgetState = castedW;
-                    } else if (slot != null)
-                        // TODO mit csináljunk, ha a slotot többen is használják egyszerre?
-                        slot.content = w;
 
                     // TODO mit csináljunk, ha konstruktor exceptiont dob?
                 }

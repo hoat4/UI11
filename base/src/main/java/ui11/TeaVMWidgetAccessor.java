@@ -270,11 +270,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                         injectFieldsOptional >>> i & 1,
                         JSWrapper.dependencyJavaToJs(injectFieldName.stringValue()));
             else {
-                if (type == Slot.class)
-                    wrapper = new Slot(widgetState.tree);
-                else if (type == MultiSlot.class)
-                    wrapper = new MultiSlot<>(widgetState);
-                else if ((injectFieldsObservableWrapped >>> i & 1) != 0)
+                if ((injectFieldsObservableWrapped >>> i & 1) != 0)
                     // ha ezt megváltoztatjuk, akkor lent változtassuk meg propagateType-nak átadott classnevet is
                     wrapper = new InheritedPropObservable<>(
                             widgetState.ivCollectors[injectFieldToCollectorIndex.get(i).intValue()],
@@ -355,20 +351,15 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
     public void copyIVValuesToFields(W w) {
         for (int i = 0; i < injectFieldNames.getLength(); i++) {
             if ((injectFieldsObservableWrapped & 1 << i) == 0 && injectFieldInterfaceProxyFactories.get(i) == null) {
-                Class<?> type = injectFieldTypes.get(i);
-                if (type != Slot.class && type != MultiSlot.class) {
-                    // InjectedFieldKind.NORMAL
+                // InjectedFieldKind.NORMAL
 
-                    boolean optional = (injectFieldsOptional >>> i & 1) != 0;
-                    JSString fieldName = injectFieldNames.get(i);
+                boolean optional = (injectFieldsOptional >>> i & 1) != 0;
+                JSString fieldName = injectFieldNames.get(i);
 
-                    int collectorIndex = injectFieldToCollectorIndex.get(i).intValue();
-                    Object value = w.widgetState().ivCollectors[collectorIndex].
-                            currentValue(optional, fieldName.stringValue());
-                    fieldSet(w, fieldName, value);
-                } else {
-                    // InjectedFieldKind.SLOT_OR_MULTI_SLOT
-                }
+                int collectorIndex = injectFieldToCollectorIndex.get(i).intValue();
+                Object value = w.widgetState().ivCollectors[collectorIndex].
+                        currentValue(optional, fieldName.stringValue());
+                fieldSet(w, fieldName, value);
             } else {
                 // InjectedFieldKind.OBSERVABLE, InjectedFieldKind.INTERFACE_PROXY
 
@@ -671,9 +662,6 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                                         }
                                     });
                                 }
-                                case SLOT_OR_MULTI_SLOT -> {
-                                    fieldDependency.getValue().propagate(type);
-                                }
                                 case OBSERVABLE -> {
                                     fieldDependency.getValue().propagate(agent.getType(
                                             ValueType.object(InheritedPropObservable.class.getName())));
@@ -697,14 +685,12 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                                 }
                             }
 
-                            if (f.kind() != InjectionFieldInfo.InjectedFieldKind.SLOT_OR_MULTI_SLOT) {
-                                DependencyNode ivCollectorConstructorTypeParam =
-                                        agent.linkMethod(new MethodReference(WidgetState.IVCollector.class, "<init>",
-                                                        WidgetState.class, Class.class,
-                                                        void.class)).
-                                                getVariable(2 /* type paraméter */);
-                                ivCollectorConstructorTypeParam.getClassValueNode().propagate(type);
-                            }
+                            DependencyNode ivCollectorConstructorTypeParam =
+                                    agent.linkMethod(new MethodReference(WidgetState.IVCollector.class, "<init>",
+                                                    WidgetState.class, Class.class,
+                                                    void.class)).
+                                            getVariable(2 /* type paraméter */);
+                            ivCollectorConstructorTypeParam.getClassValueNode().propagate(type);
 
                             DependencyNode getInjectFieldValue =
                                     agent.linkMethod(new MethodReference(TeaVMWidgetAccessor.class,
@@ -867,9 +853,6 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                             case OBSERVABLE -> {
                                 injectFieldsInherited |= 1 << i;
                                 injectFieldsObservableWrapped |= 1 << i;
-                            }
-                            case SLOT_OR_MULTI_SLOT -> {
-                                // nop
                             }
                             default -> {
                                 throw new RuntimeException("Unknown injection field kind: " + f);
