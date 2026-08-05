@@ -78,6 +78,9 @@ public abstract class SubstitutedWidget extends Widget {
      */
     @Override
     protected final Widget build() {
+        SubstitutedWidget thiz = cloneForSubstitution();
+        Objects.requireNonNull(thiz, "SW.cFS");
+
         // GlobalWidgetResolversről feltesszük hogy composite
         WidgetResolver.CompositeWidgetResolver resolvers = (WidgetResolver.CompositeWidgetResolver)
                 (widgetResolver != null ?
@@ -92,11 +95,11 @@ public abstract class SubstitutedWidget extends Widget {
         Set<ResolutionRequest<?>> handledUsingPeerSpecificResolvers = new HashSet<>();
         for (WidgetResolver resolver : resolvers.leaves()) {
             for (ResolutionRequest<?> req : peerCreationRequestCollection.requests()) {
-                Widget w = resolver.tryResolveRequestSpecific(this, req.requestData); // TODO exceptionök
+                Widget w = resolver.tryResolveRequestSpecific(thiz, req.requestData); // TODO exceptionök
                 if (w != null) {
                     if (!handledUsingPeerSpecificResolvers.add(req))
                         throw new RuntimeException("Multiple resolvers has applicable " +
-                                "tryResolveRequestSpecific for " + this + " and " + req + ": " + resolvers);
+                                "tryResolveRequestSpecific for " + thiz + " and " + req + ": " + resolvers);
 
                     ResolverWidgetKey.OfPeerSpecificResolver key =
                             new ResolverWidgetKey.OfPeerSpecificResolver(req.requestData);
@@ -119,13 +122,13 @@ public abstract class SubstitutedWidget extends Widget {
         // tryResolveGeneric-eket akkor is végrehajtjuk, ha minden req-t lefednek a peer-specifikusok, hogy
         // multiple resolvers applicable hibák kijöjjenek
         for (WidgetResolver resolver : resolvers.leaves()) {
-            Widget w = resolver.tryResolveGeneric(this); // TODO exceptionök
+            Widget w = resolver.tryResolveGeneric(thiz); // TODO exceptionök
             if (w == null)
                 continue;
 
             if (foundGenericResolver)
                 throw new RuntimeException("Multiple resolvers has applicable tryResolveGeneric for " +
-                        this + ": " + resolvers);
+                        thiz + ": " + resolvers);
             foundGenericResolver = true;
 
             if (!remainingForGeneric.isEmpty()) {
@@ -138,7 +141,7 @@ public abstract class SubstitutedWidget extends Widget {
         if (peerCreationRequestCollection.requests().size() != handledUsingPeerSpecificResolvers.size()) {
             // van olyan req, amit a peer-specifikusok nem fednek le
             if (!foundGenericResolver) {
-                Widget w = fallbackContent(); // TODO exceptionök
+                Widget w = thiz.fallbackContent(); // TODO exceptionök
                 if (w != null) {
                     ResolverWidgetKey.OfFallback key = new ResolverWidgetKey.OfFallback();
                     childrenWidgets.put(key, w);
@@ -147,7 +150,7 @@ public abstract class SubstitutedWidget extends Widget {
                     Set<ResolutionRequest<?>> remainingReqs = new HashSet<>(peerCreationRequestCollection.requests());
                     remainingReqs.removeAll(handledUsingPeerSpecificResolvers);
                     throw new RuntimeException("No resolvers supports these and no " +
-                            SubstitutedWidget.class.getSimpleName() + ".fallbackContent is not overriden on " + this + ": " +
+                            SubstitutedWidget.class.getSimpleName() + ".fallbackContent is not overriden on " + thiz + ": " +
                             remainingReqs + "\n" +
                             "Refresh stack:" +
                             widgetState().tree.refreshStackToDebugString());

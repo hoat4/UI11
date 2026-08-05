@@ -40,6 +40,15 @@ public final class BorderLayout extends SubstitutedWidget {
     }
 
     @Override
+    protected void initState() {
+        centerSlot = new Slot2();
+        topSlot = new Slot2();
+        rightSlot = new Slot2();
+        bottomSlot = new Slot2();
+        leftSlot = new Slot2();
+    }
+
+    @Override
     protected BorderLayout cloneForSubstitution() {
         return new BorderLayout(
                 centerSlot.with(center),
@@ -80,23 +89,23 @@ public final class BorderLayout extends SubstitutedWidget {
     }
 
     public @Nullable Widget center() {
-        return center == null || centerSlot == null ? center : center.withSlot(centerSlot);
+        return center;
     }
 
     public @Nullable Widget top() {
-        return top == null || topSlot == null ? top : top.withSlot(topSlot);
+        return top;
     }
 
     public @Nullable Widget right() {
-        return right == null || rightSlot == null ? right : right.withSlot(rightSlot);
+        return right;
     }
 
     public @Nullable Widget bottom() {
-        return bottom == null || bottomSlot == null ? bottom : bottom.withSlot(bottomSlot);
+        return bottom;
     }
 
     public @Nullable Widget left() {
-        return left == null || leftSlot == null ? left : left.withSlot(leftSlot);
+        return left;
     }
 
     @Override

@@ -3,6 +3,7 @@ package ui11.layout.multichild;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.*;
+import ui11.Slot2.Slot2List;
 import ui11.geom.Axis;
 import ui11.geom.Length;
 import ui11.layout.Gap;
@@ -54,7 +55,7 @@ public final class LinearLayout extends SubstitutedWidget {
     private final @NonNull JustifyContent mainAxisAlignment;
     private final @NonNull AlignChildren crossAxisAlignment;
 
-    @Inject private MultiSlot<Integer> slots;
+    @Remember private Slot2List slots;
 
     /**
      * @param items ebben nullok helyett {@link Gone Gone-ok} szerepeljenek
@@ -333,7 +334,7 @@ public final class LinearLayout extends SubstitutedWidget {
      * @return an {@link List#of() unmodifiable list} of non-null Widgets
      */
     public @NonNull List<? extends Widget> items() { // név inkább "children"?
-        return slots == null ? items : MultiSlot.assignSlots(slots, items);
+        return items;
     }
 
     /**
@@ -399,6 +400,22 @@ public final class LinearLayout extends SubstitutedWidget {
         List<Widget> l = new ArrayList<>(items);
         Collections.reverse(l);
         return new LinearLayout(mainAxis, List.copyOf(l), Length.zero(), mainAxisAlignment, crossAxisAlignment);
+    }
+
+    @Override
+    protected void initState() {
+        slots = new Slot2List();
+    }
+
+    @Override
+    protected LinearLayout cloneForSubstitution() {
+        return new LinearLayout(
+                mainAxis,
+                slots.with(items),
+                gap,
+                mainAxisAlignment,
+                crossAxisAlignment
+        );
     }
 
     @Override

@@ -6,14 +6,12 @@ import ui11.window.Window;
 
 import static ui11.layout.multichild.LinearLayout.column;
 
-// TODO ez egyelőre failol, kéne csinálni normális child modellt SubstitutedWidgetbe hogy ne failoljon.
-//      tehát az lenne a cél, hogy a peer ne legyen rebuildelve, amikor a childek változnak, de a childek peerjei nem.
-
 public class TestReplaceLLChild {
     static void main() throws InterruptedException {
-        // ennek a tesztnek a futtatása előtt rakjunk be egy system.outot
+        // ennek a tesztnek a futtatása előtt rakjunk be egy debug üzenetet
         // DefaultLinearLayoutImpl.build elejére és nézzük, hogy 5 mp után kiíródik-e.
-        // ha igen, akkor sikertelen a teszt.
+        // A teszt akkor sikeres, ha a debug üzenet nem íródik ki az 5 mp után (csak induláskor), de mégis
+        // zöldre vált pirosról a tartalom.
         SlotOld s = new SlotOld(column(new ColorFill(Color.RED)));
         Window.open(s);
         Thread.sleep(5000);

@@ -374,7 +374,7 @@ public final class WidgetTree {
                     if (widget instanceof Slot2.SlotWidget slotWidget) {
                         @SuppressWarnings("unchecked")
                         WidgetState<Slot2.SlotWidget> castedW = (WidgetState<Slot2.SlotWidget>) w;
-                        // TODO a lenti többen használják komment érvényes itt is?
+                        assert prevState == null;
                         slotWidget.slot.widgetState = castedW;
                     } else if (slot != null)
                         // TODO mit csináljunk, ha a slotot többen is használják egyszerre?
