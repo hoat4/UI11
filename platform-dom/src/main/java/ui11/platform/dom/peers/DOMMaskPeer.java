@@ -1,12 +1,8 @@
 package ui11.platform.dom.peers;
 
-import org.teavm.jso.dom.html.HTMLElement;
-import ui11.Slot;
 import ui11.Widget;
 import ui11.graphics.effect.Mask;
 import ui11.platform.dom.*;
-
-import java.util.List;
 
 public class DOMMaskPeer extends DOMLayoutPeerBase {
 

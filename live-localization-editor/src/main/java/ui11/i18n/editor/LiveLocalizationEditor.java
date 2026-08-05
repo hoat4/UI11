@@ -1,27 +1,20 @@
 package ui11.i18n.editor;
 
-import ui11.MultiSlot;
 import ui11.Slot2;
 import ui11.Widget;
 import ui11.color.Color;
-import ui11.color.RGBColor;
 import ui11.control.EditablePlainText;
 import ui11.control.PlainTextEditor;
 import ui11.i18n.LocalizableTextEditingContext;
-import ui11.input.focus.FocusHolder;
-import ui11.layout.multichild.Grid;
 import ui11.layout.singlechild.Align;
 import ui11.layout.singlechild.Padding;
 import ui11.layout.singlechild.PassiveSize;
 import ui11.layout.singlechild.Scrollable;
 import ui11.text.Text;
-import ui11.text.TextModifiers;
-import ui11.text.TextStyle;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static ui11.color.Color.LIGHTCORAL;
 import static ui11.decoration.Background.withBackground;
 import static ui11.geom.Length.px;
 import static ui11.layout.multichild.Grid.grid;

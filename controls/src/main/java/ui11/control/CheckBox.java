@@ -37,12 +37,21 @@ public final class CheckBox extends SubstitutedWidget {
         graphicSlot = new Slot2();
     }
 
+    @Override
+    protected CheckBox forSubstitution() {
+        return new CheckBox(
+                value,
+                graphicSlot.with(graphic),
+                disabled
+        );
+    }
+
     public @NonNull MutableObservable<Boolean> value() {
         return value;
     }
 
     public @Nullable Widget graphic() {
-        return graphic == null || graphicSlot == null ? graphic : graphic.withSlot(graphicSlot);
+        return graphic;
     }
 
     public boolean disabled() {

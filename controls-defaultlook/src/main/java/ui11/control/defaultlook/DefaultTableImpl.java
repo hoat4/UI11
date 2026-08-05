@@ -1,11 +1,10 @@
 package ui11.control.defaultlook;
 
-import ui11.MultiSlot;
 import ui11.Slot2;
 import ui11.Widget;
+import ui11.color.Color;
 import ui11.control.Table;
 import ui11.control.Table.Column;
-import ui11.color.Color;
 import ui11.graphics.fill.ColorFill;
 import ui11.input.gesture.ClickListener;
 import ui11.input.pointer.PointerStateDependent;
@@ -14,7 +13,6 @@ import ui11.text.Text;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static ui11.layout.multichild.Grid.grid;

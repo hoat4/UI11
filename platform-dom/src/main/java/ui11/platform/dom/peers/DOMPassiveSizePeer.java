@@ -1,6 +1,5 @@
 package ui11.platform.dom.peers;
 
-import ui11.Slot;
 import ui11.Widget;
 import ui11.layout.singlechild.PassiveSize;
 import ui11.platform.dom.DOMLayoutPeerBase;

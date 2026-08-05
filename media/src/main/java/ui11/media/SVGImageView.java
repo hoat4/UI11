@@ -12,7 +12,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
 public final class SVGImageView extends SubstitutedWidget {
 

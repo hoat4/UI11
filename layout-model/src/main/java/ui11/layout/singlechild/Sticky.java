@@ -6,7 +6,6 @@ import ui11.Widget;
 
 import org.jspecify.annotations.NonNull;
 
-import java.lang.invoke.StringConcatException;
 import java.util.Objects;
 
 public class Sticky extends SubstitutedWidget {

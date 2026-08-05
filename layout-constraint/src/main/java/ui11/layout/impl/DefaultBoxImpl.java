@@ -1,7 +1,6 @@
 package ui11.layout.impl;
 
 import ui11.PeerRequestor;
-import ui11.Slot;
 import ui11.Slot2;
 import ui11.Widget;
 import ui11.color.Color;

@@ -1,6 +1,5 @@
 package ui11.graphics.effect;
 
-import ui11.MultiSlot;
 import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;

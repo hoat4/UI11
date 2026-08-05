@@ -2,7 +2,6 @@ package ui11.layout.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.MultiSlot;
 import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.geom.Axis;

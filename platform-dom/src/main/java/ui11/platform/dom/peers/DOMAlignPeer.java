@@ -1,7 +1,5 @@
 package ui11.platform.dom.peers;
 
-import org.teavm.jso.dom.html.HTMLElement;
-import ui11.Slot;
 import ui11.Widget;
 import ui11.css.WrapWithCSSClassTag;
 import ui11.layout.singlechild.Align;

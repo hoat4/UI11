@@ -1,7 +1,6 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.MultiSlot;
 import ui11.Widget;
 import ui11.platform.dom.DOMLayoutPeerBase;
 import ui11.platform.dom.DOMPeerBase;

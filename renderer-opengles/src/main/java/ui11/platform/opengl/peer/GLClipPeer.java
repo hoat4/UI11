@@ -1,8 +1,6 @@
 package ui11.platform.opengl.peer;
 
 import ui11.PeerRequestor;
-import ui11.Slot;
-import ui11.Slot2;
 import ui11.Widget;
 import ui11.graphics.Surface;
 import ui11.graphics.effect.Clip;

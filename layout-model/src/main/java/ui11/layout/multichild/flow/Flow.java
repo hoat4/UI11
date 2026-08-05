@@ -1,7 +1,6 @@
 package ui11.layout.multichild.flow;
 
 import org.jspecify.annotations.Nullable;
-import ui11.MultiSlot;
 import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
