@@ -13,6 +13,21 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
+/**
+ * A widget that requests some information about some child widgets, then invokes a callback with the results.
+ * <p>
+ * The requests can be accessed in the following ways:
+ * <ul>
+ *     <li>By implementing the {@link WidgetResolver#tryResolveRequestSpecific(SubstitutedWidget, Request)} method,
+ *     which will be called for each request
+ *     <li>Declaring a {@link ui11.Widget.Inject @Inject} field in a widget whose type is the array type of the request
+ *     type. The array's value will be the current peer requests that should be fulfilled. The array won't contain two
+ *     {@linkplain Object#equals(Object) same} element twice.
+ * </ul>
+ * A widget can provide response to a request by returning the value of
+ * {@linkplain Request#createResponse(Object) Request.createResponse} or
+ * {@linkplain Request#createResponse(Object, Widget)}.
+ */
 public abstract sealed class PeerRequestor extends Widget {
 
     final Set<Class<? extends ParentData>> interestedParentDataTypes;
@@ -154,8 +169,8 @@ public abstract sealed class PeerRequestor extends Widget {
 
     @NullMarked
     public static <K> PeerRequestor ofMultiple(Map<K, ? extends Widget> widgets,
-                                                  Map<K, Set<Request<?>>> requests,
-                                                  Function<Map<Request<?>, Map<K, Result<?>>>, Widget> then) {
+                                               Map<K, Set<Request<?>>> requests,
+                                               Function<Map<Request<?>, Map<K, Result<?>>>, Widget> then) {
         // most ez a Map.copyOf NPE-t akkor is, ha K-k között van egy null.
         // ha mégis kell null K, akkor kézzel kell ellenőrizni
         // (de akkor ofMultiple-t is módosítsuk eszerint)
@@ -163,7 +178,7 @@ public abstract sealed class PeerRequestor extends Widget {
         widgets = Map.copyOf(widgets);
         requests = requests.entrySet().stream().collect(toUnmodifiableMap(
                 Map.Entry::getKey, entry -> Set.copyOf(entry.getValue())));
-        @SuppressWarnings("unchecked") Map<K, Set<Request<Object>>> requests2 = (Map<K, Set<Request<Object>>>) (Map<K, ?>)  requests;
+        @SuppressWarnings("unchecked") Map<K, Set<Request<Object>>> requests2 = (Map<K, Set<Request<Object>>>) (Map<K, ?>) requests;
         @SuppressWarnings("unchecked") Function<Map<Request<Object>, Map<K, Result<Object>>>, Widget> then2 =
                 (Function<Map<Request<Object>, Map<K, Result<Object>>>, Widget>) (Function<?, Widget>) then;
         return new PeerRequestor.CreatePeersForMap<>(widgets, requests2, then2, Set.of(), true);
@@ -191,6 +206,13 @@ public abstract sealed class PeerRequestor extends Widget {
                 });
     }
 
+    /**
+     * Describes what information to query about a widget (or multiple widgets).
+     * For example, on a layout query, the Request object would contain the size constraints,
+     * and the result will be the computed size.
+     * <p>
+     * If two requests are equal according to {@link Object#equals(Object)}, then they are performed only once.
+     */
     public abstract static class Request<P> {
 
         private final Class<P> peerType;
@@ -270,6 +292,12 @@ public abstract sealed class PeerRequestor extends Widget {
         }
     }
 
+    /**
+     * The resulting peer and parent data (if available) of a peer resolution.
+     * Peer is always available (else the resolution fails). Parent data is only available for the
+     * {@linkplain PeerRequestor#withInterestedParentDataType(Set) interested types}, and only if they are set via
+     * {@linkplain ParentData#attach(ParentData, Widget)}.
+     */
     public static final class Result<P> {
 
         // TODO ez a req miért kell ide? equalst nem befolyásolja? Request nem lenne elég helyette?
@@ -308,6 +336,8 @@ public abstract sealed class PeerRequestor extends Widget {
             result = 31 * result + parentDataMap.hashCode();
             return result;
         }
+
+        // TODO toString most túl sok információt tartalmaz, mert req is benne van, ami többi függvényben nincs
 
         @Override
         public String toString() {
@@ -502,7 +532,7 @@ public abstract sealed class PeerRequestor extends Widget {
         private final Map<K, ? extends Set<Request<P>>> requests;
         private final Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f;
 
-        @Remember private Slot2.SlotMap<K> slots;
+        @Remember private Slot.SlotMap<K> slots;
         @Remember private Map<K, Set<ResolutionRequest<P>>> reqs;
 
         public CreatePeersForMap(Map<K, ? extends Widget> widgets,
@@ -518,7 +548,7 @@ public abstract sealed class PeerRequestor extends Widget {
 
         @Override
         protected void initState() {
-            slots = new Slot2.SlotMap<>();
+            slots = new Slot.SlotMap<>();
         }
 
         @Override

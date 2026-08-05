@@ -1,7 +1,7 @@
 package ui11.graphics.effect;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -14,8 +14,8 @@ public final class Mask extends SubstitutedWidget {
     private final Widget content;
     private final Widget mask;
 
-    @Remember private Slot2 contentSlot;
-    @Remember private Slot2 maskSlot;
+    @Remember private Slot contentSlot;
+    @Remember private Slot maskSlot;
 
     public Mask(@NonNull Widget content, @NonNull Widget mask) {
         this.content = Objects.requireNonNull(content);
@@ -24,8 +24,8 @@ public final class Mask extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
-        maskSlot = new Slot2();
+        contentSlot = new Slot();
+        maskSlot = new Slot();
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ui11.layout.singlechild;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -12,7 +12,7 @@ public class Sticky extends SubstitutedWidget {
 
     private final Widget content;
 
-    @Remember private Slot2 contentSlot;
+    @Remember private Slot contentSlot;
 
     public Sticky(@NonNull Widget content) {
         this.content = Objects.requireNonNull(content);
@@ -20,7 +20,7 @@ public class Sticky extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
+        contentSlot = new Slot();
     }
 
     @Override

@@ -16,22 +16,22 @@ import java.util.*;
 // TODO le kéne írni, hogy a tipikus layout konténereknél nem kell ezt használni
 
 /**
- * A Slot is a widget which have identity: if it is inserted into an other position in the tree,
- * its state will be retained.
+ * A Slot is a widget which has identity: if it is inserted into another position in the tree,
+ * the state of its content will be retained.
  */
 // WidgetTree.findOrCreateWidgetState-ben special case-elve van ez a widget, hogyha SlotWidgetet
 // talál, akkor ignorálja a previous WidgetInstantiationt és a KeyWrappereket is
-public final class Slot2 extends Widget {
+public final class Slot extends Widget {
 
     // IntelliJ IDEA-hoz hack, hogy with-et ne tekintse nullable-nek
-    private static final Slot2 SLOT_WIDGET_NULL = null;
+    private static final Slot SLOT_WIDGET_NULL = null;
 
     final MutableObservable<Widget> content = MutableObservable.ofNullable();
 
     /**
      * Creates a new Slot which will be initially empty.
      */
-    public Slot2() {
+    public Slot() {
     }
 
     /**
@@ -67,14 +67,14 @@ public final class Slot2 extends Widget {
     }
 
     /**
-     * A collections of {@linkplain Slot2 Slots} that are indexed by an int.
+     * A collections of {@linkplain Slot Slots} that are indexed by an int.
      * <p>
      * This is usually used when a widget needs to show a list of items: each row gets a different slot, so when some row
      * changes, only the changed row refreshed, not the container of all items.
      */
     public static final class SlotList {
 
-        private final List<Slot2> slots = new ArrayList<>();
+        private final List<Slot> slots = new ArrayList<>();
 
         // TODO itt is lehetne detektálni a dupla meghívásokat (lehet akár véletlen is,
         //      pl. TabbedPaneben van 2 db SlotList)
@@ -83,9 +83,9 @@ public final class Slot2 extends Widget {
 
             int i = 0;
             for (Widget w : widgets) {
-                Slot2 s;
+                Slot s;
                 if (slots.size() == i)
-                    slots.add(s = new Slot2());
+                    slots.add(s = new Slot());
                 else
                     s = slots.get(i);
                 i++;
@@ -102,21 +102,21 @@ public final class Slot2 extends Widget {
     //      most elég nehézkesen használható, csak SubstitutedWidgetekre használható könnyen
 
     /**
-     * A collection of {@linkplain Slot2 Slots} that are indexed by an arbitrary typed key.
+     * A collection of {@linkplain Slot Slots} that are indexed by an arbitrary typed key.
      * <p>
      * This is usually used when a widget needs to show a list of items: each item gets a different slot, so when some
      * row changes, only the changed row refreshed, not the container of all items.
      */
     public static final class SlotMap<K> {
 
-        private final Map<K, Slot2> slots = new HashMap<>();
+        private final Map<K, Slot> slots = new HashMap<>();
 
         public @NonNull Map<@NonNull K, ? extends @NonNull Widget> with(
                 @NonNull Map<@NonNull K, ? extends @NonNull Widget> widgets) {
             HashMap<K, Widget> m = new HashMap<>(widgets);
 
             m.replaceAll((key, widget) ->
-                    slots.computeIfAbsent(key, __ -> new Slot2()).with(widget));
+                    slots.computeIfAbsent(key, __ -> new Slot()).with(widget));
             slots.keySet().retainAll(widgets.keySet());
 
             return Collections.unmodifiableMap(m);
@@ -127,7 +127,7 @@ public final class Slot2 extends Widget {
             LinkedHashMap<K, Widget> m = new LinkedHashMap<>(widgets);
 
             m.replaceAll((key, widget) ->
-                    slots.computeIfAbsent(key, __ -> new Slot2()).with(widget));
+                    slots.computeIfAbsent(key, __ -> new Slot()).with(widget));
             slots.keySet().retainAll(widgets.keySet());
 
             return Collections.unmodifiableSequencedMap(m);
@@ -135,7 +135,7 @@ public final class Slot2 extends Widget {
     }
 
     /**
-     * A collections of {@link Slot2 Slots} that are cached by a key.
+     * A collections of {@link Slot Slots} that are cached by a key.
      * <p>
      * This is usually used when a widget needs to show a list of items: each row gets a different slot, so when some row
      * changes, only the changed row refreshed, not all items.

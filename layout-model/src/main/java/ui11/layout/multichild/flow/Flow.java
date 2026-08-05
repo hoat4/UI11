@@ -1,7 +1,7 @@
 package ui11.layout.multichild.flow;
 
 import org.jspecify.annotations.Nullable;
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -26,7 +26,7 @@ public final class Flow extends SubstitutedWidget {
 
     private final @NonNull List<? extends @NonNull Widget> items;
 
-    @Remember private Slot2.SlotList slots;
+    @Remember private Slot.SlotList slots;
 
     public Flow(@NonNull List<? extends @Nullable Widget> items) {
         this.items = Gone.replaceNullsWithGone(items);
@@ -34,7 +34,7 @@ public final class Flow extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        slots = new Slot2.SlotList();
+        slots = new Slot.SlotList();
     }
 
     @Override

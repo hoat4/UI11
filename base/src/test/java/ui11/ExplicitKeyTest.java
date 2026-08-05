@@ -13,7 +13,7 @@ public class ExplicitKeyTest {
 
         private final Observable<Boolean> reverse;
 
-        @Remember private Slot2 fa, fb;
+        @Remember private Slot fa, fb;
 
         W(Observable<Boolean> reverse) {
             this.reverse = reverse;
@@ -21,8 +21,8 @@ public class ExplicitKeyTest {
 
         @Override
         protected void initState() {
-            fa = new Slot2();
-            fb = new Slot2();
+            fa = new Slot();
+            fb = new Slot();
         }
 
         @Override

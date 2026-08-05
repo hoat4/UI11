@@ -51,11 +51,11 @@ public class Element4Test {
 
         WidgetTree.create(new Component() {
 
-            @Remember private Slot2 slot;
+            @Remember private Slot slot;
 
             @Override
             protected void initState() {
-                slot = new Slot2();
+                slot = new Slot();
             }
 
             @Override

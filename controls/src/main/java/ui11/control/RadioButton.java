@@ -1,6 +1,6 @@
 package ui11.control;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
@@ -17,7 +17,7 @@ public final class RadioButton<T> extends SubstitutedWidget {
     private final @Nullable Widget graphic;
     private final boolean disabled;
 
-    @Remember private Slot2 graphicSlot;
+    @Remember private Slot graphicSlot;
 
     // TODO disabled lehetne inherited
 
@@ -35,7 +35,7 @@ public final class RadioButton<T> extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        graphicSlot = new Slot2();
+        graphicSlot = new Slot();
     }
 
     @Override

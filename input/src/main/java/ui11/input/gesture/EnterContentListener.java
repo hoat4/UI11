@@ -1,7 +1,7 @@
 package ui11.input.gesture;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.input.focus.FocusHolder;
@@ -17,7 +17,7 @@ public final class EnterContentListener extends SubstitutedWidget {
     private final @NonNull FocusHolder focusHolder;
     private final @NonNull Widget content;
 
-    @Remember private Slot2 contentSlot;
+    @Remember private Slot contentSlot;
 
     public EnterContentListener(@NonNull Consumer<EnterContent> enterContentHandler,
                                 @NonNull FocusHolder focusHolder,
@@ -29,7 +29,7 @@ public final class EnterContentListener extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
+        contentSlot = new Slot();
     }
 
     @Override

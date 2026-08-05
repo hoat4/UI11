@@ -15,20 +15,20 @@ public class TestStealDelegate {
 
         WidgetTree.create(new Component() {
 
-            @Remember private Slot2 outerSlot1;
-            @Remember private Slot2 outerSlot2;
-            @Remember private Slot2 outerSlot3;
+            @Remember private Slot outerSlot1;
+            @Remember private Slot outerSlot2;
+            @Remember private Slot outerSlot3;
 
-            @Remember private Slot2 innerSlot;
-            @Remember private Slot2 w2Slot;
+            @Remember private Slot innerSlot;
+            @Remember private Slot w2Slot;
 
             @Override
             protected void initState() {
-                outerSlot1 = new Slot2();
-                outerSlot2 = new Slot2();
-                outerSlot3 = new Slot2();
-                innerSlot = new Slot2();
-                w2Slot = new Slot2();
+                outerSlot1 = new Slot();
+                outerSlot2 = new Slot();
+                outerSlot3 = new Slot();
+                innerSlot = new Slot();
+                w2Slot = new Slot();
             }
 
             @Override

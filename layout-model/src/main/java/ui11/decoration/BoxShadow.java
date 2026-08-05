@@ -1,6 +1,6 @@
 package ui11.decoration;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.color.Color;
@@ -19,7 +19,7 @@ public final class BoxShadow extends SubstitutedWidget {
     private final Length spread;
     private final @NonNull Widget content;
 
-    @Remember private Slot2 contentSlot;
+    @Remember private Slot contentSlot;
 
     public BoxShadow(Color color, Length blur, Length xOffset, Length yOffset, Length spread,
                      @NonNull Widget content) {
@@ -33,7 +33,7 @@ public final class BoxShadow extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
+        contentSlot = new Slot();
     }
 
     @Override

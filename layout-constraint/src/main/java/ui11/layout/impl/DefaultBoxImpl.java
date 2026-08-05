@@ -1,7 +1,7 @@
 package ui11.layout.impl;
 
 import ui11.PeerRequestor;
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.decoration.Box;
@@ -35,13 +35,13 @@ public class DefaultBoxImpl extends Widget {
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
     @Inject(required = false) private Surface surface;
 
-    @Remember private Slot2 contentWithRoundedCornersSlot;
-    @Remember private Slot2 backgroundSlot;
-    @Remember private Slot2 borderSlot;
-    @Remember private Slot2 shadowTopSlot;
-    @Remember private Slot2 shadowBottomSlot;
-    @Remember private Slot2 shadowLeftSlot;
-    @Remember private Slot2 shadowRightSlot;
+    @Remember private Slot contentWithRoundedCornersSlot;
+    @Remember private Slot backgroundSlot;
+    @Remember private Slot borderSlot;
+    @Remember private Slot shadowTopSlot;
+    @Remember private Slot shadowBottomSlot;
+    @Remember private Slot shadowLeftSlot;
+    @Remember private Slot shadowRightSlot;
 
     public DefaultBoxImpl(Box box) {
         this.box = box;
@@ -49,13 +49,13 @@ public class DefaultBoxImpl extends Widget {
 
     @Override
     protected void initState() {
-        contentWithRoundedCornersSlot = new Slot2();
-        backgroundSlot = new Slot2();
-        borderSlot = new Slot2();
-        shadowTopSlot = new Slot2();
-        shadowBottomSlot = new Slot2();
-        shadowLeftSlot = new Slot2();
-        shadowRightSlot = new Slot2();
+        contentWithRoundedCornersSlot = new Slot();
+        backgroundSlot = new Slot();
+        borderSlot = new Slot();
+        shadowTopSlot = new Slot();
+        shadowBottomSlot = new Slot();
+        shadowLeftSlot = new Slot();
+        shadowRightSlot = new Slot();
     }
 
     @Override

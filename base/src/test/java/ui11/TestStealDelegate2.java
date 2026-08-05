@@ -29,12 +29,12 @@ public class TestStealDelegate2 {
 
         WidgetTree.create(new Component() {
 
-            @Remember private Slot2 outerSlot1;
-            @Remember private Slot2 outerSlot2;
-            @Remember private Slot2 outerSlot3;
+            @Remember private Slot outerSlot1;
+            @Remember private Slot outerSlot2;
+            @Remember private Slot outerSlot3;
 
-            @Remember private Slot2 innerSlot;
-            @Remember private Slot2 w3Slot;
+            @Remember private Slot innerSlot;
+            @Remember private Slot w3Slot;
 
             @Override
             protected void update() {

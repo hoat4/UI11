@@ -1,7 +1,7 @@
 package ui11.control;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.text.Text;
@@ -18,7 +18,7 @@ public final class Button extends SubstitutedWidget {
     private final Widget content;
     @Nullable private final Runnable actionHandler;
 
-    @Remember private Slot2 contentSlot;
+    @Remember private Slot contentSlot;
 
     /**
      * @param actionHandler ha ez null, akkor disablednek számít a gomb
@@ -37,7 +37,7 @@ public final class Button extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
+        contentSlot = new Slot();
     }
 
     @Override

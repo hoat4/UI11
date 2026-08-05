@@ -1,7 +1,7 @@
 package ui11.control;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.text.Text;
@@ -15,8 +15,8 @@ public final class TabbedPane extends SubstitutedWidget {
     private final List<Tab> tabs;
     private final TabSide side;
 
-    @Inject private Slot2.SlotList tabTitleSlots;
-    @Inject private Slot2.SlotList tabContentSlots;
+    @Inject private Slot.SlotList tabTitleSlots;
+    @Inject private Slot.SlotList tabContentSlots;
 
     public TabbedPane(Tab... tabs) {
         this(List.of(tabs), TabSide.TOP);
@@ -29,7 +29,7 @@ public final class TabbedPane extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        tabTitleSlots = new Slot2.SlotList();
+        tabTitleSlots = new Slot.SlotList();
     }
 
     @Override

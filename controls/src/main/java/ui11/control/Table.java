@@ -19,7 +19,7 @@ public class Table<T> extends SubstitutedWidget {
     private final List<? extends Column<? super T>> columns;
     private final Consumer<T> clickHandler;
 
-    @Remember private Map<CellKey<T>, Slot2> cellSlots;
+    @Remember private Map<CellKey<T>, Slot> cellSlots;
 
     public Table(List<? extends Column<? super T>> columns, List<? extends T> rows) {
         this(columns, rows, null);
@@ -96,11 +96,11 @@ public class Table<T> extends SubstitutedWidget {
             return result;
         }
 
-        <T2 extends T> Column<T2> wrapContentInSlot(Map<CellKey<T2>, Slot2> cellSlots) {
+        <T2 extends T> Column<T2> wrapContentInSlot(Map<CellKey<T2>, Slot> cellSlots) {
             return new Column<>(
                     title,
                     horizontalAlignment,
-                    row -> cellSlots.computeIfAbsent(new CellKey<>(row, this), __ -> new Slot2()).
+                    row -> cellSlots.computeIfAbsent(new CellKey<>(row, this), __ -> new Slot()).
                             with(cellContent(row))
             );
         }

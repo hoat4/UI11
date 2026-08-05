@@ -385,7 +385,7 @@ public abstract class Widget implements Cloneable {
     }
 
     /**
-     * Lecserélődik az adott {@linkplain Slot2}ban lévő {@linkplain WidgetState}, ezért ez az objektum nem lesz használva
+     * Lecserélődik az adott {@linkplain Slot}ban lévő {@linkplain WidgetState}, ezért ez az objektum nem lesz használva
      * többé.
      */
     final void disposeFromStateRole(WidgetState<?> stateHolder) {

@@ -26,7 +26,7 @@ public class UpValueInvalidationBugTest {
 
         WidgetTree.create(new Component() {
 
-            @Remember private Slot2 slot;
+            @Remember private Slot slot;
 
             @Override
             protected void update() {

@@ -1,6 +1,6 @@
 package ui11.control;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.Widget;
 import ui11.input.gesture.CloseRequestListener;
 import ui11.observable.ObservableMap;
@@ -18,7 +18,7 @@ public class DialogContainer extends Widget {
     private final DialogContainerState state;
     private final Widget content;
 
-    @Remember private Slot2.SlotMap<Object> overlaySlots;
+    @Remember private Slot.SlotMap<Object> overlaySlots;
 
     public DialogContainer(DialogContainerState state, Widget content) {
         this.state = state;
@@ -27,7 +27,7 @@ public class DialogContainer extends Widget {
 
     @Override
     protected void initState() {
-        overlaySlots = new Slot2.SlotMap<>();
+        overlaySlots = new Slot.SlotMap<>();
     }
 
     @Override

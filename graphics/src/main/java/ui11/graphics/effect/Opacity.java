@@ -1,6 +1,6 @@
 package ui11.graphics.effect;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -12,7 +12,7 @@ public final class Opacity extends SubstitutedWidget {
     private final double opacity;
     private final Widget content;
 
-    @Remember private Slot2 contentSlot;
+    @Remember private Slot contentSlot;
 
     public Opacity(double opacity, @NonNull Widget content) {
         if (opacity < 0 || opacity > 1)
@@ -23,7 +23,7 @@ public final class Opacity extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
+        contentSlot = new Slot();
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ui11.i18n.editor;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.control.EditablePlainText;
@@ -26,8 +26,8 @@ public class LiveLocalizationEditor extends Widget {
 
     private final LocalizableTextEditingContext context;
 
-    @Remember private Map<String, Slot2> residLabelSlots;
-    @Remember private Map<String, Slot2> valueTextFieldSlots;
+    @Remember private Map<String, Slot> residLabelSlots;
+    @Remember private Map<String, Slot> valueTextFieldSlots;
 
     public LiveLocalizationEditor(LocalizableTextEditingContext context) {
         this.context = context;
@@ -44,8 +44,8 @@ public class LiveLocalizationEditor extends Widget {
         Widget tableContent = Padding.allSides(px(8),
                 grid(2, grid -> {
                     context.localizationResources.forEach((name, valueObs) -> {
-                        Slot2 labelSlot = residLabelSlots.computeIfAbsent(name, __ -> new Slot2());
-                        Slot2 valueTextFieldSlot = valueTextFieldSlots.computeIfAbsent(name, __ -> new Slot2());
+                        Slot labelSlot = residLabelSlots.computeIfAbsent(name, __ -> new Slot());
+                        Slot valueTextFieldSlot = valueTextFieldSlots.computeIfAbsent(name, __ -> new Slot());
 
                         grid.add(labelSlot.with(
                                 Align.leftCenter(

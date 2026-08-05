@@ -15,7 +15,7 @@ public class Faded extends Widget {
     private final @NonNull Widget content;
     private final boolean visible;
 
-    @Remember private Slot2 contentSlot;
+    @Remember private Slot contentSlot;
 
     // lehet hogy kétféle Tween kéne megjelenéshez és bezáráshoz.
     // persze akkor meg kérdés, hogyha megjelenés közben zárjuk be, akkor hogy nézzen ki a bezárás.
@@ -28,7 +28,7 @@ public class Faded extends Widget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
+        contentSlot = new Slot();
     }
 
     @Override

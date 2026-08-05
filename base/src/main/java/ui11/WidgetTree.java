@@ -349,7 +349,7 @@ public final class WidgetTree {
         }
         Objects.requireNonNull(widget, "nextWidget");
 
-        if (widget instanceof Slot2 slotWidget)
+        if (widget instanceof Slot slotWidget)
             w = slotWidget.stateHolderOrNull();
 
         if (w == null || w.effectiveModel() != widget) {

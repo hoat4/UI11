@@ -1,6 +1,6 @@
 package ui11.i18n;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.layout.singlechild.Align;
@@ -20,7 +20,7 @@ class ResidBubble extends Widget {
 
     @Inject(required = false) private LocalizableTextEditingContext editingContext;
 
-    @Remember private Slot2 contentSlot;
+    @Remember private Slot contentSlot;
 
     public ResidBubble(String resid, Widget content) {
         this.resid = resid;
@@ -29,7 +29,7 @@ class ResidBubble extends Widget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
+        contentSlot = new Slot();
     }
 
     @Override

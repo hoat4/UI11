@@ -1,6 +1,6 @@
 package ui11.control.defaultlook;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.control.Table;
@@ -22,7 +22,7 @@ public class DefaultTableImpl<T> extends Widget {
     private final Table<T> table;
 
     // TODO mi legyen, ha vannak duplikált sorok a táblázatban? és ha nullok?
-    @Remember private Slot2.SlotMap<T> rowClickHandlerSlots;
+    @Remember private Slot.SlotMap<T> rowClickHandlerSlots;
     // kéne slot a sima celláknak is
 
     public DefaultTableImpl(Table<T> table) {
@@ -31,7 +31,7 @@ public class DefaultTableImpl<T> extends Widget {
 
     @Override
     protected void initState() {
-        rowClickHandlerSlots = new Slot2.SlotMap<>();
+        rowClickHandlerSlots = new Slot.SlotMap<>();
     }
 
     @Override

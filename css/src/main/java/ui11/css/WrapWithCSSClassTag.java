@@ -1,6 +1,6 @@
 package ui11.css;
 
-import ui11.Slot2;
+import ui11.Slot;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -12,7 +12,7 @@ public final class WrapWithCSSClassTag extends SubstitutedWidget {
     private final @NonNull String className;
     private final @NonNull Widget content;
 
-    @Remember private Slot2 contentSlot;
+    @Remember private Slot contentSlot;
 
     public WrapWithCSSClassTag(@NonNull String className, @NonNull Widget content) {
         this.className = Objects.requireNonNull(className);
@@ -34,7 +34,7 @@ public final class WrapWithCSSClassTag extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot2();
+        contentSlot = new Slot();
     }
 
     @Override
