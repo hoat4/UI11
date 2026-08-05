@@ -349,6 +349,9 @@ public final class WidgetTree {
         }
         Objects.requireNonNull(widget, "nextWidget");
 
+        if (widget instanceof Slot2.SlotWidget slotWidget)
+            w = slotWidget.slot.widgetState;
+
         if (w == null || w.effectiveModel() != widget) {
             widget.initListenerProxyData();
 
@@ -368,7 +371,12 @@ public final class WidgetTree {
 
                     w = new WidgetState<>(widget, this);
 
-                    if (slot != null)
+                    if (widget instanceof Slot2.SlotWidget slotWidget) {
+                        @SuppressWarnings("unchecked")
+                        WidgetState<Slot2.SlotWidget> castedW = (WidgetState<Slot2.SlotWidget>) w;
+                        // TODO a lenti többen használják komment érvényes itt is?
+                        slotWidget.slot.widgetState = castedW;
+                    } else if (slot != null)
                         // TODO mit csináljunk, ha a slotot többen is használják egyszerre?
                         slot.content = w;
 
