@@ -365,22 +365,16 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     /**
      * ha már nem a parentünk a megadott widget, akkor nem csinál semmit
      */
+    // TODO inkább dobjunk assertiont ha már nem a parentünk?
     void removeParent(WidgetState<?> parent) {
         for (int i = 0; i < parents.size(); i++) {
             if (parents.get(i).parent() == parent) {
-                parents.subList(i, parents.size()).clear();
-                if (i == 0 && hasFlag(FLAG_ACTIVE) && !hasFlag(FLAG_IN_INACTIVATION_QUEUE))
+                parents.remove(i);
+                if (parents.isEmpty() && hasFlag(FLAG_ACTIVE) && !hasFlag(FLAG_IN_INACTIVATION_QUEUE))
                     tree.addToInactivationQueue(this);
                 break;
             }
         }
-    }
-
-    static boolean isDescendantOfOrSame(WidgetState<?> a, WidgetState<?> b) {
-        for (; b != null; b = b.parents.getLast().parent())
-            if (a == b)
-                return true;
-        return false;
     }
 
     void closeUntilPauseScope() {
@@ -588,7 +582,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     @Override
     public String toString() {
         return super.toString() + " (" + (accessor == null ? "unknown type" : accessor.clazz().getName()) +
-                (stateWidget instanceof PeerRequestor.FinisherWidget f ? ": " + f.fToString() : "") + ")";
+                (stateWidget instanceof PeerRequestor.FinisherWidget f ? ": " + f.fToString() :
+                        stateWidget instanceof Slot2.SlotWidget sw ? ": " + sw.slot.debugInfo() : "") + ")";
     }
 
     static abstract class InheritedPropBase<T> {

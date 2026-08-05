@@ -11,6 +11,7 @@ import ui11.platform.awt.j2d.rendertree.EmptyRenderNode;
 import ui11.platform.awt.j2d.rendertree.FillPathRenderNode;
 
 import java.awt.*;
+import java.awt.geom.Path2D;
 
 public class J2DColorPeer extends Widget {
 

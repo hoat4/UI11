@@ -1,15 +1,13 @@
 package ui11.control;
 
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import ui11.MultiSlot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.text.Text;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
 // TODO selectedTab kívülről módosítható legyen
 public final class TabbedPane extends SubstitutedWidget {
@@ -17,8 +15,8 @@ public final class TabbedPane extends SubstitutedWidget {
     private final List<Tab> tabs;
     private final TabSide side;
 
-    @Inject private MultiSlot<Integer> tabTitleSlots;
-    @Inject private MultiSlot<Integer> tabContentSlots;
+    @Inject private Slot2.SlotList tabTitleSlots;
+    @Inject private Slot2.SlotList tabContentSlots;
 
     public TabbedPane(Tab... tabs) {
         this(List.of(tabs), TabSide.TOP);
@@ -27,6 +25,25 @@ public final class TabbedPane extends SubstitutedWidget {
     private TabbedPane(@NonNull List<@NonNull Tab> tabs, @NonNull TabSide side) {
         this.tabs = List.copyOf(tabs);
         this.side = side;
+    }
+
+    @Override
+    protected void initState() {
+        tabTitleSlots = new Slot2.SlotList();
+    }
+
+    @Override
+    protected TabbedPane forSubstitution() {
+        List<? extends Widget> tabTitles = tabTitleSlots.with(tabs.stream().map(Tab::title).toList());
+        List<? extends Widget> tabContents = tabContentSlots.with(tabs.stream().map(Tab::content).toList());
+
+        Tab[] slottedTabs = new Tab[tabs.size()];
+        for (int i = 0; i < slottedTabs.length; i++) {
+            Tab tab = tabs.get(i);
+            slottedTabs[i] = new Tab(tabTitles.get(i), tabContents.get(i),
+                    tab.enabled, tab.isInitiallySelected);
+        }
+        return new TabbedPane(List.of(slottedTabs), side);
     }
 
     public int initiallySelected() {
@@ -41,16 +58,7 @@ public final class TabbedPane extends SubstitutedWidget {
     }
 
     public List<Tab> tabs() {
-        if (tabTitleSlots == null)
-            return tabs;
-
-        Tab[] slottedTabs = new Tab[tabs.size()];
-        for (int i = 0; i < slottedTabs.length; i++) {
-            Tab tab = tabs.get(i);
-            slottedTabs[i] = new Tab(tab.title.withSlot(tabTitleSlots.get(i)), tab.content.withSlot(tabContentSlots.get(i)),
-                    tab.enabled, tab.isInitiallySelected);
-        }
-        return List.of(slottedTabs);
+        return tabs;
     }
 
     public TabSide side() {

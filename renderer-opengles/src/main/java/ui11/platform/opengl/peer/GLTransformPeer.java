@@ -27,7 +27,6 @@ public class GLTransformPeer extends Widget {
     private final Transform transform;
 
     @Inject private Surface parentSurface;
-    @Inject private Slot transformedContentSlot;
 
     @Remember private TransformedSurface surface;
     @Remember private TransformRenderNode node;
@@ -52,7 +51,7 @@ public class GLTransformPeer extends Widget {
         surface.parent.set((GLSurface) parentSurface);
         boolean nonDegenerateTransform = surface.update(transform.transformation());
 
-        Widget transformedContent = new Provider<>(Surface.class, surface, transform.content()).withSlot(transformedContentSlot);
+        Widget transformedContent = new Provider<>(Surface.class, surface, transform.content());
 
         if (surface.renderNodeTranslation.snoop() != null) {
             // ilyenkor nem kell TransformRenderNode

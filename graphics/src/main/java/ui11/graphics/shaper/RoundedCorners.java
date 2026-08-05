@@ -1,7 +1,7 @@
 package ui11.graphics.shaper;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
@@ -16,7 +16,7 @@ public final class RoundedCorners extends SubstitutedWidget {
     private final Length bottomLeftRadius;
     private final Widget content;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public RoundedCorners(@NonNull Length topLeftRadius,
                           @NonNull Length topRightRadius,
@@ -32,6 +32,22 @@ public final class RoundedCorners extends SubstitutedWidget {
 
     public static RoundedCorners withRoundedCorners(@NonNull Length radii, @NonNull Widget content) {
         return new RoundedCorners(radii, radii, radii, radii, content);
+    }
+
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected RoundedCorners forSubstitution() {
+        return new RoundedCorners(
+                topLeftRadius,
+                topRightRadius,
+                bottomRightRadius,
+                bottomLeftRadius,
+                contentSlot.with(content)
+        );
     }
 
     public @NonNull Length topLeftRadius() {
@@ -51,7 +67,7 @@ public final class RoundedCorners extends SubstitutedWidget {
     }
 
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     @Override

@@ -1,13 +1,13 @@
 package ui11.graphics.shaper;
 
-import ui11.Slot;
+import org.jspecify.annotations.NonNull;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Path;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 
-import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 public final class RectangleShaped extends SubstitutedWidget {
@@ -15,15 +15,28 @@ public final class RectangleShaped extends SubstitutedWidget {
     private final Widget content;
     private final Size shape;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public RectangleShaped(@NonNull Widget content, @NonNull Size shape) {
         this.content = Objects.requireNonNull(content);
         this.shape = Objects.requireNonNull(shape);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected RectangleShaped forSubstitution() {
+        return new RectangleShaped(
+                contentSlot.with(content),
+                shape
+        );
+    }
+
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     public @NonNull Size shape() {

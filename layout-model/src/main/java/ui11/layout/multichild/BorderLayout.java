@@ -49,7 +49,7 @@ public final class BorderLayout extends SubstitutedWidget {
     }
 
     @Override
-    protected BorderLayout cloneForSubstitution() {
+    protected BorderLayout forSubstitution() {
         return new BorderLayout(
                 centerSlot.with(center),
                 topSlot.with(top),

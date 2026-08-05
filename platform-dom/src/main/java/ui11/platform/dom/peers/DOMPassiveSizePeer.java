@@ -11,8 +11,6 @@ public class DOMPassiveSizePeer extends DOMLayoutPeerBase {
 
     private final PassiveSize passiveSize;
 
-    @Inject private Slot contentSlot;
-
     public DOMPassiveSizePeer(PassiveSize passiveSize) {
         super(false, false);
         this.passiveSize = passiveSize;

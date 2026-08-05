@@ -1,6 +1,6 @@
 package ui11.control;
 
-import ui11.MultiSlot;
+import ui11.Slot2;
 import ui11.Widget;
 import ui11.input.gesture.CloseRequestListener;
 import ui11.observable.ObservableMap;
@@ -9,6 +9,7 @@ import ui11.provide.Provide;
 
 import java.util.LinkedHashMap;
 import java.util.Objects;
+import java.util.SequencedMap;
 
 import static ui11.graphics.effect.Overlay.overlay;
 
@@ -17,7 +18,7 @@ public class DialogContainer extends Widget {
     private final DialogContainerState state;
     private final Widget content;
 
-    @Inject private MultiSlot<Object> overlaySlots;
+    @Remember private Slot2.SlotMap<Object> overlaySlots;
 
     public DialogContainer(DialogContainerState state, Widget content) {
         this.state = state;
@@ -25,12 +26,17 @@ public class DialogContainer extends Widget {
     }
 
     @Override
+    protected void initState() {
+        overlaySlots = new Slot2.SlotMap<>();
+    }
+
+    @Override
     protected Widget build() {
         return overlay(overlay -> {
             overlay.accept(content);
-            state.overlays.forEach((key, dialog) -> {
-                overlay.accept(dialog.withSlot(overlaySlots.get(key)));
-            });
+            SequencedMap<Object, ? extends Widget> w = new LinkedHashMap<>(state.overlays);
+            w = overlaySlots.with(w);
+            w.values().forEach(overlay);
         });
     }
 

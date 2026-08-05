@@ -1,6 +1,6 @@
 package ui11.layout.singlechild;
 
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -17,7 +17,7 @@ public final class Hidden extends SubstitutedWidget {
 
     private final @NonNull Widget content;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     // egyelőre csak abban különbözik attól ha csak child lenne de widget fában nem szerepl, hogy
     // scroll pozíció megőrződik.
@@ -26,7 +26,17 @@ public final class Hidden extends SubstitutedWidget {
         this.content = Objects.requireNonNull(content);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected Hidden forSubstitution() {
+        return new Hidden(contentSlot.with(content));
+    }
+
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 }

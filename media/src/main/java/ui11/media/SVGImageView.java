@@ -1,7 +1,7 @@
 package ui11.media;
 
 import org.jspecify.annotations.NonNull;
-import ui11.MultiSlot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.media.ImageSource.InlineStringSource;
@@ -20,10 +20,10 @@ public final class SVGImageView extends SubstitutedWidget {
     private final boolean interactive;
     private final Map<String, ? extends Widget> embeddedWidgets;
 
-    @Inject private MultiSlot<String> embeddedWidgetSlots;
+    @Remember private Slot2.SlotMap<String> embeddedWidgetSlots;
 
     private SVGImageView(@NonNull TextualImageSource source, boolean interactive,
-                         @NonNull Map<String, ? extends @NonNull Widget> embeddedWidgets) {
+                         @NonNull Map<@NonNull String, ? extends @NonNull Widget> embeddedWidgets) {
         Objects.requireNonNull(source);
         this.source = source;
         this.interactive = interactive;
@@ -50,6 +50,16 @@ public final class SVGImageView extends SubstitutedWidget {
         return from(new InlineStringSource(svgSource, "image/svg+xml"));
     }
 
+    @Override
+    protected void initState() {
+        embeddedWidgetSlots = new Slot2.SlotMap<>();
+    }
+
+    @Override
+    protected SVGImageView forSubstitution() {
+        return new SVGImageView(source, interactive, embeddedWidgetSlots.with(embeddedWidgets));
+    }
+
     public TextualImageSource source() {
         return source;
     }
@@ -58,22 +68,8 @@ public final class SVGImageView extends SubstitutedWidget {
         return interactive;
     }
 
-    public Map<String, ? extends Widget> embeddedWidgets() {
-        if (embeddedWidgetSlots == null)
-            return embeddedWidgets;
-
-        @SuppressWarnings("unchecked")
-        Map.Entry<String, Widget>[] entries = new Map.Entry[embeddedWidgets.size()];
-        embeddedWidgets.forEach(new BiConsumer<String, Widget>() {
-
-            private int i;
-
-            @Override
-            public void accept(String name, Widget widget) {
-                entries[i++] = Map.entry(name, widget.withSlot(embeddedWidgetSlots.get(name)));
-            }
-        });
-        return Map.ofEntries(entries);
+    public @NonNull Map<@NonNull String, ? extends @NonNull Widget> embeddedWidgets() {
+        return embeddedWidgets;
     }
 
     public SVGImageView withInteractivity(boolean interactive) {

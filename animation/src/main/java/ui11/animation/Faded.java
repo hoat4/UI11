@@ -15,7 +15,7 @@ public class Faded extends Widget {
     private final @NonNull Widget content;
     private final boolean visible;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     // lehet hogy kétféle Tween kéne megjelenéshez és bezáráshoz.
     // persze akkor meg kérdés, hogyha megjelenés közben zárjuk be, akkor hogy nézzen ki a bezárás.
@@ -27,8 +27,13 @@ public class Faded extends Widget {
     }
 
     @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
     protected Widget build() {
-        Widget content = this.content.withSlot(contentSlot);
+        Widget content = contentSlot.with(this.content);
 
         return new ValueSmoother<>(visible ? 1.0 : 0.0,
                 Duration.ofMillis(300),

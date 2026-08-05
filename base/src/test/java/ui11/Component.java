@@ -22,20 +22,18 @@ abstract class Component extends Widget {
                 resolutionResults -> ComponentResult.INSTANCE);
     }
 
-    protected void useComponent(Slot slot, Widget component) {
-        Objects.requireNonNull(slot);
+    protected void useComponent(Widget component) {
         Objects.requireNonNull(component);
         if (childComponents == null)
             throw new IllegalStateException();
-        childComponents.add(component.withSlot(slot));
+        childComponents.add(component);
     }
 
-    protected void useComponent(Slot slot, Widget component, PeerRequestor.Request<?> request) {
-        Objects.requireNonNull(slot);
+    protected void useComponent(Widget component, PeerRequestor.Request<?> request) {
         Objects.requireNonNull(component);
         if (childComponents == null)
             throw new IllegalStateException();
-        childComponents.add(PeerRequestor.ofSingle(component.withSlot(slot), request,
+        childComponents.add(PeerRequestor.ofSingle(component, request,
                 result -> ComponentResult.INSTANCE));
     }
 

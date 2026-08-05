@@ -502,8 +502,7 @@ public abstract sealed class PeerRequestor extends Widget {
         private final Map<K, ? extends Set<Request<P>>> requests;
         private final Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f;
 
-        @Inject private MultiSlot<K> slots;
-
+        @Remember private Slot2.SlotMap<K> slots;
         @Remember private Map<K, Set<ResolutionRequest<P>>> reqs;
 
         public CreatePeersForMap(Map<K, ? extends Widget> widgets,
@@ -515,6 +514,11 @@ public abstract sealed class PeerRequestor extends Widget {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
+        }
+
+        @Override
+        protected void initState() {
+            slots = new Slot2.SlotMap<>();
         }
 
         @Override
@@ -553,10 +557,9 @@ public abstract sealed class PeerRequestor extends Widget {
             //      nem látszik a "Replace lambda with anonymous class"
             // TODO JDK-nak jelenteni kéne, hogy MapN.forEach feleslegesen vacakol entrySettel, miközben
             //      egy lapos Object[]-ben vannak a key/value párjai
-            for (Map.Entry<K, ? extends Widget> entry : widgets.entrySet()) {
+            for (Map.Entry<K, ? extends Widget> entry : slots.with(widgets).entrySet()) {
                 K key = entry.getKey();
-                Slot slot = slots.get(key);
-                Widget widget = entry.getValue().withSlot(slot);
+                Widget widget = entry.getValue();
                 Set<Request<P>> reqDatas = this.requests.get(key);
 
                 Set<ResolutionRequest<P>> oldSet = reqs.getOrDefault(key, Collections.emptySet());

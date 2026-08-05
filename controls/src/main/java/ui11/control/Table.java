@@ -1,16 +1,12 @@
 package ui11.control;
 
-import ui11.MultiSlot;
-import ui11.SubstitutedWidget;
-import ui11.Widget;
+import ui11.*;
 import ui11.layout.HorizontalAlignment;
 import ui11.text.Text;
 
 import org.jspecify.annotations.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,7 +20,7 @@ public class Table<T> extends SubstitutedWidget {
     private final List<? extends Column<? super T>> columns;
     private final Consumer<T> clickHandler;
 
-    @Inject private MultiSlot<CellKey<T>> cellSlots;
+    @Remember private Map<CellKey<T>, Slot2> cellSlots;
 
     public Table(List<? extends Column<? super T>> columns, List<? extends T> rows) {
         this(columns, rows, null);
@@ -36,18 +32,29 @@ public class Table<T> extends SubstitutedWidget {
         this.clickHandler = listenerProxy(clickHandler);
     }
 
+    @Override
+    protected void initState() {
+        cellSlots = new HashMap<>();
+        // TODO ennek a mapnek a törlése
+    }
+
+    @Override
+    protected Table<?> forSubstitution() {
+        return new Table<>(
+                columns.stream().
+                        map(col -> col.wrapContentInSlot(cellSlots)).
+                        toList(),
+                rows,
+                clickHandler
+        );
+    }
+
     public List<? extends T> rows() {
         return rows;
     }
 
-    @SuppressWarnings("SimplifyStreamApiCallChains")
     public List<? extends Column<? super T>> columns() {
-        if (cellSlots == null)
-            return columns;
-        else
-            return columns.stream().
-                    map(col -> col.wrapContentInSlot(cellSlots)).
-                    collect(Collectors.toUnmodifiableList());
+        return columns;
     }
 
     public Consumer<T> clickHandler() {
@@ -90,11 +97,12 @@ public class Table<T> extends SubstitutedWidget {
             return result;
         }
 
-        <T2 extends T> Column<T2> wrapContentInSlot(MultiSlot<CellKey<T2>> cellSlots) {
+        <T2 extends T> Column<T2> wrapContentInSlot(Map<CellKey<T2>, Slot2> cellSlots) {
             return new Column<>(
                     title,
                     horizontalAlignment,
-                    row -> cellContent(row).withSlot(cellSlots.get(new CellKey<>(row, this)))
+                    row -> cellSlots.computeIfAbsent(new CellKey<>(row, this), __ -> new Slot2()).
+                            with(cellContent(row))
             );
         }
 

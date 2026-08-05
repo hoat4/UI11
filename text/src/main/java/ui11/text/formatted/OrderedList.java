@@ -3,6 +3,7 @@ package ui11.text.formatted;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.MultiSlot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.layout.Gone;
@@ -13,7 +14,7 @@ public final class OrderedList extends SubstitutedWidget {
 
     private final @NonNull List<? extends @NonNull Widget> items;
 
-    @Inject private MultiSlot<Integer> slots;
+    @Remember private Slot2.SlotList slots;
 
     public OrderedList(@NonNull List<? extends @Nullable Widget> items) {
         this.items = Gone.replaceNullsWithGone(items);
@@ -23,8 +24,18 @@ public final class OrderedList extends SubstitutedWidget {
         this.items = Gone.replaceNullsWithGone(items);
     }
 
+    @Override
+    protected void initState() {
+        slots = new Slot2.SlotList();
+    }
+
+    @Override
+    protected OrderedList forSubstitution() {
+        return new OrderedList(slots.with(items));
+    }
+
     public @NonNull List<? extends @NonNull Widget> items() {
-        return slots == null ? items : MultiSlot.assignSlots(slots, items);
+        return items;
     }
 
     // TODO default impl

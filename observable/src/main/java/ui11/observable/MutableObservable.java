@@ -101,6 +101,10 @@ public interface MutableObservable<T> extends Observable<T> {
         }
     }
 
+    default void debug_traceUnsubscribes() {
+        throw new UnsupportedOperationException();
+    }
+
     // public Lock lock() { ... }
 
     /*

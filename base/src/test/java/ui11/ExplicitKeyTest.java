@@ -13,10 +13,16 @@ public class ExplicitKeyTest {
 
         private final Observable<Boolean> reverse;
 
-        @Inject private Slot fa, fb;
+        @Remember private Slot2 fa, fb;
 
         W(Observable<Boolean> reverse) {
             this.reverse = reverse;
+        }
+
+        @Override
+        protected void initState() {
+            fa = new Slot2();
+            fb = new Slot2();
         }
 
         @Override
@@ -29,11 +35,11 @@ public class ExplicitKeyTest {
         }
 
         private Widget fa() {
-            return new ElementIdentityPrintingWidget().withSlot(fa);
+            return fa.with(new ElementIdentityPrintingWidget());
         }
 
         private Widget fb() {
-            return new ElementIdentityPrintingWidget().withSlot(fb);
+            return fb.with(new ElementIdentityPrintingWidget());
         }
     }
 

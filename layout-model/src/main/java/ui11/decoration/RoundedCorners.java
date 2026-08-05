@@ -1,6 +1,6 @@
 package ui11.decoration;
 
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
@@ -20,7 +20,7 @@ public final class RoundedCorners extends SubstitutedWidget {
     private final Length radius;
     private final Widget content;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public RoundedCorners(@NonNull Length radius, @NonNull Widget content) {
         this.radius = Objects.requireNonNull(radius);
@@ -31,19 +31,35 @@ public final class RoundedCorners extends SubstitutedWidget {
         return new RoundedCorners(radius, content);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected RoundedCorners forSubstitution() {
+        return new RoundedCorners(
+                radius,
+                contentSlot.with(content)
+        );
+    }
+
     public @NonNull Length radius() {
         return radius;
     }
 
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
+        /*
+        ez most úgyse működik, mert content be van wrappelve SlotWidgetbe
         if (content instanceof Box b && b.cornerRadius().isZero())
             return b.withCornerRadius(radius).withSlot(contentSlot);
         else
-            return new Box(content()).withCornerRadius(radius);
+         */
+        return new Box(content()).withCornerRadius(radius);
     }
 }

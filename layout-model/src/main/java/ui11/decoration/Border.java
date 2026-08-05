@@ -1,6 +1,6 @@
 package ui11.decoration;
 
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box.BorderSpec;
@@ -24,8 +24,8 @@ public final class Border extends SubstitutedWidget {
     private final @NonNull Widget stroke;
     private final @NonNull Widget content;
 
-    @Inject private Slot strokeSlot;
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 strokeSlot;
+    @Remember private Slot2 contentSlot;
 
     public Border(@NonNull Insets thicknesses, @NonNull Widget stroke, @NonNull Widget content) {
         this.thicknesses = Objects.requireNonNull(thicknesses);
@@ -53,28 +53,36 @@ public final class Border extends SubstitutedWidget {
         this(Insets.all(thickness), stroke, content);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+        strokeSlot = new Slot2();
+    }
+
+    @Override
+    protected Border forSubstitution() {
+        return new Border(
+                thicknesses,
+                strokeSlot.with(stroke),
+                contentSlot.with(content)
+        );
+    }
+
     public Insets thicknesses() {
         return thicknesses;
     }
 
     public Widget stroke() {
-        return strokeSlot == null ? stroke : stroke.withSlot(strokeSlot);
+        return stroke;
     }
 
     public Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     @Override
     protected @NonNull Widget fallbackContent() {
-        // TODO ezeket a widget instanceof ...-okat meg kéne szüntetni,
-        //      mert ha egy lényegtelen Tag az értékük, akkor azokat nem kell nézni
-
-        // cornerRadius == 0-t azért kell nézni, mert ha RoundedCorners-en kívülre
-        // rakunk egy Bordert, akkor a bordernek nem lekerítettnek kell lennie
-        return content instanceof Box b && b.border() == null && b.cornerRadius().isZero() ?
-                b.withBorder(new BorderSpec(thicknesses, stroke())).withSlot(contentSlot) :
-                new Box(content()).withBorder(new BorderSpec(thicknesses, stroke()));
+        return new Box(content()).withBorder(new BorderSpec(thicknesses, stroke()));
     }
 
     public static Widget atTop(Color stroke, Widget content) {

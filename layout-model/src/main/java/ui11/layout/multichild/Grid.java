@@ -1,6 +1,6 @@
 package ui11.layout.multichild;
 
-import ui11.MultiSlot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Axis;
@@ -29,7 +29,7 @@ public class Grid extends SubstitutedWidget {
     // TODO ki kéne találni, hogy hogyan lehet enélkül passiveHeight-ot megcsinálni
     private final Axis orientationBias;
 
-    @Inject private MultiSlot<GridItemKey> slots;
+    @Remember private Slot2.SlotMap<GridItemKey> slots;
 
     private Grid(Builder b) {
         items = b.items;
@@ -38,6 +38,18 @@ public class Grid extends SubstitutedWidget {
         gap = b.gap;
         ignorePrefSizes = b.ignorePrefSizes;
         orientationBias = b.orientationBias;
+    }
+
+    // forSubstitution()-nek, ideiglenesen
+    private Grid(List<Item> items,
+                 Map<Integer, TrackSettings> columnSettings, Map<Integer, TrackSettings> rowSettings,
+                 Length gap, boolean ignorePrefSizes, Axis orientationBias) {
+        this.items = items;
+        this.columnSettings = columnSettings;
+        this.rowSettings = rowSettings;
+        this.gap = gap;
+        this.ignorePrefSizes = ignorePrefSizes;
+        this.orientationBias = orientationBias;
     }
 
     public static Builder builder() {
@@ -103,24 +115,43 @@ public class Grid extends SubstitutedWidget {
         return builder.build();
     }
 
-    public List<Item> items() {
-        if (slots == null)
-            return items;
+    @Override
+    protected void initState() {
+        slots = new Slot2.SlotMap<>();
+    }
 
+    @Override
+    protected Grid forSubstitution() {
         // TODO ez a kód most duplikálva van itt és DOMGridPeerben
         record GridPos(int col, int row) {
         }
-        Item[] itemsArray = new Item[this.items.size()];
         Map<GridPos, Integer> overlayCounts = new HashMap<>();
-        for (int i = 0; i < itemsArray.length; i++) {
+        Map<GridItemKey, Widget> widgetsByGridItemKey = new HashMap<>();
+        GridItemKey[] keys = new GridItemKey[items.size()];
+        for (int i = 0; i < items.size(); i++) {
             Item item = items.get(i);
             int overlayIndex = overlayCounts.compute(new GridPos(item.col(), item.row()),
                     (p, j) -> j == null ? 0 : j + 1);
-            GridItemKey key = new GridItemKey(item.col(), item.row(), overlayIndex);
-            itemsArray[i] = new Item(item.widget.withSlot(slots.get(key)),
+            keys[i] = new GridItemKey(item.col(), item.row(), overlayIndex);
+            widgetsByGridItemKey.put(keys[i], item.widget);
+        }
+
+        Item[] itemsArray = new Item[this.items.size()];
+        Map<GridItemKey, ? extends Widget> slottedWidgetsByGridItemKey = slots.with(widgetsByGridItemKey);
+        for (int i = 0; i < items.size(); i++) {
+            Item item = items.get(i);
+            Widget slottedW = slottedWidgetsByGridItemKey.get(keys[i]);
+            assert slottedW != null;
+            itemsArray[i] = new Item(slottedW,
                     item.col, item.row, item.colspan, item.rowspan);
         }
-        return List.of(itemsArray);
+
+        List<Item> itemList = List.of(itemsArray);
+        return new Grid(itemList, columnSettings, rowSettings, gap, ignorePrefSizes, orientationBias);
+    }
+
+    public List<Item> items() {
+        return items;
     }
 
     public Map<Integer, TrackSettings> tracks(@NonNull Axis axis) {

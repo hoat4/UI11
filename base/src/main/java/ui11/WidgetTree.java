@@ -63,9 +63,7 @@ public final class WidgetTree {
             refreshScheduled = false;
 
             if (TRACE_REFRESH)
-                // azért stderr, mert "Missed to refresh" szöveg logger.error, ami stderrre megy általában,
-                // és a sorrend összekavarodna
-                System.err.println("[TRACE_REFRESH] Begin refresh " + beganRefreshID);
+                traceRefresh("Begin refresh " + beganRefreshID);
 
             if (refreshStack != null)
                 throw new RuntimeException("refresh stack already exists");
@@ -136,15 +134,16 @@ public final class WidgetTree {
                         needsDescendantRefresh = true;
 
                     if (TRACE_REFRESH)
-                        System.err.println("[TRACE_REFRESH] " + w + ": no rebuild, " +
-                                (needsDescendantRefresh ? "but enter children" : "skip children"));
+                        traceRefresh(w + ": no rebuild, " +
+                                (needsDescendantRefresh ? "but enter children" : "skip children" +
+                                "; descendant interested IVs: " + w.descendantsInterestedIVs));
 
                     findNextToRefresh(!needsDescendantRefresh);
                     continue;
                 }
 
                 if (TRACE_REFRESH)
-                    System.err.println("[TRACE_REFRESH] " + w + ": rebuild");
+                    traceRefresh(w + ": rebuild");
 
                 if (w.stateWidget instanceof PeerRequestor rrw) {
                     WidgetInstantiation[] prevChildren = (WidgetInstantiation[]) w.children;
@@ -208,12 +207,20 @@ public final class WidgetTree {
             logger.error("Refresh failed", e);
             throw e;
         } finally {
-            if (TRACE_REFRESH)
-                System.err.println("[TRACE_REFRESH] Finished refresh " + beganRefreshID);
             finishedRefreshID = beganRefreshID;
             refreshStack = null;
             laterValidationChecks = null;
+            if (TRACE_REFRESH) {
+                traceRefresh("Finished refresh " + beganRefreshID);
+            }
         }
+    }
+
+    private void traceRefresh(String s) {
+        // azért stderr, mert "Missed to refresh" szöveg logger.error, ami stderrre megy általában,
+        // és a sorrend összekavarodna
+        int indent = refreshStack == null ? 0 : refreshStack.depth();
+        System.err.println("[TRACE_REFRESH] " + "  ".repeat(indent) + s);
     }
 
     private boolean ivsMatch(WidgetState<?> w, Map<Class<?>, Object> descendantsInterestedIVs) {
@@ -375,6 +382,7 @@ public final class WidgetTree {
                         @SuppressWarnings("unchecked")
                         WidgetState<Slot2.SlotWidget> castedW = (WidgetState<Slot2.SlotWidget>) w;
                         assert prevState == null;
+                        assert slotWidget.slot.widgetState == null;
                         slotWidget.slot.widgetState = castedW;
                     } else if (slot != null)
                         // TODO mit csináljunk, ha a slotot többen is használják egyszerre?

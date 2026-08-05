@@ -1,19 +1,17 @@
 package ui11.decoration;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import org.jspecify.annotations.Nullable;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
-import ui11.geom.Length;
 import ui11.color.Color;
+import ui11.geom.Length;
 import ui11.graphics.fill.ColorFill;
 import ui11.layout.Insets;
 import ui11.layout.LayoutSize;
 
-import org.jspecify.annotations.Nullable;
-
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
 import static ui11.geom.Length.px;
 
@@ -30,9 +28,9 @@ public final class Box extends SubstitutedWidget {
     private final @Nullable LayoutSize fixedSize;
     private final @NonNull Length cornerRadius;
 
-    @Inject private Slot contentSlot;
-    @Inject private Slot backgroundSlot;
-    @Inject private Slot borderFillSlot;
+    @Remember private Slot2 contentSlot;
+    @Remember private Slot2 backgroundSlot;
+    @Remember private Slot2 borderFillSlot;
 
     /**
      * @param content
@@ -63,19 +61,38 @@ public final class Box extends SubstitutedWidget {
         this(content, null, null, null, null, null, Length.zero());
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+        backgroundSlot = new Slot2();
+        borderFillSlot = new Slot2();
+    }
+
+    @Override
+    protected Box forSubstitution() {
+        return new Box(
+                contentSlot.with(content),
+                backgroundSlot.with(background),
+                border == null ? null : new BorderSpec(border.thickness, borderFillSlot.with(border.fill)),
+                boxShadow,
+                minSize,
+                fixedSize,
+                cornerRadius
+        );
+    }
+
     public Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     @Nullable
     public Widget background() {
-        return background == null || backgroundSlot == null ? background : background.withSlot(backgroundSlot);
+        return background;
     }
 
     @Nullable
     public BorderSpec border() {
-        return border == null || borderFillSlot == null ? border :
-                new BorderSpec(border.thickness, border.fill.withSlot(borderFillSlot));
+        return border;
     }
 
     @Nullable

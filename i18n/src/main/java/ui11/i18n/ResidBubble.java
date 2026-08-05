@@ -1,6 +1,6 @@
 package ui11.i18n;
 
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.layout.singlechild.Align;
@@ -19,7 +19,8 @@ class ResidBubble extends Widget {
     private final Widget content;
 
     @Inject(required = false) private LocalizableTextEditingContext editingContext;
-    @Inject private Slot contentSlot;
+
+    @Remember private Slot2 contentSlot;
 
     public ResidBubble(String resid, Widget content) {
         this.resid = resid;
@@ -27,15 +28,20 @@ class ResidBubble extends Widget {
     }
 
     @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
     protected Widget build() {
         if (editingContext == null || !editingContext.isEditing.get())
-            return content.withSlot(contentSlot);
+            return contentSlot.with(content);
 
         // ideiglenesen CSS, mert a CSS-ben felülírt boldot meg egyebeket nem tudjuk felülírni, ha DOMPeerBase nem
         // tud róla, mert CSS-ben állították
         Widget residLabel = cssClass("resid-label", new Text(resid));
         return overlay(
-                withBackground(Color.YELLOW.withAlpha(0.3), content.withSlot(contentSlot)),
+                withBackground(Color.YELLOW.withAlpha(0.3), contentSlot.with(content)),
                 Align.centerBottom(
                         new PassiveSize(
                                 new Align(

@@ -110,6 +110,11 @@ class ObservableImpl<T> implements MutableObservable<T> {
         return changes;
     }
 
+    @Override
+    public void debug_traceUnsubscribes() {
+        ip.debug_traceUnsubscribes();
+    }
+
     public static class NullableObservableImpl<T> extends ObservableImpl<T> {
         public NullableObservableImpl(T value) {
             super(value);

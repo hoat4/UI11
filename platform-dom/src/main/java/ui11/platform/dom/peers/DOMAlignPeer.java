@@ -42,8 +42,6 @@ public class DOMAlignPeer extends DOMLayoutPeerBase {
 
     private final Align align;
 
-    @Inject private Slot alignedContentSlot;
-
     @Remember private String[] prev;
 
     public DOMAlignPeer(Align align) {
@@ -58,7 +56,7 @@ public class DOMAlignPeer extends DOMLayoutPeerBase {
 
     @Override
     protected Widget doBuild() {
-        Widget alignedContent = align.content().withSlot(alignedContentSlot);
+        Widget alignedContent = align.content();
         Widget alignedContentWithCSSClass = align.allowExpandOutside() ?
                 WrapWithCSSClassTag.wrapWithCssClass(CLASS_EXPAND_OUTSIDE, alignedContent) :
                 alignedContent;

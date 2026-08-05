@@ -1,6 +1,6 @@
 package ui11.decoration;
 
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.color.Color;
@@ -19,7 +19,7 @@ public final class BoxShadow extends SubstitutedWidget {
     private final Length spread;
     private final @NonNull Widget content;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public BoxShadow(Color color, Length blur, Length xOffset, Length yOffset, Length spread,
                      @NonNull Widget content) {
@@ -29,6 +29,16 @@ public final class BoxShadow extends SubstitutedWidget {
         this.yOffset = yOffset;
         this.spread = spread;
         this.content = Objects.requireNonNull(content);
+    }
+
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected BoxShadow forSubstitution() {
+        return new BoxShadow(color, blur, xOffset, yOffset, spread, contentSlot.with(content));
     }
 
     public Color color() {
@@ -52,7 +62,7 @@ public final class BoxShadow extends SubstitutedWidget {
     }
 
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     @Override

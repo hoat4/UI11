@@ -43,7 +43,7 @@ public abstract class SubstitutedWidget extends Widget {
     }
 
     // TODO név
-    protected SubstitutedWidget cloneForSubstitution() {
+    protected SubstitutedWidget forSubstitution() {
         return this;
     }
 
@@ -78,7 +78,7 @@ public abstract class SubstitutedWidget extends Widget {
      */
     @Override
     protected final Widget build() {
-        SubstitutedWidget thiz = cloneForSubstitution();
+        SubstitutedWidget thiz = forSubstitution();
         Objects.requireNonNull(thiz, "SW.cFS");
 
         // GlobalWidgetResolversről feltesszük hogy composite

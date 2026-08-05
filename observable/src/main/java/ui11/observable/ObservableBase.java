@@ -11,6 +11,7 @@ public class ObservableBase {
     private Set<ObserverCollection> observers;
     // TODO ideiglenesen publikus
     public long invalidationCount;
+    private boolean traceUnsubscribes;
 
     protected void onRead() {
         final ObserverHolder h = ObserverHolder.current();
@@ -95,6 +96,8 @@ public class ObservableBase {
     //      valszeg publikusnak is kell maradnia, de legalább akkor kerüjön egy külön osztályba, hogy ne
     //      legyen ilyennel szemetelve az Observable API
     public void removeObserver(ObserverCollection c, int i) {
+        if (traceUnsubscribes)
+            System.out.println("Remove " + c + " from " + this);
         if (observers == null) {
             // assert this.firstObserver == observer; firstObserver = null;
             if (obs1 == c) {
@@ -117,5 +120,9 @@ public class ObservableBase {
             if (!observers.remove(c))
                 throw new RuntimeException(c + " not in observers (" + observers + ")");
         }
+    }
+
+    public void debug_traceUnsubscribes() {
+        traceUnsubscribes = true;
     }
 }

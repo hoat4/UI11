@@ -1,6 +1,6 @@
 package ui11.window;
 
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -12,7 +12,7 @@ public final class Window extends SubstitutedWidget {
     private final String title;
     private final Widget content;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public Window(String title, @NonNull Widget content) {
         // TODO title nullable?
@@ -20,12 +20,25 @@ public final class Window extends SubstitutedWidget {
         this.content = Objects.requireNonNull(content);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected Window forSubstitution() {
+        return new Window(
+                title,
+                contentSlot.with(content)
+        );
+    }
+
     public String title() {
         return title;
     }
 
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     @Override
@@ -34,6 +47,7 @@ public final class Window extends SubstitutedWidget {
     }
 
     // TODO return type pl. WidgetInstantiation?
+    // az nem jó, mert már nem publikus
     public static void open(Widget content) {
         Desktop.systemDesktop().openWindow(content);
     }

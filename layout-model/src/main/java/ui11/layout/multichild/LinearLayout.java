@@ -3,7 +3,6 @@ package ui11.layout.multichild;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.*;
-import ui11.Slot2.Slot2List;
 import ui11.geom.Axis;
 import ui11.geom.Length;
 import ui11.layout.Gap;
@@ -50,12 +49,12 @@ import static java.util.stream.Collectors.joining;
 public final class LinearLayout extends SubstitutedWidget {
 
     private final @NonNull Axis mainAxis;
-    private final @NonNull List<? extends @Nullable Widget> items;
+    private final @NonNull List<? extends @NonNull Widget> items;
     private final @NonNull Length gap;
     private final @NonNull JustifyContent mainAxisAlignment;
     private final @NonNull AlignChildren crossAxisAlignment;
 
-    @Remember private Slot2List slots;
+    @Remember private Slot2.SlotList slots;
 
     /**
      * @param items ebben nullok helyett {@link Gone Gone-ok} szerepeljenek
@@ -404,11 +403,11 @@ public final class LinearLayout extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        slots = new Slot2List();
+        slots = new Slot2.SlotList();
     }
 
     @Override
-    protected LinearLayout cloneForSubstitution() {
+    protected LinearLayout forSubstitution() {
         return new LinearLayout(
                 mainAxis,
                 slots.with(items),

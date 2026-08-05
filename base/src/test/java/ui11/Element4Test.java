@@ -51,11 +51,16 @@ public class Element4Test {
 
         WidgetTree.create(new Component() {
 
-            @Inject private Slot slot;
+            @Remember private Slot2 slot;
+
+            @Override
+            protected void initState() {
+                slot = new Slot2();
+            }
 
             @Override
             protected void update() {
-                useComponent(slot, new Provider<>(Integer.class, 1347, new E()));
+                useComponent(slot.with(new Provider<>(Integer.class, 1347, new E())));
             }
         }, executor);
 

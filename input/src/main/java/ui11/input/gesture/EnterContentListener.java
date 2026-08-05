@@ -1,7 +1,7 @@
 package ui11.input.gesture;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.input.focus.FocusHolder;
@@ -17,7 +17,7 @@ public final class EnterContentListener extends SubstitutedWidget {
     private final @NonNull FocusHolder focusHolder;
     private final @NonNull Widget content;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public EnterContentListener(@NonNull Consumer<EnterContent> enterContentHandler,
                                 @NonNull FocusHolder focusHolder,
@@ -27,8 +27,22 @@ public final class EnterContentListener extends SubstitutedWidget {
         this.content = Objects.requireNonNull(content);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected EnterContentListener forSubstitution() {
+        return new EnterContentListener(
+                enterContentHandler,
+                focusHolder,
+                contentSlot.with(content)
+        );
+    }
+
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     public @NonNull Consumer<EnterContent> enterContentHandler() {

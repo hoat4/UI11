@@ -58,6 +58,10 @@ final class RefreshStack {
         top.needsRebuild = needsRebuild;
     }
 
+    int depth() {
+        return stack.size();
+    }
+
     static final class Item {
 
         // az itteni parent helyett child.widgetState().parent nem jó,

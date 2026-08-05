@@ -1,7 +1,7 @@
 package ui11.layout.singlechild;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Rect;
@@ -20,7 +20,7 @@ public final class Scrollable extends SubstitutedWidget {
     private final @Nullable Runnable onScroll;
     private final @Nullable ScrollController scrollController;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public Scrollable(@NonNull Widget content, @Nullable Runnable onScroll, @Nullable ScrollController scrollController) {
         this.content = Objects.requireNonNull(content);
@@ -36,8 +36,18 @@ public final class Scrollable extends SubstitutedWidget {
         this(content, onScroll, null);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected Scrollable forSubstitution() {
+        return new Scrollable(contentSlot.with(content), onScroll, scrollController);
+    }
+
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     @Nullable

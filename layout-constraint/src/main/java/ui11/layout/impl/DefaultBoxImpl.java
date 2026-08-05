@@ -2,6 +2,7 @@ package ui11.layout.impl;
 
 import ui11.PeerRequestor;
 import ui11.Slot;
+import ui11.Slot2;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.decoration.Box;
@@ -34,16 +35,28 @@ public class DefaultBoxImpl extends Widget {
     @Inject private TextStyle ts;
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
     @Inject(required = false) private Surface surface;
-    @Inject private Slot contentWithRoundedCornersSlot;
-    @Inject private Slot backgroundSlot;
-    @Inject private Slot borderSlot;
-    @Inject private Slot shadowTopSlot;
-    @Inject private Slot shadowBottomSlot;
-    @Inject private Slot shadowLeftSlot;
-    @Inject private Slot shadowRightSlot;
+
+    @Remember private Slot2 contentWithRoundedCornersSlot;
+    @Remember private Slot2 backgroundSlot;
+    @Remember private Slot2 borderSlot;
+    @Remember private Slot2 shadowTopSlot;
+    @Remember private Slot2 shadowBottomSlot;
+    @Remember private Slot2 shadowLeftSlot;
+    @Remember private Slot2 shadowRightSlot;
 
     public DefaultBoxImpl(Box box) {
         this.box = box;
+    }
+
+    @Override
+    protected void initState() {
+        contentWithRoundedCornersSlot = new Slot2();
+        backgroundSlot = new Slot2();
+        borderSlot = new Slot2();
+        shadowTopSlot = new Slot2();
+        shadowBottomSlot = new Slot2();
+        shadowLeftSlot = new Slot2();
+        shadowRightSlot = new Slot2();
     }
 
     @Override
@@ -132,16 +145,16 @@ public class DefaultBoxImpl extends Widget {
             if (cornerRadius >= 0.001)
                 background = RoundedCorners.withRoundedCorners(px(cornerRadius), background);
 
-            canvas.add(background.withSlot(backgroundSlot), contentBounds);
+            canvas.add(backgroundSlot.with(background), contentBounds);
         }
 
         if (cornerRadius >= 0.001)
             content = RoundedCorners.withRoundedCorners(px(cornerRadius), content);
 
-        canvas.add(content.withSlot(contentWithRoundedCornersSlot), contentBounds);
+        canvas.add(contentWithRoundedCornersSlot.with(content), contentBounds);
 
         if (border != null)
-            canvas.add(borderShape.withSlot(borderSlot), Rect.of(containerSize));
+            canvas.add(borderSlot.with(borderShape), Rect.of(containerSize));
 
         Widget w = canvas.build();
         if (sizeRequest != null)
@@ -201,25 +214,25 @@ public class DefaultBoxImpl extends Widget {
             throw new RuntimeException("box shadow doesn't support sizes that are relative to parent");
         double blur = len.em() * emSize + len.px();
 
-        canvas.add(new LinearGradient(180, List.of(
+        canvas.add(shadowTopSlot.with(new LinearGradient(180, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        )).withSlot(shadowTopSlot), new Rect(0, -blur, s.width(), blur));
+        ))), new Rect(0, -blur, s.width(), blur));
 
-        canvas.add(new LinearGradient(270, List.of(
+        canvas.add(shadowRightSlot.with(new LinearGradient(270, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        )).withSlot(shadowRightSlot), new Rect(s.width(), 0, blur, s.height()));
+        ))), new Rect(s.width(), 0, blur, s.height()));
 
-        canvas.add(new LinearGradient(0, List.of(
+        canvas.add(shadowBottomSlot.with(new LinearGradient(0, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        )).withSlot(shadowBottomSlot), new Rect(0, s.height(), s.width(), blur));
+        ))), new Rect(0, s.height(), s.width(), blur));
 
-        canvas.add(new LinearGradient(90, List.of(
+        canvas.add(shadowLeftSlot.with(new LinearGradient(90, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        )).withSlot(shadowLeftSlot), new Rect(-blur, 0, blur, s.height()));
+        ))), new Rect(-blur, 0, blur, s.height()));
 
         // TODO sarkok
     }

@@ -1,7 +1,7 @@
 package ui11.decoration;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.color.Color;
@@ -17,20 +17,34 @@ public final class Background extends SubstitutedWidget {
     private final @NonNull Widget background;
     private final @NonNull Widget content;
 
-    @Inject private Slot backgroundSlot;
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 backgroundSlot;
+    @Remember private Slot2 contentSlot;
 
     public Background(@Nullable Widget background, @NonNull Widget content) {
         this.background = Gone.goneIfNull(background);
         this.content = Objects.requireNonNull(content);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+        backgroundSlot = new Slot2();
+    }
+
+    @Override
+    protected Background forSubstitution() {
+        return new Background(
+                backgroundSlot.with(background),
+                contentSlot.with(content)
+        );
+    }
+
     public @NonNull Widget background() {
-        return backgroundSlot == null ? background : background.withSlot(backgroundSlot);
+        return background;
     }
 
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     public static Widget withBackground(@Nullable Widget bg, @NonNull Widget e) {

@@ -3,16 +3,16 @@ package ui11;
 import org.jspecify.annotations.NonNull;
 import ui11.observable.MutableObservable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 // TODO név? IdentityPreservingSlot jutott eszembe először, de az nem érthető
 //      esetleg StateHolder?
 public final class Slot2 {
 
-    private final MutableObservable<Widget> content = MutableObservable.ofNullable();
+    // IntelliJ IDEA-hoz hack, hogy with-et ne tekintse nullable-nek
+    private static final SlotWidget SLOT_WIDGET_NULL = null;
+
+    final MutableObservable<Widget> content = MutableObservable.ofNullable();
     private final SlotWidget w;
 
     WidgetState<SlotWidget> widgetState;
@@ -28,7 +28,16 @@ public final class Slot2 {
         //      kéne tudnunk detektálni és jelezni valahogy?
 
         this.content.set(content);
-        return content == null ? null : w;
+        return content == null ? SLOT_WIDGET_NULL : w;
+    }
+
+    String debugInfo() {
+        if (content.snoop() == null)
+            return super.toString() + " <empty>";
+        if (content.snoop().getClass().getSimpleName().equals("J2DPathShapedPeer")) // TODO
+            return super.toString() + " " + content.snoop();
+        return super.toString() + " " + (content.snoop() == null ? "<empty>" :
+                "containing " + content.snoop().getClass().getName());
     }
 
     // WidgetTree.findOrCreateWidgetState-ben special case-elve van ez a widget, hogyha SlotWidgetet
@@ -51,10 +60,12 @@ public final class Slot2 {
         }
     }
 
-    public static final class Slot2List {
+    public static final class SlotList {
 
         private final List<Slot2> slots = new ArrayList<>();
 
+        // TODO itt is lehetne detektálni a dupla meghívásokat (lehet akár véletlen is,
+        //      pl. TabbedPaneben van 2 db SlotList)
         public @NonNull List<? extends Widget> with(@NonNull List<? extends @NonNull Widget> widgets) {
             List<Widget> result = new ArrayList<>();
 
@@ -75,22 +86,32 @@ public final class Slot2 {
         }
     }
 
-    public static final class Slot2Map<K> {
+    // TODO ennek az API-ján még vacakolni kell, mert gyakorlati célokra (pl. adattáblán belüli key-ek)
+    //      most elég nehézkesen használható, csak SubstitutedWidgetekre használható könnyen
+    public static final class SlotMap<K> {
 
         private final Map<K, Slot2> slots = new HashMap<>();
 
         public @NonNull Map<@NonNull K, ? extends @NonNull Widget> with(
                 @NonNull Map<@NonNull K, ? extends @NonNull Widget> widgets) {
-            widgets = Map.copyOf(widgets);
+            HashMap<K, Widget> m = new HashMap<>(widgets);
 
-            Map<K, Widget> result = new HashMap<>();
-
-            widgets.forEach((key, widget) -> {
-                result.put(key, slots.computeIfAbsent(key, __ -> new Slot2()).with(widget));
-            });
+            m.replaceAll((key, widget) ->
+                    slots.computeIfAbsent(key, __ -> new Slot2()).with(widget));
             slots.keySet().retainAll(widgets.keySet());
 
-            return Map.copyOf(result);
+            return Collections.unmodifiableMap(m);
+        }
+
+        public @NonNull SequencedMap<K, ? extends Widget> with(
+                @NonNull SequencedMap<K, ? extends Widget> widgets) {
+            LinkedHashMap<K, Widget> m = new LinkedHashMap<>(widgets);
+
+            m.replaceAll((key, widget) ->
+                    slots.computeIfAbsent(key, __ -> new Slot2()).with(widget));
+            slots.keySet().retainAll(widgets.keySet());
+
+            return Collections.unmodifiableSequencedMap(m);
         }
     }
 }

@@ -1,11 +1,12 @@
 package ui11.css;
 
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.graphics.Empty;
 
 import org.jspecify.annotations.NonNull;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -23,7 +24,7 @@ public final class CSSClassTag extends SubstitutedWidget {
     private final String className;
     private final Widget content;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public CSSClassTag(String className, Widget content) {
         Objects.requireNonNull(content);
@@ -33,12 +34,25 @@ public final class CSSClassTag extends SubstitutedWidget {
         this.content = content;
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected CSSClassTag forSubstitution() {
+        return new CSSClassTag(
+                className,
+                contentSlot.with(content)
+        );
+    }
+
     public String className() {
         return className;
     }
 
     public Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     @Override

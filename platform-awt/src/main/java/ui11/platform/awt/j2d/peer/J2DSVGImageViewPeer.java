@@ -6,25 +6,25 @@ import com.github.weisj.jsvg.view.FloatSize;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.MultiSlot;
+import ui11.Slot2;
 import ui11.Widget;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
 import ui11.layout.protocol.BoxLayoutResult;
-import ui11.platform.awt.j2d.J2DSurface;
-import ui11.task.BackgroundTask;
-import ui11.task.TaskStatus;
-import ui11.window.Shell.URLResolver;
 import ui11.media.SVGImageView;
 import ui11.platform.awt.j2d.J2DNodeHolder;
+import ui11.platform.awt.j2d.J2DSurface;
 import ui11.platform.awt.j2d.inputtree.OpaqueInputNode;
 import ui11.platform.awt.j2d.rendertree.SVGDocumentRenderNode;
+import ui11.task.BackgroundTask;
+import ui11.task.TaskStatus;
 import ui11.text.Text;
 import ui11.text.TextStyle;
+import ui11.window.Shell.URLResolver;
 
 import java.awt.geom.Rectangle2D;
 import java.net.URI;
 import java.net.URL;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 public class J2DSVGImageViewPeer extends Widget {
@@ -36,12 +36,12 @@ public class J2DSVGImageViewPeer extends Widget {
 
     @Inject private TextStyle textStyle;
     @Inject(required = false) private URLResolver urlResolver;
-    @Inject private MultiSlot<URI> loadTaskSlot;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
 
     @Remember private SVGDocumentRenderNode node;
     @Remember private OpaqueInputNode inputNode;
     @Remember private TextStyle prevTextStyle;
+    @Remember private Slot2.SlotMap<URI> loadTaskSlot;
 
     public J2DSVGImageViewPeer(SVGImageView svgImageView, J2DSurface surface) {
         this.svgImageView = svgImageView;
@@ -52,6 +52,7 @@ public class J2DSVGImageViewPeer extends Widget {
     protected void initState() {
         node = new SVGDocumentRenderNode();
         inputNode = new OpaqueInputNode();
+        loadTaskSlot = new Slot2.SlotMap<>();
     }
 
     @Override
@@ -63,7 +64,7 @@ public class J2DSVGImageViewPeer extends Widget {
             else
                 uri = urlResolver.toAbsoluteURL(uri);
 
-        return new BackgroundTask<>(
+        return loadTaskSlot.with(Map.of(uri, new BackgroundTask<>(
                 new SVGDocumentLoadTask(uri),
                 loadStatus -> {
                     return switch (loadStatus) {
@@ -81,7 +82,7 @@ public class J2DSVGImageViewPeer extends Widget {
                         }
                     };
                 }
-        ).withSlot(loadTaskSlot.get(uri));
+        ))).get(uri);
     }
 
     private @NonNull Widget displayLoadedDocument(SVGDocument loadedDocument) {
@@ -96,7 +97,7 @@ public class J2DSVGImageViewPeer extends Widget {
         inputNode.shape.set(new Rectangle2D.Double(0, 0, size.width(), size.height()));
         FloatSize docSize = loadedDocument.size();
         Widget result = surface.createResponse(new J2DNodeHolder(node, inputNode));
-        for (BoxLayoutResult.SizeRequest sizeRequest  : sizeRequests) {
+        for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             // TODO constraintset figyelembe kéne venni
             BoxLayoutResult.OfChosenSize chosenSize =
                     new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height));

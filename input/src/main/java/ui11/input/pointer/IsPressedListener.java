@@ -1,7 +1,7 @@
 package ui11.input.pointer;
 
 import org.jspecify.annotations.Nullable;
-import ui11.Slot;
+import ui11.Slot2;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -14,15 +14,25 @@ public final class IsPressedListener extends SubstitutedWidget {
     private final @NonNull Widget content;
     private final @Nullable Consumer<Boolean> consumer;
 
-    @Inject private Slot contentSlot;
+    @Remember private Slot2 contentSlot;
 
     public IsPressedListener(@NonNull Widget content, @Nullable Consumer<Boolean> consumer) {
         this.content = Objects.requireNonNull(content);
         this.consumer = listenerProxy(consumer);
     }
 
+    @Override
+    protected void initState() {
+        contentSlot = new Slot2();
+    }
+
+    @Override
+    protected IsPressedListener forSubstitution() {
+        return new IsPressedListener(contentSlot.with(content), consumer);
+    }
+
     public @NonNull Widget content() {
-        return contentSlot == null ? content : content.withSlot(contentSlot);
+        return content;
     }
 
     public @Nullable Consumer<Boolean> consumer() {

@@ -26,13 +26,13 @@ public class UpValueInvalidationBugTest {
 
         WidgetTree.create(new Component() {
 
-            @Inject private Slot slot;
+            @Remember private Slot2 slot;
 
             @Override
             protected void update() {
                 // szándékosan ugyanaz a slot
-                useComponent(slot, new W1(1), U2.U2Request.INSTANCE);
-                useComponent(slot, new W1(2), U2.U2Request.INSTANCE);
+                useComponent(slot.with(new W1(1)), U2.U2Request.INSTANCE);
+                useComponent(slot.with(new W1(2)), U2.U2Request.INSTANCE);
             }
         }, Runnable::run);
     }

@@ -66,12 +66,10 @@ public class DOMEnvironment implements Shell, Scheduler {
         }
 
         WidgetResolver rootResolver = WidgetResolver.composite(
-                new DOMElementWidgetResolver(), new CSSBackgroundImageWidgetResolver());
+                new DOMElementWidgetResolver(), CSSBackgroundImageWidgetResolver.INSTANCE);
 
         class DOMElementRoot extends Widget {
 
-
-            @Inject private Slot rootWidgetSlot;
 
             @Override
             protected void onResume() {
