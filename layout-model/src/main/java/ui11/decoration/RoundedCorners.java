@@ -1,6 +1,6 @@
 package ui11.decoration;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
@@ -20,7 +20,7 @@ public final class RoundedCorners extends SubstitutedWidget {
     private final Length radius;
     private final Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public RoundedCorners(@NonNull Length radius, @NonNull Widget content) {
         this.radius = Objects.requireNonNull(radius);
@@ -33,14 +33,14 @@ public final class RoundedCorners extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected RoundedCorners forSubstitution() {
         return new RoundedCorners(
                 radius,
-                contentSlot.with(content)
+                content.withKey(contentKey)
         );
     }
 

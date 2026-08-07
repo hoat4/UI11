@@ -18,6 +18,7 @@ import ui11.graphics.shaper.PathShaped;
 import ui11.graphics.shaper.Stroke;
 import ui11.input.gesture.EnterContentListener;
 import ui11.input.pointer.PointerRegion;
+import ui11.layout.protocol.BoxLayoutResult;
 import ui11.media.SVGImageView;
 import ui11.platform.awt.AWTEnterContentListenerPeer;
 import ui11.platform.awt.j2d.peer.*;
@@ -48,8 +49,13 @@ public class J2DWidgetResolver extends WidgetResolver {
     @Override
     protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
                                                          PeerRequestor.@NonNull Request<?> request) {
-        if (!(request instanceof J2DSurface surface))
+        if (!(request instanceof J2DSurface surface)) {
+            if (request instanceof BoxLayoutResult.SizeRequest &&
+                    widget instanceof Text text)
+                // TODO így feleslegesen duplikálunk J2DTextPeereket
+                return new J2DTextPeer(text, null);
             return null;
+        }
 
         return switch (widget) {
             case ColorFill c -> new J2DColorPeer(c, surface);

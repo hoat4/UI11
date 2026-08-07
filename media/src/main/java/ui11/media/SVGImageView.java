@@ -1,7 +1,7 @@
 package ui11.media;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.media.ImageSource.InlineStringSource;
@@ -19,7 +19,7 @@ public final class SVGImageView extends SubstitutedWidget {
     private final boolean interactive;
     private final Map<String, ? extends Widget> embeddedWidgets;
 
-    @Remember private Slot.SlotMap<String> embeddedWidgetSlots;
+    @Remember private Key.SlotMap<String> embeddedWidgetSlots;
 
     private SVGImageView(@NonNull TextualImageSource source, boolean interactive,
                          @NonNull Map<@NonNull String, ? extends @NonNull Widget> embeddedWidgets) {
@@ -51,7 +51,7 @@ public final class SVGImageView extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        embeddedWidgetSlots = new Slot.SlotMap<>();
+        embeddedWidgetSlots = new Key.SlotMap<>();
     }
 
     @Override

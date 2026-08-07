@@ -2,7 +2,7 @@ package ui11.layout.singlechild;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
@@ -22,7 +22,7 @@ public final class Align extends SubstitutedWidget {
     private final @Nullable Alignment alignment;
     private final boolean allowExpandOutside;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public Align(@NonNull Widget content, Alignment alignment) {
         this(content, alignment, false);
@@ -36,12 +36,12 @@ public final class Align extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected Align forSubstitution() {
-        return new Align(contentSlot.with(content), alignment, allowExpandOutside);
+        return new Align(content.withKey(contentKey), alignment, allowExpandOutside);
     }
 
     public @NonNull Widget content() {

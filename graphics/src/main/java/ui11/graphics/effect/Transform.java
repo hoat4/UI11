@@ -1,6 +1,6 @@
 package ui11.graphics.effect;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Mat4;
@@ -13,7 +13,7 @@ public final class Transform extends SubstitutedWidget {
     private final @NonNull Widget content;
     private final @NonNull Mat4 transformation;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public Transform(@NonNull Widget content, @NonNull Mat4 transformation) {
         this.content = Objects.requireNonNull(content);
@@ -22,13 +22,13 @@ public final class Transform extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected Transform forSubstitution() {
         return new Transform(
-                contentSlot.with(content),
+                content.withKey(contentKey),
                 transformation
         );
     }

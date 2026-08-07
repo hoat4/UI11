@@ -1,7 +1,7 @@
 package ui11.input.focus;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
@@ -14,7 +14,7 @@ public final class FocusListener extends SubstitutedWidget {
     private final Runnable onFocused;
     private final Runnable onFocusLost;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public FocusListener(@NonNull Widget content, @NonNull Runnable onFocused, @NonNull Runnable onFocusLost) {
         this.content = Objects.requireNonNull(content);
@@ -31,13 +31,13 @@ public final class FocusListener extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected FocusListener forSubstitution() {
         return new FocusListener(
-                contentSlot.with(content),
+                content.withKey(contentKey),
                 onFocused,
                 onFocusLost
         );

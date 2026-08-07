@@ -1,7 +1,7 @@
 package ui11.input.pointer;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -15,7 +15,7 @@ public final class PointerTransparent extends SubstitutedWidget {
 
     private final Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public PointerTransparent(@NonNull Widget content) {
         this.content = Objects.requireNonNull(content);
@@ -23,12 +23,12 @@ public final class PointerTransparent extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected PointerTransparent forSubstitution() {
-        return new PointerTransparent(contentSlot.with(content));
+        return new PointerTransparent(content.withKey(contentKey));
     }
 
     public @NonNull Widget content() {

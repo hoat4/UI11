@@ -71,14 +71,21 @@ public class J2DTextPeer extends Widget {
 
         inputNode.shape.set(new Rectangle(w, h));
 
-        Widget result = surface.createResponse(new J2DNodeHolder(
-                node,
-                inputNode
-        ));
+        Widget result;
+        if (surface == null)
+            result = null;
+        else
+            result = surface.createResponse(new J2DNodeHolder(
+                    node,
+                    inputNode
+            ));
 
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             Size size = sizeRequest.constraints().clamp(new Size(w, h));
-            result = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(size), result);
+            if (result == null)
+                result = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(size));
+            else
+                result = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(size), result);
         }
 
         return result;

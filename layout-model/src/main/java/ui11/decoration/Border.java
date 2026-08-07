@@ -1,6 +1,6 @@
 package ui11.decoration;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.decoration.Box.BorderSpec;
@@ -24,8 +24,8 @@ public final class Border extends SubstitutedWidget {
     private final @NonNull Widget stroke;
     private final @NonNull Widget content;
 
-    @Remember private Slot strokeSlot;
-    @Remember private Slot contentSlot;
+    @Remember private Key strokeKey;
+    @Remember private Key contentKey;
 
     public Border(@NonNull Insets thicknesses, @NonNull Widget stroke, @NonNull Widget content) {
         this.thicknesses = Objects.requireNonNull(thicknesses);
@@ -55,16 +55,16 @@ public final class Border extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
-        strokeSlot = new Slot();
+        contentKey = Key.create();
+        strokeKey = Key.create();
     }
 
     @Override
     protected Border forSubstitution() {
         return new Border(
                 thicknesses,
-                strokeSlot.with(stroke),
-                contentSlot.with(content)
+                stroke.withKey(strokeKey),
+                content.withKey(contentKey)
         );
     }
 

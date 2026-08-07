@@ -1,7 +1,7 @@
 package ui11.layout.singlechild;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -23,7 +23,7 @@ public final class Cover extends SubstitutedWidget {
 
     private final Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public Cover(@NonNull Widget content) {
         this.content = Objects.requireNonNull(content);
@@ -31,12 +31,12 @@ public final class Cover extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected Cover forSubstitution() {
-        return new Cover(contentSlot.with(content));
+        return new Cover(content.withKey(contentKey));
     }
 
     public @NonNull Widget content() {

@@ -1,7 +1,7 @@
 package ui11.layout.singlechild;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Length;
@@ -20,7 +20,7 @@ public final class Padding extends SubstitutedWidget {
     private final Insets insets;
     private final Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public Padding(@NonNull Insets insets, @NonNull Widget content) {
         this.insets = Objects.requireNonNull(insets);
@@ -34,12 +34,12 @@ public final class Padding extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected Padding forSubstitution() {
-        return new Padding(insets, contentSlot.with(content));
+        return new Padding(insets, content.withKey(contentKey));
     }
 
     public static Padding atTopBottom(Length len, Widget w) {

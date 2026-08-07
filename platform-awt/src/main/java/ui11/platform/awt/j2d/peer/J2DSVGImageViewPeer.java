@@ -6,7 +6,7 @@ import com.github.weisj.jsvg.view.FloatSize;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.Slot;
+import ui11.Key;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.layout.protocol.BoxLayoutResult;
@@ -41,7 +41,7 @@ public class J2DSVGImageViewPeer extends Widget {
     @Remember private SVGDocumentRenderNode node;
     @Remember private OpaqueInputNode inputNode;
     @Remember private TextStyle prevTextStyle;
-    @Remember private Slot.SlotMap<URI> loadTaskSlot;
+    @Remember private Key.SlotMap<URI> loadTaskSlot;
 
     public J2DSVGImageViewPeer(SVGImageView svgImageView, J2DSurface surface) {
         this.svgImageView = svgImageView;
@@ -52,7 +52,7 @@ public class J2DSVGImageViewPeer extends Widget {
     protected void initState() {
         node = new SVGDocumentRenderNode();
         inputNode = new OpaqueInputNode();
-        loadTaskSlot = new Slot.SlotMap<>();
+        loadTaskSlot = new Key.SlotMap<>();
     }
 
     @Override

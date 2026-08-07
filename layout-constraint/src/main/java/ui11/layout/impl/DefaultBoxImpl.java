@@ -1,7 +1,7 @@
 package ui11.layout.impl;
 
 import ui11.PeerRequestor;
-import ui11.Slot;
+import ui11.Key;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.decoration.Box;
@@ -35,13 +35,13 @@ public class DefaultBoxImpl extends Widget {
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
     @Inject(required = false) private Surface surface;
 
-    @Remember private Slot contentWithRoundedCornersSlot;
-    @Remember private Slot backgroundSlot;
-    @Remember private Slot borderSlot;
-    @Remember private Slot shadowTopSlot;
-    @Remember private Slot shadowBottomSlot;
-    @Remember private Slot shadowLeftSlot;
-    @Remember private Slot shadowRightSlot;
+    @Remember private Key contentWithRoundedCornersKey;
+    @Remember private Key backgroundSlot;
+    @Remember private Key borderKey;
+    @Remember private Key shadowTopSlot;
+    @Remember private Key shadowBottomSlot;
+    @Remember private Key shadowLeftSlot;
+    @Remember private Key shadowRightSlot;
 
     public DefaultBoxImpl(Box box) {
         this.box = box;
@@ -49,13 +49,13 @@ public class DefaultBoxImpl extends Widget {
 
     @Override
     protected void initState() {
-        contentWithRoundedCornersSlot = new Slot();
-        backgroundSlot = new Slot();
-        borderSlot = new Slot();
-        shadowTopSlot = new Slot();
-        shadowBottomSlot = new Slot();
-        shadowLeftSlot = new Slot();
-        shadowRightSlot = new Slot();
+        contentWithRoundedCornersKey = Key.create();
+        backgroundSlot = Key.create();
+        borderKey = Key.create();
+        shadowTopSlot = Key.create();
+        shadowBottomSlot = Key.create();
+        shadowLeftSlot = Key.create();
+        shadowRightSlot = Key.create();
     }
 
     @Override
@@ -144,16 +144,16 @@ public class DefaultBoxImpl extends Widget {
             if (cornerRadius >= 0.001)
                 background = RoundedCorners.withRoundedCorners(px(cornerRadius), background);
 
-            canvas.add(backgroundSlot.with(background), contentBounds);
+            canvas.add(background.withKey(backgroundSlot), contentBounds);
         }
 
         if (cornerRadius >= 0.001)
             content = RoundedCorners.withRoundedCorners(px(cornerRadius), content);
 
-        canvas.add(contentWithRoundedCornersSlot.with(content), contentBounds);
+        canvas.add(content.withKey(contentWithRoundedCornersKey), contentBounds);
 
         if (border != null)
-            canvas.add(borderSlot.with(borderShape), Rect.of(containerSize));
+            canvas.add(borderShape.withKey(borderKey), Rect.of(containerSize));
 
         Widget w = canvas.build();
         if (sizeRequest != null)
@@ -213,25 +213,25 @@ public class DefaultBoxImpl extends Widget {
             throw new RuntimeException("box shadow doesn't support sizes that are relative to parent");
         double blur = len.em() * emSize + len.px();
 
-        canvas.add(shadowTopSlot.with(new LinearGradient(180, List.of(
+        canvas.add(new LinearGradient(180, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        ))), new Rect(0, -blur, s.width(), blur));
+        )).withKey(shadowTopSlot), new Rect(0, -blur, s.width(), blur));
 
-        canvas.add(shadowRightSlot.with(new LinearGradient(270, List.of(
+        canvas.add(new LinearGradient(270, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        ))), new Rect(s.width(), 0, blur, s.height()));
+        )).withKey(shadowRightSlot), new Rect(s.width(), 0, blur, s.height()));
 
-        canvas.add(shadowBottomSlot.with(new LinearGradient(0, List.of(
+        canvas.add(new LinearGradient(0, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        ))), new Rect(0, s.height(), s.width(), blur));
+        )).withKey(shadowBottomSlot), new Rect(0, s.height(), s.width(), blur));
 
-        canvas.add(shadowLeftSlot.with(new LinearGradient(90, List.of(
+        canvas.add(new LinearGradient(90, List.of(
                 new Stop(Color.TRANSPARENT, Length.percent(0)),
                 new Stop(m.color(), Length.percent(100))
-        ))), new Rect(-blur, 0, blur, s.height()));
+        )).withKey(shadowLeftSlot), new Rect(-blur, 0, blur, s.height()));
 
         // TODO sarkok
     }

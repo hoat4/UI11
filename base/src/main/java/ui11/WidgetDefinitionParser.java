@@ -284,6 +284,7 @@ class WidgetDefinitionParser {
 
         @Override
         public String toString() {
+            // TODO ez a baseIdentifier dolog már száz éve megszűnt, Slot is egy ideje
             // Slot.baseIdentifier miatt kell
             return ReflectionUtil.memberToShortString2(field);
         }

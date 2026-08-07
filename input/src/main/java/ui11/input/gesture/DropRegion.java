@@ -1,6 +1,6 @@
 package ui11.input.gesture;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Location;
@@ -15,7 +15,7 @@ public final class DropRegion extends SubstitutedWidget {
     private final @NonNull DropListener listener;
     private final @NonNull Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public DropRegion(@NonNull DropListener listener, @NonNull Widget content) {
         this.listener = Objects.requireNonNull(listener); // TODO eventListener proxy
@@ -24,12 +24,12 @@ public final class DropRegion extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected DropRegion forSubstitution() {
-        return new DropRegion(listener, contentSlot.with(content));
+        return new DropRegion(listener, content.withKey(contentKey));
     }
 
     public @NonNull DropListener listener() {

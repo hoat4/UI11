@@ -54,7 +54,7 @@ public final class LinearLayout extends SubstitutedWidget {
     private final @NonNull JustifyContent mainAxisAlignment;
     private final @NonNull AlignChildren crossAxisAlignment;
 
-    @Remember private Slot.SlotList slots;
+    @Remember private Key.SlotList slots;
 
     /**
      * @param items ebben nullok helyett {@link Gone Gone-ok} szerepeljenek
@@ -403,7 +403,7 @@ public final class LinearLayout extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        slots = new Slot.SlotList();
+        slots = new Key.SlotList();
     }
 
     @Override

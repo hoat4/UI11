@@ -1,7 +1,7 @@
 package ui11.graphics.shaper;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Path;
@@ -15,7 +15,7 @@ public final class RectangleShaped extends SubstitutedWidget {
     private final Widget content;
     private final Size shape;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public RectangleShaped(@NonNull Widget content, @NonNull Size shape) {
         this.content = Objects.requireNonNull(content);
@@ -24,13 +24,13 @@ public final class RectangleShaped extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected RectangleShaped forSubstitution() {
         return new RectangleShaped(
-                contentSlot.with(content),
+                content.withKey(contentKey),
                 shape
         );
     }

@@ -1,7 +1,7 @@
 package ui11.layout.singlechild;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -11,7 +11,7 @@ public final class PassiveSize extends SubstitutedWidget {
 
     private final @NonNull Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public PassiveSize(@NonNull Widget content) {
         this.content = Objects.requireNonNull(content);
@@ -19,13 +19,13 @@ public final class PassiveSize extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected PassiveSize forSubstitution() {
         return new PassiveSize(
-                contentSlot.with(content)
+                content.withKey(contentKey)
         );
     }
 

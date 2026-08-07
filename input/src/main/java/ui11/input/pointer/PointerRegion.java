@@ -1,6 +1,6 @@
 package ui11.input.pointer;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.input.pointer.Pointer.Button;
@@ -13,7 +13,7 @@ public abstract class PointerRegion extends SubstitutedWidget {
 
     private final @NonNull Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public PointerRegion(Widget content) {
         this.content = Objects.requireNonNull(content);
@@ -21,7 +21,7 @@ public abstract class PointerRegion extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     public final @NonNull Widget content() {

@@ -342,15 +342,16 @@ public final class WidgetTree {
                         widget = p.content();
                     }
                 }
+                case Key.GlobalKey.GlobalKeyWidget globalKeyWidget -> {
+                    w = globalKeyWidget.replacement(this);
+                    widget = w.stateWidget;
+                }
                 default -> {
                     break processProxyWidgets;
                 }
             }
         }
         Objects.requireNonNull(widget, "nextWidget");
-
-        if (widget instanceof Slot slotWidget)
-            w = slotWidget.stateHolderOrNull();
 
         if (w == null || w.effectiveModel() != widget) {
             widget.initListenerProxyData();

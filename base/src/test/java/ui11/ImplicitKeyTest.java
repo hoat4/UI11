@@ -31,11 +31,11 @@ public class ImplicitKeyTest {
 
         private final InvalidationPoint ip = new InvalidationPoint();
 
-        @Remember private Slot slot;
+        @Remember private Key slot;
 
         @Override
         protected void initState() {
-            slot = new Slot();
+            slot = Key.create();
         }
 
         @Override
@@ -45,7 +45,7 @@ public class ImplicitKeyTest {
             String s = "C" + new Object().hashCode();
             ll.add(new Text(s));
             ll.add(row(new A(), new A()));
-            ll.add(row(slot.with(new A()), new A()));
+            ll.add(row(new A().withKey(slot), new A()));
             for (int i = 0; i < 25; i++)
                 ll.add(row(new A(), new A()));
             return ll.build();

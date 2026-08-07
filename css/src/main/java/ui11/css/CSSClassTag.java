@@ -1,6 +1,6 @@
 package ui11.css;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.graphics.Empty;
@@ -24,7 +24,7 @@ public final class CSSClassTag extends SubstitutedWidget {
     private final String className;
     private final Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public CSSClassTag(String className, Widget content) {
         Objects.requireNonNull(content);
@@ -36,14 +36,14 @@ public final class CSSClassTag extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected CSSClassTag forSubstitution() {
         return new CSSClassTag(
                 className,
-                contentSlot.with(content)
+                content.withKey(contentKey)
         );
     }
 

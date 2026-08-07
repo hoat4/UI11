@@ -582,8 +582,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     @Override
     public String toString() {
         return super.toString() + " (" + (accessor == null ? "unknown type" : accessor.clazz().getName()) +
-                (stateWidget instanceof PeerRequestor.FinisherWidget f ? ": " + f.fToString() :
-                        stateWidget instanceof Slot sw ? ": " + sw.debugInfo() : "") + ")";
+                (stateWidget instanceof PeerRequestor.FinisherWidget f ? ": " + f.fToString() : "") + ")";
     }
 
     static abstract class InheritedPropBase<T> {

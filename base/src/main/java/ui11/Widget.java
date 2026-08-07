@@ -1,5 +1,6 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.observable.ObservableBase;
@@ -183,6 +184,7 @@ public abstract class Widget implements Cloneable {
     //      hiába nem használjuk a field initializer blokkon kívül sehol
 
     // TODO javadocban "element" kifejezésre hivatkozás
+
     /**
      * The specified object will be replaced by a proxy object, which implements the interface, and forwards all method
      * calls to the element's current widget's value of the annotated field. This allows to change event listener
@@ -385,8 +387,8 @@ public abstract class Widget implements Cloneable {
     }
 
     /**
-     * Lecserélődik az adott {@linkplain Slot}ban lévő {@linkplain WidgetState}, ezért ez az objektum nem lesz használva
-     * többé.
+     * Vagy új modellre váltunk, vagy az egész {@linkplain WidgetState} megszűnik, ezért ez az objektum nem lesz
+     * a state role-ú Widget objektum nem lesz használva többé.
      */
     final void disposeFromStateRole(WidgetState<?> stateHolder) {
         if (!(this.stateHolderOrDef instanceof WidgetState<?> prevHolder))
@@ -429,6 +431,14 @@ public abstract class Widget implements Cloneable {
     void initListenerProxyData() {
         if (lpModelData == null && accessor().prepareListenerProxies(this))
             lpModelData = new ListenerProxyBase.LPModelData(this);
+    }
+
+    public @NonNull Widget withKey(@NonNull Key key) {
+        Objects.requireNonNull(key, "key");
+        if (roleIsState())
+            throw new IllegalStateException("Can't call withKey on a state role " +
+                    Widget.class.getSimpleName() + ": " + this);
+        return key.wrap(this);
     }
 
     // "rebuilding" vagy "recomposition"-nak nevezzük?
@@ -493,5 +503,6 @@ public abstract class Widget implements Cloneable {
      */
     @Target(FIELD)
     @Retention(RUNTIME)
-    protected @interface Remember {}
+    protected @interface Remember {
+    }
 }

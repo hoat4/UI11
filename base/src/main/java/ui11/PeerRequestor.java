@@ -532,7 +532,7 @@ public abstract sealed class PeerRequestor extends Widget {
         private final Map<K, ? extends Set<Request<P>>> requests;
         private final Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f;
 
-        @Remember private Slot.SlotMap<K> slots;
+        @Remember private Key.SlotMap<K> slots;
         @Remember private Map<K, Set<ResolutionRequest<P>>> reqs;
 
         public CreatePeersForMap(Map<K, ? extends Widget> widgets,
@@ -548,7 +548,7 @@ public abstract sealed class PeerRequestor extends Widget {
 
         @Override
         protected void initState() {
-            slots = new Slot.SlotMap<>();
+            slots = new Key.SlotMap<>();
         }
 
         @Override

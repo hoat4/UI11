@@ -15,29 +15,29 @@ public class TestStealDelegate {
 
         WidgetTree.create(new Component() {
 
-            @Remember private Slot outerSlot1;
-            @Remember private Slot outerSlot2;
-            @Remember private Slot outerSlot3;
+            @Remember private Key outerSlot1;
+            @Remember private Key outerSlot2;
+            @Remember private Key outerSlot3;
 
-            @Remember private Slot innerSlot;
-            @Remember private Slot w2Slot;
+            @Remember private Key innerSlot;
+            @Remember private Key w2Slot;
 
             @Override
             protected void initState() {
-                outerSlot1 = new Slot();
-                outerSlot2 = new Slot();
-                outerSlot3 = new Slot();
-                innerSlot = new Slot();
-                w2Slot = new Slot();
+                outerSlot1 = Key.create();
+                outerSlot2 = Key.create();
+                outerSlot3 = Key.create();
+                innerSlot = Key.create();
+                w2Slot = Key.create();
             }
 
             @Override
             protected void update() {
-                Widget w1 = innerSlot.with(new W1());
-                Widget w2 = w2Slot.with(new W2(w1));
-                useComponent(outerSlot1.with(new T(w2)));
-                useComponent(outerSlot2.with(new T(w1)));
-                useComponent(outerSlot3.with(new T(w2)));
+                Widget w1 = new W1().withKey(innerSlot);
+                Widget w2 = new W2(w1).withKey(w2Slot);
+                useComponent(new T(w2).withKey(outerSlot1));
+                useComponent(new T(w1).withKey(outerSlot2));
+                useComponent(new T(w2).withKey(outerSlot3));
             }
         }, Runnable::run);
     }

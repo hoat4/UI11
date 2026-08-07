@@ -1,6 +1,6 @@
 package ui11.layout.singlechild;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -12,7 +12,7 @@ public class Sticky extends SubstitutedWidget {
 
     private final Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public Sticky(@NonNull Widget content) {
         this.content = Objects.requireNonNull(content);
@@ -20,13 +20,13 @@ public class Sticky extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected Sticky forSubstitution() {
         return new Sticky(
-                contentSlot.with(content)
+                content.withKey(contentKey)
         );
     }
 

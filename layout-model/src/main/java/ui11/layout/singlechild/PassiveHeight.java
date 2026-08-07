@@ -1,7 +1,7 @@
 package ui11.layout.singlechild;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -16,7 +16,7 @@ public final class PassiveHeight extends SubstitutedWidget {
     private final Widget content;
     private final double aspectRatio;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public PassiveHeight(@NonNull Widget content, double aspectRatio) {
         if (aspectRatio < 0 && aspectRatio != -1 || !Double.isFinite(aspectRatio))
@@ -31,13 +31,13 @@ public final class PassiveHeight extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected PassiveHeight forSubstitution() {
         return new PassiveHeight(
-                contentSlot.with(content),
+                content.withKey(contentKey),
                 aspectRatio
         );
     }

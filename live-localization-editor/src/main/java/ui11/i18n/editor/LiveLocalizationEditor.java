@@ -1,6 +1,6 @@
 package ui11.i18n.editor;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.control.EditablePlainText;
@@ -11,9 +11,6 @@ import ui11.layout.singlechild.Padding;
 import ui11.layout.singlechild.PassiveSize;
 import ui11.layout.singlechild.Scrollable;
 import ui11.text.Text;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static ui11.decoration.Background.withBackground;
 import static ui11.geom.Length.px;
@@ -26,17 +23,8 @@ public class LiveLocalizationEditor extends Widget {
 
     private final LocalizableTextEditingContext context;
 
-    @Remember private Map<String, Slot> residLabelSlots;
-    @Remember private Map<String, Slot> valueTextFieldSlots;
-
     public LiveLocalizationEditor(LocalizableTextEditingContext context) {
         this.context = context;
-    }
-
-    @Override
-    protected void initState() {
-        residLabelSlots = new HashMap<>();
-        valueTextFieldSlots = new HashMap<>();
     }
 
     @Override
@@ -44,20 +32,18 @@ public class LiveLocalizationEditor extends Widget {
         Widget tableContent = Padding.allSides(px(8),
                 grid(2, grid -> {
                     context.localizationResources.forEach((name, valueObs) -> {
-                        Slot labelSlot = residLabelSlots.computeIfAbsent(name, __ -> new Slot());
-                        Slot valueTextFieldSlot = valueTextFieldSlots.computeIfAbsent(name, __ -> new Slot());
-
-                        grid.add(labelSlot.with(
+                        grid.add(
                                 Align.leftCenter(
-                                        withFontSize(10d, withLineWrapping(new Text(name)))
-                                )
-                        ));
-                        grid.add(valueTextFieldSlot.with(
-                                new PlainTextEditor(new EditablePlainText(valueObs))
-                        ));
+                                        withFontSize(10d,
+                                                withLineWrapping(new Text(name))
+                                        )
+                                ).withKey(Key.of("residLabel", name))
+                        );
+                        grid.add(
+                                new PlainTextEditor(new EditablePlainText(valueObs)).
+                                        withKey(Key.of("valueField", name))
+                        );
                     });
-                    residLabelSlots.keySet().retainAll(context.localizationResources.keySet());
-                    valueTextFieldSlots.keySet().retainAll(context.localizationResources.keySet());
                     grid.setGap(px(4));
                     grid.columnWeights(1, 2);
                 })

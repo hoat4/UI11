@@ -1,7 +1,7 @@
 package ui11.input.focus;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -13,7 +13,7 @@ public final class FocusHolderWrapper extends SubstitutedWidget {
     private final @NonNull FocusHolder holder;
     private final @NonNull Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public FocusHolderWrapper(@NonNull FocusHolder holder, @NonNull Widget content) {
         this.holder = Objects.requireNonNull(holder);
@@ -22,12 +22,12 @@ public final class FocusHolderWrapper extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected FocusHolderWrapper forSubstitution() {
-        return new FocusHolderWrapper(holder, contentSlot.with(content));
+        return new FocusHolderWrapper(holder, content.withKey(contentKey));
     }
 
     public @NonNull FocusHolder holder() {

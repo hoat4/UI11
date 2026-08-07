@@ -1,6 +1,6 @@
 package ui11.graphics.effect;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -29,7 +29,7 @@ public final class Overlay extends SubstitutedWidget {
 
     private final List<? extends Widget> items;
 
-    @Remember private Slot.SlotList slots;
+    @Remember private Key.SlotList slots;
 
     public Overlay(List<? extends Widget> items) {
         // TODO items = items.stream().map(Gone::goneIfNull).toList();
@@ -51,7 +51,7 @@ public final class Overlay extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        slots = new Slot.SlotList();
+        slots = new Key.SlotList();
     }
 
     @Override

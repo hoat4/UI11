@@ -1,6 +1,6 @@
 package ui11.layout.multichild;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Axis;
@@ -29,7 +29,7 @@ public class Grid extends SubstitutedWidget {
     // TODO ki kéne találni, hogy hogyan lehet enélkül passiveHeight-ot megcsinálni
     private final Axis orientationBias;
 
-    @Remember private Slot.SlotMap<GridItemKey> slots;
+    @Remember private Key.SlotMap<GridItemKey> slots;
 
     private Grid(Builder b) {
         items = b.items;
@@ -117,7 +117,7 @@ public class Grid extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        slots = new Slot.SlotMap<>();
+        slots = new Key.SlotMap<>();
     }
 
     @Override

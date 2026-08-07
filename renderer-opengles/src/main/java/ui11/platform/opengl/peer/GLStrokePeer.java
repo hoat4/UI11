@@ -1,7 +1,7 @@
 /*
 package ui11.platform.opengl.peer;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.Widget;
 import ui11.geom.Path;
 import ui11.geom.Size;
@@ -22,7 +22,7 @@ public class GLStrokePeer extends Widget {
 
     private final Stroke stroke;
 
-    @Inject private Slot textureSlot;
+    @Inject private Key textureKey;
     @Inject private Observable<Surface> parentSurface;
     @Inject private Observable<TextStyle> textStyle;
 

@@ -1,6 +1,6 @@
 package ui11.graphics.shaper;
 
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Path;
@@ -13,7 +13,7 @@ public final class PathShaped extends SubstitutedWidget {
     private final @NonNull Widget content;
     private final @NonNull Path shape;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public PathShaped(@NonNull Widget content, @NonNull Path shape) {
         this.content = Objects.requireNonNull(content);
@@ -22,13 +22,13 @@ public final class PathShaped extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected PathShaped forSubstitution() {
         return new PathShaped(
-                contentSlot.with(content),
+                content.withKey(contentKey),
                 shape
         );
     }

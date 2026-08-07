@@ -1,7 +1,7 @@
 package ui11.graphics.effect;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Slot;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -11,7 +11,7 @@ public final class Clip extends SubstitutedWidget {
 
     private final Widget content;
 
-    @Remember private Slot contentSlot;
+    @Remember private Key contentKey;
 
     public Clip(@NonNull Widget content) {
         this.content = Objects.requireNonNull(content);
@@ -19,12 +19,12 @@ public final class Clip extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        contentSlot = new Slot();
+        contentKey = Key.create();
     }
 
     @Override
     protected Clip forSubstitution() {
-        return new Clip(contentSlot.with(content));
+        return new Clip(content.withKey(contentKey));
     }
 
     public @NonNull Widget content() {

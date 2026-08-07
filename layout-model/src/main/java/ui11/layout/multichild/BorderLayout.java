@@ -1,6 +1,7 @@
 package ui11.layout.multichild;
 
-import ui11.Slot;
+import ui11.Key;
+import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -17,11 +18,11 @@ public final class BorderLayout extends SubstitutedWidget {
     private final @Nullable Widget bottom;
     private final @Nullable Widget left;
 
-    @Remember private Slot centerSlot;
-    @Remember private Slot topSlot;
-    @Remember private Slot rightSlot;
-    @Remember private Slot bottomSlot;
-    @Remember private Slot leftSlot;
+    @Remember private Key centerKey;
+    @Remember private Key topKey;
+    @Remember private Key rightKey;
+    @Remember private Key bottomKey;
+    @Remember private Key leftKey;
 
     public BorderLayout(@Nullable Widget center,
                         @Nullable Widget top,
@@ -41,21 +42,21 @@ public final class BorderLayout extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        centerSlot = new Slot();
-        topSlot = new Slot();
-        rightSlot = new Slot();
-        bottomSlot = new Slot();
-        leftSlot = new Slot();
+        centerKey = Key.create();
+        topKey = Key.create();
+        rightKey = Key.create();
+        bottomKey = Key.create();
+        leftKey = Key.create();
     }
 
     @Override
     protected BorderLayout forSubstitution() {
         return new BorderLayout(
-                centerSlot.with(center),
-                topSlot.with(top),
-                rightSlot.with(right),
-                bottomSlot.with(bottom),
-                leftSlot.with(left)
+                center == null ? null : center.withKey(centerKey),
+                top == null ? null : top.withKey(topKey),
+                right == null ? null : right.withKey(rightKey),
+                bottom == null ? null : bottom.withKey(bottomKey),
+                left == null ? null : left.withKey(leftKey)
         );
     }
 
