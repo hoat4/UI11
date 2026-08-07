@@ -317,6 +317,7 @@ public final class WidgetTree {
 
         WidgetState<?> w = previous == null ? null : previous.child();
 
+        // ez a ciklus és switch maradjon szinkronban LocalKey.findLocalKey-jel
         processProxyWidgets:
         while (true) {
             switch (widget) {
@@ -345,6 +346,9 @@ public final class WidgetTree {
                 case Key.GlobalKey.GlobalKeyWidget globalKeyWidget -> {
                     w = globalKeyWidget.replacement(this);
                     widget = w.stateWidget;
+                }
+                case Key.LocalKey.LocalKeyWidget localKeyWidget -> {
+                    widget = localKeyWidget.widget;
                 }
                 default -> {
                     break processProxyWidgets;
