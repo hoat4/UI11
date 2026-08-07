@@ -20,16 +20,17 @@ import ui11.text.TextStyle;
 public class GLLinearGradientPeer extends Widget {
 
     private final LinearGradient gradient;
+    private final GLSurface surface;
 
     @Inject private TextStyle textStyle;
-    @Inject private Surface surface;
     @Inject private BufferPool bufferPool;
 
     @Remember private FillTrianglesWithColorRenderNode node;
     @Remember private OpaqueInputNode inputNode;
 
-    public GLLinearGradientPeer(LinearGradient gradient) {
+    public GLLinearGradientPeer(LinearGradient gradient, GLSurface surface) {
         this.gradient = gradient;
+        this.surface = surface;
     }
 
     @Override
@@ -40,10 +41,9 @@ public class GLLinearGradientPeer extends Widget {
 
     @Override
     protected Widget build() {
-        GLSurface surface = (GLSurface) this.surface;
         Shape2D shape = surface.shape();
         if (shape == Shape2D.InfinitePlane.INFINITE_PLANE)
-            return new GLNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE);
+            return surface.createResponse(new GLNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
 
         double emSize = textStyle.size();
         double deg = gradient.angleDeg();
@@ -85,7 +85,7 @@ public class GLLinearGradientPeer extends Widget {
 
         inputNode.shape.set(shape);
 
-        return new GLNodeHolder(node, inputNode);
+        return surface.createResponse(new GLNodeHolder(node, inputNode));
     }
 
     private static class TriangleSplitter implements Shape2D.Triangle2DConsumer {

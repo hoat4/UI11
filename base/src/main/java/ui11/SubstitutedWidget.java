@@ -1,5 +1,6 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.reflectutil.ReflectionUtil;
 
@@ -78,10 +79,10 @@ public abstract class SubstitutedWidget extends Widget {
         SubstitutedWidget thiz = forSubstitution();
         Objects.requireNonNull(thiz, "SW.cFS");
 
-        // GlobalWidgetResolversről feltesszük hogy composite
-        WidgetResolver.CompositeWidgetResolver resolvers = (WidgetResolver.CompositeWidgetResolver)
+        WidgetResolver.CompositeWidgetResolver resolvers =
                 (widgetResolver != null ?
-                        WidgetResolver.composite(GlobalWidgetResolvers.instance(), widgetResolver) :
+                        (WidgetResolver.CompositeWidgetResolver)
+                                WidgetResolver.composite(GlobalWidgetResolvers.instance(), widgetResolver) :
                         GlobalWidgetResolvers.instance());
 
         Map<ResolverWidgetKey, Widget> childrenWidgets = new HashMap<>();
@@ -144,13 +145,7 @@ public abstract class SubstitutedWidget extends Widget {
                     childrenWidgets.put(key, w);
                     childrenReqs.put(key, remainingForGeneric);
                 } else {
-                    Set<ResolutionRequest<?>> remainingReqs = new HashSet<>(peerCreationRequestCollection.requests());
-                    remainingReqs.removeAll(handledUsingPeerSpecificResolvers);
-                    throw new RuntimeException("No resolvers supports these and no " +
-                            SubstitutedWidget.class.getSimpleName() + ".fallbackContent is not overriden on " + thiz + ": " +
-                            remainingReqs + "\n" +
-                            "Refresh stack:" +
-                            widgetState().tree.refreshStackToDebugString());
+                    throw cantFindResolver(handledUsingPeerSpecificResolvers, thiz);
                 }
             }
         }
@@ -168,6 +163,27 @@ public abstract class SubstitutedWidget extends Widget {
             });
             return new WidgetTree.ChainEnd();
         }).withClearParentData(false).withInterestedParentDataType(ParentData.class);
+    }
+
+    private @NonNull RuntimeException cantFindResolver(
+            Set<ResolutionRequest<?>> handledUsingPeerSpecificResolvers, SubstitutedWidget thiz) {
+        Set<ResolutionRequest<?>> remainingReqs = new HashSet<>(peerCreationRequestCollection.requests());
+        remainingReqs.removeAll(handledUsingPeerSpecificResolvers);
+        StringBuilder s = new StringBuilder();
+        s.append("No resolver supports and fallbackContent is not overriden on ");
+        s.append(thiz.toString());
+        s.append(": ").append(remainingReqs).append("\n").append("Refresh stack:");
+        s.append(widgetState().tree.refreshStackToString());
+        s.append("\nAvailable resolvers: ");
+        if (widgetResolver != null)
+            if (widgetResolver instanceof WidgetResolver.CompositeWidgetResolver c)
+                for (WidgetResolver r : c.leaves())
+                    s.append("\n- ").append(r).append(" (from IV)");
+            else
+                s.append("\n- ").append(widgetResolver).append(" (from IV)");
+        for (WidgetResolver r : GlobalWidgetResolvers.instance().leaves())
+            s.append("\n- ").append(r).append(" (global)");
+        return new RuntimeException(s.toString());
     }
 
     /**
@@ -203,7 +219,7 @@ public abstract class SubstitutedWidget extends Widget {
                     widgetType.getName() + " and " + ReflectionUtil.simpleName(widgetType) +
                     ".fallbackContent() returned null\n" +
                     "Remaining requests: " + requests.requests() + "\n" +
-                    "Refresh stack: " + widgetState().tree.refreshStackToDebugString());
+                    "Refresh stack: " + widgetState().tree.refreshStackToString());
         }
     }
 

@@ -4,7 +4,10 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.reflectutil.ReflectionUtil;
 
-import java.util.*;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 final class RefreshStack {
 
@@ -39,15 +42,21 @@ final class RefreshStack {
         return stack.pop();
     }
 
-    public String toDebugString() {
+    public String stackToString() {
         if (stack.isEmpty())
             return "EMPTY";
         StringBuilder sb = new StringBuilder();
         for (Item item : stack) {
-            sb.append("\n- ").append(item.widgetInstantiation.child().stateWidget.getClass().getName());
-            sb.append(" (needsRebuild=").append(item.needsRebuild).append(')');
+            Class<? extends Widget> widgetClass = item.widgetInstantiation.child().stateWidget.getClass();
+            if (widgetClass != InheritedValueMerger.class &&
+                    widgetClass != Key.GlobalKey.GlobalKeyWidgetImpl.class &&
+                    !PeerRequestor.class.isAssignableFrom(widgetClass) &&
+                    !PeerRequestor.FinisherWidget.class.isAssignableFrom(widgetClass)) {
+                sb.append("\n- ").append(widgetClass.getName());
+                sb.append(" (needsRebuild=").append(item.needsRebuild).append(')');
+            }
             item.widgetInstantiation.directIVs().forEach((type, val) -> {
-                sb.append("\n    ").append(ReflectionUtil.simpleName(type)).append(" = ").append(val);
+                sb.append("\n   ").append(ReflectionUtil.simpleName(type)).append(" = ").append(val);
             });
         }
         return sb.toString();
@@ -85,24 +94,6 @@ final class RefreshStack {
         public String toString() {
             // debuggerhez hasznos
             return widgetInstantiation.child().modelWidget.toString();
-        }
-    }
-
-    static class IVValueWrapper {
-
-        final @Nullable Object value;
-
-        /**
-         * ha {@code null}, az azért van nem kell rá feliratkozni, mert mergeölt érték ami
-         * ancestorból jött és ott már feliratkoztunk rá
-         */
-        final @Nullable WidgetInstantiation origin;
-        final boolean isFromDescendant;
-
-        IVValueWrapper(@Nullable Object value, @Nullable WidgetInstantiation origin, boolean isFromDescendant) {
-            this.value = value;
-            this.origin = origin;
-            this.isFromDescendant = isFromDescendant;
         }
     }
 }

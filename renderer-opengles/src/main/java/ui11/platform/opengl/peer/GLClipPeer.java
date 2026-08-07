@@ -18,15 +18,15 @@ import ui11.provide.Provider;
 public class GLClipPeer extends Widget {
 
     private final Clip clip;
-
-    @Inject private Observable<Surface> parentSurface;
+    private final GLSurface parentSurface;
 
     @Remember private ClipPathRenderNode clipNode;
     @Remember private ClipPathInputNode clipInputNode;
     @Remember private GLSurface childSurface;
 
-    public GLClipPeer(Clip clip) {
+    public GLClipPeer(Clip clip, GLSurface parentSurface) {
         this.clip = clip;
+        this.parentSurface = parentSurface;
     }
 
     @Override
@@ -38,16 +38,14 @@ public class GLClipPeer extends Widget {
 
     @Override
     protected Widget build() {
-        GLSurface parentSurface = (GLSurface) this.parentSurface.get();
         childSurface.parent.set(parentSurface);
 
         Widget widget = clip.content();
-        widget = new Provider<>(Surface.class, childSurface, widget);
-        return PeerRequestor.ofSingle(widget, new GLNodeHolder.GLNodeRequest(), result -> {
-            return new GLNodeHolder(
+        return PeerRequestor.ofSingle(widget, childSurface, result -> {
+            return parentSurface.createResponse(new GLNodeHolder(
                     makeRenderNode(result.peer().renderNode(), childSurface.shape()),
                     makeInputNode(result.peer().inputNode(), childSurface.shape())
-            );
+            ));
         });
     }
 

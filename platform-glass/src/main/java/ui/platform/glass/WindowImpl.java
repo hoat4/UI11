@@ -87,7 +87,6 @@ public class WindowImpl {
                 Widget w = rootWidget;
 
                 w = new Provider<>(TextStyle.class, DEFAULT_TEXT_STYLE, w);
-                w = new Provider<>(Surface.class, rootSurface, w);
                 w = new Provider<>(WidgetResolver.class, DEFAULT_VIEW_PROVIDER, w);
                 w = new Provider<>(BufferPool.class, bufferPool, w);
                 w = new Provider<>(Scheduler.class, scheduler, w);
@@ -102,7 +101,7 @@ public class WindowImpl {
                 );
 
 
-                return PeerRequestor.ofSingle(w, new GLNodeHolder.GLNodeRequest(), result -> {
+                return PeerRequestor.ofSingle(w, rootSurface, result -> {
 
                 /*
                 System.out.println("New render tree. Viewport size: "+innerSize.get());

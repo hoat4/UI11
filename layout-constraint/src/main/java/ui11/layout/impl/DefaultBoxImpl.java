@@ -260,7 +260,7 @@ public class DefaultBoxImpl extends Widget {
         public void add(Widget w, Rect bounds) {
             Objects.requireNonNull(w);
             Objects.requireNonNull(bounds);
-            widgets.add(SingleChildLayout.transformWidgetToBounds(w, bounds));
+            widgets.add(DefaultSingleChildLayoutImpl.transformWidgetToBounds(w, bounds));
         }
 
         public Widget build() {

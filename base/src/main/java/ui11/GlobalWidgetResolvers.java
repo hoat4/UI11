@@ -6,7 +6,7 @@ import java.util.ServiceLoader;
 
 class GlobalWidgetResolvers {
 
-    private static final WidgetResolver INSTANCE;
+    private static final WidgetResolver.CompositeWidgetResolver INSTANCE;
 
     static {
         // kell cacheelni, mert folyton ServiceLoadert hívogatni lassú.
@@ -23,7 +23,7 @@ class GlobalWidgetResolvers {
         INSTANCE = new WidgetResolver.CompositeWidgetResolver(providers);
     }
 
-    public static WidgetResolver instance() {
+    public static WidgetResolver.CompositeWidgetResolver instance() {
         return INSTANCE;
     }
 }

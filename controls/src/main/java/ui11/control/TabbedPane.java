@@ -8,6 +8,7 @@ import ui11.text.Text;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 // TODO selectedTab kívülről módosítható legyen
 public final class TabbedPane extends SubstitutedWidget {
@@ -30,6 +31,7 @@ public final class TabbedPane extends SubstitutedWidget {
     @Override
     protected void initState() {
         tabTitleSlots = new Key.ListKeyCache();
+        tabContentSlots = new Key.ListKeyCache();
     }
 
     @Override

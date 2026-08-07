@@ -17,15 +17,16 @@ import ui11.platform.opengl.rendertree.FillTrianglesWithColorRenderNode;
 public class GLColorFillPeer extends Widget {
 
     private final ColorFill colorFill;
+    private final GLSurface surface;
 
-    @Inject private Surface surface;
     @Inject private BufferPool bufferPool;
 
     @Remember private FillTrianglesWithColorRenderNode node;
     @Remember private OpaqueInputNode inputNode;
 
-    public GLColorFillPeer(ColorFill colorFill) {
+    public GLColorFillPeer(ColorFill colorFill, GLSurface surface) {
         this.colorFill = colorFill;
+        this.surface = surface;
     }
 
     @Override
@@ -36,17 +37,16 @@ public class GLColorFillPeer extends Widget {
 
     @Override
     protected Widget build() {
-        GLSurface surface = (GLSurface) this.surface;
         Shape2D shape = surface.shape();
         Vec2 renderNodeTranslation = surface.renderNodeTranslation();
 
         if (shape == Shape2D.InfinitePlane.INFINITE_PLANE)
-            return new GLNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE);
+            return surface.createResponse(new GLNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
 
         inputNode.shape.set(shape);
 
         if (colorFill.color().equals(ui11.color.Color.TRANSPARENT))
-            return new GLNodeHolder(EmptyRenderNode.INSTANCE, inputNode);
+            return surface.createResponse(new GLNodeHolder(EmptyRenderNode.INSTANCE, inputNode));
 
         int estimatedVertexCount = shape.estimateTriangleCount() * 3;
         BufferPool.GrowableVertexBuffer buf = bufferPool.allocate(
@@ -62,6 +62,6 @@ public class GLColorFillPeer extends Widget {
             buf.put(colorInt);
         });
         node.vertices.set(buf.finish());
-        return new GLNodeHolder(node, inputNode);
+        return surface.createResponse(new GLNodeHolder(node, inputNode));
     }
 }

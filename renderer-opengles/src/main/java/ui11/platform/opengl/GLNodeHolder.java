@@ -8,7 +8,7 @@ import ui11.platform.opengl.rendertree.RenderNode;
 
 import java.util.Objects;
 
-public final class GLNodeHolder extends SubstitutedWidget {
+public final class GLNodeHolder {
 
     private final @NonNull RenderNode renderNode;
     private final @NonNull InputNode inputNode;
@@ -24,12 +24,5 @@ public final class GLNodeHolder extends SubstitutedWidget {
 
     public @NonNull InputNode inputNode() {
         return inputNode;
-    }
-
-    public static class GLNodeRequest extends PeerRequestor.Request<GLNodeHolder> {
-
-        public GLNodeRequest() {
-            super(GLNodeHolder.class);
-        }
     }
 }

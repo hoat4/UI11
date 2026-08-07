@@ -295,7 +295,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                 for (int i = 0; i < itemCount; i++) {
                     double w = widths[i];
                     Rect bounds = Rect.of(mainAxis, x, 0, w, height);
-                    o.accept(SingleChildLayout.transformWidgetToBounds(placeables[i], bounds));
+                    o.accept(DefaultSingleChildLayoutImpl.transformWidgetToBounds(placeables[i], bounds));
                     x += w;
                 }
             });

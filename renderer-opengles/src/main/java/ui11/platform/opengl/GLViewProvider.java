@@ -29,14 +29,14 @@ public class GLViewProvider extends WidgetResolver {
 
     @Override
     protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget, PeerRequestor.@NonNull Request<?> request) {
-        if (!(request instanceof GLNodeHolder.GLNodeRequest req))
+        if (!(request instanceof GLSurface surface))
             return null;
 
         return switch (widget) {
-            case ColorFill colorFill -> new GLColorFillPeer(colorFill);
-            case Overlay overlay -> new GLOverlayPeer(overlay);
-            case Transform transform -> new GLTransformPeer(transform);
-            case RectangleShaped clip -> new GLRectShapedPeer(clip);
+            case ColorFill colorFill -> new GLColorFillPeer(colorFill, surface);
+            case Overlay overlay -> new GLOverlayPeer(overlay, surface);
+            case Transform transform -> new GLTransformPeer(transform, surface);
+            case RectangleShaped clip -> new GLRectShapedPeer(clip, surface);
             default -> null;
         };
     }

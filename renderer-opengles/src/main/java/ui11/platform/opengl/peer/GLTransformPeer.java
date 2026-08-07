@@ -24,15 +24,15 @@ import ui11.provide.Provider;
 public class GLTransformPeer extends Widget {
 
     private final Transform transform;
-
-    @Inject private Surface parentSurface;
+    private final GLSurface parentSurface;
 
     @Remember private TransformedSurface surface;
     @Remember private TransformRenderNode node;
     @Remember private TransformInputNode inputNode;
 
-    public GLTransformPeer(Transform transform) {
+    public GLTransformPeer(Transform transform, GLSurface surface) {
         this.transform = transform;
+        this.parentSurface = surface;
     }
 
     @Override
@@ -47,29 +47,29 @@ public class GLTransformPeer extends Widget {
         // TODO mi történjen, ha 0-ra scaleelünk egy ColorFillt vagy hasonlót (aminek végtelen a mérete)?
         //      most jelenleg eltüntetjük. ha mégsem kéne eltüntetni, módosítsuk lent a kódot.
 
-        surface.parent.set((GLSurface) parentSurface);
+        surface.parent.set(parentSurface);
         boolean nonDegenerateTransform = surface.update(transform.transformation());
 
-        Widget transformedContent = new Provider<>(Surface.class, surface, transform.content());
-
+        /* TODO
         if (surface.renderNodeTranslation.snoop() != null) {
             // ilyenkor nem kell TransformRenderNode
             return transformedContent;
         }
+         */
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
-        return PeerRequestor.ofSingle(transformedContent, new GLNodeHolder.GLNodeRequest(), result -> {
-            return new GLNodeHolder(
+        return PeerRequestor.ofSingle(transform.content(), surface, result -> {
+            return parentSurface.createResponse(new GLNodeHolder(
                     nonDegenerateTransform ?
                             makeRenderNode(result.peer().renderNode()) :
                             EmptyRenderNode.INSTANCE,
                     nonDegenerateTransform ?
                             makeInputNode(result.peer().inputNode()) :
                             TransparentInputNode.INSTANCE
-            );
+            ));
         });
     }
 

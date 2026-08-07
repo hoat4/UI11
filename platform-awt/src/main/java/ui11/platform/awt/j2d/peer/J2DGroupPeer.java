@@ -58,7 +58,7 @@ public class J2DGroupPeer extends Widget {
         List<RenderNode> childRenderNodes = new ArrayList<>();
         List<InputNode> childInputNodes = new ArrayList<>();
 
-        Shape shape = ((J2DSurface) parentSurface).shape();
+        Shape shape = parentSurface.shape();
 
         for (PeerRequestor.Result<J2DNodeHolder> r : childrenResolutionResults) {
             J2DNodeHolder h = r.peer();

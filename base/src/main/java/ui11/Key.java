@@ -73,9 +73,15 @@ public sealed abstract class Key {
             protected Widget build() {
                 throw new RuntimeException("should not reach here (GKW.b)");
             }
+
+            @Override
+            public String toString() {
+                // TODO Widget.toString exceptionök?
+                return "GlobalKeyWidget{key=" + GlobalKey.this + ", content=" + content.snoop() + "}";
+            }
         }
 
-        private final class GlobalKeyWidgetImpl extends Widget {
+        final class GlobalKeyWidgetImpl extends Widget {
 
             @Override
             protected Widget build() {

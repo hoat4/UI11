@@ -8,6 +8,7 @@ import ui11.graphics.Surface;
 import ui11.graphics.effect.Overlay;
 import ui11.graphics.fill.ColorFill;
 import ui11.layout.Gone;
+import ui11.layout.helper.SingleChildLayout;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.layout.singlechild.Align;
 import ui11.layout.multichild.LinearLayout;
@@ -30,9 +31,18 @@ public class DefaultLayoutProvider extends WidgetResolver {
     @Override
     protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
                                                          PeerRequestor.@NonNull Request<?> request) {
-        if (request instanceof Surface s && widget instanceof LinearLayout ll)
-            // TODO request instanceof Surface most csak J2D esetén működik
-            return new DefaultLinearLayoutImpl.Arranger(ll, s);
+        if (request instanceof Surface s) {
+            switch (widget) {
+                case LinearLayout linearLayout -> {
+                    return new DefaultLinearLayoutImpl.Arranger(linearLayout, s);
+                }
+                case SingleChildLayout singleChildLayout -> {
+                    return new DefaultSingleChildLayoutImpl.Arranger(singleChildLayout, s);
+                }
+                default -> {
+                }
+            }
+        }
 
         if (!(request instanceof BoxLayoutResult.SizeRequest sizeRequest))
             return null;
@@ -46,6 +56,9 @@ public class DefaultLayoutProvider extends WidgetResolver {
             case Overlay overlay -> new DefaultOverlayLayoutImpl(overlay, sizeRequest);
 
             case LinearLayout linearLayout -> new DefaultLinearLayoutImpl.Sizer(linearLayout, sizeRequest);
+
+            case SingleChildLayout singleChildLayout ->
+                    new DefaultSingleChildLayoutImpl.Sizer(singleChildLayout, sizeRequest);
 
             // case Grid grid -> new WidgetStateRequest<>(DefaultGrid::new, grid);
             // case PassiveHeight passiveHeight -> new WidgetStateRequest<>(DefaultPassiveHeight::new, passiveHeight);

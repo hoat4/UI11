@@ -368,12 +368,6 @@ public final class WidgetTree {
 
             switch (changeModelResult) {
                 case NEEDS_NEW_STATE -> {
-                    // új widget state-et kell létrehozni
-
-                    WidgetState<?> prevState = w;
-                    if (prevState != null)
-                        prevState.dispose();
-
                     w = new WidgetState<>(widget, this);
 
                     // TODO mit csináljunk, ha konstruktor exceptiont dob?
@@ -522,8 +516,8 @@ public final class WidgetTree {
         refreshScheduled = true;
     }
 
-    String refreshStackToDebugString() {
-        return refreshStack.toDebugString();
+    String refreshStackToString() {
+        return refreshStack.stackToString();
     }
 
     // TODO milyen API kéne ide?
