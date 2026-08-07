@@ -26,7 +26,7 @@ public final class Flow extends SubstitutedWidget {
 
     private final @NonNull List<? extends @NonNull Widget> items;
 
-    @Remember private Key.SlotList slots;
+    @Remember private Key.ListKeyCache slots;
 
     public Flow(@NonNull List<? extends @Nullable Widget> items) {
         this.items = Gone.replaceNullsWithGone(items);
@@ -34,7 +34,7 @@ public final class Flow extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        slots = new Key.SlotList();
+        slots = new Key.ListKeyCache();
     }
 
     @Override

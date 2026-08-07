@@ -168,13 +168,16 @@ public sealed abstract class Key {
      * This is usually used when a widget needs to show a list of items: each row gets a different slot, so when some row
      * changes, only the changed row refreshed, not the container of all items.
      */
-    public static final class SlotList {
+    public static final class ListKeyCache /* extends KeyCache<Integer>? */ {
 
         private final List<GlobalKey> globalKeysByIndex = new ArrayList<>();
         private final Map<LocalKey, GlobalKey> globalKeysByLocalKeys = new HashMap<>();
 
+        public ListKeyCache() {
+        }
+
         // TODO itt is lehetne detektálni a dupla meghívásokat (lehet akár véletlen is,
-        //      pl. TabbedPaneben van 2 db SlotList)
+        //      pl. TabbedPaneben van 2 db ListKeyCache)
         public @NonNull List<? extends Widget> with(@NonNull List<? extends @NonNull Widget> widgets) {
             List<Widget> result = new ArrayList<>();
             Set<LocalKey> usedLocalKeys = new HashSet<>();
@@ -212,10 +215,13 @@ public sealed abstract class Key {
      * This is usually used when a widget needs to show a list of items: each item gets a different slot, so when some
      * row changes, only the changed row refreshed, not the container of all items.
      */
-    public static final class SlotMap<K> {
+    public static final class KeyCache<K> {
 
         private final Map<K, GlobalKey> globalKeysByIndex = new HashMap<>();
         private final Map<LocalKey, GlobalKey> globalKeysByLocalKeys = new HashMap<>();
+
+        public KeyCache() {
+        }
 
         public @NonNull Map<@NonNull K, ? extends @NonNull Widget> with(
                 @NonNull Map<@NonNull K, ? extends @NonNull Widget> widgets) {

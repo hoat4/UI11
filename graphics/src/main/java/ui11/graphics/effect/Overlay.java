@@ -29,7 +29,7 @@ public final class Overlay extends SubstitutedWidget {
 
     private final List<? extends Widget> items;
 
-    @Remember private Key.SlotList slots;
+    @Remember private Key.ListKeyCache slots;
 
     public Overlay(List<? extends Widget> items) {
         // TODO items = items.stream().map(Gone::goneIfNull).toList();
@@ -51,7 +51,7 @@ public final class Overlay extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        slots = new Key.SlotList();
+        slots = new Key.ListKeyCache();
     }
 
     @Override

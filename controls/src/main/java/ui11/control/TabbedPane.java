@@ -15,8 +15,8 @@ public final class TabbedPane extends SubstitutedWidget {
     private final List<Tab> tabs;
     private final TabSide side;
 
-    @Inject private Key.SlotList tabTitleSlots;
-    @Inject private Key.SlotList tabContentSlots;
+    @Inject private Key.ListKeyCache tabTitleSlots;
+    @Inject private Key.ListKeyCache tabContentSlots;
 
     public TabbedPane(Tab... tabs) {
         this(List.of(tabs), TabSide.TOP);
@@ -29,7 +29,7 @@ public final class TabbedPane extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        tabTitleSlots = new Key.SlotList();
+        tabTitleSlots = new Key.ListKeyCache();
     }
 
     @Override

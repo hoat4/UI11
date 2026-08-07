@@ -41,7 +41,7 @@ public class J2DSVGImageViewPeer extends Widget {
     @Remember private SVGDocumentRenderNode node;
     @Remember private OpaqueInputNode inputNode;
     @Remember private TextStyle prevTextStyle;
-    @Remember private Key.SlotMap<URI> loadTaskSlot;
+    @Remember private Key.KeyCache<URI> loadTaskSlot;
 
     public J2DSVGImageViewPeer(SVGImageView svgImageView, J2DSurface surface) {
         this.svgImageView = svgImageView;
@@ -52,7 +52,7 @@ public class J2DSVGImageViewPeer extends Widget {
     protected void initState() {
         node = new SVGDocumentRenderNode();
         inputNode = new OpaqueInputNode();
-        loadTaskSlot = new Key.SlotMap<>();
+        loadTaskSlot = new Key.KeyCache<>();
     }
 
     @Override

@@ -19,7 +19,7 @@ public final class SVGImageView extends SubstitutedWidget {
     private final boolean interactive;
     private final Map<String, ? extends Widget> embeddedWidgets;
 
-    @Remember private Key.SlotMap<String> embeddedWidgetSlots;
+    @Remember private Key.KeyCache<String> embeddedWidgetSlots;
 
     private SVGImageView(@NonNull TextualImageSource source, boolean interactive,
                          @NonNull Map<@NonNull String, ? extends @NonNull Widget> embeddedWidgets) {
@@ -51,7 +51,7 @@ public final class SVGImageView extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        embeddedWidgetSlots = new Key.SlotMap<>();
+        embeddedWidgetSlots = new Key.KeyCache<>();
     }
 
     @Override

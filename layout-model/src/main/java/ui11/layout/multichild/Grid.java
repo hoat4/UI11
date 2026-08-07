@@ -29,7 +29,7 @@ public class Grid extends SubstitutedWidget {
     // TODO ki kéne találni, hogy hogyan lehet enélkül passiveHeight-ot megcsinálni
     private final Axis orientationBias;
 
-    @Remember private Key.SlotMap<GridItemKey> slots;
+    @Remember private Key.KeyCache<GridItemKey> slots;
 
     private Grid(Builder b) {
         items = b.items;
@@ -117,7 +117,7 @@ public class Grid extends SubstitutedWidget {
 
     @Override
     protected void initState() {
-        slots = new Key.SlotMap<>();
+        slots = new Key.KeyCache<>();
     }
 
     @Override

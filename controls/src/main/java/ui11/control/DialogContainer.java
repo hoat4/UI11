@@ -18,7 +18,7 @@ public class DialogContainer extends Widget {
     private final DialogContainerState state;
     private final Widget content;
 
-    @Remember private Key.SlotMap<Object> overlaySlots;
+    @Remember private Key.KeyCache<Object> overlaySlots;
 
     public DialogContainer(DialogContainerState state, Widget content) {
         this.state = state;
@@ -27,7 +27,7 @@ public class DialogContainer extends Widget {
 
     @Override
     protected void initState() {
-        overlaySlots = new Key.SlotMap<>();
+        overlaySlots = new Key.KeyCache<>();
     }
 
     @Override
