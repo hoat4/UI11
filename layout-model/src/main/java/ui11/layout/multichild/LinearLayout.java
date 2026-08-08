@@ -281,7 +281,7 @@ public final class LinearLayout extends SubstitutedWidget {
         // lehetne ellenőrizni hogy w instanceof WeightMarker és akkor el lehet dobni a belsőt, de valszeg kevésszer fordul
         // elő ilyen.
         // vagy lehetne csinálni egy ilyen factory methodot ParentDataWidgetbe ami ezt csinálja
-        return ParentData.attach(new WeightMarker(weight), w);
+        return WeightMarker.WeightRequest.INSTANCE.createResponse(new WeightMarker(weight), w);
     }
 
     // TODO legális expanded-et használni több childre? és ha van már weight beállítva?
@@ -579,14 +579,18 @@ public final class LinearLayout extends SubstitutedWidget {
                 throw new IllegalArgumentException("invalid weight: " + weight);
         }
 
-        /**
-         * {@link PeerRequestor#withInterestedParentDataType(Class[])}-et meg kell hívni {@link WeightMarker}-rel ahhoz,
-         * hogy ez működjön
-         */
-        public static double weight(PeerRequestor.Result<?> peerResult) {
-            LinearLayout.WeightMarker weightM = (LinearLayout.WeightMarker)
-                    peerResult.parentDataList().get(ParentData.class);
-            return weightM == null ? 0 : weightM.weight();
+        public static final class WeightRequest extends PeerRequestor.Request<WeightMarker> {
+
+            public static final WeightRequest INSTANCE = new WeightRequest();
+
+            private WeightRequest() {
+                super(WeightMarker.class);
+            }
+
+            @Override
+            protected WeightMarker defaultValue() {
+                return new WeightMarker(0);
+            }
         }
     }
 

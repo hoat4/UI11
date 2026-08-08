@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
@@ -168,6 +169,34 @@ public abstract sealed class PeerRequestor extends Widget {
     }
 
     @NullMarked
+    public static Widget ofMultipleRequests(
+            List<? extends Widget> widgets,
+            Set<Request<?>> requests,
+            Function<Map<Request<?>, ? extends List<?>>, Widget> then) {
+        List<? extends Widget> widgets2 = List.copyOf(widgets);
+        Set<Request<?>> requests2 = Set.copyOf(requests);
+        Objects.requireNonNull(then);
+
+        // TODO CreatePeersForList nem tud több requestet, de ez a mapes izé meg lassú
+        Map<Integer, Widget> widgetsMap = IntStream.range(0, widgets2.size()).
+                boxed().collect(toUnmodifiableMap(i -> i, widgets2::get));
+        Map<Integer, Set<Request<?>>> requestsMap = IntStream.range(0, widgets2.size()).
+                boxed().collect(toUnmodifiableMap(i -> i, i -> requests2));
+        return ofMultiple(widgetsMap, requestsMap, resultMap -> {
+            assert resultMap.keySet().equals(requests2);
+            Map<Request<?>, List<Object>> lists = new HashMap<>();
+            resultMap.forEach((req, resultsForReq) -> {
+                List<Object> list = new ArrayList<>();
+                for (int i = 0; i < widgets2.size(); i++) {
+                    list.add(resultsForReq.get(i).peer());
+                }
+                lists.put(req, list);
+            });
+            return then.apply(lists);
+        });
+    }
+
+    @NullMarked
     public static <K> PeerRequestor ofMultiple(Map<K, ? extends Widget> widgets,
                                                Map<K, Set<Request<?>>> requests,
                                                Function<Map<Request<?>, Map<K, Result<?>>>, Widget> then) {
@@ -221,8 +250,18 @@ public abstract sealed class PeerRequestor extends Widget {
             this.peerType = peerType;
         }
 
+        // TODO van valami haszna, hogy ez publikus?
         public final Class<P> peerType() {
             return peerType;
+        }
+
+        /**
+         * Ha nem {@code null}, akkor van defaultja, ekkor az első {@linkplain SubstitutedWidget SubstitutedWidgetnél}
+         * meg fog állni a keresése. Ha {@code null}, akkor nincs defaultja
+         */
+        // TODO cache value of this
+        protected @Nullable P defaultValue() {
+            return null;
         }
 
         public final Widget createResponse(P peer) {
@@ -273,8 +312,13 @@ public abstract sealed class PeerRequestor extends Widget {
                 }
             }
 
-            if (remaining.isEmpty())
+            if (remaining.keySet().stream().allMatch(req -> req.defaultValue() != null)) {
+                // ugyanaz mint SubstitutedWidget elején
+                remaining.forEach((req, resolutionRequest) -> {
+                    resolutionRequest.setResultUnchecked(req.defaultValue(), List.of(), widgetState().tree.beganRefreshID);
+                });
                 return new WidgetTree.ChainEnd();
+            }
 
             if (chainedWidget == null)
                 throw new RuntimeException("TODO");

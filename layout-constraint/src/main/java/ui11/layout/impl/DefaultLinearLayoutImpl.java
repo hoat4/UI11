@@ -12,15 +12,13 @@ import ui11.layout.helper.SingleChildLayout;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.multichild.LinearLayout.WeightMarker;
 import ui11.layout.multichild.LinearLayout.JustifyContent;
+import ui11.layout.multichild.LinearLayout.WeightMarker.WeightRequest;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.layout.singlechild.Align;
 import ui11.layout.singlechild.Alignment;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static ui11.graphics.Empty.empty;
 import static ui11.graphics.effect.Overlay.overlay;
@@ -58,9 +56,10 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                 /* max width */ Double.POSITIVE_INFINITY,
                 /* max height */ constraints.max(crossAxis)
         ));
-        return PeerRequestor.ofMultipleWidgets(items, sizeReq,
-                results -> layoutPhase2(itemsFinal, results)).
-                withInterestedParentDataType(WeightMarker.class);
+        return PeerRequestor.ofMultipleRequests(items, Set.of(sizeReq, WeightRequest.INSTANCE),
+                results -> layoutPhase2(itemsFinal,
+                        (List<? extends BoxLayoutResult>) results.get(sizeReq),
+                        (List<? extends WeightMarker>) results.get(WeightRequest.INSTANCE)));
     }
 
     private List<? extends Widget> applyMainAxisAlignment(List<? extends Widget> items) {
@@ -114,7 +113,8 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
     }
 
     private Widget layoutPhase2(List<? extends Widget> items,
-                                List<? extends PeerRequestor.Result<BoxLayoutResult>> boxLayoutResults) {
+                                List<? extends BoxLayoutResult> boxLayoutResults,
+                                List<? extends WeightMarker> weightResults) {
         BoxConstraints constraints = containerConstraints();
         Axis mainAxis = linearLayout.mainAxis();
         Axis crossAxis = mainAxis.cross();
@@ -147,10 +147,10 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
         int i = 0;
         for (int indexInWidgets = 0; indexInWidgets < items.size(); indexInWidgets++) {
             Widget widget = items.get(indexInWidgets);
-            PeerRequestor.Result<BoxLayoutResult> resolutionResult = boxLayoutResults.get(indexInWidgets);
-            double weight = WeightMarker.weight(resolutionResult);
+            BoxLayoutResult boxLayoutResult = boxLayoutResults.get(indexInWidgets);
+            double weight = weightResults.get(indexInWidgets).weight();
 
-            switch (resolutionResult.peer()) {
+            switch (boxLayoutResult) {
                 case BoxLayoutResult.OfGone _ -> {
                     continue;
                 }
@@ -235,8 +235,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                             }
                         }
                     }
-                    Widget[] placeables2 = reqWidgets.toArray(Widget[]::new);
-                    return layoutPhase3(itemCountFinal, placeables2, widths, height2, containerWidth);
+                    return layoutPhase3(itemCountFinal, placeables, widths, height2, containerWidth);
                 });
             }
         } else {

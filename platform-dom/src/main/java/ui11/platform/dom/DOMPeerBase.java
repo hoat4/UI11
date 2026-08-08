@@ -14,8 +14,11 @@ import ui11.platform.dom.DOMWidgetWrapper.ProxySurface;
 import ui11.platform.dom.peers.DOMCoverPeer;
 import ui11.text.TextStyle;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -87,20 +90,26 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     @SuppressWarnings("SimplifyStreamApiCallChains")
     protected Widget makePeers(List<? extends Widget> widgets,
                                Function<List<DOMElementHolder>, Widget> f) {
-        return makePeers2(widgets, results ->
-                f.apply(results.stream().map(PeerRequestor.Result::peer).
-                        collect(Collectors.toUnmodifiableList())));
-    }
-
-    @SafeVarargs
-    protected final Widget makePeers2(List<? extends Widget> widgets,
-                                Function<List<PeerRequestor.Result<DOMElementHolder>>, Widget> f,
-                                Class<? extends ParentData>... interestedParentDataTypes) {
         return PeerRequestor.ofMultipleWidgets(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
                 new DOMPeerCreationRequest(),
+                results ->
+                f.apply(results.stream().map(PeerRequestor.Result::peer).
+                        collect(Collectors.toUnmodifiableList()))
+        );
+    }
+
+    protected final Widget makePeers(List<? extends Widget> widgets,
+                                     Set<PeerRequestor.Request<?>> additionalRequests,
+                                     BiFunction<List<DOMElementHolder>,
+                                             Map<PeerRequestor.Request<?>, ? extends List<?>>, Widget> f) {
+        Set<PeerRequestor.Request<?>> requests = new HashSet<>(additionalRequests);
+        requests.add(new DOMPeerCreationRequest());
+        return PeerRequestor.ofMultipleRequests(
+                widgets.stream().map(DOMWidgetWrapper::new).toList(),
+                requests,
                 f
-        ).withInterestedParentDataType(interestedParentDataTypes);
+        );
     }
 
     protected <K> Widget makePeers(Map<K, ? extends Widget> widgets,

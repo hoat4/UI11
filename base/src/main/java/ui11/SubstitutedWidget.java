@@ -76,6 +76,16 @@ public abstract class SubstitutedWidget extends Widget {
      */
     @Override
     protected final Widget build() {
+        Set<? extends ResolutionRequest<?>> allRemainingRequests = new LinkedHashSet<>(peerCreationRequestCollection.requests());
+        allRemainingRequests.removeIf(req -> {
+            Object defaultValue;
+            if ((defaultValue = req.requestData.defaultValue()) != null) {
+                req.setResultUnchecked(defaultValue, List.of(), widgetState().tree.beganRefreshID);
+                return true;
+            } else
+                return false;
+        });
+
         SubstitutedWidget thiz = forSubstitution();
         Objects.requireNonNull(thiz, "SW.cFS");
 
@@ -92,7 +102,7 @@ public abstract class SubstitutedWidget extends Widget {
         // mert ha peer-specifikusakkal ki elégíteni, akkor lehet hogy a nem peer-specifikus nem is kell
         Set<ResolutionRequest<?>> handledUsingPeerSpecificResolvers = new HashSet<>();
         for (WidgetResolver resolver : resolvers.leaves()) {
-            for (ResolutionRequest<?> req : peerCreationRequestCollection.requests()) {
+            for (ResolutionRequest<?> req : allRemainingRequests) {
                 Widget w = resolver.tryResolveRequestSpecific(thiz, req.requestData); // TODO exceptionök
                 if (w != null) {
                     if (!handledUsingPeerSpecificResolvers.add(req))
@@ -109,7 +119,7 @@ public abstract class SubstitutedWidget extends Widget {
         }
 
         Set<ResolutionRequest<?>> remainedAfterPeerSpecificResolvers =
-                new HashSet<>(peerCreationRequestCollection.requests());
+                new HashSet<>(allRemainingRequests);
         remainedAfterPeerSpecificResolvers.removeAll(handledUsingPeerSpecificResolvers);
         Map<PeerRequestor.Request<?>, ResolutionRequest<?>> remainingForGeneric =
                 remainedAfterPeerSpecificResolvers.stream().
@@ -136,7 +146,7 @@ public abstract class SubstitutedWidget extends Widget {
             }
         }
 
-        if (peerCreationRequestCollection.requests().size() != handledUsingPeerSpecificResolvers.size()) {
+        if (allRemainingRequests.size() != handledUsingPeerSpecificResolvers.size()) {
             // van olyan req, amit a peer-specifikusok nem fednek le
             if (!foundGenericResolver) {
                 Widget w = thiz.fallbackContent(); // TODO exceptionök
