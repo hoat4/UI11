@@ -1,13 +1,11 @@
 package ui11.platform.awt;
 
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.*;
 import ui11.animation.Scheduler;
 import ui11.geom.*;
 import ui11.geom.Location.CoordinateSpaceRoot;
-import ui11.graphics.Surface;
 import ui11.color.Color;
 import ui11.input.gesture.EnterContentListener.EnterContent.KeyboardEnterContentSource;
 import ui11.input.keyboard.KeyCombination;
@@ -40,8 +38,6 @@ import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-
-import static ui11.graphics.Empty.empty;
 
 public class AWTWindow {
 
@@ -107,7 +103,7 @@ public class AWTWindow {
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
-            return PeerRequestor.ofSingle(content, rootSurface, result->{
+            return PeerRequest.requestSingle(content, rootSurface, result->{
                 rootNodeHolder.set(result);
                 // TODO repaint kéne, ha rootPeer megváltozik
 

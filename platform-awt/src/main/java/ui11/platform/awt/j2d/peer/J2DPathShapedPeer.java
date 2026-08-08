@@ -1,16 +1,14 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Path;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
 import ui11.graphics.shaper.PathShaped;
 import ui11.observable.MutableObservable;
 import ui11.platform.awt.j2d.J2DSurface;
 import ui11.platform.awt.j2d.J2DSurface.J2DSurfaceWithOwnShape;
 import ui11.platform.awt.j2d.J2DUtil;
-import ui11.provide.Provider;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -36,7 +34,7 @@ public class J2DPathShapedPeer extends Widget {
     protected Widget build() {
         childSurface.parent.set(parentSurface);
         childSurface.updateShape(pathShaped.shape());
-        return PeerRequestor.ofSingle(pathShaped.content(), childSurface, parentSurface::createResponse);
+        return PeerRequest.requestSingle(pathShaped.content(), childSurface, parentSurface::createResponse);
     }
 
     private static class ClippedSurface extends J2DSurfaceWithOwnShape {

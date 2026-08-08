@@ -1,6 +1,6 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Opacity;
 import ui11.platform.awt.j2d.J2DNodeHolder;
@@ -26,7 +26,7 @@ public class J2DOpacityPeer extends Widget {
 
     @Override
     protected Widget build() {
-        return PeerRequestor.ofSingle(opacity.content(), surface, result -> {
+        return PeerRequest.requestSingle(opacity.content(), surface, result -> {
             opacityRenderNode.opacity.set(opacity.opacity());
             opacityRenderNode.content.set(result.renderNode());
             return surface.createResponse(new J2DNodeHolder(

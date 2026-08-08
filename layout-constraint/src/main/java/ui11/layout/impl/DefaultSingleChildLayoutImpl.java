@@ -1,7 +1,7 @@
 package ui11.layout.impl;
 
 import org.jspecify.annotations.NonNull;
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Mat4;
 import ui11.geom.Rect;
@@ -36,7 +36,7 @@ public abstract class DefaultSingleChildLayoutImpl extends Widget {
         Objects.requireNonNull(childConstraints);
 
         BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
-        return PeerRequestor.ofSingle(singleChildLayout.child(), sizeReq, result -> {
+        return PeerRequest.requestSingle(singleChildLayout.child(), sizeReq, result -> {
             return switch (result) {
                 case BoxLayoutResult.OfGone _ -> empty(); // mert overlay(gone()) is ugyanaz mint empty()
                 case BoxLayoutResult.OfChosenSize r -> {

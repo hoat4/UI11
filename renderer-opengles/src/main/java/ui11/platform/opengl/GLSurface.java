@@ -1,6 +1,6 @@
 package ui11.platform.opengl;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.geom.Location;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Rect;
@@ -14,7 +14,7 @@ import static ui11.platform.opengl.GLSurface.GLSurfaceWithOwnShape;
 import static ui11.platform.opengl.GLSurface.ShapeInheritingGLSurface;
 
 public abstract sealed class GLSurface
-        extends PeerRequestor.Request<GLNodeHolder>
+        extends PeerRequest<GLNodeHolder>
         implements Surface
         permits GLSurfaceWithOwnShape, ShapeInheritingGLSurface {
 

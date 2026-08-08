@@ -1,6 +1,6 @@
 package ui11.layout.impl;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.graphics.effect.Overlay;
@@ -23,7 +23,7 @@ public final class DefaultOverlayLayoutImpl extends Widget {
         // TODO ha csak Gone van az Overlayben, akkor mi a teendő?
         BoxLayoutResult.SizeRequest req = new BoxLayoutResult.SizeRequest(constraints);
         // TODO reuse?
-        return PeerRequestor.ofMultipleWidgets(overlay.items(), req, results -> {
+        return PeerRequest.requestOnMultipleWidgets(overlay.items(), req, results -> {
             Size s = results.stream().
                     filter(result -> switch (result) {
                         case BoxLayoutResult.OfChosenSize _ -> true;

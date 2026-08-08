@@ -2,10 +2,7 @@ package ui11.platform.dom;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.PeerRequestor;
-import ui11.SubstitutedWidget;
-import ui11.Widget;
-import ui11.WidgetResolver;
+import ui11.*;
 import ui11.control.*;
 import ui11.css.CSSClassTag;
 import ui11.css.WrapWithCSSClassTag;
@@ -128,7 +125,7 @@ class DOMElementWidgetResolver extends WidgetResolver {
 
     @Override
     protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
-                                                         PeerRequestor.@NonNull Request<?> request) {
+                                                         @NonNull PeerRequest<?> request) {
         return null;
     }
 }

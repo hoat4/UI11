@@ -9,10 +9,8 @@ import ui11.animation.Scheduler;
 import ui11.color.Color;
 import ui11.geom.Mat4;
 import ui11.geom.Vec2;
-import ui11.graphics.Surface;
 import ui11.observable.MutableObservable;
 import ui11.platform.opengl.BufferPool;
-import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.GLSurface;
 import ui11.platform.opengl.GLViewProvider;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
@@ -102,7 +100,7 @@ public class WindowImpl {
                 );
 
 
-                return PeerRequestor.ofSingle(w, rootSurface, result -> {
+                return PeerRequest.requestSingle(w, rootSurface, result -> {
 
                 /*
                 System.out.println("New render tree. Viewport size: "+innerSize.get());

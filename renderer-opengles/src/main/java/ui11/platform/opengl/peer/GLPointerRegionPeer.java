@@ -1,6 +1,6 @@
 package ui11.platform.opengl.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.platform.opengl.GLNodeHolder;
@@ -27,7 +27,7 @@ public class GLPointerRegionPeer extends Widget {
     @Override
     protected Widget build() {
         Widget content = pointerRegion.content();
-        return PeerRequestor.ofSingle(content, surface, result -> {
+        return PeerRequest.requestSingle(content, surface, result -> {
             inputNode.child.set(result.inputNode());
             inputNode.listener = pointerRegion;
             GLNodeHolder h = new GLNodeHolder(result.renderNode(), inputNode);

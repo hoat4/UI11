@@ -1,15 +1,13 @@
 package ui11.platform.opengl.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Rect;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
 import ui11.graphics.shaper.RectangleShaped;
 import ui11.platform.opengl.ClippedSurface;
 import ui11.platform.opengl.GLSurface;
 import ui11.platform.opengl.Shape2D;
-import ui11.provide.Provider;
 
 public class GLRectShapedPeer extends Widget {
 
@@ -33,6 +31,6 @@ public class GLRectShapedPeer extends Widget {
         Size size = rectShaped.shape();
         childSurface.parent.set(parentSurface);
         childSurface.updateShape(new Shape2D.RectShape(Rect.of(size)), size, parentSurface.renderNodeTranslation());
-        return PeerRequestor.ofSingle(rectShaped.content(), childSurface, parentSurface::createResponse);
+        return PeerRequest.requestSingle(rectShaped.content(), childSurface, parentSurface::createResponse);
     }
 }

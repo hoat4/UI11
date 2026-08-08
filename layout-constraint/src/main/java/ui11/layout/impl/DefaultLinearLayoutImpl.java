@@ -2,13 +2,12 @@ package ui11.layout.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Axis;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.graphics.Surface;
-import ui11.layout.helper.SingleChildLayout;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.multichild.LinearLayout.WeightMarker;
 import ui11.layout.multichild.LinearLayout.JustifyContent;
@@ -56,7 +55,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                 /* max width */ Double.POSITIVE_INFINITY,
                 /* max height */ constraints.max(crossAxis)
         ));
-        return PeerRequestor.ofMultipleRequests(items, Set.of(sizeReq, WeightRequest.INSTANCE),
+        return PeerRequest.requestMultiple(items, Set.of(sizeReq, WeightRequest.INSTANCE),
                 results -> layoutPhase2(itemsFinal,
                         (List<? extends BoxLayoutResult>) results.get(sizeReq),
                         (List<? extends WeightMarker>) results.get(WeightRequest.INSTANCE)));
@@ -223,7 +222,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                 }
                 double heightFinal = height;
                 int itemCountFinal = itemCount;
-                return PeerRequestor.ofMultiple(reqWidgets, reqs, resolutionResults -> {
+                return PeerRequest.requestMultiple(reqWidgets, reqs, resolutionResults -> {
                     double height2 = heightFinal;
                     for (BoxLayoutResult layoutResult : resolutionResults) {
                         switch (layoutResult) {

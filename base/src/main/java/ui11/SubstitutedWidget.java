@@ -68,7 +68,7 @@ public abstract class SubstitutedWidget extends Widget {
 
     /**
      * Asks the available {@linkplain WidgetResolver WidgetResolvers} to create a peer for each
-     * {@linkplain ui11.PeerRequestor.Request request}. This method is not intended to be called by an application,
+     * {@linkplain PeerRequest request}. This method is not intended to be called by an application,
      * instead it will be called by the {@linkplain WidgetTree widget tree refresher} as any other widget.
      * <p>
      * If no peer could be created for a request, then it will be
@@ -96,7 +96,7 @@ public abstract class SubstitutedWidget extends Widget {
                         GlobalWidgetResolvers.instance());
 
         Map<ResolverWidgetKey, Widget> childrenWidgets = new HashMap<>();
-        Map<ResolverWidgetKey, Map<PeerRequestor.Request<?>, ResolutionRequest<?>>> childrenReqs = new HashMap<>();
+        Map<ResolverWidgetKey, Map<PeerRequest<?>, ResolutionRequest<?>>> childrenReqs = new HashMap<>();
 
         // peer-specifikus resolvereket előbbre vesszük, mint a nem peer-specifikusakat,
         // mert ha peer-specifikusakkal ki elégíteni, akkor lehet hogy a nem peer-specifikus nem is kell
@@ -121,7 +121,7 @@ public abstract class SubstitutedWidget extends Widget {
         Set<ResolutionRequest<?>> remainedAfterPeerSpecificResolvers =
                 new HashSet<>(allRemainingRequests);
         remainedAfterPeerSpecificResolvers.removeAll(handledUsingPeerSpecificResolvers);
-        Map<PeerRequestor.Request<?>, ResolutionRequest<?>> remainingForGeneric =
+        Map<PeerRequest<?>, ResolutionRequest<?>> remainingForGeneric =
                 remainedAfterPeerSpecificResolvers.stream().
                         collect(toMap(r -> r.requestData, r -> r));
 
@@ -160,10 +160,10 @@ public abstract class SubstitutedWidget extends Widget {
             }
         }
 
-        Map<ResolverWidgetKey, Set<PeerRequestor.Request<?>>> childrenReqs2 =
+        Map<ResolverWidgetKey, Set<PeerRequest<?>>> childrenReqs2 =
                 childrenReqs.entrySet().stream().collect(toMap(Map.Entry::getKey,
                         e -> e.getValue().keySet()));
-        return PeerRequestor.ofMultiple(childrenWidgets, childrenReqs2, results -> {
+        return PeerRequest.requestMultiple(childrenWidgets, childrenReqs2, results -> {
             results.forEach((req, resultsByKey) -> {
                 resultsByKey.forEach((key, result) -> {
                     ResolutionRequest<?> parentResolutionRequest = childrenReqs.get(key).get(req);
@@ -239,7 +239,7 @@ public abstract class SubstitutedWidget extends Widget {
         }
 
         // TODO ennek jobb key kéne
-        record OfPeerSpecificResolver(PeerRequestor.Request<?> request) implements ResolverWidgetKey {
+        record OfPeerSpecificResolver(PeerRequest<?> request) implements ResolverWidgetKey {
         }
 
         record OfFallback() implements ResolverWidgetKey {

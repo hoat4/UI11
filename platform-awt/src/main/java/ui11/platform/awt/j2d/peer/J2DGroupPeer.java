@@ -1,6 +1,6 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Overlay;
 import ui11.platform.awt.j2d.J2DNodeHolder;
@@ -49,7 +49,7 @@ public class J2DGroupPeer extends Widget {
         if (childSurfaces.size() > overlay.items().size())
             childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
 
-        return PeerRequestor.ofMultiple(overlay.items(), childSurfaces, this::doBuild);
+        return PeerRequest.requestMultiple(overlay.items(), childSurfaces, this::doBuild);
     }
 
     private Widget doBuild(List<? extends J2DNodeHolder> childrenResolutionResults) {

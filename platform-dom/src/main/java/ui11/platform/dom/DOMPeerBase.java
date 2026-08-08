@@ -1,7 +1,7 @@
 package ui11.platform.dom;
 
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.color.RGBColor;
 import ui11.geom.Length;
@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
@@ -82,12 +81,12 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected Widget makePeer(Widget widget, Function<DOMElementHolder, Widget> f) {
-        return PeerRequestor.ofSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(), f);
+        return PeerRequest.requestSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(), f);
     }
 
     protected Widget makePeers(List<? extends Widget> widgets,
                                Function<List<DOMElementHolder>, Widget> f) {
-        return PeerRequestor.ofMultipleWidgets(
+        return PeerRequest.requestOnMultipleWidgets(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
                 new DOMPeerCreationRequest(),
                 f
@@ -95,13 +94,13 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected final Widget makePeers(List<? extends Widget> widgets,
-                                     Set<PeerRequestor.Request<?>> additionalRequests,
+                                     Set<PeerRequest<?>> additionalRequests,
                                      BiFunction<List<DOMElementHolder>,
-                                     Map<PeerRequestor.Request<?>, ? extends List<?>>, Widget> f) {
-        Set<PeerRequestor.Request<?>> requests = new HashSet<>(additionalRequests);
+                                     Map<PeerRequest<?>, ? extends List<?>>, Widget> f) {
+        Set<PeerRequest<?>> requests = new HashSet<>(additionalRequests);
         DOMPeerCreationRequest domPeerCreationRequest = new DOMPeerCreationRequest();
         requests.add(domPeerCreationRequest);
-        return PeerRequestor.ofMultipleRequests(
+        return PeerRequest.requestMultiple(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
                 requests,
                 results -> f.apply((List<DOMElementHolder>) results.get(domPeerCreationRequest), results)
@@ -114,12 +113,12 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
                 Map.Entry::getKey,
                 e -> new DOMWidgetWrapper(e.getValue()))
         );
-        return PeerRequestor.ofMultipleWidgets(widgets, new DOMPeerCreationRequest(), f::apply);
+        return PeerRequest.requestOnMultipleWidgets(widgets, new DOMPeerCreationRequest(), f::apply);
     }
 
     protected Widget makePeer_sameSurface(Widget widget, Function<DOMElementHolder, Widget> f) {
         // TODO ez most ugyanaz mint a sima makePeer
-        return PeerRequestor.ofSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(), f);
+        return PeerRequest.requestSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(), f);
     }
 
     protected Widget wrapResult(DOMElementHolder h) {
@@ -211,7 +210,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
         return !cumulativePropList.onClick().isEmpty();
     }
 
-    public static final class DOMPeerCreationRequest extends PeerRequestor.Request<DOMElementHolder> {
+    public static final class DOMPeerCreationRequest extends PeerRequest<DOMElementHolder> {
 
         public DOMPeerCreationRequest() {
             super(DOMElementHolder.class);
@@ -228,7 +227,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
         }
     }
 
-    public static final class CSSBackgroundImagePeerCreationRequest extends PeerRequestor.Request<DOMCoverPeer.CSSBackgroundImage> {
+    public static final class CSSBackgroundImagePeerCreationRequest extends PeerRequest<DOMCoverPeer.CSSBackgroundImage> {
 
         public CSSBackgroundImagePeerCreationRequest() {
             super(DOMCoverPeer.CSSBackgroundImage.class);

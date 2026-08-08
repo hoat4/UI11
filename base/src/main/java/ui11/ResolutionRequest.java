@@ -10,7 +10,7 @@ class ResolutionRequest<P> {
 
     final @Nullable WidgetState<?> container;
     final @NonNull Widget widget;
-    final PeerRequestor.@NonNull Request<P> requestData;
+    final @NonNull PeerRequest<P> requestData;
 
     /**
      * ha null az értéke, akkor nincs result, nem pedig a {@code null} a result
@@ -29,7 +29,7 @@ class ResolutionRequest<P> {
      */
     public ResolutionRequest(
             @Nullable WidgetState<?> container,
-            PeerRequestor.@NonNull Request<P> requestData,
+            @NonNull PeerRequest<P> requestData,
             @NonNull Widget widget
     ) {
         this.container = container;

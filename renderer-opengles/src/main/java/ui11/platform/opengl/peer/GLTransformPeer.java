@@ -1,12 +1,11 @@
 package ui11.platform.opengl.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Mat4;
 import ui11.geom.Size;
 import ui11.geom.Vec2;
-import ui11.graphics.Surface;
 import ui11.graphics.effect.Transform;
 import ui11.observable.MutableObservable;
 import ui11.platform.opengl.GLNodeHolder;
@@ -19,7 +18,6 @@ import ui11.platform.opengl.inputtree.TransparentInputNode;
 import ui11.platform.opengl.rendertree.EmptyRenderNode;
 import ui11.platform.opengl.rendertree.RenderNode;
 import ui11.platform.opengl.rendertree.TransformRenderNode;
-import ui11.provide.Provider;
 
 public class GLTransformPeer extends Widget {
 
@@ -52,14 +50,14 @@ public class GLTransformPeer extends Widget {
 
         if (surface.renderNodeTranslation.snoop() != null) {
             // ilyenkor nem kell TransformRenderNode
-            return PeerRequestor.ofSingle(transform.content(), surface, parentSurface::createResponse);
+            return PeerRequest.requestSingle(transform.content(), surface, parentSurface::createResponse);
         }
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
-        return PeerRequestor.ofSingle(transform.content(), surface, result -> {
+        return PeerRequest.requestSingle(transform.content(), surface, result -> {
             return parentSurface.createResponse(new GLNodeHolder(
                     nonDegenerateTransform ?
                             makeRenderNode(result.renderNode()) :

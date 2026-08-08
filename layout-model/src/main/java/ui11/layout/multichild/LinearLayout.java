@@ -579,7 +579,7 @@ public final class LinearLayout extends SubstitutedWidget {
                 throw new IllegalArgumentException("invalid weight: " + weight);
         }
 
-        public static final class WeightRequest extends PeerRequestor.Request<WeightMarker> {
+        public static final class WeightRequest extends PeerRequest<WeightMarker> {
 
             public static final WeightRequest INSTANCE = new WeightRequest();
 

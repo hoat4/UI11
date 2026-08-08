@@ -1,6 +1,6 @@
 package ui11.layout.impl;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Key;
 import ui11.Widget;
 import ui11.color.Color;
@@ -15,7 +15,6 @@ import ui11.graphics.fill.LinearGradient.Stop;
 import ui11.graphics.shaper.RoundedCorners;
 import ui11.graphics.shaper.Stroke;
 import ui11.layout.LayoutSize;
-import ui11.layout.helper.SingleChildLayout;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.text.TextStyle;
@@ -97,7 +96,7 @@ public class DefaultBoxImpl extends Widget {
             );
             BoxConstraints childConstraints = constraints.subtract(allPadding);
             BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
-            return PeerRequestor.ofSingle(box.content(), sizeReq, r -> {
+            return PeerRequest.requestSingle(box.content(), sizeReq, r -> {
                 Size childSize = switch (r) {
                     case BoxLayoutResult.OfGone _ -> Size.ZERO;
                     case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size();

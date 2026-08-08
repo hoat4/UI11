@@ -30,7 +30,7 @@ public class DefaultLayoutProvider extends WidgetResolver {
 
     @Override
     protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
-                                                         PeerRequestor.@NonNull Request<?> request) {
+                                                         @NonNull PeerRequest<?> request) {
         if (request instanceof Surface s) {
             switch (widget) {
                 case LinearLayout linearLayout -> {

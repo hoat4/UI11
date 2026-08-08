@@ -2,10 +2,7 @@ package ui11.platform.awt.j2d;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.PeerRequestor;
-import ui11.SubstitutedWidget;
-import ui11.Widget;
-import ui11.WidgetResolver;
+import ui11.*;
 import ui11.color.Color;
 import ui11.graphics.Empty;
 import ui11.graphics.effect.Clip;
@@ -23,8 +20,6 @@ import ui11.media.SVGImageView;
 import ui11.platform.awt.AWTEnterContentListenerPeer;
 import ui11.platform.awt.j2d.peer.*;
 import ui11.text.Text;
-
-import java.util.Set;
 
 public class J2DWidgetResolver extends WidgetResolver {
 
@@ -48,7 +43,7 @@ public class J2DWidgetResolver extends WidgetResolver {
 
     @Override
     protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
-                                                         PeerRequestor.@NonNull Request<?> request) {
+                                                         @NonNull PeerRequest<?> request) {
         if (!(request instanceof J2DSurface surface)) {
             if (request instanceof BoxLayoutResult.SizeRequest &&
                     widget instanceof Text text)

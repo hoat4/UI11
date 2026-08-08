@@ -18,7 +18,7 @@ abstract class Component extends Widget {
         update();
         List<Widget> childComponents2 = childComponents;
         childComponents = null;
-        return PeerRequestor.ofMultipleWidgets(childComponents2, ComponentResultRequest.INSTANCE,
+        return PeerRequest.requestOnMultipleWidgets(childComponents2, ComponentResultRequest.INSTANCE,
                 resolutionResults -> ComponentResult.INSTANCE);
     }
 
@@ -29,11 +29,11 @@ abstract class Component extends Widget {
         childComponents.add(component);
     }
 
-    protected void useComponent(Widget component, PeerRequestor.Request<?> request) {
+    protected void useComponent(Widget component, PeerRequest<?> request) {
         Objects.requireNonNull(component);
         if (childComponents == null)
             throw new IllegalStateException();
-        childComponents.add(PeerRequestor.ofSingle(component, request,
+        childComponents.add(PeerRequest.requestSingle(component, request,
                 result -> ComponentResult.INSTANCE));
     }
 
@@ -41,7 +41,7 @@ abstract class Component extends Widget {
         static final ComponentResult INSTANCE = new ComponentResult();
     }
 
-    private static class ComponentResultRequest extends PeerRequestor.Request<ComponentResult> {
+    private static class ComponentResultRequest extends PeerRequest<ComponentResult> {
 
         private static final ComponentResultRequest INSTANCE = new ComponentResultRequest();
 

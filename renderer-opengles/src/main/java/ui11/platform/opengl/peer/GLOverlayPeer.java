@@ -1,8 +1,7 @@
 package ui11.platform.opengl.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
-import ui11.graphics.Surface;
 import ui11.graphics.effect.Overlay;
 import ui11.observable.Observable;
 import ui11.platform.opengl.BufferPool;
@@ -15,7 +14,6 @@ import ui11.platform.opengl.rendertree.EmptyRenderNode;
 import ui11.platform.opengl.rendertree.FillTrianglesWithColorRenderNode;
 import ui11.platform.opengl.rendertree.GroupRenderNode;
 import ui11.platform.opengl.rendertree.RenderNode;
-import ui11.provide.Provider;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -58,7 +56,7 @@ public class GLOverlayPeer extends Widget {
         if (childSurfaces.size() > overlay.items().size())
             childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
 
-        return PeerRequestor.ofMultiple(overlay.items(), childSurfaces, this::doBuild);
+        return PeerRequest.requestMultiple(overlay.items(), childSurfaces, this::doBuild);
     }
 
     private Widget doBuild(List<? extends GLNodeHolder> children) {

@@ -1,6 +1,6 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Clip;
 import ui11.platform.awt.j2d.J2DNodeHolder;
@@ -44,7 +44,7 @@ public class J2DClipPeer extends Widget {
     protected Widget build() {
         childSurface.parent.set(parentSurface);
 
-        return PeerRequestor.ofSingle(clip.content(), childSurface, result -> {
+        return PeerRequest.requestSingle(clip.content(), childSurface, result -> {
             return parentSurface.createResponse(new J2DNodeHolder(
                     makeRenderNode(result.renderNode(), childSurface.shape()),
                     makeInputNode(result.inputNode(), childSurface.shape())

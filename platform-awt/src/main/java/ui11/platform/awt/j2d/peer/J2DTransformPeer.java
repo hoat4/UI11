@@ -1,6 +1,6 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Mat4;
@@ -54,7 +54,7 @@ public class J2DTransformPeer extends Widget {
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
-        return PeerRequestor.ofSingle(transform.content(), childSurface, result -> {
+        return PeerRequest.requestSingle(transform.content(), childSurface, result -> {
             return parentSurface.createResponse(new J2DNodeHolder(
                     nonDegenerateTransform ?
                             makeRenderNode(result.renderNode()) :

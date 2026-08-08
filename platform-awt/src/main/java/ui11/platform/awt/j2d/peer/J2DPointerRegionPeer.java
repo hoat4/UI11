@@ -1,6 +1,6 @@
 package ui11.platform.awt.j2d.peer;
 
-import ui11.PeerRequestor;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.platform.awt.j2d.J2DNodeHolder;
@@ -30,7 +30,7 @@ public class J2DPointerRegionPeer extends Widget {
         //      kelljen be�rni, hogy a t�bbi req t�pus legyen contentnek tov�bb�tva
 
         Widget content = pointerRegion.content();
-        return PeerRequestor.ofSingle(content, surface, result -> {
+        return PeerRequest.requestSingle(content, surface, result -> {
             inputNode.child.set(result.inputNode());
             inputNode.listener = pointerRegion;
             J2DNodeHolder h = new J2DNodeHolder(result.renderNode(), inputNode);

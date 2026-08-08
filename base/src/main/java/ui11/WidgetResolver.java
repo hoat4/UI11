@@ -14,7 +14,7 @@ public abstract class WidgetResolver {
     protected abstract @Nullable Widget tryResolveGeneric(@NonNull SubstitutedWidget widget);
 
     protected abstract @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
-                                                                  PeerRequestor.@NonNull Request<?> request);
+                                                                  @NonNull PeerRequest<?> request);
 
     public static WidgetResolver composite(@NonNull WidgetResolver defaults,
                                            @NonNull WidgetResolver override) {
@@ -37,7 +37,7 @@ public abstract class WidgetResolver {
         }
 
         @Override
-        protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget, PeerRequestor.@NonNull Request<?> request) {
+        protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget, @NonNull PeerRequest<?> request) {
             throw new UnsupportedOperationException();
         }
 
