@@ -58,7 +58,7 @@ public class TestStealDelegate2 {
         @Override
         protected Widget build() {
             return PeerRequestor.ofSingle(w, TestStealDelegate.UV.UVRequest.INSTANCE, result -> {
-                System.out.println(result.peer());
+                System.out.println(result);
                 return Component.ComponentResult.INSTANCE;
             });
         }

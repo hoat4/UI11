@@ -110,8 +110,8 @@ public class WindowImpl {
                 System.out.println();
                  */
 
-                    System.out.println(RenderNode.RenderTreePrinter.toString(result.peer().renderNode()));
-                    result.peer().renderNode().addToDisplayList(initialTransform, displayList);
+                    System.out.println(RenderNode.RenderTreePrinter.toString(result.renderNode()));
+                    result.renderNode().addToDisplayList(initialTransform, displayList);
                     currentDisplayList = displayList;
                     repaint();
 

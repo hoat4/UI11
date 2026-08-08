@@ -33,7 +33,6 @@ public class GLRectShapedPeer extends Widget {
         Size size = rectShaped.shape();
         childSurface.parent.set(parentSurface);
         childSurface.updateShape(new Shape2D.RectShape(Rect.of(size)), size, parentSurface.renderNodeTranslation());
-        return PeerRequestor.ofSingle(rectShaped.content(), childSurface,
-                result -> parentSurface.createResponse(result.peer()));
+        return PeerRequestor.ofSingle(rectShaped.content(), childSurface, parentSurface::createResponse);
     }
 }

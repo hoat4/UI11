@@ -25,11 +25,11 @@ public final class DefaultOverlayLayoutImpl extends Widget {
         // TODO reuse?
         return PeerRequestor.ofMultipleWidgets(overlay.items(), req, results -> {
             Size s = results.stream().
-                    filter(result -> switch (result.peer()) {
+                    filter(result -> switch (result) {
                         case BoxLayoutResult.OfChosenSize _ -> true;
                         case BoxLayoutResult.OfGone _ -> false;
                     }).
-                    map(r -> ((BoxLayoutResult.OfChosenSize) r.peer()).size()).
+                    map(r -> ((BoxLayoutResult.OfChosenSize) r).size()).
                     reduce(Size::max).
                     orElse(constraints.min());
 

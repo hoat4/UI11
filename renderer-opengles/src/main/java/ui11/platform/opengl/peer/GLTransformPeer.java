@@ -52,9 +52,7 @@ public class GLTransformPeer extends Widget {
 
         if (surface.renderNodeTranslation.snoop() != null) {
             // ilyenkor nem kell TransformRenderNode
-            return PeerRequestor.ofSingle(transform.content(), surface, result->{
-                return parentSurface.createResponse(result.peer());
-            });
+            return PeerRequestor.ofSingle(transform.content(), surface, parentSurface::createResponse);
         }
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
@@ -64,10 +62,10 @@ public class GLTransformPeer extends Widget {
         return PeerRequestor.ofSingle(transform.content(), surface, result -> {
             return parentSurface.createResponse(new GLNodeHolder(
                     nonDegenerateTransform ?
-                            makeRenderNode(result.peer().renderNode()) :
+                            makeRenderNode(result.renderNode()) :
                             EmptyRenderNode.INSTANCE,
                     nonDegenerateTransform ?
-                            makeInputNode(result.peer().inputNode()) :
+                            makeInputNode(result.inputNode()) :
                             TransparentInputNode.INSTANCE
             ));
         });

@@ -28,9 +28,9 @@ public class GLPointerRegionPeer extends Widget {
     protected Widget build() {
         Widget content = pointerRegion.content();
         return PeerRequestor.ofSingle(content, surface, result -> {
-            inputNode.child.set(result.peer().inputNode());
+            inputNode.child.set(result.inputNode());
             inputNode.listener = pointerRegion;
-            GLNodeHolder h = new GLNodeHolder(result.peer().renderNode(), inputNode);
+            GLNodeHolder h = new GLNodeHolder(result.renderNode(), inputNode);
             return surface.createResponse(h);
         });
     }

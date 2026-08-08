@@ -108,7 +108,7 @@ public class AWTWindow {
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
             return PeerRequestor.ofSingle(content, rootSurface, result->{
-                rootNodeHolder.set(result.peer());
+                rootNodeHolder.set(result);
                 // TODO repaint kéne, ha rootPeer megváltozik
 
                 if (!frame.isVisible()) // TODO onResume kéne, csak az túl korán van

@@ -2,9 +2,7 @@ package ui11;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.PeerRequestor.Result;
 import ui11.observable.MutableObservable;
-import ui11.provide.Provider;
 
 import java.util.*;
 
@@ -14,7 +12,10 @@ class ResolutionRequest<P> {
     final @NonNull Widget widget;
     final PeerRequestor.@NonNull Request<P> requestData;
 
-    final @NonNull MutableObservable<@Nullable Result<P>> result =
+    /**
+     * ha null az értéke, akkor nincs result, nem pedig a {@code null} a result
+     */
+    final @NonNull MutableObservable<@Nullable P> result =
             MutableObservable.ofNullable();
 
     WidgetInstantiation reqWI;
@@ -36,27 +37,14 @@ class ResolutionRequest<P> {
         this.widget = widget;
     }
 
-    void setResultUnchecked(@NonNull Object peer,
-                            long refreshID) {
+    void setResult(Object peer) {
         Objects.requireNonNull(peer);
-
-        @SuppressWarnings("unchecked") final P castedPeer = (P) peer;
-        this.result.set(new PeerRequestor.Result<>(this, castedPeer));
+        P castedResult = requestData.peerType().cast(peer);
+        this.result.set(castedResult);
     }
 
-    void setResultFrom(Result<? /*P*/> other) {
-        if (!Objects.equals(other.req.requestData, requestData))
-            // ha ez a feltétel nem teljesül, akkor nem biztonságos a lenti cast
-            throw new IllegalArgumentException();
-
-        @SuppressWarnings("unchecked")
-        Result<P> castedResult = (Result<P>) other;
-        // valszeg másik ResolutionRequestből származik, ezért req-t átállítjuk this-re
-        this.result.set(new PeerRequestor.Result<>(this, castedResult.peer()));
-    }
-
-    Result<P> resultOrFail() {
-        Result<P> value = result.get();
+    P resultOrFail() {
+        P value = result.get();
         if (value == null)
             throw makeResolutionFailedException();
         else

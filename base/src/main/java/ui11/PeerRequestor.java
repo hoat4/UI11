@@ -44,7 +44,7 @@ public abstract sealed class PeerRequestor extends Widget {
     @NullMarked
     public static <P> PeerRequestor ofSingle(Widget widget,
                                              Request<P> request,
-                                             Function<Result<P>, Widget> then) {
+                                             Function<P, Widget> then) {
         Objects.requireNonNull(widget);
         Objects.requireNonNull(request);
         Objects.requireNonNull(then);
@@ -52,10 +52,11 @@ public abstract sealed class PeerRequestor extends Widget {
     }
 
     // TODO REQ extends Request<P> nem lehet, mert akkor egy Set<Request<?>>-vel nem lehet meghívni ezt a függvényt
+    // TODO most hogy Result osztály már nincs, RES típusváltozóra még szükség van ebben a formában?
     @NullMarked
-    public static <REQ extends Request<?>, RES extends Result<?>> PeerRequestor ofSingleWidget(Widget widget,
-                                                                                               Set<REQ> requests,
-                                                                                               Function<Map<REQ, RES>, Widget> then) {
+    public static <REQ extends Request<?>, RES> PeerRequestor ofSingleWidget(Widget widget,
+                                                                             Set<REQ> requests,
+                                                                             Function<Map<REQ, RES>, Widget> then) {
         Objects.requireNonNull(widget);
         Objects.requireNonNull(requests);
         Objects.requireNonNull(then);
@@ -64,11 +65,11 @@ public abstract sealed class PeerRequestor extends Widget {
         return PeerRequestor.ofMultiple(
                 Map.of(Single.SINGLE, widget),
                 Map.of(Single.SINGLE, Set.copyOf(requests)),
-                (Map<Request<?>, Map<Single, Result<?>>> results) -> {
-                    Map<Request<?>, Result<?>> results2 = results.entrySet().stream().collect(toUnmodifiableMap(
-                            Map.Entry::getKey, (Map.Entry<Request<?>, Map<Single, Result<?>>> entry) -> {
-                                Map<Single, Result<?>> m = entry.getValue();
-                                Result<?> result = m.get(Single.SINGLE);
+                (Map<Request<?>, Map<Single, ?>> results) -> {
+                    Map<Request<?>, ?> results2 = results.entrySet().stream().collect(toUnmodifiableMap(
+                            Map.Entry::getKey, (Map.Entry<Request<?>, Map<Single, ?>> entry) -> {
+                                Map<Single, ?> m = entry.getValue();
+                                Object result = m.get(Single.SINGLE);
                                 assert result != null;
                                 return result;
                             }));
@@ -81,7 +82,7 @@ public abstract sealed class PeerRequestor extends Widget {
     @NullMarked
     public static <P> PeerRequestor ofMultipleWidgets(List<? extends Widget> widgets,
                                                       Request<P> request,
-                                                      Function<List<Result<P>>, Widget> then) {
+                                                      Function<List<P>, Widget> then) {
         widgets = List.copyOf(widgets);
         return new CreatePeersForList<>(widgets, Collections.nCopies(widgets.size(), request), then);
     }
@@ -90,7 +91,7 @@ public abstract sealed class PeerRequestor extends Widget {
     @NullMarked
     public static <K, P> PeerRequestor ofMultipleWidgets(Map<K, ? extends Widget> widgets,
                                                          Request<P> request,
-                                                         Function<Map<K, Result<P>>, Widget> then) {
+                                                         Function<Map<K, P>, Widget> then) {
         // most ez a Map.copyOf NPE-t akkor is, ha K-k között van egy null.
         // ha mégis kell null K, akkor kézzel kell ellenőrizni
         // (de akkor ofMultiple-t is módosítsuk eszerint)
@@ -105,7 +106,7 @@ public abstract sealed class PeerRequestor extends Widget {
                 widgets,
                 requests,
                 results -> {
-                    Map<K, Result<P>> map = results.get(request);
+                    Map<K, P> map = results.get(request);
                     assert map != null;
                     return then.apply(map);
                 }
@@ -116,7 +117,7 @@ public abstract sealed class PeerRequestor extends Widget {
     public static <P> Widget ofMultiple(
             List<? extends Widget> widgets,
             List<? extends Request<P>> requests,
-            Function<List<Result<P>>, Widget> then) {
+            Function<List<P>, Widget> then) {
         widgets = List.copyOf(widgets);
         requests = List.copyOf(requests);
         Objects.requireNonNull(then);
@@ -146,7 +147,7 @@ public abstract sealed class PeerRequestor extends Widget {
             resultMap.forEach((req, resultsForReq) -> {
                 List<Object> list = new ArrayList<>();
                 for (int i = 0; i < widgets2.size(); i++) {
-                    list.add(resultsForReq.get(i).peer());
+                    list.add(resultsForReq.get(i));
                 }
                 lists.put(req, list);
             });
@@ -157,7 +158,7 @@ public abstract sealed class PeerRequestor extends Widget {
     @NullMarked
     public static <K> PeerRequestor ofMultiple(Map<K, ? extends Widget> widgets,
                                                Map<K, Set<Request<?>>> requests,
-                                               Function<Map<Request<?>, Map<K, Result<?>>>, Widget> then) {
+                                               Function<Map<Request<?>, Map<K, ?>>, Widget> then) {
         // most ez a Map.copyOf NPE-t akkor is, ha K-k között van egy null.
         // ha mégis kell null K, akkor kézzel kell ellenőrizni
         // (de akkor ofMultiple-t is módosítsuk eszerint)
@@ -166,8 +167,8 @@ public abstract sealed class PeerRequestor extends Widget {
         requests = requests.entrySet().stream().collect(toUnmodifiableMap(
                 Map.Entry::getKey, entry -> Set.copyOf(entry.getValue())));
         @SuppressWarnings("unchecked") Map<K, Set<Request<Object>>> requests2 = (Map<K, Set<Request<Object>>>) (Map<K, ?>) requests;
-        @SuppressWarnings("unchecked") Function<Map<Request<Object>, Map<K, Result<Object>>>, Widget> then2 =
-                (Function<Map<Request<Object>, Map<K, Result<Object>>>, Widget>) (Function<?, Widget>) then;
+        @SuppressWarnings("unchecked") Function<Map<Request<Object>, Map<K, Object>>, Widget> then2 =
+                (Function<Map<Request<Object>, Map<K, Object>>, Widget>) (Function<?, Widget>) then;
         return new PeerRequestor.CreatePeersForMap<>(widgets, requests2, then2);
     }
 
@@ -175,7 +176,7 @@ public abstract sealed class PeerRequestor extends Widget {
     @NullMarked
     public static <P> Collector<Widget, ?, Widget> collector(
             Request<P> request,
-            Function<Stream<Result<P>>, Widget> then) {
+            Function<Stream<P>, Widget> then) {
         // then-ben azért Stream van List helyett, mert így majd lehetne
         // olyat csinálni, hogy mondjuk ne resolveolja a végén lévő
         // widgeteket feleslegesen, ha azok resultjait úgyse olvassuk ki.
@@ -220,12 +221,12 @@ public abstract sealed class PeerRequestor extends Widget {
             return null;
         }
 
-        public final Widget createResponse(P peer) {
+        public final Widget createResponse(@NonNull P peer) {
             Objects.requireNonNull(peer);
             return new ResponseWidget<>(this, peer, null);
         }
 
-        public final Widget createResponse(P peer, @NonNull Widget chainedWidget) {
+        public final Widget createResponse(@NonNull P peer, @NonNull Widget chainedWidget) {
             Objects.requireNonNull(peer);
             return new ResponseWidget<>(this, peer, chainedWidget);
         }
@@ -252,7 +253,7 @@ public abstract sealed class PeerRequestor extends Widget {
                 if (resolutionRequest.requestData.peerType().isInstance(peer) &&
                         request.equals(resolutionRequest.requestData)) {
                     // TODO ha már kapott resultot ebben a refreshben, akkor az újabbakat ignorálnia kéne vagy beraknia?
-                    resolutionRequest.setResultUnchecked(peer, widgetState().tree.beganRefreshID);
+                    resolutionRequest.setResult(peer);
                 } else {
                     if (remaining.put(resolutionRequest.requestData, resolutionRequest) != null)
                         // több ResolutionRequest tartozik egy Requesthez
@@ -263,7 +264,7 @@ public abstract sealed class PeerRequestor extends Widget {
             if (remaining.keySet().stream().allMatch(req -> req.defaultValue() != null)) {
                 // ugyanaz mint SubstitutedWidget elején
                 remaining.forEach((req, resolutionRequest) -> {
-                    resolutionRequest.setResultUnchecked(req.defaultValue(), widgetState().tree.beganRefreshID);
+                    resolutionRequest.setResult(req.defaultValue());
                 });
                 return new WidgetTree.ChainEnd();
             }
@@ -273,60 +274,14 @@ public abstract sealed class PeerRequestor extends Widget {
 
             return PeerRequestor.ofSingleWidget(chainedWidget, remaining.keySet(), respMap -> {
                 remaining.forEach((req, resReq) -> {
-                    Result<?> result2 = respMap.get(req);
+                    Object result2 = respMap.get(req);
                     assert result2 != null;
 
                     // TODO lásd fenti kommentek
-                    resReq.setResultFrom(result2);
+                    resReq.setResult(result2);
                 });
                 return new WidgetTree.ChainEnd();
             });
-        }
-    }
-
-    /**
-     * The resulting peer and parent data (if available) of a peer resolution.
-     * Peer is always available (else the resolution fails).
-     */
-    public static final class Result<P> {
-
-        // TODO ez a req miért kell ide? equalst nem befolyásolja? Request nem lenne elég helyette?
-        final @NonNull ResolutionRequest<P> req;
-        private final @NonNull P peer;
-
-        Result(@NonNull ResolutionRequest<P> req,
-               @NonNull P peer) {
-            this.req = req;
-            this.peer = peer;
-        }
-
-        public P peer() {
-            return peer;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Result<?> that = (Result<?>) o;
-            return req.equals(that.req) && peer.equals(that.peer);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = req.hashCode();
-            result = 31 * result + peer.hashCode();
-            return result;
-        }
-
-        // TODO toString most túl sok információt tartalmaz, mert req is benne van, ami többi függvényben nincs
-
-        @Override
-        public String toString() {
-            return "PeerRequestor.Result{" +
-                    "req=" + req +
-                    ", peer=" + peer +
-                    '}';
         }
     }
 
@@ -334,12 +289,12 @@ public abstract sealed class PeerRequestor extends Widget {
 
         private final Widget widget;
         private final Request<P> request;
-        private final Function<Result<P>, Widget> f;
+        private final Function<P, Widget> f;
 
         @Remember private ResolutionRequest<P> req;
 
         @NullMarked
-        public CreatePeerForSingle(Widget widget, Request<P> request, Function<Result<P>, Widget> f) {
+        public CreatePeerForSingle(Widget widget, Request<P> request, Function<P, Widget> f) {
             this.widget = widget;
             this.request = request;
             this.f = f;
@@ -370,9 +325,9 @@ public abstract sealed class PeerRequestor extends Widget {
         private static class SingleRRFinisher<P> extends FinisherWidget {
 
             private final ResolutionRequest<P> req;
-            private final Function<Result<P>, Widget> f;
+            private final Function<P, Widget> f;
 
-            public SingleRRFinisher(ResolutionRequest<P> req, Function<Result<P>, Widget> f) {
+            public SingleRRFinisher(ResolutionRequest<P> req, Function<P, Widget> f) {
                 this.req = req;
                 this.f = f;
             }
@@ -393,13 +348,13 @@ public abstract sealed class PeerRequestor extends Widget {
 
         private final List<? extends Widget> widgets;
         private final List<? extends Request<P>> requests;
-        private final Function<? super List<Result<P>>, Widget> f;
+        private final Function<? super List<P>, Widget> f;
 
         @Remember private ResolutionRequest<P>[] reqs;
 
         public CreatePeersForList(List<? extends Widget> widgets,
                                   List<? extends Request<P>> requests,
-                                  Function<? super List<Result<P>>, Widget> f) {
+                                  Function<? super List<P>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
@@ -449,22 +404,23 @@ public abstract sealed class PeerRequestor extends Widget {
         private static class ListRRFinisher<P> extends FinisherWidget {
 
             private final ResolutionRequest<P>[] reqs;
-            private final Function<? super List<Result<P>>, Widget> f;
+            private final Function<? super List<P>, Widget> f;
 
             public ListRRFinisher(ResolutionRequest<P>[] reqs,
-                                  Function<? super List<Result<P>>, Widget> f) {
+                                  Function<? super List<P>, Widget> f) {
                 this.reqs = reqs;
                 this.f = f;
             }
 
             @Override
             protected Widget build() {
-                @SuppressWarnings("unchecked")
-                Result<P>[] results = new Result[reqs.length];
+                Object[] results = new Object[reqs.length];
                 for (int i = 0; i < results.length; i++)
                     results[i] = reqs[i].resultOrFail();
                 // TODO dokumentálni kéne, hogy f nem null-toleráns Listet kap
-                return f.apply(List.of(results));
+                List<?> objList = List.of(results);
+                @SuppressWarnings("unchecked") List<P> castedList = (List<P>) (List<?>) objList;
+                return f.apply(castedList);
             }
 
             @Override
@@ -478,14 +434,14 @@ public abstract sealed class PeerRequestor extends Widget {
 
         private final Map<K, ? extends Widget> widgets;
         private final Map<K, ? extends Set<Request<P>>> requests;
-        private final Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f;
+        private final Function<? super Map<Request<P>, Map<K, P>>, Widget> f;
 
         @Remember private Key.KeyCache<K> slots;
         @Remember private Map<K, Set<ResolutionRequest<P>>> reqs;
 
         public CreatePeersForMap(Map<K, ? extends Widget> widgets,
                                  Map<K, ? extends Set<Request<P>>> requests,
-                                 Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f) {
+                                 Function<? super Map<Request<P>, Map<K, P>>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
@@ -563,17 +519,17 @@ public abstract sealed class PeerRequestor extends Widget {
         private static class MapRRFinisher<K, P> extends FinisherWidget {
 
             private final Map<K, Set<ResolutionRequest<P>>> reqs;
-            private final Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f;
+            private final Function<? super Map<Request<P>, Map<K, P>>, Widget> f;
 
             public MapRRFinisher(Map<K, Set<ResolutionRequest<P>>> reqs,
-                                 Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f) {
+                                 Function<? super Map<Request<P>, Map<K, P>>, Widget> f) {
                 this.reqs = reqs;
                 this.f = f;
             }
 
             @Override
             protected Widget build() {
-                Map<Request<P>, Map<K, Result<P>>> results = new HashMap<>();
+                Map<Request<P>, Map<K, P>> results = new HashMap<>();
 
                 reqs.forEach((k, reqs) -> {
                     for (ResolutionRequest<P> req : reqs) {

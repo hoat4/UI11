@@ -80,7 +80,7 @@ public abstract class SubstitutedWidget extends Widget {
         allRemainingRequests.removeIf(req -> {
             Object defaultValue;
             if ((defaultValue = req.requestData.defaultValue()) != null) {
-                req.setResultUnchecked(defaultValue, widgetState().tree.beganRefreshID);
+                req.setResult(defaultValue);
                 return true;
             } else
                 return false;
@@ -168,7 +168,7 @@ public abstract class SubstitutedWidget extends Widget {
                 resultsByKey.forEach((key, result) -> {
                     ResolutionRequest<?> parentResolutionRequest = childrenReqs.get(key).get(req);
                     assert parentResolutionRequest != null;
-                    parentResolutionRequest.setResultFrom(result);
+                    parentResolutionRequest.setResult(result);
                 });
             });
             return new WidgetTree.ChainEnd();

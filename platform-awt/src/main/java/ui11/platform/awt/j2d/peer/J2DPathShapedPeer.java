@@ -36,8 +36,7 @@ public class J2DPathShapedPeer extends Widget {
     protected Widget build() {
         childSurface.parent.set(parentSurface);
         childSurface.updateShape(pathShaped.shape());
-        return PeerRequestor.ofSingle(pathShaped.content(), childSurface,
-                result -> parentSurface.createResponse(result.peer()));
+        return PeerRequestor.ofSingle(pathShaped.content(), childSurface, parentSurface::createResponse);
     }
 
     private static class ClippedSurface extends J2DSurfaceWithOwnShape {

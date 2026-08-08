@@ -98,7 +98,7 @@ public class DefaultBoxImpl extends Widget {
             BoxConstraints childConstraints = constraints.subtract(allPadding);
             BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
             return PeerRequestor.ofSingle(box.content(), sizeReq, r -> {
-                Size childSize = switch (r.peer()) {
+                Size childSize = switch (r) {
                     case BoxLayoutResult.OfGone _ -> Size.ZERO;
                     case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size();
                 };

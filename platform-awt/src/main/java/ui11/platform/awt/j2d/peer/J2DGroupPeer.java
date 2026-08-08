@@ -2,7 +2,6 @@ package ui11.platform.awt.j2d.peer;
 
 import ui11.PeerRequestor;
 import ui11.Widget;
-import ui11.graphics.Surface;
 import ui11.graphics.effect.Overlay;
 import ui11.platform.awt.j2d.J2DNodeHolder;
 import ui11.platform.awt.j2d.J2DSurface;
@@ -11,7 +10,6 @@ import ui11.platform.awt.j2d.inputtree.*;
 import ui11.platform.awt.j2d.rendertree.EmptyRenderNode;
 import ui11.platform.awt.j2d.rendertree.GroupRenderNode;
 import ui11.platform.awt.j2d.rendertree.RenderNode;
-import ui11.provide.Provider;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -54,14 +52,13 @@ public class J2DGroupPeer extends Widget {
         return PeerRequestor.ofMultiple(overlay.items(), childSurfaces, this::doBuild);
     }
 
-    private Widget doBuild(List<? extends PeerRequestor.Result<J2DNodeHolder>> childrenResolutionResults) {
+    private Widget doBuild(List<? extends J2DNodeHolder> childrenResolutionResults) {
         List<RenderNode> childRenderNodes = new ArrayList<>();
         List<InputNode> childInputNodes = new ArrayList<>();
 
         Shape shape = parentSurface.shape();
 
-        for (PeerRequestor.Result<J2DNodeHolder> r : childrenResolutionResults) {
-            J2DNodeHolder h = r.peer();
+        for (J2DNodeHolder h : childrenResolutionResults) {
             if (!(h.renderNode() instanceof EmptyRenderNode))
                 childRenderNodes.add(h.renderNode());
             if (!(h.inputNode() instanceof TransparentInputNode)) {

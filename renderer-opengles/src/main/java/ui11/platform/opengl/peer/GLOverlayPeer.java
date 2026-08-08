@@ -58,16 +58,14 @@ public class GLOverlayPeer extends Widget {
         if (childSurfaces.size() > overlay.items().size())
             childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
 
-        return PeerRequestor.ofMultiple(overlay.items(), childSurfaces,
-                results -> doBuild(results.stream().
-                        map(PeerRequestor.Result::peer).toList()));
+        return PeerRequestor.ofMultiple(overlay.items(), childSurfaces, this::doBuild);
     }
 
     private Widget doBuild(List<? extends GLNodeHolder> children) {
         List<RenderNode> childRenderNodes = new ArrayList<>();
         List<InputNode> childInputNodes = new ArrayList<>();
 
-        Shape2D shape = ((GLSurface) parentSurface).shape();
+        Shape2D shape = parentSurface.shape();
 
         List<FillTrianglesWithColorRenderNode> fillTrianglesNodes = new ArrayList<>();
         for (GLNodeHolder h : children) {

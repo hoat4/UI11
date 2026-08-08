@@ -46,8 +46,8 @@ public class J2DClipPeer extends Widget {
 
         return PeerRequestor.ofSingle(clip.content(), childSurface, result -> {
             return parentSurface.createResponse(new J2DNodeHolder(
-                    makeRenderNode(result.peer().renderNode(), childSurface.shape()),
-                    makeInputNode(result.peer().inputNode(), childSurface.shape())
+                    makeRenderNode(result.renderNode(), childSurface.shape()),
+                    makeInputNode(result.inputNode(), childSurface.shape())
             ));
         });
     }

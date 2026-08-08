@@ -31,9 +31,9 @@ public class J2DPointerRegionPeer extends Widget {
 
         Widget content = pointerRegion.content();
         return PeerRequestor.ofSingle(content, surface, result -> {
-            inputNode.child.set(result.peer().inputNode());
+            inputNode.child.set(result.inputNode());
             inputNode.listener = pointerRegion;
-            J2DNodeHolder h = new J2DNodeHolder(result.peer().renderNode(), inputNode);
+            J2DNodeHolder h = new J2DNodeHolder(result.renderNode(), inputNode);
             return surface.createResponse(h);
         });
     }

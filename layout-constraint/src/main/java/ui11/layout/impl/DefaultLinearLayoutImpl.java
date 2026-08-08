@@ -225,8 +225,8 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                 int itemCountFinal = itemCount;
                 return PeerRequestor.ofMultiple(reqWidgets, reqs, resolutionResults -> {
                     double height2 = heightFinal;
-                    for (PeerRequestor.Result<BoxLayoutResult> layoutResult : resolutionResults) {
-                        switch (layoutResult.peer()) {
+                    for (BoxLayoutResult layoutResult : resolutionResults) {
+                        switch (layoutResult) {
                             case BoxLayoutResult.OfGone _ -> { // TODO ez legális?
                                 // 0x0-nak tekintjük, ezért nem kell height-ot változtatni
                             }

@@ -82,26 +82,22 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected Widget makePeer(Widget widget, Function<DOMElementHolder, Widget> f) {
-        return PeerRequestor.ofSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(),
-                result -> f.apply(result.peer()));
+        return PeerRequestor.ofSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(), f);
     }
 
-    @SuppressWarnings("SimplifyStreamApiCallChains")
     protected Widget makePeers(List<? extends Widget> widgets,
                                Function<List<DOMElementHolder>, Widget> f) {
         return PeerRequestor.ofMultipleWidgets(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
                 new DOMPeerCreationRequest(),
-                results ->
-                        f.apply(results.stream().map(PeerRequestor.Result::peer).
-                                collect(Collectors.toUnmodifiableList()))
+                f
         );
     }
 
     protected final Widget makePeers(List<? extends Widget> widgets,
                                      Set<PeerRequestor.Request<?>> additionalRequests,
                                      BiFunction<List<DOMElementHolder>,
-                                             Map<PeerRequestor.Request<?>, ? extends List<?>>, Widget> f) {
+                                     Map<PeerRequestor.Request<?>, ? extends List<?>>, Widget> f) {
         Set<PeerRequestor.Request<?>> requests = new HashSet<>(additionalRequests);
         DOMPeerCreationRequest domPeerCreationRequest = new DOMPeerCreationRequest();
         requests.add(domPeerCreationRequest);
@@ -118,18 +114,12 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
                 Map.Entry::getKey,
                 e -> new DOMWidgetWrapper(e.getValue()))
         );
-        return PeerRequestor.ofMultipleWidgets(widgets, new DOMPeerCreationRequest(), results ->
-                f.apply(results.entrySet().stream().
-                        collect(toUnmodifiableMap(
-                                Map.Entry::getKey,
-                                e -> e.getValue().peer())
-                        )));
+        return PeerRequestor.ofMultipleWidgets(widgets, new DOMPeerCreationRequest(), f::apply);
     }
 
     protected Widget makePeer_sameSurface(Widget widget, Function<DOMElementHolder, Widget> f) {
         // TODO ez most ugyanaz mint a sima makePeer
-        return PeerRequestor.ofSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(),
-                result -> f.apply(result.peer()));
+        return PeerRequestor.ofSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(), f);
     }
 
     protected Widget wrapResult(DOMElementHolder h) {

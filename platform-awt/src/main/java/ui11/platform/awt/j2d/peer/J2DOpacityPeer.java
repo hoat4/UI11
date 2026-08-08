@@ -28,10 +28,10 @@ public class J2DOpacityPeer extends Widget {
     protected Widget build() {
         return PeerRequestor.ofSingle(opacity.content(), surface, result -> {
             opacityRenderNode.opacity.set(opacity.opacity());
-            opacityRenderNode.content.set(result.peer().renderNode());
+            opacityRenderNode.content.set(result.renderNode());
             return surface.createResponse(new J2DNodeHolder(
                     opacityRenderNode,
-                    result.peer().inputNode()
+                    result.inputNode()
             ));
         });
     }

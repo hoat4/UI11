@@ -57,10 +57,10 @@ public class J2DTransformPeer extends Widget {
         return PeerRequestor.ofSingle(transform.content(), childSurface, result -> {
             return parentSurface.createResponse(new J2DNodeHolder(
                     nonDegenerateTransform ?
-                            makeRenderNode(result.peer().renderNode()) :
+                            makeRenderNode(result.renderNode()) :
                             EmptyRenderNode.INSTANCE,
                     nonDegenerateTransform ?
-                            makeInputNode(result.peer().inputNode()) :
+                            makeInputNode(result.inputNode()) :
                             TransparentInputNode.INSTANCE
             ));
         });
