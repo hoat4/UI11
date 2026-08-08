@@ -1,7 +1,6 @@
 package ui11.platform.dom;
 
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.ParentData;
 import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.color.RGBColor;
@@ -94,8 +93,8 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
                 new DOMPeerCreationRequest(),
                 results ->
-                f.apply(results.stream().map(PeerRequestor.Result::peer).
-                        collect(Collectors.toUnmodifiableList()))
+                        f.apply(results.stream().map(PeerRequestor.Result::peer).
+                                collect(Collectors.toUnmodifiableList()))
         );
     }
 
@@ -104,11 +103,12 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
                                      BiFunction<List<DOMElementHolder>,
                                              Map<PeerRequestor.Request<?>, ? extends List<?>>, Widget> f) {
         Set<PeerRequestor.Request<?>> requests = new HashSet<>(additionalRequests);
-        requests.add(new DOMPeerCreationRequest());
+        DOMPeerCreationRequest domPeerCreationRequest = new DOMPeerCreationRequest();
+        requests.add(domPeerCreationRequest);
         return PeerRequestor.ofMultipleRequests(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
                 requests,
-                f
+                results -> f.apply((List<DOMElementHolder>) results.get(domPeerCreationRequest), results)
         );
     }
 

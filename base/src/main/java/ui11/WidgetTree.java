@@ -73,7 +73,7 @@ public final class WidgetTree {
             ObserverHolder observerHolder = ObserverHolder.current();
             observerHolder.ensureNoCurrentObserver();
 
-            root = findOrCreateWidgetState(rootWidget, null, root, Set.of(), false);
+            root = findOrCreateWidgetState(rootWidget, null, root, Set.of());
             refreshStack = new RefreshStack(root);
 
             while (!refreshStack.isEmpty()) {
@@ -173,7 +173,7 @@ public final class WidgetTree {
 
                     WidgetInstantiation newChild;
                     if (content != null)
-                        newChild = findOrCreateWidgetState(content, w, prevChild, null, false);
+                        newChild = findOrCreateWidgetState(content, w, prevChild, null);
                     else
                         newChild = null;
                     w.children = newChild;
@@ -294,26 +294,20 @@ public final class WidgetTree {
      * hozzáadja a parent children listájába, illetve a refreshQueueba is.
      * Ha parent nem null, akkor feltételezi, hogy {@link WidgetState#FLAG_ACTIVE aktív} állapotban van.
      *
-     * @param parent          ez csak akkor null, ha a root widgetről van szó
-     * @param clearParentData ez csak akkor értelmezhető, ha {@code reqs} nem null
+     * @param parent ez csak akkor null, ha a root widgetről van szó
      */
     WidgetInstantiation findOrCreateWidgetState(@NonNull Widget widget,
                                                 @Nullable WidgetState<?> parent,
                                                 @Nullable WidgetInstantiation previous,
-                                                @Nullable Set<? extends ResolutionRequest<?>> reqs,
-                                                boolean clearParentData) {
+                                                @Nullable Set<? extends ResolutionRequest<?>> reqs) {
         Objects.requireNonNull(widget, "widget");
         if (parent != null && !parent.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalArgumentException("parent not active: " + parent);
 
         Map<Class<?>, Object> ivs = new HashMap<>();
 
-        if (reqs != null) {
+        if (reqs != null)
             ivs.put(ResolutionRequestCollection.class, new ResolutionRequestCollection(reqs));
-
-            if (clearParentData)
-                ivs.put(ParentDataWidget.ParentDataCollection.class, ParentDataWidget.ParentDataCollection.CLEAR);
-        }
 
         WidgetState<?> w = previous == null ? null : previous.child();
 

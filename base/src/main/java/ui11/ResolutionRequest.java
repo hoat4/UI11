@@ -13,7 +13,6 @@ class ResolutionRequest<P> {
     final @Nullable WidgetState<?> container;
     final @NonNull Widget widget;
     final PeerRequestor.@NonNull Request<P> requestData;
-    final Set<Class<? extends ParentData>> interestedParentDataTypes;
 
     final @NonNull MutableObservable<@Nullable Result<P>> result =
             MutableObservable.ofNullable();
@@ -30,32 +29,19 @@ class ResolutionRequest<P> {
     public ResolutionRequest(
             @Nullable WidgetState<?> container,
             PeerRequestor.@NonNull Request<P> requestData,
-            @NonNull Widget widget,
-            Set<Class<? extends ParentData>> interestedParentDataTypes
+            @NonNull Widget widget
     ) {
         this.container = container;
         this.requestData = Objects.requireNonNull(requestData);
         this.widget = widget;
-        this.interestedParentDataTypes = interestedParentDataTypes;
     }
 
     void setResultUnchecked(@NonNull Object peer,
-                            @NonNull List<? extends ParentDataWidget> parentDataWidgets,
                             long refreshID) {
         Objects.requireNonNull(peer);
-        Objects.requireNonNull(parentDataWidgets);
-
-        Map<Class<? extends ParentData>, ParentData> parentDataMap = new HashMap<>();
-        for (Class<? extends ParentData> type : interestedParentDataTypes) {
-            for (ParentDataWidget w : parentDataWidgets)
-                if (type.isInstance(w.parentData)) {
-                    parentDataMap.put(type, w.parentData);
-                    break;
-                }
-        }
 
         @SuppressWarnings("unchecked") final P castedPeer = (P) peer;
-        this.result.set(new PeerRequestor.Result<>(this, castedPeer, Map.copyOf(parentDataMap)));
+        this.result.set(new PeerRequestor.Result<>(this, castedPeer));
     }
 
     void setResultFrom(Result<? /*P*/> other) {
@@ -66,7 +52,7 @@ class ResolutionRequest<P> {
         @SuppressWarnings("unchecked")
         Result<P> castedResult = (Result<P>) other;
         // valszeg másik ResolutionRequestből származik, ezért req-t átállítjuk this-re
-        this.result.set(new PeerRequestor.Result<>(this, castedResult.peer(), castedResult.parentDataList()));
+        this.result.set(new PeerRequestor.Result<>(this, castedResult.peer()));
     }
 
     Result<P> resultOrFail() {
@@ -89,15 +75,6 @@ class ResolutionRequest<P> {
                 w = ((WidgetInstantiation) w.children).child();
         }
         return new RuntimeException(sb.toString());
-    }
-
-    private static <T> Provider<T> wrapWithProvide(Map.Entry<Class<?>, Object> e, Widget w) {
-        @SuppressWarnings("unchecked") Class<T> key = (Class<T>) e.getKey();
-        return new Provider<>(key, key.cast(e.getValue()), w);
-    }
-
-    Widget widget() {
-        return widget;
     }
 
     @Override

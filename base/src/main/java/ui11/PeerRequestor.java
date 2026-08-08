@@ -31,19 +31,6 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
  */
 public abstract sealed class PeerRequestor extends Widget {
 
-    final Set<Class<? extends ParentData>> interestedParentDataTypes;
-    final boolean clearParentData;
-
-    private PeerRequestor(Set<Class<? extends ParentData>> interestedParentDataTypes, boolean clearParentData) {
-        this.interestedParentDataTypes = interestedParentDataTypes;
-        for (Class<?> c : interestedParentDataTypes)
-            if (!ParentData.class.isAssignableFrom(c))
-                throw new IllegalArgumentException("not a " + ParentData.class.getSimpleName() + " subtype: " +
-                        c.getName());
-
-        this.clearParentData = clearParentData;
-    }
-
     @Override
     protected Widget build() {
         throw new RuntimeException("should not reach here (PR.b)");
@@ -54,33 +41,6 @@ public abstract sealed class PeerRequestor extends Widget {
      */
     abstract WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren);
 
-    /**
-     * @throws NullPointerException     ha parentDataTypes vagy egy eleme {@code null}
-     * @throws ClassCastException       ha parentDataTypes legalább egy eleme nem assignable to {@link ParentData}
-     * @throws IllegalArgumentException ha parentDataTypes legalább egy eleme már hozzá lett adva az
-     *                                  interested ParentData type-ok listájához
-     */
-    // ez a függvény nem használható a Collectoros API-val együtt. ezzel csináljunk valamit vagy nem baj?
-    @SuppressWarnings("DataFlowIssue") // IDE szerint redundáns asSubclass
-    @SafeVarargs
-    public final @NonNull PeerRequestor withInterestedParentDataType(Class<? extends ParentData>... parentDataTypes) {
-        if (parentDataTypes.length == 0)
-            return this;
-
-        Set<Class<? extends ParentData>> set = new HashSet<>(interestedParentDataTypes);
-        for (Class<? extends ParentData> parentDataType : parentDataTypes) {
-            Objects.requireNonNull(parentDataType);
-            parentDataType = parentDataType.asSubclass(ParentData.class);
-            if (!set.add(parentDataType))
-                throw new IllegalArgumentException("Parent data type already added: " + parentDataType.getName());
-        }
-        return withInterestedParentDataType(Set.copyOf(set));
-    }
-
-    abstract PeerRequestor withInterestedParentDataType(Set<Class<? extends ParentData>> parentDataTypes);
-
-    abstract PeerRequestor withClearParentData(boolean clearParentData);
-
     @NullMarked
     public static <P> PeerRequestor ofSingle(Widget widget,
                                              Request<P> request,
@@ -88,7 +48,7 @@ public abstract sealed class PeerRequestor extends Widget {
         Objects.requireNonNull(widget);
         Objects.requireNonNull(request);
         Objects.requireNonNull(then);
-        return new CreatePeerForSingle<>(widget, request, then, Set.of(), true);
+        return new CreatePeerForSingle<>(widget, request, then);
     }
 
     // TODO REQ extends Request<P> nem lehet, mert akkor egy Set<Request<?>>-vel nem lehet meghívni ezt a függvényt
@@ -123,7 +83,7 @@ public abstract sealed class PeerRequestor extends Widget {
                                                       Request<P> request,
                                                       Function<List<Result<P>>, Widget> then) {
         widgets = List.copyOf(widgets);
-        return new CreatePeersForList<>(widgets, Collections.nCopies(widgets.size(), request), then, Set.of(), true);
+        return new CreatePeersForList<>(widgets, Collections.nCopies(widgets.size(), request), then);
     }
 
 
@@ -148,9 +108,7 @@ public abstract sealed class PeerRequestor extends Widget {
                     Map<K, Result<P>> map = results.get(request);
                     assert map != null;
                     return then.apply(map);
-                },
-                Set.of(),
-                true
+                }
         );
     }
 
@@ -165,7 +123,7 @@ public abstract sealed class PeerRequestor extends Widget {
         if (widgets.size() != requests.size())
             throw new IllegalArgumentException();
 
-        return new PeerRequestor.CreatePeersForList<>(widgets, requests, then, Set.of(), true);
+        return new PeerRequestor.CreatePeersForList<>(widgets, requests, then);
     }
 
     @NullMarked
@@ -210,7 +168,7 @@ public abstract sealed class PeerRequestor extends Widget {
         @SuppressWarnings("unchecked") Map<K, Set<Request<Object>>> requests2 = (Map<K, Set<Request<Object>>>) (Map<K, ?>) requests;
         @SuppressWarnings("unchecked") Function<Map<Request<Object>, Map<K, Result<Object>>>, Widget> then2 =
                 (Function<Map<Request<Object>, Map<K, Result<Object>>>, Widget>) (Function<?, Widget>) then;
-        return new PeerRequestor.CreatePeersForMap<>(widgets, requests2, then2, Set.of(), true);
+        return new PeerRequestor.CreatePeersForMap<>(widgets, requests2, then2);
     }
 
     // TODO név?
@@ -228,9 +186,7 @@ public abstract sealed class PeerRequestor extends Widget {
                     return new PeerRequestor.CreatePeersForList<>(
                             list,
                             Collections.nCopies(list.size(), request),
-                            l -> then.apply(l.stream()),
-                            Set.of(),
-                            true
+                            l -> then.apply(l.stream())
                     );
                 });
     }
@@ -283,9 +239,6 @@ public abstract sealed class PeerRequestor extends Widget {
 
         @Inject private ResolutionRequestCollection peerCreationRequestCollection;
 
-        // TODO ezt csak akkor kéne lekérdezni és observálni, ha resolutionRequest.requestData.peerType().isInstance(this)
-        @Inject(required = false) private ParentDataWidget.ParentDataCollection parentDataCollection;
-
         public ResponseWidget(@NonNull Request<P> request, @NonNull P peer, @Nullable Widget chainedWidget) {
             this.request = request;
             this.peer = peer;
@@ -298,13 +251,8 @@ public abstract sealed class PeerRequestor extends Widget {
             for (ResolutionRequest<?> resolutionRequest : peerCreationRequestCollection.requests()) {
                 if (resolutionRequest.requestData.peerType().isInstance(peer) &&
                         request.equals(resolutionRequest.requestData)) {
-                    List<? extends ParentDataWidget> parentDataList =
-                            parentDataCollection == null ? List.of() : parentDataCollection.parentDataList;
                     // TODO ha már kapott resultot ebben a refreshben, akkor az újabbakat ignorálnia kéne vagy beraknia?
-                    // TODO ha this instanceof ParentDataWidget, akkor értelmetlen hogy setResultUncheckedben
-                    //      ellenőrizzük a next widget egyezőségét is
-                    resolutionRequest.setResultUnchecked(peer, parentDataList,
-                            widgetState().tree.beganRefreshID);
+                    resolutionRequest.setResultUnchecked(peer, widgetState().tree.beganRefreshID);
                 } else {
                     if (remaining.put(resolutionRequest.requestData, resolutionRequest) != null)
                         // több ResolutionRequest tartozik egy Requesthez
@@ -315,7 +263,7 @@ public abstract sealed class PeerRequestor extends Widget {
             if (remaining.keySet().stream().allMatch(req -> req.defaultValue() != null)) {
                 // ugyanaz mint SubstitutedWidget elején
                 remaining.forEach((req, resolutionRequest) -> {
-                    resolutionRequest.setResultUnchecked(req.defaultValue(), List.of(), widgetState().tree.beganRefreshID);
+                    resolutionRequest.setResultUnchecked(req.defaultValue(), widgetState().tree.beganRefreshID);
                 });
                 return new WidgetTree.ChainEnd();
             }
@@ -332,37 +280,28 @@ public abstract sealed class PeerRequestor extends Widget {
                     resReq.setResultFrom(result2);
                 });
                 return new WidgetTree.ChainEnd();
-            }).withClearParentData(false).withInterestedParentDataType(ParentData.class);
+            });
         }
     }
 
     /**
      * The resulting peer and parent data (if available) of a peer resolution.
-     * Peer is always available (else the resolution fails). Parent data is only available for the
-     * {@linkplain PeerRequestor#withInterestedParentDataType(Set) interested types}, and only if they are set via
-     * {@linkplain ParentData#attach(ParentData, Widget)}.
+     * Peer is always available (else the resolution fails).
      */
     public static final class Result<P> {
 
         // TODO ez a req miért kell ide? equalst nem befolyásolja? Request nem lenne elég helyette?
         final @NonNull ResolutionRequest<P> req;
         private final @NonNull P peer;
-        private final @NonNull Map<Class<? extends ParentData>, ParentData> parentDataMap;
 
         Result(@NonNull ResolutionRequest<P> req,
-               @NonNull P peer,
-               @NonNull Map<Class<? extends ParentData>, ParentData> parentDataMap) {
+               @NonNull P peer) {
             this.req = req;
             this.peer = peer;
-            this.parentDataMap = parentDataMap;
         }
 
         public P peer() {
             return peer;
-        }
-
-        public Map<Class<? extends ParentData>, ParentData> parentDataList() {
-            return parentDataMap;
         }
 
         @Override
@@ -370,14 +309,13 @@ public abstract sealed class PeerRequestor extends Widget {
             if (o == null || getClass() != o.getClass()) return false;
 
             Result<?> that = (Result<?>) o;
-            return req.equals(that.req) && peer.equals(that.peer) && parentDataMap.equals(that.parentDataMap);
+            return req.equals(that.req) && peer.equals(that.peer);
         }
 
         @Override
         public int hashCode() {
             int result = req.hashCode();
             result = 31 * result + peer.hashCode();
-            result = 31 * result + parentDataMap.hashCode();
             return result;
         }
 
@@ -388,7 +326,6 @@ public abstract sealed class PeerRequestor extends Widget {
             return "PeerRequestor.Result{" +
                     "req=" + req +
                     ", peer=" + peer +
-                    ", parentDataList=" + parentDataMap +
                     '}';
         }
     }
@@ -402,45 +339,29 @@ public abstract sealed class PeerRequestor extends Widget {
         @Remember private ResolutionRequest<P> req;
 
         @NullMarked
-        public CreatePeerForSingle(Widget widget, Request<P> request, Function<Result<P>, Widget> f,
-                                   Set<Class<? extends ParentData>> interestedParentDataTypes,
-                                   boolean clearParentData) {
-            super(interestedParentDataTypes, clearParentData);
+        public CreatePeerForSingle(Widget widget, Request<P> request, Function<Result<P>, Widget> f) {
             this.widget = widget;
             this.request = request;
             this.f = f;
         }
 
         @Override
-        PeerRequestor withInterestedParentDataType(Set<Class<? extends ParentData>> parentDataTypes) {
-            return new CreatePeerForSingle<>(widget, request, f, parentDataTypes, clearParentData);
-        }
-
-        @Override
-        PeerRequestor withClearParentData(boolean clearParentData) {
-            return new CreatePeerForSingle<>(widget, request, f, interestedParentDataTypes, clearParentData);
-        }
-
-        @Override
         WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren) {
             if (req == null || !Objects.equals(req.requestData, request) ||
-                    !Objects.equals(req.widget, widget) ||
-                    !Objects.equals(interestedParentDataTypes, req.interestedParentDataTypes))
+                    !Objects.equals(req.widget, widget))
                 req = new ResolutionRequest<>(
-                        widgetState, request, widget, interestedParentDataTypes);
+                        widgetState, request, widget);
             WidgetInstantiation reqW = widgetState.tree.findOrCreateWidgetState(
                     req.widget,
                     widgetState,
                     existingChildren == null ? null : existingChildren[0],
-                    Set.of(req),
-                    clearParentData
+                    Set.of(req)
             );
             WidgetInstantiation finisher = widgetState.tree.findOrCreateWidgetState(
                     new SingleRRFinisher<>(req, f),
                     widgetState,
                     existingChildren == null ? null : existingChildren[1],
-                    null,
-                    false
+                    null
             );
             req.finisherWidget = finisher.child();
             return new WidgetInstantiation[]{reqW, finisher};
@@ -478,23 +399,10 @@ public abstract sealed class PeerRequestor extends Widget {
 
         public CreatePeersForList(List<? extends Widget> widgets,
                                   List<? extends Request<P>> requests,
-                                  Function<? super List<Result<P>>, Widget> f,
-                                  Set<Class<? extends ParentData>> interestedParentDataTypes,
-                                  boolean clearParentData) {
-            super(interestedParentDataTypes, clearParentData);
+                                  Function<? super List<Result<P>>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
-        }
-
-        @Override
-        PeerRequestor withInterestedParentDataType(Set<Class<? extends ParentData>> parentDataTypes) {
-            return new CreatePeersForList<>(widgets, requests, f, parentDataTypes, clearParentData);
-        }
-
-        @Override
-        PeerRequestor withClearParentData(boolean clearParentData) {
-            return new CreatePeersForList<>(widgets, requests, f, interestedParentDataTypes, clearParentData);
         }
 
         @Override
@@ -512,19 +420,16 @@ public abstract sealed class PeerRequestor extends Widget {
                     new ListRRFinisher<>(reqs, f),
                     widgetState,
                     existingChildren == null ? null : existingChildren[existingChildren.length - 1],
-                    null,
-                    false
+                    null
             )).child();
 
             for (int i = 0; i < widgets.size(); i++) {
                 ResolutionRequest<P> req = reqs[i];
                 if (req == null || !Objects.equals(req.requestData, this.requests.get(i)) ||
-                        !Objects.equals(req.widget, widgets.get(i)) ||
-                        !Objects.equals(interestedParentDataTypes, req.interestedParentDataTypes)) {
+                        !Objects.equals(req.widget, widgets.get(i))) {
                     reqs[i] = req = new ResolutionRequest<>(
                             widgetState,
-                            this.requests.get(i), widgets.get(i),
-                            interestedParentDataTypes);
+                            this.requests.get(i), widgets.get(i));
                     req.finisherWidget = finisher;
                 }
                 WidgetInstantiation existingWidgetState =
@@ -534,8 +439,7 @@ public abstract sealed class PeerRequestor extends Widget {
                         req.widget,
                         widgetState,
                         existingWidgetState,
-                        Set.of(req),
-                        clearParentData
+                        Set.of(req)
                 );
             }
 
@@ -581,10 +485,7 @@ public abstract sealed class PeerRequestor extends Widget {
 
         public CreatePeersForMap(Map<K, ? extends Widget> widgets,
                                  Map<K, ? extends Set<Request<P>>> requests,
-                                 Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f,
-                                 Set<Class<? extends ParentData>> interestedParentDataTypes,
-                                 boolean clearParentData) {
-            super(interestedParentDataTypes, clearParentData);
+                                 Function<? super Map<Request<P>, Map<K, Result<P>>>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
@@ -593,16 +494,6 @@ public abstract sealed class PeerRequestor extends Widget {
         @Override
         protected void initState() {
             slots = new Key.KeyCache<>();
-        }
-
-        @Override
-        PeerRequestor withInterestedParentDataType(Set<Class<? extends ParentData>> parentDataTypes) {
-            return new CreatePeersForMap<>(widgets, requests, f, parentDataTypes, clearParentData);
-        }
-
-        @Override
-        PeerRequestor withClearParentData(boolean clearParentData) {
-            return new CreatePeersForMap<>(widgets, requests, f, interestedParentDataTypes, clearParentData);
         }
 
         @Override
@@ -621,8 +512,7 @@ public abstract sealed class PeerRequestor extends Widget {
                     new MapRRFinisher<>(reqs, f),
                     thisWidgetState,
                     existingChildren == null ? null : existingChildren[existingChildren.length - 1],
-                    null,
-                    false
+                    null
             )).child();
 
             int i = 0;
@@ -642,15 +532,13 @@ public abstract sealed class PeerRequestor extends Widget {
                 for (Request<P> req : reqDatas) {
                     ResolutionRequest<P> existing = oldSet.stream().
                             filter(rr -> Objects.equals(rr.requestData, req) &&
-                                    Objects.equals(rr.widget, widget) &&
-                                    Objects.equals(rr.interestedParentDataTypes, interestedParentDataTypes)).
+                                    Objects.equals(rr.widget, widget)).
                             findAny().orElse(null); // elvileg maximum 1 lehetséges
                     ResolutionRequest<P> rr;
                     if (existing == null) {
                         rr = new ResolutionRequest<>(
                                 widgetState,
-                                req, widget,
-                                interestedParentDataTypes);
+                                req, widget);
                         rr.finisherWidget = finisher;
                     } else
                         rr = existing;
@@ -665,8 +553,7 @@ public abstract sealed class PeerRequestor extends Widget {
                         widget,
                         widgetState,
                         null,
-                        newSet,
-                        clearParentData
+                        newSet
                 );
             }
 

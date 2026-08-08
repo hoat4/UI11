@@ -1,8 +1,6 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.ParentData;
-import ui11.PeerRequestor;
 import ui11.Widget;
 import ui11.geom.Length;
 import ui11.layout.multichild.LinearLayout;

@@ -80,7 +80,7 @@ public abstract class SubstitutedWidget extends Widget {
         allRemainingRequests.removeIf(req -> {
             Object defaultValue;
             if ((defaultValue = req.requestData.defaultValue()) != null) {
-                req.setResultUnchecked(defaultValue, List.of(), widgetState().tree.beganRefreshID);
+                req.setResultUnchecked(defaultValue, widgetState().tree.beganRefreshID);
                 return true;
             } else
                 return false;
@@ -172,7 +172,7 @@ public abstract class SubstitutedWidget extends Widget {
                 });
             });
             return new WidgetTree.ChainEnd();
-        }).withClearParentData(false).withInterestedParentDataType(ParentData.class);
+        });
     }
 
     private @NonNull RuntimeException cantFindResolver(

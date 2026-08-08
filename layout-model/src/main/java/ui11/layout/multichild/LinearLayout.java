@@ -572,7 +572,7 @@ public final class LinearLayout extends SubstitutedWidget {
         }
     }
 
-    public static record WeightMarker(double weight) implements ParentData {
+    public static record WeightMarker(double weight) {
 
         public WeightMarker {
             if (weight < 0 || !Double.isFinite(weight))
