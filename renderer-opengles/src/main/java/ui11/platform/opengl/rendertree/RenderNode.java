@@ -16,19 +16,32 @@ public abstract class RenderNode {
 
     public static class RenderTreePrinter {
 
+        private static final String INDENT = "    ";
+
         private final StringBuilder sb = new StringBuilder();
         private int indent = 1;
 
-        private RenderTreePrinter() {}
+        private RenderTreePrinter() {
+        }
 
         public void prop(String name, Object value) {
-            sb.append(' ').append(name).append("=").append(value);
+            String valueStr = String.valueOf(value);
+            if (valueStr.contains("\n")) {
+                sb.append('\n');
+                for (int i = 0; i < indent; i++)
+                    sb.append(INDENT);
+                sb.append(name).append(" = ");
+                sb.append(valueStr.replace("\n", "\n" +
+                        INDENT.repeat(indent) + " ".repeat(name.length() + " = ".length())));
+            } else {
+                sb.append(' ').append(name).append("=").append(valueStr);
+            }
         }
 
         public void child(String name, RenderNode value) {
             sb.append('\n');
             for (int i = 0; i < indent; i++)
-                sb.append("    ");
+                sb.append(INDENT);
             sb.append(name).append(": ").append(value);
             indent++;
             value.debugPrint(this);
@@ -36,7 +49,7 @@ public abstract class RenderNode {
         }
 
         public static String toString(RenderNode root) {
-            RenderTreePrinter p =new RenderTreePrinter();
+            RenderTreePrinter p = new RenderTreePrinter();
             p.sb.append(root.toString());
             root.debugPrint(p);
             p.sb.append('\n');

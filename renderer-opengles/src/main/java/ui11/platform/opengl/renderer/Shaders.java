@@ -29,13 +29,14 @@ public class Shaders {
         public static String debugPrint(ByteBuffer b) {
             StringBuilder sb = new StringBuilder();
             while (b.hasRemaining()) {
-                sb.append("\n- ");
                 sb.append(new Vec2(b.getFloat(), b.getFloat())).append(" ").
                         append(Color.sRGBBytes(b.get(), b.get(), b.get(), b.get())).append("; ");
                 sb.append(new Vec2(b.getFloat(), b.getFloat())).append(" ").
                         append(Color.sRGBBytes(b.get(), b.get(), b.get(), b.get())).append("; ");
                 sb.append(new Vec2(b.getFloat(), b.getFloat())).append(" ").
                         append(Color.sRGBBytes(b.get(), b.get(), b.get(), b.get()));
+                if (b.hasRemaining())
+                    sb.append('\n');
             }
             return sb.toString();
         }

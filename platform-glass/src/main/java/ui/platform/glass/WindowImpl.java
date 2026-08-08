@@ -16,6 +16,7 @@ import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.GLSurface;
 import ui11.platform.opengl.GLViewProvider;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
+import ui11.platform.opengl.rendertree.RenderNode;
 import ui11.provide.Provider;
 import ui11.WidgetResolver;
 import ui11.text.TextAlign;
@@ -109,6 +110,7 @@ public class WindowImpl {
                 System.out.println();
                  */
 
+                    System.out.println(RenderNode.RenderTreePrinter.toString(result.peer().renderNode()));
                     result.peer().renderNode().addToDisplayList(initialTransform, displayList);
                     currentDisplayList = displayList;
                     repaint();

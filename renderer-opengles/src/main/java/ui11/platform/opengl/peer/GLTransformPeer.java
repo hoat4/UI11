@@ -50,12 +50,12 @@ public class GLTransformPeer extends Widget {
         surface.parent.set(parentSurface);
         boolean nonDegenerateTransform = surface.update(transform.transformation());
 
-        /* TODO
         if (surface.renderNodeTranslation.snoop() != null) {
             // ilyenkor nem kell TransformRenderNode
-            return transformedContent;
+            return PeerRequestor.ofSingle(transform.content(), surface, result->{
+                return parentSurface.createResponse(result.peer());
+            });
         }
-         */
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
