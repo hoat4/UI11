@@ -1,7 +1,6 @@
 package ui11.graphics.shaper;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Path;
@@ -15,11 +14,9 @@ import java.util.Objects;
 
 public final class Stroke extends SubstitutedWidget {
 
-    private final Widget texture;
+    private final @NonNull Widget texture;
     private final Length thickness;
     private final Path path;
-
-    @Remember private Key textureSlot;
 
     public Stroke(@NonNull Widget texture, @NonNull Length thickness, @NonNull Path path) {
         this.texture = Objects.requireNonNull(texture);
@@ -35,14 +32,9 @@ public final class Stroke extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        textureSlot = Key.create();
-    }
-
-    @Override
     protected Stroke forSubstitution() {
         return new Stroke(
-                texture.withKey(textureSlot),
+                withID("texture", texture),
                 thickness,
                 path
         );

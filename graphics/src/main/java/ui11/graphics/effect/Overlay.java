@@ -1,6 +1,5 @@
 package ui11.graphics.effect;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -29,8 +28,6 @@ public final class Overlay extends SubstitutedWidget {
 
     private final List<? extends Widget> items;
 
-    @Remember private Key.ListKeyCache slots;
-
     public Overlay(List<? extends Widget> items) {
         // TODO items = items.stream().map(Gone::goneIfNull).toList();
         //      de itt nem a layout-model modulban vagyunk, tehát nincsen Gone
@@ -50,13 +47,8 @@ public final class Overlay extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        slots = new Key.ListKeyCache();
-    }
-
-    @Override
     protected Overlay forSubstitution() {
-        return new Overlay(slots.with(items));
+        return new Overlay(withID("items", items));
     }
 
     public List<? extends Widget> items() {

@@ -1,7 +1,6 @@
 package ui11.layout.helper;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Size;
@@ -15,21 +14,14 @@ public class SingleChildLayout extends SubstitutedWidget {
     private final Widget child;
     private final SingleChildLayoutDelegate delegate;
 
-    @Remember private Key childKey;
-
     public SingleChildLayout(@NonNull Widget child, @NonNull SingleChildLayoutDelegate delegate) {
         this.child = Objects.requireNonNull(child);
         this.delegate = Objects.requireNonNull(delegate);
     }
 
     @Override
-    protected void initState() {
-        childKey = Key.create();
-    }
-
-    @Override
     protected SubstitutedWidget forSubstitution() {
-        return new SingleChildLayout(child.withKey(childKey), delegate);
+        return new SingleChildLayout(withID("child", child), delegate);
     }
 
     public Widget child() {

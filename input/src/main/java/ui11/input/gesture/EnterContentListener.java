@@ -1,7 +1,6 @@
 package ui11.input.gesture;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.input.focus.FocusHolder;
@@ -17,8 +16,6 @@ public final class EnterContentListener extends SubstitutedWidget {
     private final @NonNull FocusHolder focusHolder;
     private final @NonNull Widget content;
 
-    @Remember private Key contentKey;
-
     public EnterContentListener(@NonNull Consumer<EnterContent> enterContentHandler,
                                 @NonNull FocusHolder focusHolder,
                                 @NonNull Widget content) {
@@ -28,16 +25,11 @@ public final class EnterContentListener extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected EnterContentListener forSubstitution() {
         return new EnterContentListener(
                 enterContentHandler,
                 focusHolder,
-                content.withKey(contentKey)
+                withID("content", content)
         );
     }
 

@@ -1,6 +1,5 @@
 package ui11.control;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
@@ -17,8 +16,6 @@ public final class RadioButton<T> extends SubstitutedWidget {
     private final @Nullable Widget graphic;
     private final boolean disabled;
 
-    @Remember private Key graphicSlot;
-
     // TODO disabled lehetne inherited
 
     public RadioButton(@NonNull MutableObservable<T> prop, T value, @Nullable Widget graphic, boolean disabled) {
@@ -34,13 +31,13 @@ public final class RadioButton<T> extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        graphicSlot = Key.create();
-    }
-
-    @Override
     protected RadioButton<T> forSubstitution() {
-        return new RadioButton<>(prop, value, graphicSlot.with(graphic), disabled);
+        return new RadioButton<>(
+                prop,
+                value,
+                graphic == null ? null : withID("graphic", graphic),
+                disabled
+        );
     }
 
     public @NonNull MutableObservable<T> prop() {

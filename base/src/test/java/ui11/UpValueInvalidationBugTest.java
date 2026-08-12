@@ -26,13 +26,12 @@ public class UpValueInvalidationBugTest {
 
         WidgetTree.create(new Component() {
 
-            @Remember private Key slot;
-
             @Override
             protected void update() {
                 // szándékosan ugyanaz a slot
-                useComponent(new W1(1).withKey(slot), U2.U2Request.INSTANCE);
-                useComponent(new W1(2).withKey(slot), U2.U2Request.INSTANCE);
+                // TODO ez a teszt már értelmetlen lesz, mivel az azonos ID-ket megakadályozzuk majd
+                useComponent(withID("w", new W1(1)), U2.U2Request.INSTANCE);
+                useComponent(withID("w", new W1(2)), U2.U2Request.INSTANCE);
             }
         }, Runnable::run);
     }

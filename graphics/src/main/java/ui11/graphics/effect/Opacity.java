@@ -1,18 +1,15 @@
 package ui11.graphics.effect;
 
-import ui11.Key;
+import org.jspecify.annotations.NonNull;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
-import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 public final class Opacity extends SubstitutedWidget {
 
     private final double opacity;
     private final Widget content;
-
-    @Remember private Key contentKey;
 
     public Opacity(double opacity, @NonNull Widget content) {
         if (opacity < 0 || opacity > 1)
@@ -22,15 +19,10 @@ public final class Opacity extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected Opacity forSubstitution() {
         return new Opacity(
                 opacity,
-                content.withKey(contentKey)
+                withID("content", content)
         );
     }
 

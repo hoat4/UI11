@@ -1,7 +1,6 @@
 package ui11.input.pointer;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -12,21 +11,14 @@ public final class WithCursor extends SubstitutedWidget {
     private final @NonNull Cursor cursor;
     private final @NonNull Widget content;
 
-    @Remember private Key contentKey;
-
     public WithCursor(@NonNull Cursor cursor, @NonNull Widget content) {
         this.cursor = Objects.requireNonNull(cursor);
         this.content = Objects.requireNonNull(content);
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected WithCursor forSubstitution() {
-        return new WithCursor(cursor, content.withKey(contentKey));
+        return new WithCursor(cursor, withID("content", content));
     }
 
     public @NonNull Cursor cursor() {

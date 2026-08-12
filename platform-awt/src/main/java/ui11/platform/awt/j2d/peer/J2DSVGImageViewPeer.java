@@ -6,7 +6,6 @@ import com.github.weisj.jsvg.view.FloatSize;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.Key;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.layout.protocol.BoxLayoutResult;
@@ -24,7 +23,6 @@ import ui11.window.Shell.URLResolver;
 import java.awt.geom.Rectangle2D;
 import java.net.URI;
 import java.net.URL;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 public class J2DSVGImageViewPeer extends Widget {
@@ -41,7 +39,6 @@ public class J2DSVGImageViewPeer extends Widget {
     @Remember private SVGDocumentRenderNode node;
     @Remember private OpaqueInputNode inputNode;
     @Remember private TextStyle prevTextStyle;
-    @Remember private Key.KeyCache<URI> loadTaskSlot;
 
     public J2DSVGImageViewPeer(SVGImageView svgImageView, J2DSurface surface) {
         this.svgImageView = svgImageView;
@@ -52,7 +49,6 @@ public class J2DSVGImageViewPeer extends Widget {
     protected void initState() {
         node = new SVGDocumentRenderNode();
         inputNode = new OpaqueInputNode();
-        loadTaskSlot = new Key.KeyCache<>();
     }
 
     @Override
@@ -64,7 +60,7 @@ public class J2DSVGImageViewPeer extends Widget {
             else
                 uri = urlResolver.toAbsoluteURL(uri);
 
-        return loadTaskSlot.with(Map.of(uri, new BackgroundTask<>(
+        return withID("loadTask", uri, new BackgroundTask<>(
                 new SVGDocumentLoadTask(uri),
                 loadStatus -> {
                     return switch (loadStatus) {
@@ -82,7 +78,7 @@ public class J2DSVGImageViewPeer extends Widget {
                         }
                     };
                 }
-        ))).get(uri);
+        ));
     }
 
     private @NonNull Widget displayLoadedDocument(SVGDocument loadedDocument) {

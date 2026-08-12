@@ -28,6 +28,8 @@ import static java.util.stream.Collectors.toMap;
  *         Only one can be inherited, but {@link WidgetResolver#composite(WidgetResolver, WidgetResolver)} can be used
  *         to combine multiple WidgetResolvers.
  * </ol>
+ * A {@linkplain SubstitutedWidget} must not contain fields annotated with {@link ui11.Widget.Inject @Inject} or
+ * {@link Widget.Remember @Remember}.
  */
 public abstract class SubstitutedWidget extends Widget {
 
@@ -51,9 +53,8 @@ public abstract class SubstitutedWidget extends Widget {
      * <p>
      * The implementation in this class also does nothing.
      */
-    // TODO ez most ideiglenesen nem-final lett, Slot2 miatt
     @Override
-    protected void initState() {
+    protected final void initState() {
     }
 
     /**

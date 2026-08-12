@@ -1,6 +1,5 @@
 package ui11.input.gesture;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -20,8 +19,6 @@ public final class ClickListener extends SubstitutedWidget {
     private final @NonNull Widget content;
     private final @NonNull Runnable handler;
 
-    @Remember private Key contentKey;
-
     public ClickListener(@Nullable Runnable handler) {
         this(PointerOpaque.pointerOpaque(), handler);
     }
@@ -36,13 +33,11 @@ public final class ClickListener extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected ClickListener forSubstitution() {
-        return new ClickListener(content.withKey(contentKey), handler);
+        return new ClickListener(
+                withID("content", content),
+                handler
+        );
     }
 
     public @NonNull Widget content() {

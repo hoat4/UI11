@@ -1,6 +1,5 @@
 package ui11.i18n.editor;
 
-import ui11.Key;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.control.EditablePlainText;
@@ -32,17 +31,16 @@ public class LiveLocalizationEditor extends Widget {
         Widget tableContent = Padding.allSides(px(8),
                 grid(2, grid -> {
                     context.localizationResources.forEach((name, valueObs) -> {
-                        grid.add(
+                        grid.add(withID("residLabel", name,
                                 Align.leftCenter(
                                         withFontSize(10d,
                                                 withLineWrapping(new Text(name))
                                         )
-                                ).withKey(Key.of("residLabel", name))
-                        );
-                        grid.add(
-                                new PlainTextEditor(new EditablePlainText(valueObs)).
-                                        withKey(Key.of("valueField", name))
-                        );
+                                )
+                        ));
+                        grid.add(withID("valueField", name,
+                                new PlainTextEditor(new EditablePlainText(valueObs))
+                        ));
                     });
                     grid.setGap(px(4));
                     grid.columnWeights(1, 2);

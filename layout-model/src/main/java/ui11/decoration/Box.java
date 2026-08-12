@@ -2,7 +2,6 @@ package ui11.decoration;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.color.Color;
@@ -27,10 +26,6 @@ public final class Box extends SubstitutedWidget {
     private final @Nullable LayoutSize minSize;
     private final @Nullable LayoutSize fixedSize;
     private final @NonNull Length cornerRadius;
-
-    @Remember private Key contentKey;
-    @Remember private Key backgroundKey;
-    @Remember private Key borderFillKey;
 
     /**
      * @param content
@@ -62,18 +57,11 @@ public final class Box extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-        backgroundKey = Key.create();
-        borderFillKey = Key.create();
-    }
-
-    @Override
     protected Box forSubstitution() {
         return new Box(
-                content.withKey(contentKey),
-                background == null ? null : background.withKey(backgroundKey),
-                border == null ? null : new BorderSpec(border.thickness, border.fill.withKey(borderFillKey)),
+                withID("content", content),
+                background == null ? null : withID("background", background),
+                border == null ? null : new BorderSpec(border.thickness, withID("borderFill", border.fill)),
                 boxShadow,
                 minSize,
                 fixedSize,

@@ -1,23 +1,18 @@
 package ui11.control;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.text.Text;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.IntStream;
 
 // TODO selectedTab kívülről módosítható legyen
 public final class TabbedPane extends SubstitutedWidget {
 
     private final List<Tab> tabs;
     private final TabSide side;
-
-    @Inject private Key.ListKeyCache tabTitleSlots;
-    @Inject private Key.ListKeyCache tabContentSlots;
 
     public TabbedPane(Tab... tabs) {
         this(List.of(tabs), TabSide.TOP);
@@ -29,21 +24,16 @@ public final class TabbedPane extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        tabTitleSlots = new Key.ListKeyCache();
-        tabContentSlots = new Key.ListKeyCache();
-    }
-
-    @Override
     protected TabbedPane forSubstitution() {
-        List<? extends Widget> tabTitles = tabTitleSlots.with(tabs.stream().map(Tab::title).toList());
-        List<? extends Widget> tabContents = tabContentSlots.with(tabs.stream().map(Tab::content).toList());
-
         Tab[] slottedTabs = new Tab[tabs.size()];
         for (int i = 0; i < slottedTabs.length; i++) {
             Tab tab = tabs.get(i);
-            slottedTabs[i] = new Tab(tabTitles.get(i), tabContents.get(i),
-                    tab.enabled, tab.isInitiallySelected);
+            slottedTabs[i] = new Tab(
+                    withID("tabTitle", tab.title),
+                    withID("tabContent", tab.content),
+                    tab.enabled,
+                    tab.isInitiallySelected
+            );
         }
         return new TabbedPane(List.of(slottedTabs), side);
     }

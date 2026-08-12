@@ -31,13 +31,6 @@ public class ImplicitKeyTest {
 
         private final InvalidationPoint ip = new InvalidationPoint();
 
-        @Remember private Key slot;
-
-        @Override
-        protected void initState() {
-            slot = Key.create();
-        }
-
         @Override
         protected Widget build() {
             ip.subscribe();
@@ -45,7 +38,7 @@ public class ImplicitKeyTest {
             String s = "C" + new Object().hashCode();
             ll.add(new Text(s));
             ll.add(row(new A(), new A()));
-            ll.add(row(new A().withKey(slot), new A()));
+            ll.add(row(withID("a", new A()), new A()));
             for (int i = 0; i < 25; i++)
                 ll.add(row(new A(), new A()));
             return ll.build();

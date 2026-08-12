@@ -1,6 +1,5 @@
 package ui11.css;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -11,8 +10,6 @@ public final class WrapWithCSSClassTag extends SubstitutedWidget {
 
     private final @NonNull String className;
     private final @NonNull Widget content;
-
-    @Remember private Key contentKey;
 
     public WrapWithCSSClassTag(@NonNull String className, @NonNull Widget content) {
         this.className = Objects.requireNonNull(className);
@@ -33,15 +30,10 @@ public final class WrapWithCSSClassTag extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected WrapWithCSSClassTag forSubstitution() {
         return new WrapWithCSSClassTag(
                 className,
-                content.withKey(contentKey)
+                withID("content", content)
         );
     }
 

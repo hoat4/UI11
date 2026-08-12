@@ -1,7 +1,6 @@
 package ui11.layout.multichild.flow;
 
 import org.jspecify.annotations.Nullable;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -26,20 +25,13 @@ public final class Flow extends SubstitutedWidget {
 
     private final @NonNull List<? extends @NonNull Widget> items;
 
-    @Remember private Key.ListKeyCache slots;
-
     public Flow(@NonNull List<? extends @Nullable Widget> items) {
         this.items = Gone.replaceNullsWithGone(items);
     }
 
     @Override
-    protected void initState() {
-        slots = new Key.ListKeyCache();
-    }
-
-    @Override
     protected Flow forSubstitution() {
-        return new Flow(slots.with(items));
+        return new Flow(withID("items", items));
     }
 
     public @NonNull List<? extends @NonNull Widget> items() {

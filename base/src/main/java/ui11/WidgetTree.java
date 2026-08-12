@@ -337,12 +337,9 @@ public final class WidgetTree {
                         widget = p.content();
                     }
                 }
-                case Key.GlobalKey.GlobalKeyWidget globalKeyWidget -> {
+                case GlobalKey.GlobalKeyWidget globalKeyWidget -> {
                     w = globalKeyWidget.replacement(this);
                     widget = w.stateWidget;
-                }
-                case Key.LocalKey.LocalKeyWidget localKeyWidget -> {
-                    widget = localKeyWidget.widget;
                 }
                 default -> {
                     break processProxyWidgets;

@@ -1,6 +1,5 @@
 package ui11.input.gesture;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Location;
@@ -15,21 +14,17 @@ public final class DropRegion extends SubstitutedWidget {
     private final @NonNull DropListener listener;
     private final @NonNull Widget content;
 
-    @Remember private Key contentKey;
-
     public DropRegion(@NonNull DropListener listener, @NonNull Widget content) {
         this.listener = Objects.requireNonNull(listener); // TODO eventListener proxy
         this.content = Objects.requireNonNull(content);
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected DropRegion forSubstitution() {
-        return new DropRegion(listener, content.withKey(contentKey));
+        return new DropRegion(
+                listener,
+                withID("content", content)
+        );
     }
 
     public @NonNull DropListener listener() {

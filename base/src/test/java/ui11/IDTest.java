@@ -7,32 +7,22 @@ import ui11.window.Window;
 
 import static ui11.layout.multichild.LinearLayout.column;
 
-public class GlobalKeyTest extends Widget {
+public class IDTest extends Widget {
 
     public static void main() throws InterruptedException {
         // 1 és alatta 2 jelenik meg, majd 5 másodperc múlva 2 és alatta 1-nek kell megjelennie.
         // ha az elején 3 és 4 jelenik meg, az már hiba.
 
         MutableObservable<Boolean> reverse = MutableObservable.withInitial(false);
-        Window.open(new GlobalKeyTest(reverse));
+        Window.open(new IDTest(reverse));
         Thread.sleep(5000);
         reverse.set(!reverse.get());
     }
 
     private final Observable<Boolean> reverse;
 
-    @Remember private Key fa, fb;
-
-    GlobalKeyTest(Observable<Boolean> reverse) {
+    IDTest(Observable<Boolean> reverse) {
         this.reverse = reverse;
-    }
-
-    @Override
-    protected void initState() {
-        fa = Key.create();
-        fb = Key.create();
-        System.out.println("fa: " + fa);
-        System.out.println("fb: " + fb);
     }
 
     @Override
@@ -45,11 +35,11 @@ public class GlobalKeyTest extends Widget {
     }
 
     private Widget fa() {
-        return new ElementIdentityPrintingWidget().withKey(fa);
+        return withID("fa", new ElementIdentityPrintingWidget());
     }
 
     private Widget fb() {
-        return new ElementIdentityPrintingWidget().withKey(fb);
+        return withID("fb", new ElementIdentityPrintingWidget());
     }
 
     private static final class ElementIdentityPrintingWidget extends Widget {

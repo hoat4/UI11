@@ -1,6 +1,7 @@
 package ui11;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.observable.ObservableBase;
@@ -10,6 +11,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -214,6 +217,59 @@ public abstract class Widget implements Cloneable {
         return new ListenerProxyBase.ConsumerListenerProxy<>(this, listener);
     }
 
+    private enum KeyPart2 {
+        KEY_PART_2
+    }
+
+    /**
+     * Assigns an ID to a widget. A new widget will only be used to update an existing widget state if its ID is the
+     * same as the IDs of the current widget; otherwise, a new widget state will be created.
+     * <p>
+     * IDs are not global: their scope is only this widget from which you call this method.
+     * If you call this method from another widget with the same ID argument, the IDs won't collide.
+     */
+    protected final @NonNull Widget withID(@NonNull String id, @NonNull Widget content) {
+        return withID(id, KeyPart2.KEY_PART_2, content);
+    }
+
+    /**
+     * @see #withID(String, Widget)
+     */
+    protected final @NonNull Widget withID(@NonNull String idPart1,
+                                           @Nullable Object idPart2,
+                                           @NonNull Widget content) {
+        return widgetState().withKey(idPart1, idPart2, content);
+    }
+
+    /**
+     * @see #withID(String, Widget)
+     */
+    @SuppressWarnings("SimplifyStreamApiCallChains")
+    protected final @NonNull List<? extends Widget> withID(
+            @NonNull String keyPart1, @NonNull List<? extends Widget> content) {
+        List<Widget> content2 = List.copyOf(content);
+        record Index(int i) {
+        } // TODO
+        return IntStream.range(0, content2.size()).
+                mapToObj(i -> widgetState().withKey(keyPart1, new Index(i), content2.get(i))).
+                collect(Collectors.toUnmodifiableList());
+    }
+
+    /**
+     * @see #withID(String, Widget)
+     */
+    protected final <K extends @Nullable Object> @NonNull Map<K, @NonNull Widget> withID(
+            @NonNull String keyPart1, @NonNull Map<K, ? extends @NonNull Widget> content) {
+        Map<K, Widget> content2 = new HashMap<>(content); // Map.copyOf nem jó, mert null keyeket nem fogadja el
+        record MapKeyWrapper(Object key) {
+        }
+        return Collections.unmodifiableMap(content2.keySet().stream().
+                collect(Collectors.toMap(
+                        k -> k,
+                        k -> widgetState().withKey(keyPart1, new MapKeyWrapper(k), content2.get(k))
+                )));
+    }
+
     // régi komment listener proxy-kkal kapcsolatban, ElementDefReflectorból:
     //     eredetileg úgy volt, hogy tetszőleges interface-ek lehetnek event listenerek.
     //     de lehet hogy jobb így, hogy csak Runnable meg egy-két másik lehet, mert így biztosítani lehet,
@@ -367,7 +423,8 @@ public abstract class Widget implements Cloneable {
         if (!(stateHolderOrDef instanceof WidgetState<?> sh))
             // toStringet lehet hogy felülírják egy olyannal ami inherited valuet olvasna (pl. MultiChildLayout)
             // ami nem fog működni ha element() exceptiont dob
-            throw new IllegalStateException("RSW no SH: " + super.toString() + ", " + stateHolderOrDef);
+            throw new IllegalStateException(Widget.class.getSimpleName() + " not in state role: " +
+                    super.toString() + ", " + stateHolderOrDef);
 
         if (sh.stateWidget != this)
             // elvileg nem lehetséges ilyen
@@ -431,14 +488,6 @@ public abstract class Widget implements Cloneable {
     void initListenerProxyData() {
         if (lpModelData == null && accessor().prepareListenerProxies(this))
             lpModelData = new ListenerProxyBase.LPModelData(this);
-    }
-
-    public @NonNull Widget withKey(@NonNull Key key) {
-        Objects.requireNonNull(key, "key");
-        if (roleIsState())
-            throw new IllegalStateException("Can't call withKey on a state role " +
-                    Widget.class.getSimpleName() + ": " + this);
-        return key.wrap(this);
     }
 
     // "rebuilding" vagy "recomposition"-nak nevezzük?

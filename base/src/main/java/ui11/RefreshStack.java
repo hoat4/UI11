@@ -49,7 +49,7 @@ final class RefreshStack {
         for (Item item : stack) {
             Class<? extends Widget> widgetClass = item.widgetInstantiation.child().stateWidget.getClass();
             if (widgetClass != InheritedValueMerger.class &&
-                    widgetClass != Key.GlobalKey.GlobalKeyWidgetImpl.class &&
+                    widgetClass != GlobalKey.GlobalKeyWidgetImpl.class &&
                     !PeerRequestor.class.isAssignableFrom(widgetClass) &&
                     !PeerRequestor.FinisherWidget.class.isAssignableFrom(widgetClass)) {
                 sb.append("\n- ").append(widgetClass.getName());

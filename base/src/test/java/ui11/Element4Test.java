@@ -51,16 +51,9 @@ public class Element4Test {
 
         WidgetTree.create(new Component() {
 
-            @Remember private Key key;
-
-            @Override
-            protected void initState() {
-                key = Key.create();
-            }
-
             @Override
             protected void update() {
-                useComponent(new Provider<>(Integer.class, 1347, new E()).withKey(key));
+                useComponent(withID("e", new Provider<>(Integer.class, 1347, new E())));
             }
         }, executor);
 

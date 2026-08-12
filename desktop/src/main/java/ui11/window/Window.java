@@ -1,6 +1,5 @@
 package ui11.window;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -12,8 +11,6 @@ public final class Window extends SubstitutedWidget {
     private final String title;
     private final Widget content;
 
-    @Remember private Key contentKey;
-
     public Window(String title, @NonNull Widget content) {
         // TODO title nullable?
         this.title = title;
@@ -21,15 +18,10 @@ public final class Window extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected Window forSubstitution() {
         return new Window(
                 title,
-                content.withKey(contentKey)
+                withID("content", content)
         );
     }
 

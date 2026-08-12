@@ -16,8 +16,6 @@ public final class MouseRegion extends SubstitutedWidget {
     private final @NonNull Button acceptedButton;
     private final @NonNull MouseListener listener;
 
-    @Remember private Key contentKey;
-
     public MouseRegion(@NonNull Widget content, @NonNull Button acceptedButton, @NonNull MouseListener listener) {
         this.content = Objects.requireNonNull(content);
         this.acceptedButton = Objects.requireNonNull(acceptedButton);
@@ -25,14 +23,9 @@ public final class MouseRegion extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected MouseRegion forSubstitution() {
         return new MouseRegion(
-                content.withKey(contentKey),
+                withID("content", content),
                 acceptedButton,
                 listener
         );

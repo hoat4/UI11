@@ -1,6 +1,5 @@
 package ui11.control;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.observable.MutableObservable;
@@ -15,8 +14,6 @@ public final class CheckBox extends SubstitutedWidget {
     private final @NonNull MutableObservable<Boolean> value;
     private final @Nullable Widget graphic;
     private final boolean disabled;
-
-    @Remember private Key graphicSlot;
 
     public CheckBox(@NonNull MutableObservable<Boolean> value, @Nullable Widget graphic, boolean disabled) {
         this.value = Objects.requireNonNull(value);
@@ -33,15 +30,10 @@ public final class CheckBox extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        graphicSlot = Key.create();
-    }
-
-    @Override
     protected CheckBox forSubstitution() {
         return new CheckBox(
                 value,
-                graphicSlot.with(graphic),
+                graphic == null ? null : withID("graphic", graphic),
                 disabled
         );
     }

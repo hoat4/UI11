@@ -104,6 +104,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      */
     Map<Class<?>, Object> descendantsInterestedIVs;
 
+    private Map<RelativeKey, GlobalKey> relativeKeysToGlobalKeys;
+
     @SuppressWarnings("unchecked")
     WidgetState(W modelWidget, WidgetTree tree) {
         this.tree = tree;
@@ -576,6 +578,22 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         for (IVCollector<?> collector : ivCollectors)
             changed |= collector.retrieveValue();
         return changed;
+    }
+
+    public Widget withKey(@NonNull Object keyPart1, @Nullable Object keyPart2, @NonNull Widget content) {
+        Objects.requireNonNull(content);
+        RelativeKey relativeKey = new RelativeKey(keyPart1, keyPart2);
+        if (relativeKeysToGlobalKeys == null)
+            relativeKeysToGlobalKeys = new HashMap<>();
+        GlobalKey globalKey = relativeKeysToGlobalKeys.computeIfAbsent(relativeKey, __ -> new GlobalKey());
+        // TODO remove obsolete entries from this map
+        return globalKey.wrap(content);
+    }
+
+    private record RelativeKey(@NonNull Object keyPart1, @Nullable Object keyPart2) {
+        RelativeKey {
+            Objects.requireNonNull(keyPart1);
+        }
     }
 
     @SuppressWarnings("ConstantValue")

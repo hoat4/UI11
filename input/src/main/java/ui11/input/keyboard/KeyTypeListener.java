@@ -1,7 +1,6 @@
 package ui11.input.keyboard;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -18,16 +17,9 @@ public final class KeyTypeListener extends SubstitutedWidget {
     private final Consumer<KeyCombination> consumer;
     private final Widget content;
 
-    @Remember private Key contentKey;
-
     public KeyTypeListener(@NonNull Consumer<KeyCombination> consumer, @NonNull Widget content) {
         this.consumer = listenerProxy(Objects.requireNonNull(consumer));
         this.content = Objects.requireNonNull(content);
-    }
-
-    @Override
-    protected void initState() {
-        contentKey = Key.create();
     }
 
     public @NonNull Consumer<KeyCombination> consumer() {
@@ -36,7 +28,7 @@ public final class KeyTypeListener extends SubstitutedWidget {
 
     @Override
     protected KeyTypeListener forSubstitution() {
-        return new KeyTypeListener(consumer, content.withKey(contentKey));
+        return new KeyTypeListener(consumer, withID("content", content));
     }
 
     public @NonNull Widget content() {

@@ -1,7 +1,6 @@
 package ui11.decoration;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.color.Color;
@@ -17,25 +16,16 @@ public final class Background extends SubstitutedWidget {
     private final @NonNull Widget background;
     private final @NonNull Widget content;
 
-    @Remember private Key backgroundKey;
-    @Remember private Key contentKey;
-
     public Background(@Nullable Widget background, @NonNull Widget content) {
         this.background = Gone.goneIfNull(background);
         this.content = Objects.requireNonNull(content);
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-        backgroundKey = Key.create();
-    }
-
-    @Override
     protected Background forSubstitution() {
         return new Background(
-                background.withKey(backgroundKey),
-                content.withKey(contentKey)
+                withID("background", background),
+                withID("content", content)
         );
     }
 

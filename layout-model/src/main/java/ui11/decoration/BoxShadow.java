@@ -1,6 +1,5 @@
 package ui11.decoration;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.color.Color;
@@ -19,10 +18,9 @@ public final class BoxShadow extends SubstitutedWidget {
     private final Length spread;
     private final @NonNull Widget content;
 
-    @Remember private Key contentKey;
-
     public BoxShadow(Color color, Length blur, Length xOffset, Length yOffset, Length spread,
                      @NonNull Widget content) {
+        // TODO többi is nemnull gondolom
         this.color = color;
         this.blur = blur;
         this.xOffset = xOffset;
@@ -32,13 +30,8 @@ public final class BoxShadow extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected BoxShadow forSubstitution() {
-        return new BoxShadow(color, blur, xOffset, yOffset, spread, content.withKey(contentKey));
+        return new BoxShadow(color, blur, xOffset, yOffset, spread, withID("content", content));
     }
 
     public Color color() {

@@ -1,6 +1,5 @@
 package ui11.layout.multichild;
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.geom.Axis;
@@ -28,8 +27,6 @@ public class Grid extends SubstitutedWidget {
 
     // TODO ki kéne találni, hogy hogyan lehet enélkül passiveHeight-ot megcsinálni
     private final Axis orientationBias;
-
-    @Remember private Key.KeyCache<GridItemKey> slots;
 
     private Grid(Builder b) {
         items = b.items;
@@ -116,33 +113,18 @@ public class Grid extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        slots = new Key.KeyCache<>();
-    }
-
-    @Override
     protected Grid forSubstitution() {
         // TODO ez a kód most duplikálva van itt és DOMGridPeerben
         record GridPos(int col, int row) {
         }
         Map<GridPos, Integer> overlayCounts = new HashMap<>();
-        Map<GridItemKey, Widget> widgetsByGridItemKey = new HashMap<>();
-        GridItemKey[] keys = new GridItemKey[items.size()];
+        Item[] itemsArray = new Item[this.items.size()];
         for (int i = 0; i < items.size(); i++) {
             Item item = items.get(i);
             int overlayIndex = overlayCounts.compute(new GridPos(item.col(), item.row()),
                     (p, j) -> j == null ? 0 : j + 1);
-            keys[i] = new GridItemKey(item.col(), item.row(), overlayIndex);
-            widgetsByGridItemKey.put(keys[i], item.widget);
-        }
-
-        Item[] itemsArray = new Item[this.items.size()];
-        Map<GridItemKey, ? extends Widget> slottedWidgetsByGridItemKey = slots.with(widgetsByGridItemKey);
-        for (int i = 0; i < items.size(); i++) {
-            Item item = items.get(i);
-            Widget slottedW = slottedWidgetsByGridItemKey.get(keys[i]);
-            assert slottedW != null;
-            itemsArray[i] = new Item(slottedW,
+            GridItemKey key = new GridItemKey(item.col(), item.row(), overlayIndex);
+            itemsArray[i] = new Item(withID("items", key, item.widget),
                     item.col, item.row, item.colspan, item.rowspan);
         }
 

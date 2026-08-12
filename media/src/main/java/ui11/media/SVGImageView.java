@@ -1,7 +1,6 @@
 package ui11.media;
 
 import org.jspecify.annotations.NonNull;
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.media.ImageSource.InlineStringSource;
@@ -18,8 +17,6 @@ public final class SVGImageView extends SubstitutedWidget {
     private final TextualImageSource source;
     private final boolean interactive;
     private final Map<String, ? extends Widget> embeddedWidgets;
-
-    @Remember private Key.KeyCache<String> embeddedWidgetSlots;
 
     private SVGImageView(@NonNull TextualImageSource source, boolean interactive,
                          @NonNull Map<@NonNull String, ? extends @NonNull Widget> embeddedWidgets) {
@@ -50,13 +47,8 @@ public final class SVGImageView extends SubstitutedWidget {
     }
 
     @Override
-    protected void initState() {
-        embeddedWidgetSlots = new Key.KeyCache<>();
-    }
-
-    @Override
     protected SVGImageView forSubstitution() {
-        return new SVGImageView(source, interactive, embeddedWidgetSlots.with(embeddedWidgets));
+        return new SVGImageView(source, interactive, withID("embeddedWidgets", embeddedWidgets));
     }
 
     public TextualImageSource source() {

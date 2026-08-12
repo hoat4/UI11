@@ -1,7 +1,6 @@
 package ui11.input.gesture;
 
 
-import ui11.Key;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 
@@ -17,21 +16,17 @@ public final class CloseRequestListener extends SubstitutedWidget {
     private final @NonNull Runnable onClose;
     private final @NonNull Widget content;
 
-    @Remember private Key contentKey;
-
     public CloseRequestListener(@NonNull Runnable onClose, @NonNull Widget content) {
         this.onClose = listenerProxy(Objects.requireNonNull(onClose));
         this.content = Objects.requireNonNull(content);
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected CloseRequestListener forSubstitution() {
-        return new CloseRequestListener(onClose, content);
+        return new CloseRequestListener(
+                onClose,
+                withID("content", content)
+        );
     }
 
     public @NonNull Runnable onClose() {

@@ -15,8 +15,6 @@ public class Faded extends Widget {
     private final @NonNull Widget content;
     private final boolean visible;
 
-    @Remember private Key contentKey;
-
     // lehet hogy kétféle Tween kéne megjelenéshez és bezáráshoz.
     // persze akkor meg kérdés, hogyha megjelenés közben zárjuk be, akkor hogy nézzen ki a bezárás.
 
@@ -27,13 +25,8 @@ public class Faded extends Widget {
     }
 
     @Override
-    protected void initState() {
-        contentKey = Key.create();
-    }
-
-    @Override
     protected Widget build() {
-        Widget content = this.content.withKey(contentKey);
+        Widget content = withID("content", this.content);
 
         return new ValueSmoother<>(visible ? 1.0 : 0.0,
                 Duration.ofMillis(300),

@@ -68,17 +68,12 @@ class WidgetDefinitionParser {
 
             // transientek lehetnek a mezők?
 
-            /*
-            SubstitutedWidgetekre vonatkozó korlátozást cloneForSubstitution miatt egyelőre kivesszük.
-
             boolean isSubstitutedWidget = SubstitutedWidget.class.isAssignableFrom(edClass);
-            if ((isInject || isState) && isSubstitutedWidget && f.getDeclaringClass() != SubstitutedWidget.class &&
-                    !(isInject && isSlotOrMultiSlot))
+            if ((isInject || isState) && isSubstitutedWidget && f.getDeclaringClass() != SubstitutedWidget.class)
                 throw new InvalidWidgetDefinitionException("@" + Inject.class.getSimpleName() + " and @" +
                         Remember.class.getSimpleName() + " " +
                         "cannot be used on fields in a " + SubstitutedWidget.class.getSimpleName() + " subtype: " +
                         ReflectionUtil.memberToShortString(edClass));
-             */
 
             // TODO ezekben az exception messageekben nincs szó slotokról, pedig azok is lehetnek @Inject-esek
 
