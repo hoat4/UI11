@@ -1,34 +1,22 @@
 package ui11.control.defaultlook;
 
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import ui11.*;
+import ui11.ResolverProvider;
+import ui11.ResolverRegistry;
 import ui11.control.*;
 import ui11.control.Button.ButtonState;
 
-public class DefaultControlLookProvider extends WidgetResolver {
-
+public class DefaultControlLookProvider implements ResolverProvider {
     @Override
-    protected Class<PeerRequest<?>> requestType() {
-        // TODO
-        return (Class<PeerRequest<?>>) (Class<?>) PeerRequest.class;
-    }
-
-    @Override
-    protected @Nullable Widget resolveOrNull(@NonNull SubstitutedWidget widget,
-                                             @NonNull PeerRequest<?> request) {
-        return switch (widget) {
-            case Button button -> new DefaultButtonBehavior(button);
-            case ButtonState buttonState -> new DefaultButtonLook(buttonState);
-            case CheckBox checkBox -> new DefaultCheckBoxImpl(checkBox);
-            case ComboBox<?> comboBox -> new DefaultComboBoxLook<>(comboBox);
-            case PlainTextEditor plainTextEditor -> new DefaultPlainTextEditorImpl(plainTextEditor);
-            case Hyperlink hyperlink -> new DefaultHyperlinkPeer(hyperlink);
-            case Slider slider -> new DefaultSliderLook(slider);
-            case TabbedPane table -> new DefaultTabbedPaneLook(table);
-            case Table<?> table -> new DefaultTableImpl<>(table);
-            case TextField textField -> new DefaultTextFieldImpl(textField);
-            default -> null;
-        };
+    public void configure(ResolverRegistry r) {
+        r.addPeerIndependent(null, Button.class, DefaultButtonBehavior::new);
+        r.addPeerIndependent(null, ButtonState.class, DefaultButtonLook::new);
+        r.addPeerIndependent(null, CheckBox.class, DefaultCheckBoxImpl::new);
+        r.addPeerIndependent(null, ComboBox.class, DefaultComboBoxLook::new);
+        r.addPeerIndependent(null, PlainTextEditor.class, DefaultPlainTextEditorImpl::new);
+        r.addPeerIndependent(null, Hyperlink.class, DefaultHyperlinkPeer::new);
+        r.addPeerIndependent(null, Slider.class, DefaultSliderLook::new);
+        r.addPeerIndependent(null, TabbedPane.class, DefaultTabbedPaneLook::new);
+        r.addPeerIndependent(null, Table.class, DefaultTableImpl::new);
+        r.addPeerIndependent(null, TextField.class, DefaultTextFieldImpl::new);
     }
 }

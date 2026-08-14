@@ -7,14 +7,16 @@ import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.*;
+import ui11.PeerRequest;
+import ui11.SubstitutedWidget;
+import ui11.Widget;
+import ui11.WidgetTree;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
 import ui11.geom.Location.CoordinateSpaceRoot;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.Scope;
 import ui11.provide.Provide;
-import ui11.WidgetResolver;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 import ui11.text.TextStyle.FontWeight;
@@ -26,9 +28,6 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
-
-import static ui11.css.CSSClassTag.cssClass;
-import static ui11.graphics.effect.Overlay.overlay;
 
 public class DOMEnvironment implements Shell, Scheduler {
 
@@ -65,9 +64,6 @@ public class DOMEnvironment implements Shell, Scheduler {
             document.getHead().appendChild(css);
         }
 
-        WidgetResolver rootResolver = WidgetResolver.composite(
-                new DOMElementWidgetResolver(), CSSBackgroundImageWidgetResolver.INSTANCE);
-
         class DOMElementRoot extends Widget {
 
 
@@ -82,11 +78,6 @@ public class DOMEnvironment implements Shell, Scheduler {
             DOMEnvironment domEnv() {
                 // mi nem használjuk, de más modul lehet hogy igen (pl. lottie-web)
                 return DOMEnvironment.this;
-            }
-
-            @Provide
-            WidgetResolver widgetResolver() {
-                return rootResolver;
             }
 
             @Provide

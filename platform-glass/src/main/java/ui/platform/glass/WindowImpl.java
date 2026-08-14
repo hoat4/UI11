@@ -12,7 +12,7 @@ import ui11.geom.Vec2;
 import ui11.observable.MutableObservable;
 import ui11.platform.opengl.BufferPool;
 import ui11.platform.opengl.GLSurface;
-import ui11.platform.opengl.GLViewProvider;
+import ui11.platform.opengl.GLResolverProvider;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
 import ui11.platform.opengl.rendertree.RenderNode;
 import ui11.provide.Provider;
@@ -34,7 +34,6 @@ public class WindowImpl {
             TextStyle.Wrapping.NEVER, false, px(12),
             null /* TODO */, TextStyle.FontStyle.NORMAL
     );
-    public static final GLViewProvider DEFAULT_VIEW_PROVIDER = GLViewProvider.INSTANCE;
 
     public final Application glassApp;
     private final Window window;
@@ -86,7 +85,6 @@ public class WindowImpl {
                 Widget w = rootWidget;
 
                 w = new Provider<>(TextStyle.class, DEFAULT_TEXT_STYLE, w);
-                w = new Provider<>(WidgetResolver.class, DEFAULT_VIEW_PROVIDER, w);
                 w = new Provider<>(BufferPool.class, bufferPool, w);
                 w = new Provider<>(Scheduler.class, scheduler, w);
 

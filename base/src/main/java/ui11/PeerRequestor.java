@@ -5,6 +5,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
@@ -15,8 +16,8 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
  * <p>
  * The requests can be accessed in the following ways:
  * <ul>
- *     <li>By implementing the {@link WidgetResolver#tryResolveRequestSpecific(SubstitutedWidget, PeerRequest)} method,
- *     which will be called for each request
+ *     <li>By the second argument of the {@link BiFunction} passed to {@link ResolverRegistry#addPeerDependent(Class, Class, BiFunction)}
+ *     <li>By the argument of the {@link Function} passed to {@link ResolverRegistry#addPeerDependent(Class, Set, Function)}
  *     <li>Declaring a {@link ui11.Widget.Inject @Inject} field in a widget whose type is the array type of the request
  *     type. The array's value will be the current peer requests that should be fulfilled. The array won't contain two
  *     {@linkplain Object#equals(Object) same} element twice.

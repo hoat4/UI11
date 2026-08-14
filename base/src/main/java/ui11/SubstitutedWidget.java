@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
 
-// időnként felmerül, hogy ezt jó lenne külön package-be vinni, WidgetResolver és GlobalWidgetResolvers mellé.
+// időnként felmerül, hogy ezt jó lenne külön package-be vinni, ResolverProvider és ResolverRegistry mellé.
 // Először azért volt problémás, mert használta findInheritedValueForInjection-t egyrészt a WidgetResolver
 // lookupolásához, másrészt a ResolutionContext::inherited implementálásához. ez megoldódott, át is került
 // ui11.resolution package-be.
@@ -214,7 +214,7 @@ public abstract class SubstitutedWidget extends Widget {
 
         @Override
         protected Widget build() {
-            throw new RuntimeException("no " + WidgetResolver.class.getSimpleName() + " supports " +
+            throw new RuntimeException("no " + ResolverProvider.class.getSimpleName() + " supports " +
                     widgetType.getName() + " and " + ReflectionUtil.simpleName(widgetType) +
                     ".fallbackContent() returned null\n" +
                     "Remaining requests: " + requests.requests() + "\n" +
