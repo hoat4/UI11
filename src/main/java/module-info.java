@@ -7,14 +7,11 @@
  * hogy milyen műveletek hatására épüljön fel az element fa, hanem hogy milyen elementek legyenek benne milyen
  * tartalommal. Bővíthetőbb mint például a JavaFX.
  * <p>
- * A keretrendszert használó program egy {@link Node} fát állít elő és módosít, amit aztán ez a
+ * A keretrendszert használó program egy {@link Widget} fát állít elő és módosít, amit aztán ez a
  * keretrendszer kijelez. A kijelzést egy platform specifikus render végzi. Például a DOM renderer a böngészőben fut
  * Javascriptre fordított kódként, és DOM objektumokat állít elő és update-eli őket az element fa alapján. Ilyenkor a
  * kliens program is Javascriptre van fordítva. A modult használó program input, timer, network stb. eseményekre
  * reagálva az element fát módosítja.
- * <p>
- * A rendererekkel érintkezhet még a felhasználó program néhány renderer által implementált interface-en keresztül:
- * {@code Scheduler}, {@link ui11.WidgetResolver}, {@code FocusRoot}.
  * <p>
  * Beépített renderer-ek:
  *     <ul>

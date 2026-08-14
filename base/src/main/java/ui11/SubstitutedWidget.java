@@ -60,12 +60,12 @@ public abstract class SubstitutedWidget extends Widget {
     }
 
     /**
-     * Asks the available {@linkplain WidgetResolver WidgetResolvers} to create a peer for each
+     * Asks the available {@linkplain ResolverProvider resolvers} to create a peer for each
      * {@linkplain PeerRequest request}. This method is not intended to be called by an application,
      * instead it will be called by the {@linkplain WidgetTree widget tree refresher} as any other widget.
      * <p>
      * If no peer could be created for a request, then it will be
-     * forwarded to a {@linkplain WidgetResolver#tryResolveGeneric(SubstitutedWidget) generic peer}.
+     * forwarded to a {@linkplain ResolverRegistry#addPeerIndependent(Class, Class, Function) peer independent resolver}.
      */
     @Override
     protected final Widget build() {
@@ -187,7 +187,7 @@ public abstract class SubstitutedWidget extends Widget {
 
     /**
      * Subclasses can override this to provide a fallback widget which will be used if the available
-     * {@linkplain WidgetResolver WidgetResolvers} can't provide a peer.
+     * {@linkplain ResolverProvider ResolverProviders} can't provide a resolver.
      * <p>
      * If not overridden, it always returns {@code null}.
      */
