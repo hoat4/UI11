@@ -1,6 +1,5 @@
 package ui11.platform.awt.j2d;
 
-import ui11.PeerRequest;
 import ui11.geom.Location;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Size;
@@ -20,8 +19,7 @@ import java.awt.geom.Rectangle2D;
 // TODO @Inject Surface most nem működik
 
 public abstract sealed class J2DSurface
-        extends PeerRequest<J2DNodeHolder>
-        implements Surface
+        extends Surface<J2DNodeHolder>
         permits J2DSurfaceWithOwnShape, ShapeInheritingJ2DSurface {
 
     public static final Shape INFINITE_SHAPE = new Rectangle2D.Double(

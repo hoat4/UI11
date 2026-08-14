@@ -95,8 +95,7 @@ public class AWTWindow {
                     Color.BLACK,
                     12D, null, TextAlign.LEFT,
                     FontWeight.NORMAL, TextStyle.Wrapping.BETWEEN_WORDS, false, null, Length.zero(), FontStyle.NORMAL);
-            Widget content = new Provider<>(WidgetResolver.class, J2DWidgetResolver.INSTANCE, AWTWindow.this.content);
-            content = new Provider<>(TextStyle.class, rootTextStyle, content);
+            Widget content = new Provider<>(TextStyle.class, rootTextStyle, AWTWindow.this.content);
             content = new Provider<>(AWTWindow.class, AWTWindow.this, content);
             content = new Provider<>(Shell.class, AWTDesktopProvider.DEFAULT_SHELL, content);
             // TODO mi legyen ha a root widget peerjét nem sikerül létrehozni?

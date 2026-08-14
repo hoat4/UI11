@@ -21,51 +21,30 @@ import ui11.platform.awt.AWTEnterContentListenerPeer;
 import ui11.platform.awt.j2d.peer.*;
 import ui11.text.Text;
 
-public class J2DWidgetResolver extends WidgetResolver {
-
-    public static final J2DWidgetResolver INSTANCE = new J2DWidgetResolver();
-
-    private J2DWidgetResolver() {
-    }
+public class J2DWidgetResolver implements ResolverProvider {
 
     @Override
-    protected @Nullable Widget tryResolveGeneric(@NonNull SubstitutedWidget widget) {
-        return switch (widget) {
-            case PointerRegion pointerRegion -> pointerRegion.content();
-            case Empty empty -> new ColorFill(Color.TRANSPARENT); // TODO egér viselkedés így más lesz
+    public void configure(ResolverRegistry r) {
+        r.addPeerIndependent(J2DSurface.class, PointerRegion.class, PointerRegion::content);
+        r.addPeerIndependent(J2DSurface.class, Empty.class,
+                empty -> new ColorFill(Color.TRANSPARENT) /* TODO egér viselkedés így más lesz */);
+        r.addPeerIndependent(J2DSurface.class, EnterContentListener.class,
+                AWTEnterContentListenerPeer::new); // TODO ez nem J2DSurface
 
-            // ennek majd kéne csinálni külön VP-t, mert nem J2D
-            case EnterContentListener l -> new AWTEnterContentListenerPeer(l);
-
-            default -> null;
-        };
-    }
-
-    @Override
-    protected @Nullable Widget tryResolveRequestSpecific(@NonNull SubstitutedWidget widget,
-                                                         @NonNull PeerRequest<?> request) {
-        if (!(request instanceof J2DSurface surface)) {
-            if (request instanceof BoxLayoutResult.SizeRequest &&
-                    widget instanceof Text text)
+        r.addPeerDependent(BoxLayoutResult.SizeRequest.class, Text.class,
                 // TODO így feleslegesen duplikálunk J2DTextPeereket
-                return new J2DTextPeer(text, null);
-            return null;
-        }
+                (text, sizeRequest) -> new J2DTextPeer(text, null));
 
-        return switch (widget) {
-            case ColorFill c -> new J2DColorPeer(c, surface);
-            case Overlay overlay -> new J2DGroupPeer(overlay, surface);
-            case PathShaped clip -> new J2DPathShapedPeer(clip, surface);
-            case Clip clip -> new J2DClipPeer(clip, surface);
-            case Transform transform -> new J2DTransformPeer(transform, surface);
-            case Text text -> new J2DTextPeer(text, surface);
-            case PointerRegion pointerRegion -> new J2DPointerRegionPeer(pointerRegion, surface);
-            case Stroke stroke -> new J2DStrokePeer(stroke, surface);
-            case LinearGradient linearGradient -> new J2DLinearGradientPeer(linearGradient, surface);
-            case SVGImageView svg -> new J2DSVGImageViewPeer(svg, surface);
-            case Opacity opacity -> new J2DOpacityPeer(opacity, surface);
-
-            default -> null;
-        };
+        r.addPeerDependent(J2DSurface.class, ColorFill.class, J2DColorPeer::new);
+        r.addPeerDependent(J2DSurface.class, Overlay.class, J2DGroupPeer::new);
+        r.addPeerDependent(J2DSurface.class, PathShaped.class, J2DPathShapedPeer::new);
+        r.addPeerDependent(J2DSurface.class, Clip.class, J2DClipPeer::new);
+        r.addPeerDependent(J2DSurface.class, Transform.class, J2DTransformPeer::new);
+        r.addPeerDependent(J2DSurface.class, Text.class, J2DTextPeer::new);
+        r.addPeerDependent(J2DSurface.class, PointerRegion.class, J2DPointerRegionPeer::new);
+        r.addPeerDependent(J2DSurface.class, Stroke.class, J2DStrokePeer::new);
+        r.addPeerDependent(J2DSurface.class, LinearGradient.class, J2DLinearGradientPeer::new);
+        r.addPeerDependent(J2DSurface.class, SVGImageView.class, J2DSVGImageViewPeer::new);
+        r.addPeerDependent(J2DSurface.class, Opacity.class, J2DOpacityPeer::new);
     }
 }

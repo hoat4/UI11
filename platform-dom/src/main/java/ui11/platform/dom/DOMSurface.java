@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class DOMSurface implements Surface {
+public class DOMSurface extends Surface<DOMElementHolder> {
 
     private static final String CLASS_WRAPPED_TEXT = "tw";
     private static final String CLASS_NON_WRAPPED_TEXT = "w";
@@ -36,6 +36,7 @@ public class DOMSurface implements Surface {
     List<PointerRegion> pointerListeners = List.of();
 
     public DOMSurface(DOMEnvironment env, HTMLElement element) {
+        super(DOMElementHolder.class);
         this.env = env;
         this.element = element;
 

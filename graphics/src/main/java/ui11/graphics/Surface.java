@@ -1,5 +1,6 @@
 package ui11.graphics;
 
+import ui11.PeerRequest;
 import ui11.geom.Location;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Rect;
@@ -10,24 +11,28 @@ import ui11.geom.Size;
 /**
  * Megadja, hogy milyen mérete van egy illető Elementnek, és mi a lokális koordináta-rendszere.
  */
-public interface Surface {
+public abstract class Surface<P> extends PeerRequest<P> {
+
+    protected Surface(Class<P> peerType) {
+        super(peerType);
+    }
 
     /**
      * a visszaadott érték az elem saját koordináta-rendszerében értendő; tehát felmenők által végzett
      * transzformációk előtti méret
      */
-    Size size();
+    public abstract Size size();
 
-    double devicePixelRatio();
+    public abstract double devicePixelRatio();
 
-    CoordinateSpace coordinateSpace();
+    public abstract CoordinateSpace coordinateSpace();
 
     // TODO ehelyett valszeg egy shape getter kéne, csak nem világos hogy mi legyen a típusa
     // meg valójában többféle shapeje lehet egy elementnek:
     // - hitbox
     // - visual bounds
     // - layout bounds
-    default boolean hitTest(Location point) {
+    public boolean hitTest(Location point) {
         // TODO ez csak téglalap alakú dolgoknál ad vissza helyes értéket
         return Rect.of(size()).contains(point.in(coordinateSpace()));
     }

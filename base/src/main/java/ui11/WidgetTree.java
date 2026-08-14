@@ -11,6 +11,7 @@ import ui11.provide.Provider;
 
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 /**
  * The container for all content in a widget tree. This class is not usually used by applications, instead it is used by
@@ -43,9 +44,22 @@ public final class WidgetTree {
 
     long beganRefreshID, finishedRefreshID = -1;
 
+    final ResolverRegistry resolverRegistry;
+
     private WidgetTree(Widget rootWidget, Executor executor) {
         this.rootWidget = rootWidget;
         this.executor = executor;
+
+        ResolverRegistry resolverRegistry = new ResolverRegistry();
+        // kell cacheelni, mert folyton ServiceLoadert hívogatni lassú.
+        // TeaVM-ben nincs ServiceLoader.stream(), ezért muszáj iterátorral.
+        // (TeaVM-ben egyébként valójában nem lenne lassú folyton ServiceLoaderen iterálni)
+        // mert thread context class loadert néz, ezért egyelőre WidgetTreenként cacheljük.
+        // TODO mi legyen vele? lehessen megadni create-nek ClassLoadert? vagy hajtsuk végre az
+        //      első refresht az executorban és akkor az már úgyis a megfelelő threadben történik?
+        for (ResolverProvider d : ServiceLoader.load(ResolverProvider.class))
+            d.configure(resolverRegistry); // TODO exceptionök
+        this.resolverRegistry = resolverRegistry;
     }
 
     public static WidgetTree create(Widget root, Executor executor) {
