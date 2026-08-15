@@ -150,7 +150,7 @@ public final class WidgetTree {
                     if (TRACE_REFRESH)
                         traceRefresh(w + ": no rebuild, " +
                                 (needsDescendantRefresh ? "but enter children" : "skip children" +
-                                "; descendant interested IVs: " + w.descendantsInterestedIVs));
+                                        "; descendant interested IVs: " + w.descendantsInterestedIVs));
 
                     findNextToRefresh(!needsDescendantRefresh);
                     continue;
@@ -172,18 +172,32 @@ public final class WidgetTree {
 
                     w.removeObservers(null);
 
-                    observerHolder.setObserver(w);
                     Widget content;
                     try {
-                        content = w.stateWidget.build();
-                        content = w.decorateChild(content);
-                    } finally {
-                        observerHolder.clearObserver(w);
-                    }
+                        observerHolder.setObserver(w);
+                        try {
+                            content = w.stateWidget.build();
+                            content = w.decorateChild(content);
+                        } finally {
+                            observerHolder.clearObserver(w);
+                        }
 
-                    if (content == null && !(w.stateWidget instanceof ChainEnd))
-                        throw new NullPointerException(w.stateWidget.getClass().getSimpleName() +
-                                ".build() returned null on " + w);
+                        if (content == null && !(w.stateWidget instanceof ChainEnd))
+                            throw new NullPointerException(w.stateWidget.getClass().getSimpleName() +
+                                    ".build() returned null on " + w);
+                    } catch (Throwable e) {
+                        if (refreshStack.containsErrorWidget()) {
+                            logger.error("Failed to build content for " + w + ", but " +
+                                    "an error widget is already on refresh stack so error is fatal", e);
+                            if (e instanceof Error e2)
+                                throw e2;
+                            // sneaky throw (vagy más JVM nyelvek) miatt az e lehet checked exception is
+                            throw asRuntimeException(e);
+                        } else {
+                            logger.error("Failed to build content for " + w, e);
+                            content = new ErrorWidget(e);
+                        }
+                    }
 
                     WidgetInstantiation newChild;
                     if (content != null)
@@ -228,6 +242,10 @@ public final class WidgetTree {
                 traceRefresh("Finished refresh " + beganRefreshID);
             }
         }
+    }
+
+    private RuntimeException asRuntimeException(Throwable e) {
+        return e instanceof RuntimeException e2 ? e2 : new RuntimeException(e);
     }
 
     private void traceRefresh(String s) {

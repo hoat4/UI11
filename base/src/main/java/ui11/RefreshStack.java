@@ -71,6 +71,11 @@ final class RefreshStack {
         return stack.size();
     }
 
+    boolean containsErrorWidget() {
+        return stack.stream().
+                anyMatch(item -> item.widgetInstantiation.child().stateWidget instanceof ErrorWidget);
+    }
+
     static final class Item {
 
         // az itteni parent helyett child.widgetState().parent nem jó,
