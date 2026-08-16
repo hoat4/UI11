@@ -104,6 +104,10 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      */
     Map<Class<?>, Object> descendantsInterestedIVs;
 
+    /**
+     * ha ez true, akkor lehet írni relativeKeysToGlobalKeysbe
+     */
+    boolean idsCanBeAssigned;
     private Map<RelativeKey, GlobalKey> relativeKeysToGlobalKeys;
 
     @SuppressWarnings("unchecked")
@@ -581,13 +585,37 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     }
 
     public Widget withKey(@NonNull Object keyPart1, @Nullable Object keyPart2, @NonNull Widget content) {
-        Objects.requireNonNull(content);
         RelativeKey relativeKey = new RelativeKey(keyPart1, keyPart2);
+        Objects.requireNonNull(content);
+
+        if (!idsCanBeAssigned)
+            throw new IllegalStateException(Widget.class.getSimpleName() + ".withID can be only called " +
+                    "inside " + Widget.class.getSimpleName() + ".build");
+        // Azért nem lehet 2 build között, mert lehetetlenné tenné az obsolete keyek eltávolítását:
+        // ha jön egy következő build, amiben már nem szerepel, akkor nem tudjuk, hogy azért
+        // nem szerepel, mert már nem kell a kérdéses widget, vagy csak mert a build után fog jönni.
+        // Esetleg lehetne megengedni, hogy a build után, de a subtree refreshjében is szabad,
+        // de nem világos, hogy hogyan lehetne a subtree-t definiálni.
+
         if (relativeKeysToGlobalKeys == null)
             relativeKeysToGlobalKeys = new HashMap<>();
         GlobalKey globalKey = relativeKeysToGlobalKeys.computeIfAbsent(relativeKey, __ -> new GlobalKey());
-        // TODO remove obsolete entries from this map
+        globalKey.used = true;
         return globalKey.wrap(content);
+    }
+
+    void beforeBuild() {
+        idsCanBeAssigned = true;
+        if (relativeKeysToGlobalKeys != null)
+            for (GlobalKey k : relativeKeysToGlobalKeys.values())
+                k.used = false;
+    }
+
+    void removeObsoleteIDs() {
+        // TODO ez nincs tesztelve
+        idsCanBeAssigned = false;
+        if (relativeKeysToGlobalKeys != null)
+            relativeKeysToGlobalKeys.values().removeIf(k -> !k.used);
     }
 
     private record RelativeKey(@NonNull Object keyPart1, @Nullable Object keyPart2) {

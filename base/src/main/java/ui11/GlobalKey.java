@@ -7,6 +7,7 @@ import ui11.observable.MutableObservable;
 final class GlobalKey {
 
     final MutableObservable<Widget> content = MutableObservable.ofNullable();
+    boolean used;
 
     // ennek csak ezért azért nem lehet rögtön értéket adni, mert WidgetTree-t nem ismerjük
     private WidgetState<GlobalKeyWidgetImpl> widgetState;

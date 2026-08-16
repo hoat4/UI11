@@ -11,7 +11,6 @@ import ui11.provide.Provider;
 
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.function.Function;
 
 /**
  * The container for all content in a widget tree. This class is not usually used by applications, instead it is used by
@@ -161,7 +160,9 @@ public final class WidgetTree {
 
                 if (w.stateWidget instanceof PeerRequestor rrw) {
                     WidgetInstantiation[] prevChildren = (WidgetInstantiation[]) w.children;
+                    w.beforeBuild();
                     WidgetInstantiation[] newChildren = rrw.buildMulti(w, prevChildren);
+                    w.removeObsoleteIDs();
                     Objects.requireNonNull(newChildren);
                     w.children = newChildren;
 
@@ -175,16 +176,19 @@ public final class WidgetTree {
                     Widget content;
                     try {
                         observerHolder.setObserver(w);
+                        w.beforeBuild();
                         try {
                             content = w.stateWidget.build();
-                            content = w.decorateChild(content);
                         } finally {
                             observerHolder.clearObserver(w);
+                            w.removeObsoleteIDs();
                         }
 
                         if (content == null && !(w.stateWidget instanceof ChainEnd))
                             throw new NullPointerException(w.stateWidget.getClass().getSimpleName() +
                                     ".build() returned null on " + w);
+
+                        content = w.decorateChild(content);
                     } catch (Throwable e) {
                         if (refreshStack.containsErrorWidget()) {
                             logger.error("Failed to build content for " + w + ", but " +
