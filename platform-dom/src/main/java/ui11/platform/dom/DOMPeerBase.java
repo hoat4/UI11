@@ -96,7 +96,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     protected final Widget makePeers(List<? extends Widget> widgets,
                                      Set<PeerRequest<?>> additionalRequests,
                                      BiFunction<List<DOMElementHolder>,
-                                     Map<PeerRequest<?>, ? extends List<?>>, Widget> f) {
+                                             Map<PeerRequest<?>, ? extends List<?>>, Widget> f) {
         Set<PeerRequest<?>> requests = new HashSet<>(additionalRequests);
         DOMPeerCreationRequest domPeerCreationRequest = new DOMPeerCreationRequest();
         requests.add(domPeerCreationRequest);
@@ -122,7 +122,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected Widget wrapResult(DOMElementHolder h) {
-        return h;
+        return inheritedSurface.createResponse(h);
     }
 
     protected final DOMEnvironment env() {

@@ -1,6 +1,7 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLVideoElement;
+import ui11.Widget;
 import ui11.media.Video;
 import ui11.platform.dom.DOMPeerBase;
 
@@ -22,7 +23,7 @@ public class DOMVideoPeer extends DOMPeerBase<HTMLVideoElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         HTMLVideoElement htmlElement = elem();
 
         htmlElement.setSrc(video.source().toString());
@@ -41,5 +42,7 @@ public class DOMVideoPeer extends DOMPeerBase<HTMLVideoElement> {
 
         htmlElement.setAutoplay(true); // mivel nincs API-nk lejátszás indítására
         htmlElement.setMuted(true); // különben autoplay nem műnödik
+
+        return endingWidget();
     }
 }

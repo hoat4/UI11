@@ -2,6 +2,7 @@ package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLOptionElement;
 import org.teavm.jso.dom.html.HTMLSelectElement;
+import ui11.Widget;
 import ui11.control.ComboBox;
 import ui11.platform.dom.DOMPeerBase;
 
@@ -34,7 +35,7 @@ public class ComboBoxPeer<T> extends DOMPeerBase<HTMLSelectElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         // TODO fel kéne iratkozni a natív érték megváltozására
         elem().setValue(valID(comboBox.model().selectedValue.get()));
 
@@ -49,6 +50,8 @@ public class ComboBoxPeer<T> extends DOMPeerBase<HTMLSelectElement> {
             option.setInnerText(text);
             elem().appendChild(option);
         }
+
+        return endingWidget();
     }
 
     private @NonNull String valID(T v) {

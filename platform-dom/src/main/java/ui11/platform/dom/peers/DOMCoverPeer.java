@@ -29,7 +29,7 @@ public class DOMCoverPeer extends DOMPeerBase<HTMLElement> {
     protected Widget doBuild() {
         CSSBackgroundImagePeerCreationRequest req = new CSSBackgroundImagePeerCreationRequest();
         return PeerRequest.requestSingle(cover.content(), req, result -> {
-            elem().getStyle().setProperty("background-image", "url(" + result.peer().uri.toString() + ")");
+            elem().getStyle().setProperty("background-image", "url(" + result.uri.toString() + ")");
             return endingWidget();
         });
     }

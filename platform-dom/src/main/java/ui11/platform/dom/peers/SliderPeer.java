@@ -1,6 +1,7 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLInputElement;
+import ui11.Widget;
 import ui11.control.Slider;
 import ui11.platform.dom.DOMPeerBase;
 
@@ -27,10 +28,11 @@ public class SliderPeer extends DOMPeerBase<HTMLInputElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         untilNextRebuild().onClose(elem().onInput(evt -> {
             slider.value().set(Double.parseDouble(elem().getValue()));
         })::dispose);
         elem().setValue(Double.toString(slider.value().get()));
+        return endingWidget();
     }
 }

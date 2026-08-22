@@ -197,8 +197,8 @@ public class LocalizedResourceDefinitionReflector {
         <A extends Annotation> A getAnnotation(Class<A> annotationType);
 
         /**
-         * member esetén deklaráló teljes név és a member név lesz benne, class esetén a teljes osztálynév
-         * @apiNote kompatibilis {@link ReflectionUtil#memberToShortString(AnnotatedElement)}-gel
+         * member esetén deklaráló teljes név és a member név lesz benne, class esetén a teljes osztálynév.
+         * This is compatible with with {@link ReflectionUtil#memberToShortString(AnnotatedElement)}.
          */
         String toShortString();
     }

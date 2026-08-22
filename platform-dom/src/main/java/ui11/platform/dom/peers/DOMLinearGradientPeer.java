@@ -1,6 +1,7 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
+import ui11.Widget;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
 import ui11.platform.dom.DOMPeerBase;
@@ -18,8 +19,9 @@ public class DOMLinearGradientPeer extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         elem().getStyle().setProperty("background-image", asCSSImage());
+        return endingWidget();
     }
 
     @Override

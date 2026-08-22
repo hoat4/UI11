@@ -1,6 +1,7 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
+import ui11.Widget;
 import ui11.platform.dom.DOMPeerBase;
 import ui11.text.Text;
 
@@ -24,7 +25,8 @@ public class TextElementPeer extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         elem().setInnerText(text.text());
+        return endingWidget();
     }
 }

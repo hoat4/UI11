@@ -1,6 +1,8 @@
 allprojects {
     group = "com.flyordie.ui11"
+}
 
+subprojects {
     apply plugin: "java-library"
 
     javadoc.options.encoding = "UTF-8"
@@ -34,9 +36,7 @@ allprojects {
             javadocOptions.addBooleanOption("-enable-preview", true)
         }
     }
-}
 
-subprojects {
     repositories {
         mavenCentral()
     }

@@ -1,6 +1,7 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
+import ui11.Widget;
 import ui11.platform.dom.DOMPeerBase;
 
 public class EmptyElementPeer extends DOMPeerBase<HTMLElement> {
@@ -11,6 +12,7 @@ public class EmptyElementPeer extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
+        return endingWidget();
     }
 }

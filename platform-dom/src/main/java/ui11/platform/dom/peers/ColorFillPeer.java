@@ -1,6 +1,7 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLElement;
+import ui11.Widget;
 import ui11.graphics.fill.ColorFill;
 import ui11.platform.dom.DOMPeerBase;
 
@@ -17,8 +18,9 @@ public class ColorFillPeer extends DOMPeerBase<HTMLElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         elem().getStyle().setProperty("background-color", colorFill.color().toString());
+        return endingWidget();
     }
 
     @Override

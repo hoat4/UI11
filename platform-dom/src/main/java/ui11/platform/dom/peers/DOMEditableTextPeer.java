@@ -2,6 +2,7 @@ package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.events.KeyboardEvent;
 import org.teavm.jso.dom.html.HTMLInputElement;
+import ui11.Widget;
 import ui11.control.PlainTextEditor;
 import ui11.platform.dom.DOMPeerBase;
 
@@ -26,7 +27,7 @@ public class DOMEditableTextPeer extends DOMPeerBase<HTMLInputElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         untilNextRebuild().onClose(elem().onInput(evt -> {
             String s = elem().getValue();
             PlainTextEditor textField = plainTextEditor;
@@ -54,5 +55,6 @@ public class DOMEditableTextPeer extends DOMPeerBase<HTMLInputElement> {
             untilPause().onClose(() -> focusRequested = false);
             focusRequested = true;
         }
+        return endingWidget();
     }
 }

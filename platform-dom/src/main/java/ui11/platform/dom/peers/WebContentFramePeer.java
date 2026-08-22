@@ -1,6 +1,7 @@
 package ui11.platform.dom.peers;
 
 import org.teavm.jso.dom.html.HTMLIFrameElement;
+import ui11.Widget;
 import ui11.platform.dom.DOMPeerBase;
 import ui11.webcontent.WebContentFrame;
 
@@ -22,7 +23,8 @@ public class WebContentFramePeer extends DOMPeerBase<HTMLIFrameElement> {
     }
 
     @Override
-    protected void update() {
+    protected Widget doBuild() {
         elem().setSourceAddress(webContentFrame.url().toString());
+        return endingWidget();
     }
 }

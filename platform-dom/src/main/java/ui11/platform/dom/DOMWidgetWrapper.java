@@ -40,9 +40,13 @@ public class DOMWidgetWrapper extends Widget {
         );
     }
 
-    static class ProxySurface implements Surface {
+    static class ProxySurface extends Surface<DOMElementHolder> {
 
         Surface s;
+
+        protected ProxySurface() {
+            super(DOMElementHolder.class);
+        }
 
         @Override
         public Size size() {
