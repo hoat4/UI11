@@ -17,5 +17,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           java-version: 21
           target-folder: javadoc
-          javadoc-source-folder: ui-base/build/docs/javadoc
+          javadoc-source-folder: base/build/docs/javadoc
           project: gradle
