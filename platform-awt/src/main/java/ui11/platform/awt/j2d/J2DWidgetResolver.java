@@ -1,7 +1,5 @@
 package ui11.platform.awt.j2d;
 
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import ui11.*;
 import ui11.color.Color;
 import ui11.graphics.Empty;
@@ -25,10 +23,10 @@ public class J2DWidgetResolver implements ResolverProvider {
 
     @Override
     public void configure(ResolverRegistry r) {
-        r.addPeerIndependent(J2DSurface.class, PointerRegion.class, PointerRegion::content);
-        r.addPeerIndependent(J2DSurface.class, Empty.class,
+        r.addPeerIndependentWithFilter(J2DSurface.class, PointerRegion.class, PointerRegion::content);
+        r.addPeerIndependentWithFilter(J2DSurface.class, Empty.class,
                 empty -> new ColorFill(Color.TRANSPARENT) /* TODO egér viselkedés így más lesz */);
-        r.addPeerIndependent(J2DSurface.class, EnterContentListener.class,
+        r.addPeerIndependentWithFilter(J2DSurface.class, EnterContentListener.class,
                 AWTEnterContentListenerPeer::new); // TODO ez nem J2DSurface
 
         r.addPeerDependent(BoxLayoutResult.SizeRequest.class, Text.class,

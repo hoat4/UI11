@@ -23,11 +23,18 @@ public final class ResolverRegistry {
     }
 
     public <SW extends SubstitutedWidget> void addPeerIndependent(
-            @Nullable Class<? extends PeerRequest<?>> requestType,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
-        if (requestType != null)
-            validateRequestType(requestType);
+        validateSubstitutedWidgetType(widgetType);
+        Objects.requireNonNull(f);
+        peerIndependentEntries.add(new PeerIndependentEntry<>(null, widgetType, f));
+    }
+
+    public <SW extends SubstitutedWidget> void addPeerIndependentWithFilter(
+            @NonNull Class<? extends PeerRequest<?>> requestType,
+            @NonNull Class<SW> widgetType,
+            @NonNull Function<@NonNull SW, Widget> f) {
+        validateRequestType(requestType);
         validateSubstitutedWidgetType(widgetType);
         Objects.requireNonNull(f);
         peerIndependentEntries.add(new PeerIndependentEntry<>(requestType, widgetType, f));

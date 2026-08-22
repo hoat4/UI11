@@ -65,7 +65,7 @@ public abstract class SubstitutedWidget extends Widget {
      * instead it will be called by the {@linkplain WidgetTree widget tree refresher} as any other widget.
      * <p>
      * If no peer could be created for a request, then it will be
-     * forwarded to a {@linkplain ResolverRegistry#addPeerIndependent(Class, Class, Function) peer independent resolver}.
+     * forwarded to a {@linkplain ResolverRegistry#addPeerIndependentWithFilter(Class, Class, Function) peer independent resolver}.
      */
     @Override
     protected final Widget build() {

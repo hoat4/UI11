@@ -18,9 +18,9 @@ import java.util.Set;
 public class DefaultLayoutProvider implements ResolverProvider {
     @Override
     public void configure(ResolverRegistry r) {
-        r.addPeerIndependent(null, Align.class, DefaultAlignImpl::new);
-        r.addPeerIndependent(null, Box.class, DefaultBoxImpl::new);
-        r.addPeerIndependent(null, Padding.class, DefaultPaddingImpl::new);
+        r.addPeerIndependent(Align.class, DefaultAlignImpl::new);
+        r.addPeerIndependent(Box.class, DefaultBoxImpl::new);
+        r.addPeerIndependent(Padding.class, DefaultPaddingImpl::new);
         r.addPeerDependent(Surface.class, LinearLayout.class, DefaultLinearLayoutImpl.Arranger::new);
         r.addPeerDependent(Surface.class, SingleChildLayout.class, DefaultSingleChildLayoutImpl.Arranger::new);
         r.addPeerDependent(SizeRequest.class, Gone.class, (gone, sizeRequest) ->

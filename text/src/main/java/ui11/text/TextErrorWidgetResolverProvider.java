@@ -8,7 +8,7 @@ public class TextErrorWidgetResolverProvider implements ResolverProvider {
 
     @Override
     public void configure(ResolverRegistry r) {
-        r.addPeerIndependent(null, ErrorWidget.class, errorWidget -> {
+        r.addPeerIndependent(ErrorWidget.class, errorWidget -> {
             Throwable throwable = errorWidget.throwable();
             // TODO kéne detektálni, ha ennek a delegatecreationje se sikerül
             return withLineWrapping(new Text(throwable.toString()));
