@@ -18,3 +18,4 @@ jobs:
           java-version: 21
           target-folder: javadoc
           javadoc-source-folder: ui-base/build/docs/javadoc
+          project: gradle
