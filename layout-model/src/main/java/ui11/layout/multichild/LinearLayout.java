@@ -57,7 +57,8 @@ public final class LinearLayout extends SubstitutedWidget {
     /**
      * @param items ebben nullok helyett {@link Gone Gone-ok} szerepeljenek
      */
-    private LinearLayout(@NonNull Axis mainAxis, @NonNull List<? extends Widget> items,
+    private LinearLayout(@NonNull Axis mainAxis,
+                         @NonNull List<? extends @NonNull Widget> items,
                          @NonNull Length gap,
                          @NonNull JustifyContent mainAxisAlignment,
                          @NonNull AlignChildren crossAxisAlignment) {
@@ -353,6 +354,11 @@ public final class LinearLayout extends SubstitutedWidget {
                 Insets.all(padAndGap),
                 withGap(padAndGap)
         );
+    }
+
+    public @NonNull LinearLayout withItems(@NonNull List<? extends @Nullable Widget> items) {
+        Objects.requireNonNull(gap, "gap size");
+        return new LinearLayout(mainAxis, Gone.replaceNullsWithGone(items), gap, mainAxisAlignment, crossAxisAlignment);
     }
 
     /**

@@ -145,7 +145,7 @@ public class AWTWindow {
     }
 
     private void redraw() {
-        if (false) {
+        if (true) {
             System.out.println();
             System.out.println("Render tree: ");
             System.out.print(RenderTreePrinter.toString(rootNodeHolder.get().renderNode()));

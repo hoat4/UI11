@@ -1,0 +1,5 @@
+dependencies {
+    api project(":layout-model")
+
+    testImplementation project(":platform-awt")
+}

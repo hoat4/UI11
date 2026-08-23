@@ -92,17 +92,17 @@ public abstract class PeerRequest<P> {
 
     // azért nem ofMultiple, mert az arra utalna, hogy több req is van, nem csak több widget
     @NullMarked
-    public static <P> PeerRequestor requestOnMultipleWidgets(List<? extends Widget> widgets,
-                                                             PeerRequest<P> request,
-                                                             Function<List<P>, Widget> then) {
+    public static <P> Widget requestOnMultipleWidgets(List<? extends Widget> widgets,
+                                                      PeerRequest<P> request,
+                                                      Function<List<P>, Widget> then) {
         widgets = List.copyOf(widgets);
         return new PeerRequestor.CreatePeersForList<>(widgets, Collections.nCopies(widgets.size(), request), then);
     }
 
     @NullMarked
-    public static <K, P> PeerRequestor requestOnMultipleWidgets(Map<K, ? extends Widget> widgets,
-                                                                PeerRequest<P> request,
-                                                                Function<Map<K, P>, Widget> then) {
+    public static <K, P> Widget requestOnMultipleWidgets(Map<K, ? extends Widget> widgets,
+                                                         PeerRequest<P> request,
+                                                         Function<Map<K, P>, Widget> then) {
         // most ez a Map.copyOf NPE-t akkor is, ha K-k között van egy null.
         // ha mégis kell null K, akkor kézzel kell ellenőrizni
         // (de akkor ofMultiple-t is módosítsuk eszerint)
@@ -167,9 +167,9 @@ public abstract class PeerRequest<P> {
     }
 
     @NullMarked
-    public static <K> PeerRequestor requestMultiple(Map<K, ? extends Widget> widgets,
-                                                    Map<K, Set<PeerRequest<?>>> requests,
-                                                    Function<Map<PeerRequest<?>, Map<K, ?>>, Widget> then) {
+    public static <K> Widget requestMultiple(Map<K, ? extends Widget> widgets,
+                                             Map<K, Set<PeerRequest<?>>> requests,
+                                             Function<Map<PeerRequest<?>, Map<K, ?>>, Widget> then) {
         // most ez a Map.copyOf NPE-t akkor is, ha K-k között van egy null.
         // ha mégis kell null K, akkor kézzel kell ellenőrizni
         // (de akkor ofMultiple-t is módosítsuk eszerint)

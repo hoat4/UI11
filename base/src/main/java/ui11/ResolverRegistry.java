@@ -16,8 +16,9 @@ import java.util.stream.Stream;
 
 public final class ResolverRegistry {
 
-    private final List<PeerIndependentEntry<?>> peerIndependentEntries = new ArrayList<>();
-    private final List<PeerDependentEntry<?, ?>> peerDependentEntries = new ArrayList<>();
+    private final List<Transformer<?>> transformers = new ArrayList<>();
+    private final List<PeerIndependentResolver<?>> peerIndependentResolvers = new ArrayList<>();
+    private final List<PeerDependentResolver<?, ?>> peerDependentResolvers = new ArrayList<>();
 
     ResolverRegistry() {
     }
@@ -27,7 +28,7 @@ public final class ResolverRegistry {
             @NonNull Function<@NonNull SW, Widget> f) {
         validateSubstitutedWidgetType(widgetType);
         Objects.requireNonNull(f);
-        peerIndependentEntries.add(new PeerIndependentEntry<>(null, widgetType, f));
+        peerIndependentResolvers.add(new PeerIndependentResolver<>(null, widgetType, f));
     }
 
     public <SW extends SubstitutedWidget> void addPeerIndependentWithFilter(
@@ -37,7 +38,7 @@ public final class ResolverRegistry {
         validateRequestType(requestType);
         validateSubstitutedWidgetType(widgetType);
         Objects.requireNonNull(f);
-        peerIndependentEntries.add(new PeerIndependentEntry<>(requestType, widgetType, f));
+        peerIndependentResolvers.add(new PeerIndependentResolver<>(requestType, widgetType, f));
     }
 
     public <SW extends SubstitutedWidget, REQ extends PeerRequest<?>> void addPeerDependent(
@@ -47,7 +48,7 @@ public final class ResolverRegistry {
         validateRequestType(requestType);
         validateSubstitutedWidgetType(widgetType);
         Objects.requireNonNull(f);
-        peerDependentEntries.add(new PeerDependentEntry<>(requestType, widgetType, f));
+        peerDependentResolvers.add(new PeerDependentResolver<>(requestType, widgetType, f));
     }
 
     public <REQ extends PeerRequest<?>> void addPeerDependent(
@@ -69,6 +70,14 @@ public final class ResolverRegistry {
         }
     }
 
+    public <SW extends SubstitutedWidget> void addTransformer(
+            @NonNull Class<SW> widgetType,
+            @NonNull BiFunction<@NonNull SW, @NonNull PeerRequest<Widget>, @NonNull Widget> f) {
+        validateSubstitutedWidgetType(widgetType);
+        Objects.requireNonNull(f);
+        transformers.add(new Transformer<>(widgetType, f));
+    }
+
     private static void validateRequestType(Class<? extends PeerRequest<?>> requestType) {
         Objects.requireNonNull(requestType);
         requestType.asSubclass(PeerRequest.class);
@@ -88,7 +97,7 @@ public final class ResolverRegistry {
             SubstitutedWidget w,
             PeerRequest<?> req,
             Consumer<BiFunction<? extends SubstitutedWidget, ? extends PeerRequest<?>, Widget>> consumer) {
-        for (PeerDependentEntry<?, ?> e : peerDependentEntries) {
+        for (PeerDependentResolver<?, ?> e : peerDependentResolvers) {
             if (!e.widgetType.isInstance(w))
                 continue;
             if (!e.requestType.isInstance(req))
@@ -101,7 +110,7 @@ public final class ResolverRegistry {
             SubstitutedWidget w,
             Set<? extends PeerRequest<?>> reqs,
             BiConsumer<Object /* key */, Function<? extends SubstitutedWidget, Widget>> consumer) {
-        for (PeerIndependentEntry<?> e : peerIndependentEntries) {
+        for (PeerIndependentResolver<?> e : peerIndependentResolvers) {
             if (!e.widgetType.isInstance(w))
                 continue;
             if (e.requestType != null && reqs.stream().noneMatch(e.requestType::isInstance))
@@ -110,29 +119,39 @@ public final class ResolverRegistry {
         }
     }
 
-    Stream<Entry> all() {
-        return Stream.concat(peerDependentEntries.stream(), peerIndependentEntries.stream());
+    List<Transformer<?>> findTransformers(SubstitutedWidget w) {
+        List<Transformer<?>> l = new ArrayList<>();
+        for (Transformer<?> e : transformers) {
+            if (!e.widgetType.isInstance(w))
+                continue;
+            l.add(e);
+        }
+        return l;
     }
 
-    static sealed abstract class Entry {
+    Stream<Resolver> all() {
+        return Stream.concat(peerDependentResolvers.stream(), peerIndependentResolvers.stream());
+    }
+
+    static sealed abstract class Resolver {
 
         final Class<? extends PeerRequest<?>> requestType; // csak peer independent esetén nullable
         final @NonNull Class<? extends SubstitutedWidget> widgetType;
 
-        public Entry(Class<? extends PeerRequest<?>> requestType,
-                     @NonNull Class<? extends SubstitutedWidget> widgetType) {
+        public Resolver(Class<? extends PeerRequest<?>> requestType,
+                        @NonNull Class<? extends SubstitutedWidget> widgetType) {
             this.requestType = requestType;
             this.widgetType = widgetType;
         }
     }
 
-    static final class PeerIndependentEntry<SW extends SubstitutedWidget> extends Entry {
+    static final class PeerIndependentResolver<SW extends SubstitutedWidget> extends Resolver {
 
         private final Function<SW, Widget> f;
 
-        public PeerIndependentEntry(@Nullable Class<? extends PeerRequest<?>> requestType,
-                                    @NonNull Class<SW> widgetType,
-                                    @NonNull Function<@NonNull SW, @NonNull Widget> f) {
+        public PeerIndependentResolver(@Nullable Class<? extends PeerRequest<?>> requestType,
+                                       @NonNull Class<SW> widgetType,
+                                       @NonNull Function<@NonNull SW, @NonNull Widget> f) {
             super(requestType, widgetType);
             this.f = f;
         }
@@ -145,13 +164,13 @@ public final class ResolverRegistry {
         }
     }
 
-    static final class PeerDependentEntry<SW extends SubstitutedWidget, REQ extends PeerRequest<?>> extends Entry {
+    static final class PeerDependentResolver<SW extends SubstitutedWidget, REQ extends PeerRequest<?>> extends Resolver {
 
         private final BiFunction<SW, REQ, Widget> f;
 
-        public PeerDependentEntry(@NonNull Class<REQ> requestType,
-                                  @NonNull Class<SW> widgetType,
-                                  @NonNull BiFunction<@NonNull SW, @NonNull REQ, @NonNull Widget> f) {
+        public PeerDependentResolver(@NonNull Class<REQ> requestType,
+                                     @NonNull Class<SW> widgetType,
+                                     @NonNull BiFunction<@NonNull SW, @NonNull REQ, @NonNull Widget> f) {
             super(requestType, widgetType);
             this.f = f;
         }
@@ -164,4 +183,29 @@ public final class ResolverRegistry {
         }
     }
 
+    static final class Transformer<SW extends SubstitutedWidget> {
+
+        final @NonNull Class<? extends SubstitutedWidget> widgetType;
+        final @NonNull BiFunction<@NonNull SW, @NonNull PeerRequest<Widget>, @NonNull Widget> f;
+
+        Transformer(@NonNull Class<? extends SubstitutedWidget> widgetType,
+                    @NonNull BiFunction<@NonNull SW, @NonNull PeerRequest<Widget>, @NonNull Widget> f) {
+            this.widgetType = widgetType;
+            this.f = f;
+        }
+
+        @Override
+        public String toString() {
+            return "Transformer for " + ReflectionUtil.simpleName(widgetType) + ": " + f;
+        }
+    }
+
+    static final class TransformerResultRequest extends PeerRequest<Widget> {
+
+        static final TransformerResultRequest INSTANCE = new TransformerResultRequest();
+
+        private TransformerResultRequest() {
+            super(Widget.class);
+        }
+    }
 }
