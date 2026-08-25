@@ -13,6 +13,9 @@ public class FlattenLLTest {
         Window.open(column(new RedRect(), column(new GreenRect(), new BlueRect())));
     }
 
+    // TODO this test actually can't be run without the optimization, see comment above NestedLinearLayouts2Test
+    //      for details
+
     // azért külön osztályok, mert debuggerben így olvashatóbb, mint hogy csak annyi lenne kiírva hogy ColorFill
     static class RedRect extends Widget {
 
