@@ -10,13 +10,13 @@ import ui11.platform.awt.j2d.rendertree.OpacityRenderNode;
 public class J2DOpacityPeer extends Widget {
 
     private final Opacity opacity;
-    private final J2DSurface surface;
+
+    @Inject private J2DSurface surface;
 
     @Remember private OpacityRenderNode opacityRenderNode;
 
-    public J2DOpacityPeer(Opacity opacity, J2DSurface surface) {
+    public J2DOpacityPeer(Opacity opacity) {
         this.opacity = opacity;
-        this.surface = surface;
     }
 
     @Override
@@ -29,10 +29,10 @@ public class J2DOpacityPeer extends Widget {
         return PeerRequest.requestSingle(opacity.content(), surface, result -> {
             opacityRenderNode.opacity.set(opacity.opacity());
             opacityRenderNode.content.set(result.renderNode());
-            return surface.createResponse(new J2DNodeHolder(
+            return new J2DNodeHolder(
                     opacityRenderNode,
                     result.inputNode()
-            ));
+            );
         });
     }
 }

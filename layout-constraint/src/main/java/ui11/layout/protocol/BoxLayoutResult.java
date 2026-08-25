@@ -2,20 +2,31 @@ package ui11.layout.protocol;
 
 import org.jspecify.annotations.NonNull;
 import ui11.PeerRequest;
+import ui11.SubstitutedWidget;
 import ui11.geom.Size;
 
+import java.util.Map;
 import java.util.Objects;
 
-public sealed interface BoxLayoutResult {
+public sealed abstract class BoxLayoutResult extends SubstitutedWidget {
 
-    record OfChosenSize(@NonNull Size size) implements BoxLayoutResult {
+    public static final class OfChosenSize extends BoxLayoutResult {
 
-        public OfChosenSize {
-            Objects.requireNonNull(size);
+        public final BoxConstraints inputConstraints;
+        public final Size size;
+
+        public OfChosenSize(@NonNull BoxConstraints inputConstraints, @NonNull Size size) {
+            this.inputConstraints = Objects.requireNonNull(inputConstraints);
+            this.size = Objects.requireNonNull(size);
         }
     }
 
-    record OfGone() implements BoxLayoutResult {
+    public static final class OfGone extends BoxLayoutResult {
+
+        public static final OfGone INSTANCE = new OfGone();
+
+        private OfGone() {
+        }
     }
 
     public static class SizeRequest extends PeerRequest<BoxLayoutResult> {

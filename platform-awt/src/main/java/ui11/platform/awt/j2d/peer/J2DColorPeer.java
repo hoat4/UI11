@@ -16,14 +16,14 @@ import java.awt.geom.Path2D;
 public class J2DColorPeer extends Widget {
 
     private final ColorFill colorFill;
-    private final J2DSurface surface;
+
+    @Inject private J2DSurface surface;
 
     @Remember private FillPathRenderNode node;
     @Remember private OpaqueInputNode inputNode;
 
-    public J2DColorPeer(ColorFill colorFill, J2DSurface surface) {
+    public J2DColorPeer(ColorFill colorFill) {
         this.colorFill = colorFill;
-        this.surface = surface;
     }
 
     @Override
@@ -37,18 +37,18 @@ public class J2DColorPeer extends Widget {
         Shape shape = surface.shape();
 
         if (shape == J2DSurface.INFINITE_SHAPE)
-            return surface.createResponse(new J2DNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
+            return new J2DNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE);
 
         // TODO ezt observeli J2DGroupPeer isOpaque miatt, és valamiért invalidálni próbálja J2DGroupPeert ez,
         //      ezért exception lesz itt (pl. ButtonTest)
         inputNode.shape.set(shape);
 
         if (colorFill.color().equals(ui11.color.Color.TRANSPARENT))
-            return surface.createResponse(new J2DNodeHolder(EmptyRenderNode.INSTANCE, inputNode));
+            return new J2DNodeHolder(EmptyRenderNode.INSTANCE, inputNode);
 
         Color awtColor = J2DUtil.color(colorFill.color());
         node.paint.set(awtColor);
         node.shape.set(shape);
-        return surface.createResponse(new J2DNodeHolder(node, inputNode));
+        return new J2DNodeHolder(node, inputNode);
     }
 }

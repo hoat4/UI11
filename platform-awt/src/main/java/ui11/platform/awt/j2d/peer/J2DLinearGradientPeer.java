@@ -19,16 +19,15 @@ import java.awt.*;
 public class J2DLinearGradientPeer extends Widget {
 
     private final LinearGradient gradient;
-    private final J2DSurface surface;
 
+    @Inject private J2DSurface surface;
     @Inject private TextStyle textStyle;
 
     @Remember private FillPathRenderNode node;
     @Remember private OpaqueInputNode inputNode;
 
-    public J2DLinearGradientPeer(LinearGradient gradient, J2DSurface surface) {
+    public J2DLinearGradientPeer(LinearGradient gradient) {
         this.gradient = gradient;
-        this.surface = surface;
     }
 
     @Override
@@ -41,7 +40,7 @@ public class J2DLinearGradientPeer extends Widget {
     protected Widget build() {
         Shape shape = surface.shape();
         if (shape == J2DSurface.INFINITE_SHAPE)
-            return surface.createResponse(new J2DNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
+            return new J2DNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE);
 
         float[] fractions = new float[gradient.stops().size()];
         Color[] colors = new Color[gradient.stops().size()];
@@ -81,6 +80,6 @@ public class J2DLinearGradientPeer extends Widget {
         node.shape.set(shape);
         inputNode.shape.set(shape);
 
-        return surface.createResponse(new J2DNodeHolder(node, inputNode));
+        return new J2DNodeHolder(node, inputNode);
     }
 }

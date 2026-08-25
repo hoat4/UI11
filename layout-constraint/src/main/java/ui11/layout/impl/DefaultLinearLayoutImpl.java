@@ -24,9 +24,12 @@ import static ui11.graphics.effect.Overlay.overlay;
 import static ui11.layout.multichild.LinearLayout.expanded;
 import static ui11.layout.multichild.LinearLayout.withWeight;
 
-public abstract class DefaultLinearLayoutImpl extends Widget {
+public class DefaultLinearLayoutImpl extends Widget {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultLinearLayoutImpl.class);
+
+    @Inject private BoxLayoutResult.SizeRequest sizeRequest;
+    @Inject private Surface surface;
 
     protected final LinearLayout linearLayout;
 
@@ -159,7 +162,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                     placeables[i] = widget;
                     weights[i] = weight;
                     if (weight == 0 || !canFlex) {
-                        Size size = r.size();
+                        Size size = r.size;
 
                         double mainLen = size.length(mainAxis);
                         mainLen = Math.ceil(mainLen); // snap to pixel
@@ -230,7 +233,7 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
                                 // 0x0-nak tekintjük, ezért nem kell height-ot változtatni
                             }
                             case BoxLayoutResult.OfChosenSize r -> {
-                                height2 = Math.max(height2, r.size().length(crossAxis));
+                                height2 = Math.max(height2, r.size.length(crossAxis));
                             }
                         }
                     }
@@ -243,13 +246,17 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
         }
     }
 
-    protected abstract Widget layoutPhase3(int itemCount, Widget[] placeables, double[] widths, double height, double containerWidth);
+    private Widget layoutPhase3(int itemCount, Widget[] placeables, double[] widths, double height, double containerWidth) {
+        throw new RuntimeException("TODO");
+    }
 
-    protected abstract BoxConstraints containerConstraints();
+    private BoxConstraints containerConstraints() {
+        throw new RuntimeException("TODO");
+    }
 
+    /*
     static class Sizer extends DefaultLinearLayoutImpl {
 
-        private final BoxLayoutResult.SizeRequest sizeRequest;
 
         public Sizer(LinearLayout linearLayout, BoxLayoutResult.SizeRequest sizeRequest) {
             super(linearLayout);
@@ -272,7 +279,6 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
 
     static class Arranger extends DefaultLinearLayoutImpl {
 
-        private final Surface surface;
 
         public Arranger(LinearLayout linearLayout, Surface surface) {
             super(linearLayout);
@@ -299,4 +305,5 @@ public abstract class DefaultLinearLayoutImpl extends Widget {
             });
         }
     }
+     */
 }

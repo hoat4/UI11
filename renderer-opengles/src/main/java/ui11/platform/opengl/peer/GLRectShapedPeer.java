@@ -12,13 +12,13 @@ import ui11.platform.opengl.Shape2D;
 public class GLRectShapedPeer extends Widget {
 
     private final RectangleShaped rectShaped;
-    private final GLSurface parentSurface;
+
+    @Inject private GLSurface parentSurface;
 
     @Remember private ClippedSurface childSurface;
 
-    public GLRectShapedPeer(RectangleShaped pathShaped, GLSurface surface) {
+    public GLRectShapedPeer(RectangleShaped pathShaped) {
         this.rectShaped = pathShaped;
-        this.parentSurface = surface;
     }
 
     @Override
@@ -31,6 +31,6 @@ public class GLRectShapedPeer extends Widget {
         Size size = rectShaped.shape();
         childSurface.parent.set(parentSurface);
         childSurface.updateShape(new Shape2D.RectShape(Rect.of(size)), size, parentSurface.renderNodeTranslation());
-        return PeerRequest.requestSingle(rectShaped.content(), childSurface, parentSurface::createResponse);
+        return PeerRequest.requestSingle(rectShaped.content(), childSurface, w -> w);
     }
 }

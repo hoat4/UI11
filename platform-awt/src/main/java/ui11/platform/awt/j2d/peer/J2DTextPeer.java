@@ -1,6 +1,7 @@
 package ui11.platform.awt.j2d.peer;
 
 import org.jspecify.annotations.NonNull;
+import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.geom.Size;
@@ -14,14 +15,16 @@ import ui11.text.Text;
 import ui11.text.TextStyle;
 
 import java.awt.*;
+import java.util.List;
+import java.util.ArrayList;
 
 public class J2DTextPeer extends Widget {
 
     private static final Canvas C = new Canvas(); // font metricshez
 
     private final Text text;
-    private final J2DSurface surface;
 
+    @Inject private J2DSurface surface;
     @Inject private TextStyle textStyle;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
 
@@ -33,9 +36,8 @@ public class J2DTextPeer extends Widget {
     @Remember private Color prevColor;
     @Remember private Font prevFont;
 
-    public J2DTextPeer(Text text, J2DSurface surface) {
+    public J2DTextPeer(Text text) {
         this.text = text;
-        this.surface = surface;
     }
 
     @Override
@@ -71,24 +73,17 @@ public class J2DTextPeer extends Widget {
 
         inputNode.shape.set(new Rectangle(w, h));
 
-        Widget result;
-        if (surface == null)
-            result = null;
-        else
-            result = surface.createResponse(new J2DNodeHolder(
-                    node,
-                    inputNode
-            ));
+        List<Widget> results = new ArrayList<>();
+
+        if (surface != null)
+            results.add(new J2DNodeHolder(node, inputNode));
 
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             Size size = sizeRequest.constraints().clamp(new Size(w, h));
-            if (result == null)
-                result = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(size));
-            else
-                result = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(size), result);
+            results.add(new BoxLayoutResult.OfChosenSize(sizeRequest.constraints(), size));
         }
 
-        return result;
+        return PeerRequest.combineResults(results);
     }
 
     static @NonNull Font awtFont(TextStyle ts) {

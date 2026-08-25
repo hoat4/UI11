@@ -202,4 +202,12 @@ public abstract class PeerRequest<P> {
                     );
                 });
     }
+
+    public static Widget combineResults(Widget... widgets) {
+        throw new RuntimeException("TODO");
+    }
+
+    public static Widget combineResults(List<? extends Widget> widgets) {
+        throw new RuntimeException("TODO");
+    }
 }

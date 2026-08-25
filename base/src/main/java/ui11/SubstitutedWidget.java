@@ -7,7 +7,9 @@ import ui11.reflectutil.ReflectionUtil;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 
 // időnként felmerül, hogy ezt jó lenne külön package-be vinni, ResolverProvider és ResolverRegistry mellé.
@@ -63,15 +65,13 @@ public abstract class SubstitutedWidget extends Widget {
      * Asks the available {@linkplain ResolverProvider resolvers} to create a peer for each
      * {@linkplain PeerRequest request}. This method is not intended to be called by an application,
      * instead it will be called by the {@linkplain WidgetTree widget tree refresher} as any other widget.
-     * <p>
-     * If no peer could be created for a request, then it will be
-     * forwarded to a {@linkplain ResolverRegistry#addPeerIndependentWithFilter(Class, Class, Function) peer independent resolver}.
      */
     @Override
     protected final Widget build() {
         SubstitutedWidget thiz = forSubstitution();
         Objects.requireNonNull(thiz, "SW.cFS");
 
+    /*
         ResolverRegistry resolverRegistry = widgetState().tree.resolverRegistry;
         List<ResolverRegistry.Transformer<?>> transformers = resolverRegistry.findTransformers(thiz);
 
@@ -107,120 +107,46 @@ public abstract class SubstitutedWidget extends Widget {
                 apply(thiz, ResolverRegistry.TransformerResultRequest.INSTANCE);
     }
 
+
     private Widget doResolution(SubstitutedWidget thiz) {
+     */
+
         Set<? extends ResolutionRequest<?>> allRemainingRequests = new LinkedHashSet<>(peerCreationRequestCollection.requests());
-
-        Map<ResolverWidgetKey, Widget> childrenWidgets = new HashMap<>();
-        Map<ResolverWidgetKey, Map<PeerRequest<?>, ResolutionRequest<?>>> childrenReqs = new HashMap<>();
-
-        ResolverRegistry resolverRegistry = widgetState().tree.resolverRegistry;
-
-        // peer-specifikus resolvereket előbbre vesszük, mint a nem peer-specifikusakat,
-        // mert ha peer-specifikusakkal ki elégíteni, akkor lehet hogy a nem peer-specifikus nem is kell
-        Set<ResolutionRequest<?>> handledUsingPeerSpecificResolvers = new HashSet<>();
-        for (ResolutionRequest<?> req : allRemainingRequests) {
-            resolverRegistry.findPeerDependentResolvers(thiz, req.requestData, f -> {
-                if (!handledUsingPeerSpecificResolvers.add(req))
-                    throw new RuntimeException("Multiple resolvers has applicable " +
-                            "tryResolveRequestSpecific for " + thiz + " and " + req + ": " + resolverRegistry);
-
-                @SuppressWarnings("unchecked") BiFunction<SubstitutedWidget, PeerRequest<?>, Widget> castedF =
-                        (BiFunction<SubstitutedWidget, PeerRequest<?>, Widget>) f;
-                Widget w = castedF.apply(thiz, req.requestData); // TODO exceptionök
-                if (w == null)
-                    throw new NullPointerException(f + " returned null"); // TODO értelmesebb hibaüzenet
-
-                ResolverWidgetKey.OfPeerSpecificResolver key =
-                        new ResolverWidgetKey.OfPeerSpecificResolver(req.requestData);
-                Object prev = childrenWidgets.putIfAbsent(key, w);
-                assert prev == null;
-                childrenReqs.put(key, Map.of(req.requestData, req));
-            });
-        }
-
-        Set<ResolutionRequest<?>> remainedAfterPeerSpecificResolvers =
-                new HashSet<>(allRemainingRequests);
-        remainedAfterPeerSpecificResolvers.removeAll(handledUsingPeerSpecificResolvers);
-
-        // amelyiknek van default értéke, azt ne adjuk tovább generic resolvereknek.
-        // mert ebből az lenne, hogy pl. WeightRequest miatt elkezdené a natív control helyett felépíteni
-        // az emuláltat.
-        int[] removedBecauseDefaultValue = {0};
-        remainedAfterPeerSpecificResolvers.removeIf(req -> {
-            Object defaultValue;
-            if ((defaultValue = req.requestData.defaultValue()) != null) {
-                req.setResult(defaultValue);
-                removedBecauseDefaultValue[0]++;
+        allRemainingRequests.removeIf(req -> {
+            if (req.requestData.peerType().isInstance(thiz)) {
+                req.setResult(thiz);
                 return true;
             } else
                 return false;
         });
 
-        Map<PeerRequest<?>, ResolutionRequest<?>> remainingForGeneric =
-                remainedAfterPeerSpecificResolvers.stream().
-                        collect(toMap(r -> r.requestData, r -> r));
-
-        boolean[] foundGenericResolver = {false};
-
-        // tryResolveGeneric-eket akkor is végrehajtjuk, ha minden req-t lefednek a peer-specifikusok, hogy
-        // multiple resolvers applicable hibák kijöjjenek
-        resolverRegistry.findPeerIndependentResolvers(thiz, remainingForGeneric.keySet(), (keyO, f) -> {
-            if (foundGenericResolver[0])
-                // TODO ezt már ResolverRegistrynek kéne detektálnia
-                throw new RuntimeException("Multiple resolvers has applicable tryResolveGeneric for " +
-                        thiz + ": " + resolverRegistry);
-            foundGenericResolver[0] = true;
-
-            @SuppressWarnings("unchecked") Function<SubstitutedWidget, Widget> castedF = (Function<SubstitutedWidget, Widget>) f;
-            Widget w = castedF.apply(thiz); // TODO exceptionök
-            if (w == null)
-                throw new NullPointerException(f + " returned null"); // TODO értelmesebb hibaüzenet
-
-            if (!remainingForGeneric.isEmpty()) {
-                ResolverWidgetKey.OfGenericResolver key = new ResolverWidgetKey.OfGenericResolver(keyO);
-                childrenWidgets.put(key, w);
-                childrenReqs.put(key, remainingForGeneric);
-            }
-        });
-
-        if (allRemainingRequests.size() != handledUsingPeerSpecificResolvers.size() + removedBecauseDefaultValue[0]) {
-            // van olyan req, amit a peer-specifikusok nem fednek le
-            if (!foundGenericResolver[0]) {
-                Widget w = thiz.fallbackContent(); // TODO exceptionök
-                if (w != null) {
-                    ResolverWidgetKey.OfFallback key = new ResolverWidgetKey.OfFallback();
-                    childrenWidgets.put(key, w);
-                    childrenReqs.put(key, remainingForGeneric);
-                } else {
-                    throw cantFindResolver(remainedAfterPeerSpecificResolvers, thiz);
-                }
-            }
+        if (allRemainingRequests.isEmpty()) { // ha nem tűnt el az összes, akkor mi legyen?
+            return new WidgetTree.ChainEnd();
         }
 
-        Map<ResolverWidgetKey, Set<PeerRequest<?>>> childrenReqs2 =
-                childrenReqs.entrySet().stream().collect(toMap(Map.Entry::getKey,
-                        e -> e.getValue().keySet()));
-        return PeerRequest.requestMultiple(childrenWidgets, childrenReqs2, results -> {
-            results.forEach((req, resultsByKey) -> {
-                resultsByKey.forEach((key, result) -> {
-                    ResolutionRequest<?> parentResolutionRequest = childrenReqs.get(key).get(req);
-                    assert parentResolutionRequest != null;
-                    parentResolutionRequest.setResult(result);
-                });
-            });
-            return new WidgetTree.ChainEnd();
-        });
+        ResolverRegistry resolverRegistry = widgetState().tree.resolverRegistry;
+        List<ResolverRegistry.Resolver<?>> filteredResolvers = resolverRegistry.findResolvers(thiz, allRemainingRequests);
+
+        if (filteredResolvers.size() > 1)
+            throw new RuntimeException("Multiple resolvers available for widget " + thiz.getClass().getName() + ":\n- " +
+                    filteredResolvers.stream().map(ResolverRegistry.Resolver::toString).collect(joining("\n- ")));
+
+        if (filteredResolvers.isEmpty())
+            throw cantFindResolver(allRemainingRequests, thiz);
+
+        ResolverRegistry.Resolver<?> resolver = filteredResolvers.getFirst();
+        return resolver.invokeUnchecked(thiz);
     }
 
     private @NonNull RuntimeException cantFindResolver(
-            Set<ResolutionRequest<?>> remainingReqs, SubstitutedWidget thiz) {
+            Set<? extends ResolutionRequest<?>> remainingReqs, SubstitutedWidget thiz) {
         StringBuilder s = new StringBuilder();
         s.append("No resolver supports and fallbackContent is not overriden on ");
         s.append(thiz.toString());
         s.append(": ").append(remainingReqs).append("\n").append("Refresh stack:");
         s.append(widgetState().tree.refreshStackToString());
         s.append("\nAvailable resolvers: ");
-        widgetState().tree.resolverRegistry.all().forEach(entry -> {
+        widgetState().tree.resolverRegistry.debug_allResolvers().forEach(entry -> {
             s.append("\n- ").append(entry);
         });
         return new RuntimeException(s.toString());
