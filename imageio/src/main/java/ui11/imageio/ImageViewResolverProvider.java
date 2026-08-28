@@ -8,7 +8,7 @@ public class ImageViewResolverProvider implements ResolverProvider {
 
     @Override
     public void configure(ResolverRegistry r) {
-        r.addPeerIndependent(JPEGImageView.class,
+        r.add(JPEGImageView.class,
                 jpg -> new ImageViewImpl(jpg.source()));
     }
 }

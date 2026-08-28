@@ -8,15 +8,15 @@ import ui11.control.Button.ButtonState;
 public class DefaultControlLookProvider implements ResolverProvider {
     @Override
     public void configure(ResolverRegistry r) {
-        r.addPeerIndependent(Button.class, DefaultButtonBehavior::new);
-        r.addPeerIndependent(ButtonState.class, DefaultButtonLook::new);
-        r.addPeerIndependent(CheckBox.class, DefaultCheckBoxImpl::new);
-        r.addPeerIndependent(ComboBox.class, DefaultComboBoxLook::new);
-        r.addPeerIndependent(PlainTextEditor.class, DefaultPlainTextEditorImpl::new);
-        r.addPeerIndependent(Hyperlink.class, DefaultHyperlinkPeer::new);
-        r.addPeerIndependent(Slider.class, DefaultSliderLook::new);
-        r.addPeerIndependent(TabbedPane.class, DefaultTabbedPaneLook::new);
-        r.addPeerIndependent(Table.class, DefaultTableImpl::new);
-        r.addPeerIndependent(TextField.class, DefaultTextFieldImpl::new);
+        r.add(Button.class, DefaultButtonBehavior::new);
+        r.add(ButtonState.class, DefaultButtonLook::new);
+        r.add(CheckBox.class, DefaultCheckBoxImpl::new);
+        r.add(ComboBox.class, DefaultComboBoxLook::new);
+        r.add(PlainTextEditor.class, DefaultPlainTextEditorImpl::new);
+        r.add(Hyperlink.class, DefaultHyperlinkPeer::new);
+        r.add(Slider.class, DefaultSliderLook::new);
+        r.add(TabbedPane.class, DefaultTabbedPaneLook::new);
+        r.add(Table.class, DefaultTableImpl::new);
+        r.add(TextField.class, DefaultTextFieldImpl::new);
     }
 }

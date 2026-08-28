@@ -14,6 +14,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * Can be used to control the process of lowering the {@linkplain SubstitutedWidget SubstitutedWidgets} to
+ * more concrete widgets.
+ */
 public final class ResolverRegistry {
 
     private final List<Transformer<?>> transformers = new ArrayList<>();
@@ -23,7 +27,13 @@ public final class ResolverRegistry {
     ResolverRegistry() {
     }
 
-    public <SW extends SubstitutedWidget> void addPeerIndependent(
+    /**
+     * Adds a new resolver to this resolver registry.
+     * It will be applicable if the widget is an instance of the specified type or its subtypes.
+     * The widget will be passed to the function, and the widget returned from the function will replace
+     * the original widget.
+     */
+    public <SW extends SubstitutedWidget> void add(
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
         validateSubstitutedWidgetType(widgetType);
