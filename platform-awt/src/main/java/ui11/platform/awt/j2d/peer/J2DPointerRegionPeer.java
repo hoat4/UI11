@@ -10,13 +10,13 @@ import ui11.platform.awt.j2d.inputtree.ListenerInputNode;
 public class J2DPointerRegionPeer extends Widget {
 
     private final PointerRegion pointerRegion;
-
-    @Inject private J2DSurface surface;
+    private final J2DSurface surface;
 
     @Remember private ListenerInputNode inputNode;
 
-    public J2DPointerRegionPeer(PointerRegion pointerRegion) {
+    public J2DPointerRegionPeer(PointerRegion pointerRegion, J2DSurface surface) {
         this.pointerRegion = pointerRegion;
+        this.surface = surface;
     }
 
     @Override
@@ -33,7 +33,8 @@ public class J2DPointerRegionPeer extends Widget {
         return PeerRequest.requestSingle(content, surface, result -> {
             inputNode.child.set(result.inputNode());
             inputNode.listener = pointerRegion;
-            return new J2DNodeHolder(result.renderNode(), inputNode);
+            J2DNodeHolder h = new J2DNodeHolder(result.renderNode(), inputNode);
+            return surface.createResponse(h);
         });
     }
 }

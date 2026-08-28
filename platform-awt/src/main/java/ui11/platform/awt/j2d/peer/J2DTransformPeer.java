@@ -24,15 +24,15 @@ import java.awt.geom.NoninvertibleTransformException;
 public class J2DTransformPeer extends Widget {
 
     private final Transform transform;
-
-    @Inject private J2DSurface parentSurface;
+    private final J2DSurface parentSurface;
 
     @Remember private TransformedSurface childSurface;
     @Remember private TransformRenderNode node;
     @Remember private TransformInputNode inputNode;
 
-    public J2DTransformPeer(Transform transform) {
+    public J2DTransformPeer(Transform transform, J2DSurface surface) {
         this.transform = transform;
+        this.parentSurface = surface;
     }
 
     @Override
@@ -55,14 +55,14 @@ public class J2DTransformPeer extends Widget {
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
         return PeerRequest.requestSingle(transform.content(), childSurface, result -> {
-            return new J2DNodeHolder(
+            return parentSurface.createResponse(new J2DNodeHolder(
                     nonDegenerateTransform ?
                             makeRenderNode(result.renderNode()) :
                             EmptyRenderNode.INSTANCE,
                     nonDegenerateTransform ?
                             makeInputNode(result.inputNode()) :
                             TransparentInputNode.INSTANCE
-            );
+            ));
         });
     }
 

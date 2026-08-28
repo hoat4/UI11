@@ -18,14 +18,15 @@ import java.awt.geom.Rectangle2D;
 public class J2DStrokePeer extends Widget {
 
     private final Stroke stroke;
+    private final J2DSurface parentSurface;
 
-    @Inject private J2DSurface parentSurface;
     @Inject private TextStyle textStyle;
 
     @Remember private StrokeSurface surface;
 
-    public J2DStrokePeer(Stroke stroke) {
+    public J2DStrokePeer(Stroke stroke, J2DSurface parentSurface) {
         this.stroke = stroke;
+        this.parentSurface = parentSurface;
     }
 
     @Override

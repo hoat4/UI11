@@ -79,7 +79,7 @@ public class DefaultBoxImpl extends Widget {
             return PeerRequest.requestSingle(box.content(), sizeReq, r -> {
                 Size childSize = switch (r) {
                     case BoxLayoutResult.OfGone _ -> Size.ZERO;
-                    case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size;
+                    case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size();
                 };
                 Size newContainerSize = childSize.add(allPadding);
                 return layoutPhase2(newContainerSize, box.content());
@@ -136,7 +136,7 @@ public class DefaultBoxImpl extends Widget {
 
         Widget w = canvas.build();
         if (sizeRequest != null)
-            w = PeerRequest.combineResults(w, new BoxLayoutResult.OfChosenSize(sizeRequest.constraints(), containerSize));
+            w = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(containerSize), w);
         return w;
     }
 

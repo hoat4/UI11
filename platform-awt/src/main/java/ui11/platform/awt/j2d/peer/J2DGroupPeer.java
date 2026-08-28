@@ -18,15 +18,15 @@ import java.util.List;
 public class J2DGroupPeer extends Widget {
 
     private final Overlay overlay;
-
-    @Inject private J2DSurface parentSurface;
+    private final J2DSurface parentSurface;
 
     @Remember private List<J2DSurface> childSurfaces;
     @Remember private GroupRenderNode groupNode;
     @Remember private GroupInputNode groupInputNode;
 
-    public J2DGroupPeer(Overlay overlay) {
+    public J2DGroupPeer(Overlay overlay, J2DSurface parentSurface) {
         this.overlay = overlay;
+        this.parentSurface = parentSurface;
     }
 
     @Override
@@ -68,7 +68,7 @@ public class J2DGroupPeer extends Widget {
             }
         }
 
-        return new J2DNodeHolder(
+        return parentSurface.createResponse(new J2DNodeHolder(
                 switch (childRenderNodes.size()) {
                     case 0 -> EmptyRenderNode.INSTANCE;
                     case 1 -> childRenderNodes.getFirst();
@@ -85,7 +85,7 @@ public class J2DGroupPeer extends Widget {
                         yield groupInputNode;
                     }
                 }
-        );
+        ));
     }
 
     private static boolean isOpaque(InputNode node, Shape shape) {

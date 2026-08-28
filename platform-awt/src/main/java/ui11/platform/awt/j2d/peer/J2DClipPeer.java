@@ -20,16 +20,16 @@ import java.awt.geom.Area;
 public class J2DClipPeer extends Widget {
 
     private final Clip clip;
-
-    @Inject private J2DSurface parentSurface;
+    private final J2DSurface parentSurface;
 
     @Remember private ClipPathRenderNode clipNode;
     @Remember private FillPathRenderNode fillPathNode;
     @Remember private ClipPathInputNode clipInputNode;
     @Remember private J2DSurface childSurface;
 
-    public J2DClipPeer(Clip clip) {
+    public J2DClipPeer(Clip clip, J2DSurface surface) {
         this.clip = clip;
+        this.parentSurface = surface;
     }
 
     @Override
@@ -45,10 +45,10 @@ public class J2DClipPeer extends Widget {
         childSurface.parent.set(parentSurface);
 
         return PeerRequest.requestSingle(clip.content(), childSurface, result -> {
-            return new J2DNodeHolder(
+            return parentSurface.createResponse(new J2DNodeHolder(
                     makeRenderNode(result.renderNode(), childSurface.shape()),
                     makeInputNode(result.inputNode(), childSurface.shape())
-            );
+            ));
         });
     }
 

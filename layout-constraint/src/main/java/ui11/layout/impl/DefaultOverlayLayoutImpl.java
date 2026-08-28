@@ -29,14 +29,14 @@ public final class DefaultOverlayLayoutImpl extends Widget {
                         case BoxLayoutResult.OfChosenSize _ -> true;
                         case BoxLayoutResult.OfGone _ -> false;
                     }).
-                    map(r -> ((BoxLayoutResult.OfChosenSize) r).size).
+                    map(r -> ((BoxLayoutResult.OfChosenSize) r).size()).
                     reduce(Size::max).
                     orElse(constraints.min());
 
             if (!constraints.isSatisfiedBy(s))
                 throw new RuntimeException(constraints + " is not satisfied by " + s + " (returned by " + this + ")");
 
-            return new BoxLayoutResult.OfChosenSize(sizeRequest.constraints(), s);
+            return sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(s));
         });
     }
 }

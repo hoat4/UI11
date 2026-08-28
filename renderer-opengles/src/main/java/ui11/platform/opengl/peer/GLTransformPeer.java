@@ -22,15 +22,15 @@ import ui11.platform.opengl.rendertree.TransformRenderNode;
 public class GLTransformPeer extends Widget {
 
     private final Transform transform;
-
-    @Inject private GLSurface parentSurface;
+    private final GLSurface parentSurface;
 
     @Remember private TransformedSurface surface;
     @Remember private TransformRenderNode node;
     @Remember private TransformInputNode inputNode;
 
-    public GLTransformPeer(Transform transform) {
+    public GLTransformPeer(Transform transform, GLSurface surface) {
         this.transform = transform;
+        this.parentSurface = surface;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class GLTransformPeer extends Widget {
 
         if (surface.renderNodeTranslation.snoop() != null) {
             // ilyenkor nem kell TransformRenderNode
-            return PeerRequest.requestSingle(transform.content(), surface, w -> w);
+            return PeerRequest.requestSingle(transform.content(), surface, parentSurface::createResponse);
         }
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
@@ -58,14 +58,14 @@ public class GLTransformPeer extends Widget {
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
         return PeerRequest.requestSingle(transform.content(), surface, result -> {
-            return new GLNodeHolder(
+            return parentSurface.createResponse(new GLNodeHolder(
                     nonDegenerateTransform ?
                             makeRenderNode(result.renderNode()) :
                             EmptyRenderNode.INSTANCE,
                     nonDegenerateTransform ?
                             makeInputNode(result.inputNode()) :
                             TransparentInputNode.INSTANCE
-            );
+            ));
         });
     }
 

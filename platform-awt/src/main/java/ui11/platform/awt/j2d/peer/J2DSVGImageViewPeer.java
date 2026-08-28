@@ -6,7 +6,6 @@ import com.github.weisj.jsvg.view.FloatSize;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.layout.protocol.BoxLayoutResult;
@@ -31,8 +30,8 @@ public class J2DSVGImageViewPeer extends Widget {
     private static final Logger logger = LoggerFactory.getLogger(J2DSVGImageViewPeer.class);
 
     private final SVGImageView svgImageView;
+    private final J2DSurface surface;
 
-    @Inject private J2DSurface surface;
     @Inject private TextStyle textStyle;
     @Inject(required = false) private URLResolver urlResolver;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
@@ -41,8 +40,9 @@ public class J2DSVGImageViewPeer extends Widget {
     @Remember private OpaqueInputNode inputNode;
     @Remember private TextStyle prevTextStyle;
 
-    public J2DSVGImageViewPeer(SVGImageView svgImageView) {
+    public J2DSVGImageViewPeer(SVGImageView svgImageView, J2DSurface surface) {
         this.svgImageView = svgImageView;
+        this.surface = surface;
     }
 
     @Override
@@ -92,12 +92,12 @@ public class J2DSVGImageViewPeer extends Widget {
         node.size.set(size);
         inputNode.shape.set(new Rectangle2D.Double(0, 0, size.width(), size.height()));
         FloatSize docSize = loadedDocument.size();
-        Widget result = new J2DNodeHolder(node, inputNode);
+        Widget result = surface.createResponse(new J2DNodeHolder(node, inputNode));
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             // TODO constraintset figyelembe kéne venni
             BoxLayoutResult.OfChosenSize chosenSize =
-                    new BoxLayoutResult.OfChosenSize(sizeRequest.constraints(), new Size(docSize.width, docSize.height));
-            result = PeerRequest.combineResults(result, chosenSize);
+                    new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height));
+            result = sizeRequest.createResponse(chosenSize, result);
         }
         return result;
     }

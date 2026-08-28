@@ -42,7 +42,6 @@ import java.util.Set;
 public class AWTWindow {
 
     private static final Logger logger = LoggerFactory.getLogger(AWTWindow.class);
-    private static final boolean PRINT_RENDER_TREE = false;
 
     private final AWTDesktop desktop;
     private final Widget content;
@@ -146,7 +145,7 @@ public class AWTWindow {
     }
 
     private void redraw() {
-        if (PRINT_RENDER_TREE) {
+        if (true) {
             System.out.println();
             System.out.println("Render tree: ");
             System.out.print(RenderTreePrinter.toString(rootNodeHolder.get().renderNode()));

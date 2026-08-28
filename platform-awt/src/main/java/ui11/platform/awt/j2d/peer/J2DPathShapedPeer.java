@@ -16,13 +16,13 @@ import java.awt.geom.Rectangle2D;
 public class J2DPathShapedPeer extends Widget {
 
     private final PathShaped pathShaped;
-
-    @Inject private J2DSurface parentSurface;
+    private final J2DSurface parentSurface;
 
     @Remember private ClippedSurface childSurface;
 
-    public J2DPathShapedPeer(PathShaped pathShaped) {
+    public J2DPathShapedPeer(PathShaped pathShaped, J2DSurface surface) {
         this.pathShaped = pathShaped;
+        this.parentSurface = surface;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class J2DPathShapedPeer extends Widget {
     protected Widget build() {
         childSurface.parent.set(parentSurface);
         childSurface.updateShape(pathShaped.shape());
-        return PeerRequest.requestSingle(pathShaped.content(), childSurface, w -> w);
+        return PeerRequest.requestSingle(pathShaped.content(), childSurface, parentSurface::createResponse);
     }
 
     private static class ClippedSurface extends J2DSurfaceWithOwnShape {

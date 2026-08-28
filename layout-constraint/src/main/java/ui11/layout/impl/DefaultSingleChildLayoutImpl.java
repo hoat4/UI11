@@ -18,7 +18,7 @@ import java.util.Objects;
 
 import static ui11.graphics.Empty.empty;
 
-public class DefaultSingleChildLayoutImpl extends Widget {
+public abstract class DefaultSingleChildLayoutImpl extends Widget {
 
     protected final SingleChildLayout singleChildLayout;
 
@@ -40,7 +40,7 @@ public class DefaultSingleChildLayoutImpl extends Widget {
             return switch (result) {
                 case BoxLayoutResult.OfGone _ -> empty(); // mert overlay(gone()) is ugyanaz mint empty()
                 case BoxLayoutResult.OfChosenSize r -> {
-                    Size childSize = r.size;
+                    Size childSize = r.size();
                     if (!childConstraints.isSatisfiedBy(childSize))
                         throw new RuntimeException("child size not satisfied by child constraints: " +
                                 childConstraints + ", " + childSize + ", " + singleChildLayout.child());
@@ -75,15 +75,10 @@ public class DefaultSingleChildLayoutImpl extends Widget {
         );
     }
 
-    private BoxConstraints containerConstraints() {
-        throw new RuntimeException("TODO");
-    }
+    protected abstract BoxConstraints containerConstraints();
 
-    private Widget makeLayoutResult(Size containerSize, Size childSize) {
-        throw new RuntimeException("TODO");
-    }
+    protected abstract Widget makeLayoutResult(Size containerSize, Size childSize);
 
-    /*
     public static final class Sizer extends DefaultSingleChildLayoutImpl {
 
         private final BoxLayoutResult.SizeRequest sizeRequest;
@@ -129,5 +124,4 @@ public class DefaultSingleChildLayoutImpl extends Widget {
             return transformWidgetToBounds(singleChildLayout.child(), childBounds);
         }
     }
-     */
 }

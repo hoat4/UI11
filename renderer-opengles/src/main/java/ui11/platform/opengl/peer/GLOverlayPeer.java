@@ -21,8 +21,8 @@ import java.util.*;
 public class GLOverlayPeer extends Widget {
 
     private final Overlay overlay;
+    private final GLSurface parentSurface;
 
-    @Inject private GLSurface parentSurface;
     @Inject private Observable<BufferPool> bufferPool;
 
     @Remember private List<GLSurface> childSurfaces;
@@ -30,8 +30,9 @@ public class GLOverlayPeer extends Widget {
     @Remember private GroupInputNode groupInputNode;
     @Remember private Map<Set<FillTrianglesWithColorRenderNode>, FillTrianglesWithColorRenderNode> mergedNodeCache;
 
-    public GLOverlayPeer(Overlay overlay) {
+    public GLOverlayPeer(Overlay overlay, GLSurface surface) {
         this.overlay = overlay;
+        this.parentSurface = surface;
     }
 
     @Override
@@ -88,7 +89,7 @@ public class GLOverlayPeer extends Widget {
         mergeInto(fillTrianglesNodes, childRenderNodes);
         mergedNodeCache.values().retainAll(childRenderNodes);
 
-        return new GLNodeHolder(
+        return parentSurface.createResponse(new GLNodeHolder(
                 switch (childRenderNodes.size()) {
                     case 0 -> EmptyRenderNode.INSTANCE;
                     case 1 -> childRenderNodes.getFirst();
@@ -105,7 +106,7 @@ public class GLOverlayPeer extends Widget {
                         yield groupInputNode;
                     }
                 }
-        );
+        ));
     }
 
     private void mergeInto(List<FillTrianglesWithColorRenderNode> nodes, List<RenderNode> out) {
