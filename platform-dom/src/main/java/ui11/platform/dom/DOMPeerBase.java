@@ -3,10 +3,10 @@ package ui11.platform.dom;
 import org.teavm.jso.dom.html.HTMLElement;
 import ui11.PeerRequest;
 import ui11.Widget;
+import ui11.color.Color;
 import ui11.color.RGBColor;
 import ui11.geom.Length;
 import ui11.graphics.Surface;
-import ui11.color.Color;
 import ui11.layout.Insets;
 import ui11.platform.dom.DOMWidgetWrapper.InheritedTextStyle;
 import ui11.platform.dom.DOMWidgetWrapper.ProxySurface;
@@ -21,7 +21,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toUnmodifiableMap;
 
 public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
 
@@ -81,14 +80,14 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected Widget makePeer(Widget widget, Function<DOMElementHolder, Widget> f) {
-        return PeerRequest.requestSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(), f);
+        return PeerRequest.requestSingle(new DOMWidgetWrapper(widget), DOMPeerCreationRequest.INSTANCE, f);
     }
 
     protected Widget makePeers(List<? extends Widget> widgets,
                                Function<List<DOMElementHolder>, Widget> f) {
         return PeerRequest.requestOnMultipleWidgets(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
-                new DOMPeerCreationRequest(),
+                DOMPeerCreationRequest.INSTANCE,
                 f
         );
     }
@@ -98,7 +97,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
                                      BiFunction<List<DOMElementHolder>,
                                              Map<PeerRequest<?>, ? extends List<?>>, Widget> f) {
         Set<PeerRequest<?>> requests = new HashSet<>(additionalRequests);
-        DOMPeerCreationRequest domPeerCreationRequest = new DOMPeerCreationRequest();
+        DOMPeerCreationRequest domPeerCreationRequest = DOMPeerCreationRequest.INSTANCE;
         requests.add(domPeerCreationRequest);
         return PeerRequest.requestMultiple(
                 widgets.stream().map(DOMWidgetWrapper::new).toList(),
@@ -113,12 +112,12 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
                 Map.Entry::getKey,
                 e -> new DOMWidgetWrapper(e.getValue()))
         );
-        return PeerRequest.requestOnMultipleWidgets(widgets, new DOMPeerCreationRequest(), f::apply);
+        return PeerRequest.requestOnMultipleWidgets(widgets, DOMPeerCreationRequest.INSTANCE, f::apply);
     }
 
     protected Widget makePeer_sameSurface(Widget widget, Function<DOMElementHolder, Widget> f) {
         // TODO ez most ugyanaz mint a sima makePeer
-        return PeerRequest.requestSingle(new DOMWidgetWrapper(widget), new DOMPeerCreationRequest(), f);
+        return PeerRequest.requestSingle(new DOMWidgetWrapper(widget), DOMPeerCreationRequest.INSTANCE, f);
     }
 
     protected Widget wrapResult(DOMElementHolder h) {
@@ -212,35 +211,19 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
 
     public static final class DOMPeerCreationRequest extends PeerRequest<DOMElementHolder> {
 
-        public DOMPeerCreationRequest() {
+        public static final DOMPeerCreationRequest INSTANCE = new DOMPeerCreationRequest();
+
+        private DOMPeerCreationRequest() {
             super(DOMElementHolder.class);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj instanceof DOMPeerCreationRequest;
-        }
-
-        @Override
-        public int hashCode() {
-            return 34411343;
         }
     }
 
     public static final class CSSBackgroundImagePeerCreationRequest extends PeerRequest<DOMCoverPeer.CSSBackgroundImage> {
 
-        public CSSBackgroundImagePeerCreationRequest() {
+        public static final CSSBackgroundImagePeerCreationRequest INSTANCE = new CSSBackgroundImagePeerCreationRequest();
+
+        private CSSBackgroundImagePeerCreationRequest() {
             super(DOMCoverPeer.CSSBackgroundImage.class);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj instanceof CSSBackgroundImagePeerCreationRequest;
-        }
-
-        @Override
-        public int hashCode() {
-            return 340404043;
         }
     }
 }

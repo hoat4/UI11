@@ -27,7 +27,7 @@ public class DOMCoverPeer extends DOMPeerBase<HTMLElement> {
 
     @Override
     protected Widget doBuild() {
-        CSSBackgroundImagePeerCreationRequest req = new CSSBackgroundImagePeerCreationRequest();
+        CSSBackgroundImagePeerCreationRequest req = CSSBackgroundImagePeerCreationRequest.INSTANCE;
         return PeerRequest.requestSingle(cover.content(), req, result -> {
             elem().getStyle().setProperty("background-image", "url(" + result.uri.toString() + ")");
             return endingWidget();
