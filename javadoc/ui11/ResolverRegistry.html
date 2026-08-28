@@ -92,6 +92,8 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">ResolverRegistry</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
+<div class="block">Can be used to control the process of lowering the <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidgets</a> to
+ more concrete widgets.</div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -106,20 +108,22 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;SW extends <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a>,<wbr>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;SW extends <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a>&gt;<br>void</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#add(java.lang.Class,java.util.function.Function)" class="member-name-link">add</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;SW&gt;&nbsp;widgetType,
+ @NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;@NonNull SW,<wbr><a href="Widget.html" title="class in ui11">Widget</a>&gt;&nbsp;f)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Adds a new resolver to this resolver registry.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;SW extends <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a>,<wbr>
 REQ extends <a href="PeerRequest.html" title="class in ui11">PeerRequest</a>&lt;?&gt;&gt;<br>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addPeerDependent(java.lang.Class,java.lang.Class,java.util.function.BiFunction)" class="member-name-link">addPeerDependent</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;REQ&gt;&nbsp;requestType,
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addPeerDependent(java.lang.Class,java.lang.Class,java.util.function.BiFunction)" class="member-name-link">addPeerDependent</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;REQ&gt;&nbsp;requestType,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;SW&gt;&nbsp;widgetType,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/BiFunction.html" title="class or interface in java.util.function" class="external-link">BiFunction</a>&lt;@NonNull SW,<wbr>@NonNull REQ,<wbr>@NonNull <a href="Widget.html" title="class in ui11">Widget</a>&gt;&nbsp;f)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;REQ extends <a href="PeerRequest.html" title="class in ui11">PeerRequest</a>&lt;?&gt;&gt;<br>void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addPeerDependent(java.lang.Class,java.util.Set,java.util.function.Function)" class="member-name-link">addPeerDependent</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;REQ&gt;&nbsp;requestType,
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;REQ extends <a href="PeerRequest.html" title="class in ui11">PeerRequest</a>&lt;?&gt;&gt;<br>void</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addPeerDependent(java.lang.Class,java.util.Set,java.util.function.Function)" class="member-name-link">addPeerDependent</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;REQ&gt;&nbsp;requestType,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Set.html" title="class or interface in java.util" class="external-link">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;? extends <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a>&gt;&gt;&nbsp;widgetTypes,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;REQ,<wbr><a href="Widget.html" title="class in ui11">Widget</a>&gt;&nbsp;f)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;SW extends <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a>&gt;<br>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addPeerIndependent(java.lang.Class,java.util.function.Function)" class="member-name-link">addPeerIndependent</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;SW&gt;&nbsp;widgetType,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;@NonNull SW,<wbr><a href="Widget.html" title="class in ui11">Widget</a>&gt;&nbsp;f)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;SW extends <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a>&gt;<br>void</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addPeerIndependentWithFilter(java.lang.Class,java.lang.Class,java.util.function.Function)" class="member-name-link">addPeerIndependentWithFilter</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;? extends <a href="PeerRequest.html" title="class in ui11">PeerRequest</a>&lt;?&gt;&gt;&nbsp;requestType,
@@ -148,10 +152,14 @@ REQ extends <a href="PeerRequest.html" title="class in ui11">PeerRequest</a>&lt;
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="addPeerIndependent(java.lang.Class,java.util.function.Function)">
-<h3>addPeerIndependent</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;SW extends <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a>&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">addPeerIndependent</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;SW&gt;&nbsp;widgetType,
+<section class="detail" id="add(java.lang.Class,java.util.function.Function)">
+<h3>add</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;SW extends <a href="SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a>&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">add</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;SW&gt;&nbsp;widgetType,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;@NonNull SW,<wbr><a href="Widget.html" title="class in ui11">Widget</a>&gt;&nbsp;f)</span></div>
+<div class="block">Adds a new resolver to this resolver registry.
+ It will be applicable if the widget is an instance of the specified type or its subtypes.
+ The widget will be passed to the function, and the widget returned from the function will replace
+ the original widget.</div>
 </section>
 </li>
 <li>
