@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 
 // időnként felmerül, hogy ezt jó lenne külön package-be vinni, ResolverProvider és ResolverRegistry mellé.
 // Először azért volt problémás, mert használta findInheritedValueForInjection-t egyrészt a WidgetResolver
@@ -111,7 +111,7 @@ public abstract class SubstitutedWidget extends Widget {
         Set<? extends ResolutionRequest<?>> allRemainingRequests = new LinkedHashSet<>(peerCreationRequestCollection.requests());
 
         Map<ResolverWidgetKey, Widget> childrenWidgets = new HashMap<>();
-        Map<ResolverWidgetKey, Map<PeerRequest<?>, ResolutionRequest<?>>> childrenReqs = new HashMap<>();
+        Map<ResolverWidgetKey, Map<PeerRequest<?>, Set<ResolutionRequest<?>>>> childrenReqs = new HashMap<>();
 
         ResolverRegistry resolverRegistry = widgetState().tree.resolverRegistry;
 
@@ -131,10 +131,12 @@ public abstract class SubstitutedWidget extends Widget {
                     throw new NullPointerException(f + " returned null"); // TODO értelmesebb hibaüzenet
 
                 ResolverWidgetKey.OfPeerSpecificResolver key =
-                        new ResolverWidgetKey.OfPeerSpecificResolver(req.requestData);
+                        new ResolverWidgetKey.OfPeerSpecificResolver(req);
+
                 Object prev = childrenWidgets.putIfAbsent(key, w);
                 assert prev == null;
-                childrenReqs.put(key, Map.of(req.requestData, req));
+                if (childrenReqs.put(key, new HashMap<>(Map.of(req.requestData, new HashSet<>(Set.of(req))))) != null)
+                    throw new RuntimeException("Duplicate req key: " + key);
             });
         }
 
@@ -156,9 +158,9 @@ public abstract class SubstitutedWidget extends Widget {
                 return false;
         });
 
-        Map<PeerRequest<?>, ResolutionRequest<?>> remainingForGeneric =
+        Map<PeerRequest<?>, Set<ResolutionRequest<?>>> remainingForGeneric =
                 remainedAfterPeerSpecificResolvers.stream().
-                        collect(toMap(r -> r.requestData, r -> r));
+                        collect(groupingBy(r -> r.requestData, toSet()));
 
         boolean[] foundGenericResolver = {false};
 
@@ -203,9 +205,8 @@ public abstract class SubstitutedWidget extends Widget {
         return PeerRequest.requestMultiple(childrenWidgets, childrenReqs2, results -> {
             results.forEach((req, resultsByKey) -> {
                 resultsByKey.forEach((key, result) -> {
-                    ResolutionRequest<?> parentResolutionRequest = childrenReqs.get(key).get(req);
-                    assert parentResolutionRequest != null;
-                    parentResolutionRequest.setResult(result);
+                    for (ResolutionRequest<?> parentResolutionRequest : childrenReqs.get(key).get(req))
+                        parentResolutionRequest.setResult(result);
                 });
             });
             return new WidgetTree.ChainEnd();
@@ -268,8 +269,7 @@ public abstract class SubstitutedWidget extends Widget {
         record OfGenericResolver(Object widgetResolver) implements ResolverWidgetKey {
         }
 
-        // TODO ennek jobb key kéne
-        record OfPeerSpecificResolver(PeerRequest<?> request) implements ResolverWidgetKey {
+        record OfPeerSpecificResolver(ResolutionRequest<?> request) implements ResolverWidgetKey {
         }
 
         record OfFallback() implements ResolverWidgetKey {

@@ -6,7 +6,7 @@ import ui11.observable.MutableObservable;
 
 import java.util.*;
 
-class ResolutionRequest<P> {
+final class ResolutionRequest<P> {
 
     final @Nullable WidgetState<?> container;
     final @NonNull Widget widget;

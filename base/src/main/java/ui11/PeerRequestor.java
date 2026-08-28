@@ -54,23 +54,22 @@ abstract sealed class PeerRequestor extends Widget {
 
         @Override
         protected Widget build() {
-            Map<PeerRequest<?>, ResolutionRequest<?>> remaining = new HashMap<>();
+            Map<PeerRequest<?>, Set<ResolutionRequest<?>>> remaining = new HashMap<>();
             for (ResolutionRequest<?> resolutionRequest : peerCreationRequestCollection.requests()) {
                 if (resolutionRequest.requestData.peerType().isInstance(peer) &&
                         request.equals(resolutionRequest.requestData)) {
                     // TODO ha már kapott resultot ebben a refreshben, akkor az újabbakat ignorálnia kéne vagy beraknia?
                     resolutionRequest.setResult(peer);
                 } else {
-                    if (remaining.put(resolutionRequest.requestData, resolutionRequest) != null)
-                        // több ResolutionRequest tartozik egy Requesthez
-                        throw new RuntimeException("TODO");
+                    remaining.computeIfAbsent(resolutionRequest.requestData, __ -> new HashSet<>()).add(resolutionRequest);
                 }
             }
 
             if (remaining.keySet().stream().allMatch(req -> req.defaultValue() != null)) {
                 // ugyanaz mint SubstitutedWidget elején
-                remaining.forEach((req, resolutionRequest) -> {
-                    resolutionRequest.setResult(req.defaultValue());
+                remaining.forEach((req, resReqs) -> {
+                    for (ResolutionRequest<?> resReq : resReqs)
+                        resReq.setResult(req.defaultValue());
                 });
                 return new WidgetTree.ChainEnd();
             }
@@ -79,12 +78,14 @@ abstract sealed class PeerRequestor extends Widget {
                 throw new RuntimeException("TODO");
 
             return PeerRequest.requestOnSingleWidget(chainedWidget, remaining.keySet(), respMap -> {
-                remaining.forEach((req, resReq) -> {
+                remaining.forEach((req, resReqs) -> {
                     Object result2 = respMap.get(req);
                     assert result2 != null;
 
-                    // TODO lásd fenti kommentek
-                    resReq.setResult(result2);
+                    for (ResolutionRequest<?> resReq : resReqs) {
+                        // TODO lásd fenti kommentek
+                        resReq.setResult(result2);
+                    }
                 });
                 return new WidgetTree.ChainEnd();
             });
