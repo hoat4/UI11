@@ -22,13 +22,12 @@ public class DefaultLayoutProvider implements ResolverProvider {
         r.add(Box.class, DefaultBoxImpl::new);
         r.add(Padding.class, DefaultPaddingImpl::new);
         r.add(LinearLayout.class, DefaultLinearLayoutImpl::new);
-        r.addPeerDependent(Surface.class, SingleChildLayout.class, DefaultSingleChildLayoutImpl.Arranger::new);
+        r.add(SingleChildLayout.class, DefaultSingleChildLayoutImpl::new);
         r.addPeerDependent(SizeRequest.class, Gone.class, (gone, sizeRequest) ->
                 sizeRequest.createResponse(new BoxLayoutResult.OfGone()));
         r.addPeerDependent(SizeRequest.class, Set.of(ColorFill.class, Empty.class),
                 sizeRequest -> sizeRequest.createResponse(
                         new BoxLayoutResult.OfChosenSize(sizeRequest.constraints().min())));
-        r.addPeerDependent(SizeRequest.class, SingleChildLayout.class, DefaultSingleChildLayoutImpl.Sizer::new);
 
         // case Grid grid -> new WidgetStateRequest<>(DefaultGrid::new, grid);
         // case PassiveHeight passiveHeight -> new WidgetStateRequest<>(DefaultPassiveHeight::new, passiveHeight);
