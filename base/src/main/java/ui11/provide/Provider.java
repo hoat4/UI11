@@ -20,21 +20,7 @@ public final class Provider<T> extends Widget {
     private final T value;
     private final Widget content;
 
-    /**
-     * ideiglenesen publikus
-     */
-    @Deprecated
-    public final boolean ignoreMergeableType;
-
     public Provider(@NonNull Class<T> type, @Nullable T value, @NonNull Widget content) {
-        this(type, value, content, false);
-    }
-
-    /**
-     * ideiglenesen publikus
-     */
-    @Deprecated
-    public Provider(@NonNull Class<T> type, @Nullable T value, @NonNull Widget content, boolean ignoreMergeableType) {
         Objects.requireNonNull(content);
 
         if (type.isPrimitive())
@@ -45,7 +31,6 @@ public final class Provider<T> extends Widget {
         this.type = type;
         this.value = value;
         this.content = content;
-        this.ignoreMergeableType = ignoreMergeableType;
 
         if (!Widget.class.isInstance(content)) // TeaVM-es kód bugjakor előjött egy ilyen
             throw new RuntimeException("not a widget (P): " + content);

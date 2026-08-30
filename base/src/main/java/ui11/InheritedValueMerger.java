@@ -53,7 +53,12 @@ class InheritedValueMerger<T> extends Widget {
         } else
             val = newValue;
 
-        return new Provider<>(type, val, content, true);
+        // returnedProviderShouldNotBeMerged==true miatt ez mert nem lesz IVM-mé átalakítva
+        return new Provider<>(type, val, content);
+    }
+
+    boolean returnedProviderShouldNotBeMerged() {
+        return newValue != null;
     }
 
     private DynamicProvider mergeDynamicProviders(DynamicProvider prev, DynamicProvider value) {

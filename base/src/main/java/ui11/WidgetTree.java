@@ -345,9 +345,10 @@ public final class WidgetTree {
         if (reqs != null)
             ivs.put(ResolutionRequestCollection.class, new ResolutionRequestCollection(reqs));
 
+        Widget firstWidget = widget;
+
         WidgetState<?> w = previous == null ? null : previous.child();
 
-        // ez a ciklus és switch maradjon szinkronban LocalKey.findLocalKey-jel
         processProxyWidgets:
         while (true) {
             switch (widget) {
@@ -360,13 +361,15 @@ public final class WidgetTree {
                     // részben azért nem val instanceof Mergeable-t nézünk, hogy null esetén is működjön,
                     // részben pedig hogy findIVProvidesUntil nem a példány típusából, hanem a megadott típusból
                     // dönti el, hogy directIVsből vagy a directAncestorEDs-ből szedje az értékeket.
-                    final boolean isMergeableType = Provider.Mergeable.class.isAssignableFrom(p.type()) ||
+                    boolean isMergeableType = Provider.Mergeable.class.isAssignableFrom(p.type()) ||
                             p.type() == DynamicProvider.class;
+                    if (isMergeableType && firstWidget == widget &&
+                            parent != null && parent.stateWidget instanceof InheritedValueMerger<?> ivm &&
+                            ivm.returnedProviderShouldNotBeMerged())
+                        // TODO this branch is probably non-tested as of now
+                        isMergeableType = false;
 
-                    // p.ignoreMergeableType helyett eredetileg azt néztük, hogy
-                    // currentState.stateWidget instanceof InheritedValueMerger. de ez nem működik helyesen,
-                    // ha két egymásba ágyazott mergeölhető Provider van.
-                    if (isMergeableType && !p.ignoreMergeableType) {
+                    if (isMergeableType) {
                         widget = new InheritedValueMerger<>(p);
                     } else {
                         ivs.put(p.type(), val);
