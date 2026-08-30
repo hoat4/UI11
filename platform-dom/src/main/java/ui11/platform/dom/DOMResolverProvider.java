@@ -50,20 +50,20 @@ public class DOMResolverProvider implements ResolverProvider {
     }
 
     private void addDomResolvers(ResolverRegistry r) {
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, ColorFill.class, ColorFillPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Text.class, TextElementPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, RasterImageView.class, rasterImageView -> {
+        r.registerForContextType(DOMPeerCreationRequest.class, ColorFill.class, ColorFillPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Text.class, TextElementPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, RasterImageView.class, rasterImageView -> {
             throw new RuntimeException("TODO");
         });
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, LinearGradient.class, DOMLinearGradientPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, ConicGradient.class, DOMConicGradientPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Mask.class, DOMMaskPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Opacity.class, DOMOpacityPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, RoundedCorners.class, DOMRoundedCornersPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, WebContentFrame.class, WebContentFramePeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Empty.class, _ -> new EmptyElementPeer());
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, DOMElementWidget.class, DOMElementWrapperPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, SVGImageView.class, svg -> {
+        r.registerForContextType(DOMPeerCreationRequest.class, LinearGradient.class, DOMLinearGradientPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, ConicGradient.class, DOMConicGradientPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Mask.class, DOMMaskPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Opacity.class, DOMOpacityPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, RoundedCorners.class, DOMRoundedCornersPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, WebContentFrame.class, WebContentFramePeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Empty.class, _ -> new EmptyElementPeer());
+        r.registerForContextType(DOMPeerCreationRequest.class, DOMElementWidget.class, DOMElementWrapperPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, SVGImageView.class, svg -> {
             if (svg.embeddedWidgets().isEmpty())
                 return new DOMImageElement(svg.source().toURIString(), svg.isInteractive());
             else {
@@ -74,72 +74,72 @@ public class DOMResolverProvider implements ResolverProvider {
                     throw new RuntimeException("TODO templated SVG with non-inline source: " + svg);
             }
         });
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, JPEGImageView.class,
+        r.registerForContextType(DOMPeerCreationRequest.class, JPEGImageView.class,
                 jpg -> new DOMImageElement(jpg.source().toURIString(), false));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, HTMLElementHint.class, DOMWrapperElementPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Hyperlink.class, DOMHyperlinkPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Video.class, DOMVideoPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, HTMLElementHint.class, DOMWrapperElementPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Hyperlink.class, DOMHyperlinkPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Video.class, DOMVideoPeer::new);
 
         // INPUT
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, ClickListener.class,
+        r.registerForContextType(DOMPeerCreationRequest.class, ClickListener.class,
                 c -> new Provider<>(CumulatingPropList.class,
                         CumulatingPropList.ofOnClick(c.handler()), c.content()));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, FocusListener.class,
+        r.registerForContextType(DOMPeerCreationRequest.class, FocusListener.class,
                 f -> new Provider<>(CumulatingPropList.class,
                         CumulatingPropList.ofFocus(f), f.content()));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, PointerRegion.class,
+        r.registerForContextType(DOMPeerCreationRequest.class, PointerRegion.class,
                 pr -> new Provider<>(CumulatingPropList.class,
                         CumulatingPropList.ofPointerRegion(pr), pr.content()));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, PointerTransparent.class,
+        r.registerForContextType(DOMPeerCreationRequest.class, PointerTransparent.class,
                 pt -> cssClass("Pt", pt.content()));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, CloseRequestListener.class, DOMCloseRequestListenerPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, WithCursor.class,
+        r.registerForContextType(DOMPeerCreationRequest.class, CloseRequestListener.class, DOMCloseRequestListenerPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, WithCursor.class,
                 c -> new Provider<>(CumulatingPropList.class,
                         CumulatingPropList.ofCursor(c.cursor()), c.content()));
 
         // LAYOUT
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Align.class, DOMAlignPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Box.class, DOMBoxPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Padding.class, DOMPaddingPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Grid.class, DOMGridPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, LinearLayout.class, DOMLinearLayoutPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Overlay.class, DOMOverlayLayoutPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Flow.class, DOMFlowLayoutPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, PassiveSize.class, DOMPassiveSizePeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, CSSClassTag.class, c -> new Provider<>(CumulatingPropList.class,
+        r.registerForContextType(DOMPeerCreationRequest.class, Align.class, DOMAlignPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Box.class, DOMBoxPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Padding.class, DOMPaddingPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Grid.class, DOMGridPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, LinearLayout.class, DOMLinearLayoutPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Overlay.class, DOMOverlayLayoutPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Flow.class, DOMFlowLayoutPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, PassiveSize.class, DOMPassiveSizePeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, CSSClassTag.class, c -> new Provider<>(CumulatingPropList.class,
                 CumulatingPropList.ofCSSClass(c.className()), c.content()));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, WrapWithCSSClassTag.class, w -> cssClass(w.className(), overlay(w.content())));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Scrollable.class, DOMScrollablePeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Hidden.class, h -> new Provider<>(CumulatingPropList.class, CumulatingPropList.ofHidden(), h.content()));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Gone.class, gone -> new Hidden(empty()));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Cover.class, DOMCoverPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, PassiveHeight.class, DOMPassiveHeightPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, WrapWithCSSClassTag.class, w -> cssClass(w.className(), overlay(w.content())));
+        r.registerForContextType(DOMPeerCreationRequest.class, Scrollable.class, DOMScrollablePeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Hidden.class, h -> new Provider<>(CumulatingPropList.class, CumulatingPropList.ofHidden(), h.content()));
+        r.registerForContextType(DOMPeerCreationRequest.class, Gone.class, gone -> new Hidden(empty()));
+        r.registerForContextType(DOMPeerCreationRequest.class, Cover.class, DOMCoverPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, PassiveHeight.class, DOMPassiveHeightPeer::new);
         // TODO ha itt önmagát adjuk vissza, azt detektálni kéne. most csak végtelen ciklusba kerülünk tőle.
 
         // FORMATTED TEXT
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, OrderedList.class, DOMOrderedListPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, OrderedList.class, DOMOrderedListPeer::new);
 
         // CONTROL
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, PlainTextEditor.class, DOMEditableTextPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, PlainTextEditor.class, DOMEditableTextPeer::new);
         //r.addPeerIndependent(DOMPeerCreationRequest.class, Button.class, b -> new WidgetStateRequest<>(() -> new ButtonPeer(b, this), cf));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, CheckBox.class, DOMCheckBoxPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, RadioButton.class, DOMRadioButtonPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, ComboBox.class, ComboBoxPeer::new);
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Slider.class, SliderPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, CheckBox.class, DOMCheckBoxPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, RadioButton.class, DOMRadioButtonPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, ComboBox.class, ComboBoxPeer::new);
+        r.registerForContextType(DOMPeerCreationRequest.class, Slider.class, SliderPeer::new);
         // TODO r.addPeerIndependent(DOMPeerCreationRequest.class, StylesheetRef.class, sr -> handleStylesheet(sr), sr));
-        r.addPeerIndependentWithFilter(DOMPeerCreationRequest.class, Tooltip.class, t -> new Provider<>(CumulatingPropList.class, CumulatingPropList.ofTooltipTag(t), t.content()));
+        r.registerForContextType(DOMPeerCreationRequest.class, Tooltip.class, t -> new Provider<>(CumulatingPropList.class, CumulatingPropList.ofTooltipTag(t), t.content()));
     }
 
     private void addCSSBackgroundResolvers(ResolverRegistry r) {
         // CSS background
-        r.addPeerIndependentWithFilter(DOMPeerBase.CSSBackgroundImagePeerCreationRequest.class, SVGImageView.class, svg -> {
+        r.registerForContextType(DOMPeerBase.CSSBackgroundImagePeerCreationRequest.class, SVGImageView.class, svg -> {
             if (svg.isInteractive())
                 throw new RuntimeException("interactive SVGImageView inside CSSBackgroundImageContext");
             if (!svg.embeddedWidgets().isEmpty())
                 throw new RuntimeException("embedded widgets in SVG inside CSSBackgroundImageContext");
             return new DOMCoverPeer.CSSBackgroundImage(svg.source().toURI());
         });
-        r.addPeerIndependentWithFilter(DOMPeerBase.CSSBackgroundImagePeerCreationRequest.class, SVGImageView.class,
+        r.registerForContextType(DOMPeerBase.CSSBackgroundImagePeerCreationRequest.class, SVGImageView.class,
                 jpg -> new DOMCoverPeer.CSSBackgroundImage(jpg.source().toURI()));
     }
 }

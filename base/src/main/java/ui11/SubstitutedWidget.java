@@ -5,9 +5,7 @@ import org.jspecify.annotations.Nullable;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 import static java.util.stream.Collectors.*;
 
@@ -66,7 +64,7 @@ public abstract class SubstitutedWidget extends Widget {
      * instead it will be called by the {@linkplain WidgetTree widget tree refresher} as any other widget.
      * <p>
      * If no peer could be created for a request, then it will be
-     * forwarded to a {@linkplain ResolverRegistry#addPeerIndependentWithFilter(Class, Class, Function) peer independent resolver}.
+     * forwarded to a {@linkplain ResolverRegistry#registerForContextType(Class, Class, Function) peer independent resolver}.
      */
     @Override
     protected final Widget build() {
@@ -129,7 +127,7 @@ public abstract class SubstitutedWidget extends Widget {
         // peer-specifikus resolvereket előbbre vesszük, mint a nem peer-specifikusakat,
         // mert ha peer-specifikusakkal ki elégíteni, akkor lehet hogy a nem peer-specifikus nem is kell
         Set<ResolutionRequest<?>> handledUsingPeerSpecificResolvers = new HashSet<>();
-        for (ResolverProvider.ResolutionRule<?> rule : resolverRegistry.eagerRules) {
+        for (ResolverRegistry.ResolutionRule<?> rule : resolverRegistry.eagerRules) {
             if (!rule.matches(thiz, allRemainingRequests))
                 continue;
 
@@ -182,7 +180,7 @@ public abstract class SubstitutedWidget extends Widget {
 
         // tryResolveGeneric-eket akkor is végrehajtjuk, ha minden req-t lefednek a peer-specifikusok, hogy
         // multiple resolvers applicable hibák kijöjjenek
-        for (ResolverProvider.ResolutionRule<?> r : resolverRegistry.greedyRules) {
+        for (ResolverRegistry.ResolutionRule<?> r : resolverRegistry.greedyRules) {
             if (!r.matches(thiz, remainedAfterPeerSpecificResolvers))
                 continue;
             if (foundGenericResolver[0])

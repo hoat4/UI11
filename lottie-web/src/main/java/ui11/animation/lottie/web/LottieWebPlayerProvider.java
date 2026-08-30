@@ -9,7 +9,7 @@ public class LottieWebPlayerProvider implements ResolverProvider {
 
     @Override
     public void configure(ResolverRegistry r) {
-        r.addPeerIndependentWithFilter(DOMPeerBase.DOMPeerCreationRequest.class,
+        r.registerForContextType(DOMPeerBase.DOMPeerCreationRequest.class,
                 LottieView.class, LottieWebAnimationPeer::new);
     }
 }

@@ -1,16 +1,18 @@
 package ui11;
 
 import org.jspecify.annotations.NonNull;
-import ui11.ResolverProvider.ResolutionRule;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * Can be used to control the process of lowering the {@linkplain SubstitutedWidget SubstitutedWidgets} to
@@ -25,33 +27,58 @@ public final class ResolverRegistry {
     ResolverRegistry() {
     }
 
-    <W extends SubstitutedWidget> void add(ResolutionRule<W> rule) {
-        if (rule.coexistWithOtherResolvers)
-            eagerRules.add(rule);
-        else
-            greedyRules.add(rule);
-    }
-
     /**
      * Adds a new resolver to this resolver registry.
      * It will be applicable if the widget is an instance of the specified type or its subtypes.
      * The widget will be passed to the function, and the widget returned from the function will replace
      * the original widget.
      */
-    public <SW extends SubstitutedWidget> void add(
+    public <SW extends SubstitutedWidget> void register(
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
-        add(new ResolutionRule<>(widgetType, f));
+        register(new ResolutionRule<>(widgetType, f, Set.of(), false));
     }
 
-    public <SW extends SubstitutedWidget> void addPeerIndependentWithFilter(
+    public <SW extends SubstitutedWidget> void registerForContextType(
             @NonNull Class<? extends PeerRequest<?>> requestType,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
-        add(new ResolutionRule<>(widgetType, f).requires(requestType));
+        register(new ResolutionRule<>(widgetType, f, Set.of(requestType), false));
     }
 
-    public <SW extends SubstitutedWidget> void addTransformer(
+    public <SW extends SubstitutedWidget> void registerForContextTypes(
+            @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes,
+            @NonNull Class<SW> widgetType,
+            @NonNull Function<@NonNull SW, Widget> f) {
+        if (supportedRequestTypes.isEmpty())
+            throw new IllegalArgumentException("Supported request types is empty");
+        register(new ResolutionRule<>(widgetType, f, supportedRequestTypes, false));
+    }
+
+    public <SW extends SubstitutedWidget> void registerPeerResolver(
+            @NonNull Class<? extends PeerRequest<?>> requestType,
+            @NonNull Class<SW> widgetType,
+            @NonNull Function<@NonNull SW, Widget> f) {
+        register(new ResolutionRule<>(widgetType, f, Set.of(requestType), true));
+    }
+
+    public <SW extends SubstitutedWidget> void registerPeerResolver(
+            @NonNull Set<Class<? extends PeerRequest<?>>> requestTypes,
+            @NonNull Class<SW> widgetType,
+            @NonNull Function<@NonNull SW, Widget> f) {
+        if (requestTypes.isEmpty())
+            throw new IllegalArgumentException("Supported request types is empty");
+        register(new ResolutionRule<>(widgetType, f, requestTypes, true));
+    }
+
+    private <W extends SubstitutedWidget> void register(ResolutionRule<W> rule) {
+        if (rule.coexistWithOtherResolvers)
+            eagerRules.add(rule);
+        else
+            greedyRules.add(rule);
+    }
+
+    public <SW extends SubstitutedWidget> void registerTransformer(
             @NonNull Class<SW> widgetType,
             @NonNull BiFunction<@NonNull SW, @NonNull UnaryOperator<Widget>, @NonNull Widget> f) {
         validateSubstitutedWidgetType(widgetType);
@@ -80,6 +107,69 @@ public final class ResolverRegistry {
         return greedyRules.stream();
     }
 
+    // ennek identity equalsjére SubstitutedWidgetben a keyek dependelnek
+    static final class ResolutionRule<W extends SubstitutedWidget> {
+
+        final @NonNull Class<W> widgetType;
+        final @NonNull Function<W, Widget> f;
+        // TODO ez most kicsit zavaros, mert az üres set azt jelenti hogy minden requestet elfogad
+        final @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes;
+        /**
+         * ha ez true, akkor {@link #supportedRequestTypes} nem üres
+         */
+        final boolean coexistWithOtherResolvers;
+
+        /**
+         * @param supportedRequestTypes a hívónak kell szükség esetén ellenőriznie, hogy ez üres-e
+         */
+        public ResolutionRule(@NonNull Class<W> widgetType,
+                              @NonNull Function<W, Widget> f,
+                              @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes,
+                              boolean isPeerResolver) {
+            this.widgetType = Objects.requireNonNull(widgetType);
+            widgetType.asSubclass(SubstitutedWidget.class);
+            if (widgetType == SubstitutedWidget.class)
+                throw new IllegalArgumentException();
+            this.f = Objects.requireNonNull(f);
+
+            Set<Class<? extends PeerRequest<?>>> set = Set.copyOf(supportedRequestTypes);
+            set.forEach(t -> {
+                if (t.asSubclass(PeerRequest.class) == PeerRequest.class)
+                    throw new IllegalArgumentException();
+            });
+            this.supportedRequestTypes = set;
+
+            this.coexistWithOtherResolvers = isPeerResolver;
+        }
+
+        boolean matches(SubstitutedWidget widget, Set<? extends ResolutionRequest<?>> reqs) {
+            if (!widgetType.isInstance(widget))
+                return false;
+            if (supportedRequestTypes.isEmpty())
+                return true;
+            return supportedRequestTypes.stream().anyMatch(supportedRequestType ->
+                    reqs.stream().anyMatch(req ->
+                            supportedRequestType.isInstance(req.requestData)));
+        }
+
+        Widget invokeUnchecked(SubstitutedWidget widgetToBeSubstituted) {
+            @SuppressWarnings("unchecked") Function<SubstitutedWidget, Widget> castedF =
+                    (Function<SubstitutedWidget, Widget>) f;
+            Widget w = castedF.apply(widgetToBeSubstituted); // TODO exceptionök
+            if (w == null)
+                throw new NullPointerException("Rule returned null: " + this); // TODO értelmesebb hibaüzenet
+            return w;
+        }
+
+        @Override
+        public String toString() {
+            return ReflectionUtil.simpleName(widgetType) + " " +
+                    (supportedRequestTypes.isEmpty() ? "<any request>" : supportedRequestTypes.stream().
+                            map(ReflectionUtil::simpleName).collect(joining(", ", "[", "]"))) +
+                    " " + f;
+        }
+    }
+
     static final class Transformer<SW extends SubstitutedWidget> {
 
         final @NonNull Class<? extends SubstitutedWidget> widgetType;
@@ -102,15 +192,6 @@ public final class ResolverRegistry {
         @Override
         public String toString() {
             return "Transformer for " + ReflectionUtil.simpleName(widgetType) + ": " + f;
-        }
-    }
-
-    static final class TransformerResultRequest extends PeerRequest<Widget> {
-
-        static final TransformerResultRequest INSTANCE = new TransformerResultRequest();
-
-        private TransformerResultRequest() {
-            super(Widget.class);
         }
     }
 }

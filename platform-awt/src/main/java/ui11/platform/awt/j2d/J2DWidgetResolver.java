@@ -3,7 +3,6 @@ package ui11.platform.awt.j2d;
 import ui11.*;
 import ui11.color.Color;
 import ui11.graphics.Empty;
-import ui11.graphics.Surface;
 import ui11.graphics.effect.Clip;
 import ui11.graphics.effect.Opacity;
 import ui11.graphics.effect.Overlay;
@@ -18,36 +17,31 @@ import ui11.layout.protocol.BoxLayoutResult;
 import ui11.media.SVGImageView;
 import ui11.platform.awt.AWTEnterContentListenerPeer;
 import ui11.platform.awt.j2d.peer.*;
-import ui11.provide.Provider;
 import ui11.text.Text;
 
-import java.util.List;
+import java.util.Set;
 
 public class J2DWidgetResolver implements ResolverProvider {
 
     @Override
-    public List<ResolutionRule<?>> rules() {
-        return List.of(
-                new ResolutionRule<>(PointerRegion.class, PointerRegion::content).
-                        requires(J2DSurface.class),
-                new ResolutionRule<>(Empty.class,
-                        empty -> new ColorFill(Color.TRANSPARENT) /* TODO egér viselkedés így más lesz */).
-                        requires(J2DSurface.class),
-                new ResolutionRule<>(EnterContentListener.class, AWTEnterContentListenerPeer::new).
-                        requires(J2DSurface.class), // TODO ez nem is J2DSurface
+    public void configure(ResolverRegistry r) {
+        r.registerForContextType(J2DSurface.class, PointerRegion.class, PointerRegion::content);
+        r.registerForContextType(J2DSurface.class, Empty.class,
+                empty -> new ColorFill(Color.TRANSPARENT) /* TODO egér viselkedés így más lesz */);
+        r.registerForContextType(J2DSurface.class, EnterContentListener.class, // TODO ez nem is J2DSurface
+                AWTEnterContentListenerPeer::new);
 
-                new ResolutionRule<>(ColorFill.class, J2DColorPeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(Overlay.class, J2DGroupPeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(PathShaped.class, J2DPathShapedPeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(Clip.class, J2DClipPeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(Transform.class, J2DTransformPeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(Text.class, J2DTextPeer::new).
-                        requiresEither(J2DSurface.class, BoxLayoutResult.SizeRequest.class),
-                new ResolutionRule<>(PointerRegion.class, J2DPointerRegionPeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(Stroke.class, J2DStrokePeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(LinearGradient.class, J2DLinearGradientPeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(SVGImageView.class, J2DSVGImageViewPeer::new).requires(J2DSurface.class),
-                new ResolutionRule<>(Opacity.class, J2DOpacityPeer::new).requires(J2DSurface.class)
-        );
+        r.registerForContextType(J2DSurface.class, ColorFill.class, J2DColorPeer::new);
+        r.registerForContextType(J2DSurface.class, Overlay.class, J2DGroupPeer::new);
+        r.registerForContextType(J2DSurface.class, PathShaped.class, J2DPathShapedPeer::new);
+        r.registerForContextType(J2DSurface.class, Clip.class, J2DClipPeer::new);
+        r.registerForContextType(J2DSurface.class, Transform.class, J2DTransformPeer::new);
+        r.registerForContextTypes(Set.of(J2DSurface.class, BoxLayoutResult.SizeRequest.class),
+                Text.class, J2DTextPeer::new);
+        r.registerForContextType(J2DSurface.class, PointerRegion.class, J2DPointerRegionPeer::new);
+        r.registerForContextType(J2DSurface.class, Stroke.class, J2DStrokePeer::new);
+        r.registerForContextType(J2DSurface.class, LinearGradient.class, J2DLinearGradientPeer::new);
+        r.registerForContextType(J2DSurface.class, SVGImageView.class, J2DSVGImageViewPeer::new);
+        r.registerForContextType(J2DSurface.class, Opacity.class, J2DOpacityPeer::new);
     }
 }

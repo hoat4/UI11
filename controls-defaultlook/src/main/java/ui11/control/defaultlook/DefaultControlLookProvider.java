@@ -8,15 +8,15 @@ import ui11.control.Button.ButtonState;
 public class DefaultControlLookProvider implements ResolverProvider {
     @Override
     public void configure(ResolverRegistry r) {
-        r.add(Button.class, DefaultButtonBehavior::new);
-        r.add(ButtonState.class, DefaultButtonLook::new);
-        r.add(CheckBox.class, DefaultCheckBoxImpl::new);
-        r.add(ComboBox.class, DefaultComboBoxLook::new);
-        r.add(PlainTextEditor.class, DefaultPlainTextEditorImpl::new);
-        r.add(Hyperlink.class, DefaultHyperlinkPeer::new);
-        r.add(Slider.class, DefaultSliderLook::new);
-        r.add(TabbedPane.class, DefaultTabbedPaneLook::new);
-        r.add(Table.class, DefaultTableImpl::new);
-        r.add(TextField.class, DefaultTextFieldImpl::new);
+        r.register(Button.class, DefaultButtonBehavior::new);
+        r.register(ButtonState.class, DefaultButtonLook::new);
+        r.register(CheckBox.class, DefaultCheckBoxImpl::new);
+        r.register(ComboBox.class, DefaultComboBoxLook::new);
+        r.register(PlainTextEditor.class, DefaultPlainTextEditorImpl::new);
+        r.register(Hyperlink.class, DefaultHyperlinkPeer::new);
+        r.register(Slider.class, DefaultSliderLook::new);
+        r.register(TabbedPane.class, DefaultTabbedPaneLook::new);
+        r.register(Table.class, DefaultTableImpl::new);
+        r.register(TextField.class, DefaultTextFieldImpl::new);
     }
 }
