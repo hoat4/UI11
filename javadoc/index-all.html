@@ -57,10 +57,6 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Adds a new resolver to this resolver registry.</div>
 </dd>
-<dt><a href="ui11/ResolverRegistry.html#addPeerDependent(java.lang.Class,java.lang.Class,java.util.function.BiFunction)" class="member-name-link">addPeerDependent(Class&lt;REQ&gt;, Class&lt;SW&gt;, BiFunction&lt;SW, REQ, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
-<dd>&nbsp;</dd>
-<dt><a href="ui11/ResolverRegistry.html#addPeerDependent(java.lang.Class,java.util.Set,java.util.function.Function)" class="member-name-link">addPeerDependent(Class&lt;REQ&gt;, Set&lt;Class&lt;? extends SubstitutedWidget&gt;&gt;, Function&lt;REQ, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
-<dd>&nbsp;</dd>
 <dt><a href="ui11/ResolverRegistry.html#addPeerIndependentWithFilter(java.lang.Class,java.lang.Class,java.util.function.Function)" class="member-name-link">addPeerIndependentWithFilter(Class&lt;? extends PeerRequest&lt;?&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/ResolverRegistry.html#addTransformer(java.lang.Class,java.util.function.BiFunction)" class="member-name-link">addTransformer(Class&lt;SW&gt;, BiFunction&lt;SW, PeerRequest&lt;Widget&gt;, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
@@ -82,8 +78,12 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:C">C</h2>
 <dl class="index">
-<dt><a href="ui11/ResolverProvider.html#configure(ui11.ResolverRegistry)" class="member-name-link">configure(ResolverRegistry)</a> - Method in interface ui11.<a href="ui11/ResolverProvider.html" title="interface in ui11">ResolverProvider</a></dt>
+<dt><a href="ui11/ResolverProvider.ResolutionRule.html#coexistWithOtherResolvers()" class="member-name-link">coexistWithOtherResolvers()</a> - Method in class ui11.<a href="ui11/ResolverProvider.ResolutionRule.html" title="class in ui11">ResolverProvider.ResolutionRule</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="ui11/ResolverProvider.html#configure(ui11.ResolverRegistry)" class="member-name-link">configure(ResolverRegistry)</a> - Method in interface ui11.<a href="ui11/ResolverProvider.html" title="interface in ui11">ResolverProvider</a></dt>
+<dd>
+<div class="deprecation-block"><span class="deprecated-label">Deprecated.</span></div>
+</dd>
 <dt><a href="ui11/provide/Provider.html#content()" class="member-name-link">content()</a> - Method in class ui11.provide.<a href="ui11/provide/Provider.html" title="class in ui11.provide">Provider</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/WidgetTree.html#create(ui11.Widget,java.util.concurrent.Executor)" class="member-name-link">create(Widget, Executor)</a> - Static method in class ui11.<a href="ui11/WidgetTree.html" title="class in ui11">WidgetTree</a></dt>
@@ -135,10 +135,6 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:I">I</h2>
 <dl class="index">
-<dt><a href="ui11/provide/Provider.html#ignoreMergeableType" class="member-name-link">ignoreMergeableType</a> - Variable in class ui11.provide.<a href="ui11/provide/Provider.html" title="class in ui11.provide">Provider</a></dt>
-<dd>
-<div class="deprecation-block"><span class="deprecated-label">Deprecated.</span></div>
-</dd>
 <dt><a href="ui11/SubstitutedWidget.html#initState()" class="member-name-link">initState()</a> - Method in class ui11.<a href="ui11/SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a></dt>
 <dd>
 <div class="block">It is final because there are no <a href="ui11/Widget.Remember.html" title="annotation interface in ui11">state fields</a> permitted in the subclasses, so it is
@@ -199,10 +195,6 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/provide/Provider.html#%3Cinit%3E(java.lang.Class,T,ui11.Widget)" class="member-name-link">Provider(Class&lt;T&gt;, T, Widget)</a> - Constructor for class ui11.provide.<a href="ui11/provide/Provider.html" title="class in ui11.provide">Provider</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/provide/Provider.html#%3Cinit%3E(java.lang.Class,T,ui11.Widget,boolean)" class="member-name-link">Provider(Class&lt;T&gt;, T, Widget, boolean)</a> - Constructor for class ui11.provide.<a href="ui11/provide/Provider.html" title="class in ui11.provide">Provider</a></dt>
-<dd>
-<div class="deprecation-block"><span class="deprecated-label">Deprecated.</span></div>
-</dd>
 <dt><a href="ui11/provide/Provider.Mergeable.html" class="type-name-link" title="interface in ui11.provide">Provider.Mergeable&lt;T&gt;</a> - Interface in <a href="ui11/provide/package-summary.html">ui11.provide</a></dt>
 <dd>&nbsp;</dd>
 </dl>
@@ -226,15 +218,25 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/Widget.Inject.html#required()" class="member-name-link">required()</a> - Element in annotation interface ui11.<a href="ui11/Widget.Inject.html" title="annotation interface in ui11">Widget.Inject</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="ui11/ResolverProvider.ResolutionRule.html#requires(java.lang.Class)" class="member-name-link">requires(Class&lt;? extends PeerRequest&lt;?&gt;&gt;)</a> - Method in class ui11.<a href="ui11/ResolverProvider.ResolutionRule.html" title="class in ui11">ResolverProvider.ResolutionRule</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="ui11/ResolverProvider.ResolutionRule.html#requiresEither(java.lang.Class...)" class="member-name-link">requiresEither(Class&lt;? extends PeerRequest&lt;?&gt;&gt;...)</a> - Method in class ui11.<a href="ui11/ResolverProvider.ResolutionRule.html" title="class in ui11">ResolverProvider.ResolutionRule</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="ui11/ResolverProvider.ResolutionRule.html#%3Cinit%3E(java.lang.Class,java.util.function.Function)" class="member-name-link">ResolutionRule(Class&lt;W&gt;, Function&lt;W, Widget&gt;)</a> - Constructor for class ui11.<a href="ui11/ResolverProvider.ResolutionRule.html" title="class in ui11">ResolverProvider.ResolutionRule</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="ui11/ResolverProvider.html" class="type-name-link" title="interface in ui11">ResolverProvider</a> - Interface in <a href="ui11/package-summary.html">ui11</a></dt>
 <dd>
 <div class="block">Tartalmat biztosít az általa ismert típusú elemekhez.</div>
 </dd>
+<dt><a href="ui11/ResolverProvider.ResolutionRule.html" class="type-name-link" title="class in ui11">ResolverProvider.ResolutionRule&lt;W&gt;</a> - Class in <a href="ui11/package-summary.html">ui11</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="ui11/ResolverRegistry.html" class="type-name-link" title="class in ui11">ResolverRegistry</a> - Class in <a href="ui11/package-summary.html">ui11</a></dt>
 <dd>
 <div class="block">Can be used to control the process of lowering the <a href="ui11/SubstitutedWidget.html" title="class in ui11">SubstitutedWidgets</a> to
  more concrete widgets.</div>
 </dd>
+<dt><a href="ui11/ResolverProvider.html#rules()" class="member-name-link">rules()</a> - Method in interface ui11.<a href="ui11/ResolverProvider.html" title="interface in ui11">ResolverProvider</a></dt>
+<dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:S">S</h2>
 <dl class="index">
@@ -255,6 +257,8 @@ loadScripts(document, 'script');</script>
 <dt><a href="ui11/ErrorWidget.html#throwable()" class="member-name-link">throwable()</a> - Method in class ui11.<a href="ui11/ErrorWidget.html" title="class in ui11">ErrorWidget</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/provide/Provider.html#toString()" class="member-name-link">toString()</a> - Method in class ui11.provide.<a href="ui11/provide/Provider.html" title="class in ui11.provide">Provider</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="ui11/ResolverProvider.ResolutionRule.html#toString()" class="member-name-link">toString()</a> - Method in class ui11.<a href="ui11/ResolverProvider.ResolutionRule.html" title="class in ui11">ResolverProvider.ResolutionRule</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/Widget.html#toString()" class="member-name-link">toString()</a> - Method in class ui11.<a href="ui11/Widget.html" title="class in ui11">Widget</a></dt>
 <dd>&nbsp;</dd>
