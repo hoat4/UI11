@@ -92,17 +92,14 @@ abstract sealed class PeerRequestor extends Widget {
         private final Widget widget;
         private final PeerRequest<P> request;
         private final Function<P, Widget> f;
-        private final ResolutionRequestCollection inheritOtherReqs;
 
         @Remember private ResolutionRequest<P> req;
 
         @NullMarked
-        public CreatePeerForSingle(Widget widget, PeerRequest<P> request, Function<P, Widget> f,
-                                   @Nullable ResolutionRequestCollection inheritOtherReqs) {
+        public CreatePeerForSingle(Widget widget, PeerRequest<P> request, Function<P, Widget> f) {
             this.widget = widget;
             this.request = request;
             this.f = f;
-            this.inheritOtherReqs = inheritOtherReqs;
         }
 
         @Override
@@ -112,17 +109,11 @@ abstract sealed class PeerRequestor extends Widget {
                 req = new ResolutionRequest<>(
                         widgetState, request, widget);
 
-            Set<ResolutionRequest<?>> reqs;
-            if (inheritOtherReqs != null)
-                reqs = computeReqsWithInherited();
-            else
-                reqs = Set.of(req);
-
             WidgetInstantiation reqW = widgetState.tree.findOrCreateWidgetState(
                     req.widget,
                     widgetState,
                     existingChildren == null ? null : existingChildren[0],
-                    reqs
+                    Set.of(req)
             );
             WidgetInstantiation finisher = widgetState.tree.findOrCreateWidgetState(
                     new SingleRRFinisher<>(req, f),
@@ -132,15 +123,6 @@ abstract sealed class PeerRequestor extends Widget {
             );
             req.finisherWidget = finisher.child();
             return new WidgetInstantiation[]{reqW, finisher};
-        }
-
-        private Set<ResolutionRequest<?>> computeReqsWithInherited() {
-            Set<ResolutionRequest<?>> reqs = new HashSet<>();
-            reqs.add(req);
-            for (ResolutionRequest<?> req : inheritOtherReqs.requests())
-                if (!req.requestData.equals(this.req.requestData))
-                    reqs.add(req);
-            return Set.copyOf(reqs);
         }
 
         private static class SingleRRFinisher<P> extends FinisherWidget {
