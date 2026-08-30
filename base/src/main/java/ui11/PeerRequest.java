@@ -60,7 +60,18 @@ public abstract class PeerRequest<P> {
         Objects.requireNonNull(widget);
         Objects.requireNonNull(request);
         Objects.requireNonNull(then);
-        return new PeerRequestor.CreatePeerForSingle<>(widget, request, then);
+        return new PeerRequestor.CreatePeerForSingle<>(widget, request, then, null);
+    }
+
+    @NullMarked
+    static <P> Widget requestSingle_inheritOtherReqs(Widget widget,
+                                                     PeerRequest<P> request,
+                                                     ResolutionRequestCollection inheritedReqs,
+                                                     Function<P, Widget> then) {
+        Objects.requireNonNull(widget);
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(then);
+        return new PeerRequestor.CreatePeerForSingle<>(widget, request, then, inheritedReqs);
     }
 
     // TODO REQ extends Request<P> nem lehet, mert akkor egy Set<Request<?>>-vel nem lehet meghívni ezt a függvényt

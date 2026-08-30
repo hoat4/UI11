@@ -7,6 +7,7 @@ import ui11.reflectutil.ReflectionUtil;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static java.util.stream.Collectors.*;
 
@@ -84,27 +85,37 @@ public abstract class SubstitutedWidget extends Widget {
         if (i == transformers.size())
             return doResolution(thiz);
 
-        Widget w = invokeTransformer(transformers.get(i), thiz);
-        return PeerRequest.requestSingle(w, ResolverRegistry.TransformerResultRequest.INSTANCE, result -> {
-            Objects.requireNonNull(result);
-            if (result.getClass() != getClass())
-                // ez normális eset, csak ki kell találni, hogy hogyan kéne detektálni az ide-oda transzformálgatást
-                throw new RuntimeException("TODO transformation resulted in different type: " +
-                        result.getClass().getName() + " vs " + getClass().getName() + "\n" +
-                        "Transformers: " + transformers);
-
-            SubstitutedWidget thiz2 = (SubstitutedWidget) result;
-            // itt már nem kell talán forSubstitution(), mert a keyek már assignolva lettek az eredetibe
-            return transformOrResolve(thiz2, transformers, i + 1);
-        });
+        return new TransformerInvoker(thiz, transformers, i);
     }
 
-    @SuppressWarnings("unchecked")
-    private Widget invokeTransformer(ResolverRegistry.Transformer<?> t,
-                                     SubstitutedWidget thiz) {
-        // TODO exceptionök?
-        return ((BiFunction<SubstitutedWidget, PeerRequest<Widget>, Widget>) t.f).
-                apply(thiz, ResolverRegistry.TransformerResultRequest.INSTANCE);
+    private class TransformerInvoker extends Widget {
+
+        private final SubstitutedWidget thiz;
+        private final List<ResolverRegistry.Transformer<?>> transformers;
+        private final int i;
+
+        public TransformerInvoker(SubstitutedWidget thiz, List<ResolverRegistry.Transformer<?>> transformers, int i) {
+            this.thiz = thiz;
+            this.transformers = transformers;
+            this.i = i;
+        }
+
+        @Override
+        protected Widget build() {
+            ResolverRegistry.Transformer<?> t = transformers.get(i);
+            return t.invokeUnchecked(thiz, result -> {
+                Objects.requireNonNull(result);
+                if (result.getClass() != thiz.getClass())
+                    // ez normális eset, csak ki kell találni, hogy hogyan kéne detektálni az ide-oda transzformálgatást
+                    throw new RuntimeException("TODO transformation resulted in different type: " +
+                            result.getClass().getName() + " vs " + thiz.getClass().getName() + "\n" +
+                            "Transformers: " + transformers);
+
+                SubstitutedWidget thiz2 = (SubstitutedWidget) result;
+                // itt már nem kell talán forSubstitution(), mert a keyek már assignolva lettek az eredetibe
+                return transformOrResolve(thiz2, transformers, i + 1);
+            });
+        }
     }
 
     private Widget doResolution(SubstitutedWidget thiz) {

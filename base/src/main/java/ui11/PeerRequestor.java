@@ -70,7 +70,7 @@ abstract sealed class PeerRequestor extends Widget {
             }
 
             if (chainedWidget == null)
-                throw new RuntimeException("TODO");
+                throw new RuntimeException("TODO remaining reqs: " + remaining);
 
             return PeerRequest.requestOnSingleWidget(chainedWidget, remaining.keySet(), respMap -> {
                 remaining.forEach((req, resReqs) -> {
@@ -92,14 +92,17 @@ abstract sealed class PeerRequestor extends Widget {
         private final Widget widget;
         private final PeerRequest<P> request;
         private final Function<P, Widget> f;
+        private final ResolutionRequestCollection inheritOtherReqs;
 
         @Remember private ResolutionRequest<P> req;
 
         @NullMarked
-        public CreatePeerForSingle(Widget widget, PeerRequest<P> request, Function<P, Widget> f) {
+        public CreatePeerForSingle(Widget widget, PeerRequest<P> request, Function<P, Widget> f,
+                                   @Nullable ResolutionRequestCollection inheritOtherReqs) {
             this.widget = widget;
             this.request = request;
             this.f = f;
+            this.inheritOtherReqs = inheritOtherReqs;
         }
 
         @Override
@@ -108,11 +111,18 @@ abstract sealed class PeerRequestor extends Widget {
                     !Objects.equals(req.widget, widget))
                 req = new ResolutionRequest<>(
                         widgetState, request, widget);
+
+            Set<ResolutionRequest<?>> reqs;
+            if (inheritOtherReqs != null)
+                reqs = computeReqsWithInherited();
+            else
+                reqs = Set.of(req);
+
             WidgetInstantiation reqW = widgetState.tree.findOrCreateWidgetState(
                     req.widget,
                     widgetState,
                     existingChildren == null ? null : existingChildren[0],
-                    Set.of(req)
+                    reqs
             );
             WidgetInstantiation finisher = widgetState.tree.findOrCreateWidgetState(
                     new SingleRRFinisher<>(req, f),
@@ -122,6 +132,15 @@ abstract sealed class PeerRequestor extends Widget {
             );
             req.finisherWidget = finisher.child();
             return new WidgetInstantiation[]{reqW, finisher};
+        }
+
+        private Set<ResolutionRequest<?>> computeReqsWithInherited() {
+            Set<ResolutionRequest<?>> reqs = new HashSet<>();
+            reqs.add(req);
+            for (ResolutionRequest<?> req : inheritOtherReqs.requests())
+                if (!req.requestData.equals(this.req.requestData))
+                    reqs.add(req);
+            return Set.copyOf(reqs);
         }
 
         private static class SingleRRFinisher<P> extends FinisherWidget {

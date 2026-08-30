@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 /**
@@ -52,7 +53,7 @@ public final class ResolverRegistry {
 
     public <SW extends SubstitutedWidget> void addTransformer(
             @NonNull Class<SW> widgetType,
-            @NonNull BiFunction<@NonNull SW, @NonNull PeerRequest<Widget>, @NonNull Widget> f) {
+            @NonNull BiFunction<@NonNull SW, @NonNull UnaryOperator<Widget>, @NonNull Widget> f) {
         validateSubstitutedWidgetType(widgetType);
         Objects.requireNonNull(f);
         transformers.add(new Transformer<>(widgetType, f));
@@ -82,12 +83,20 @@ public final class ResolverRegistry {
     static final class Transformer<SW extends SubstitutedWidget> {
 
         final @NonNull Class<? extends SubstitutedWidget> widgetType;
-        final @NonNull BiFunction<@NonNull SW, @NonNull PeerRequest<Widget>, @NonNull Widget> f;
+        final @NonNull BiFunction<@NonNull SW, @NonNull UnaryOperator<Widget>, @NonNull Widget> f;
 
         Transformer(@NonNull Class<? extends SubstitutedWidget> widgetType,
-                    @NonNull BiFunction<@NonNull SW, @NonNull PeerRequest<Widget>, @NonNull Widget> f) {
+                    @NonNull BiFunction<@NonNull SW, @NonNull UnaryOperator<Widget>, @NonNull Widget> f) {
             this.widgetType = widgetType;
             this.f = f;
+        }
+
+        @SuppressWarnings("unchecked")
+        Widget invokeUnchecked(SubstitutedWidget thiz,
+                               UnaryOperator<Widget> nextInChain) {
+            // TODO exceptionök?
+            return ((BiFunction<SubstitutedWidget, UnaryOperator<Widget>, Widget>) f).
+                    apply(thiz, nextInChain);
         }
 
         @Override
