@@ -30,7 +30,6 @@ loadScripts(document, 'script');</script>
 <li><a href="package-summary.html">Package</a></li>
 <li class="nav-bar-cell1-rev">Class</li>
 <li><a href="package-tree.html">Tree</a></li>
-<li><a href="../../deprecated-list.html">Deprecated</a></li>
 <li><a href="../../index-all.html">Index</a></li>
 <li><a href="../../help-doc.html#class">Help</a></li>
 </ul>
@@ -86,14 +85,12 @@ loadScripts(document, 'script');</script>
 <div class="type-signature"><span class="annotations"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/annotation/Target.html" title="class or interface in java.lang.annotation" class="external-link">@Target</a>({<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/annotation/ElementType.html#METHOD" title="class or interface in java.lang.annotation" class="external-link">METHOD</a>,<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/annotation/ElementType.html#FIELD" title="class or interface in java.lang.annotation" class="external-link">FIELD</a>})
 <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/annotation/Retention.html" title="class or interface in java.lang.annotation" class="external-link">@Retention</a>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/annotation/RetentionPolicy.html#RUNTIME" title="class or interface in java.lang.annotation" class="external-link">RUNTIME</a>)
 </span><span class="modifiers">public @interface </span><span class="element-name type-name-label">Provide</span></div>
-<div class="block">Az annotált metódust tartalmazó <a href="../Widget.html" title="class in ui11">Widget</a> minden leszármazotta megkapja
- egy inherited value-t, aminek a típusa
- az annotált metódus visszatérési típusa (vagy a mező típusa), és értéke az annotált metódus visszatérési értéke
- (vagy a mező esetén a mezőben található Observable-ben lévő érték).
+<div class="block">All descendants in the widget containing the annotated field/method will receive an inherited value,
+ which will have a type of the annotated method's type (or field's type), and value of the annotated method's
+ return value (or in case or fields, the value in the Observable).
  <p>
- Minden childre vonatkozik, így az <code>Element.build</code> által visszaadott Widgetre, és a <code>Element.instantiate</code>
- által létrehozott childekre is. Azonban az az <code>Element</code>, melyben van az annotált metódus vagy mező,
- saját maga nem fogja érzékelni ezt a provideolt örökölhető értéket.</div>
+ The widget itself that has the annotated field or method the value won't receive the provided value via
+ <code>@Inject</code>.</div>
 </section>
 <section class="details" id="annotation-interface-element-detail"></section>
 <!-- ========= END OF CLASS DATA ========= -->
