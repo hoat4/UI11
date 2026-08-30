@@ -14,14 +14,9 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
 /**
  * A widget that requests some information about some child widgets, then invokes a callback with the results.
  * <p>
- * The requests can be accessed in the following ways:
- * <ul>
- *     <li>By the second argument of the {@link BiFunction} passed to {@link ResolverRegistry#addPeerDependent(Class, Class, BiFunction)}
- *     <li>By the argument of the {@link Function} passed to {@link ResolverRegistry#addPeerDependent(Class, Set, Function)}
- *     <li>Declaring a {@link ui11.Widget.Inject @Inject} field in a widget whose type is the array type of the request
- *     type. The array's value will be the current peer requests that should be fulfilled. The array won't contain two
- *     {@linkplain Object#equals(Object) same} element twice.
- * </ul>
+ * The requests can be accessed by declaring a {@link ui11.Widget.Inject @Inject} field in a widget whose type is the array type of the request
+ * type. The array's value will be the current peer requests that should be fulfilled. The array won't contain two
+ * {@linkplain Object#equals(Object) same} element twice.
  * A widget can provide response to a request by returning the value of
  * {@linkplain PeerRequest#createResponse(Object) Request.createResponse} or
  * {@linkplain PeerRequest#createResponse(Object, Widget)}.

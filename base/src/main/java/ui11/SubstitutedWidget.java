@@ -118,26 +118,31 @@ public abstract class SubstitutedWidget extends Widget {
         // peer-specifikus resolvereket előbbre vesszük, mint a nem peer-specifikusakat,
         // mert ha peer-specifikusakkal ki elégíteni, akkor lehet hogy a nem peer-specifikus nem is kell
         Set<ResolutionRequest<?>> handledUsingPeerSpecificResolvers = new HashSet<>();
-        for (ResolutionRequest<?> req : allRemainingRequests) {
-            resolverRegistry.findPeerDependentResolvers(thiz, req.requestData, f -> {
-                if (!handledUsingPeerSpecificResolvers.add(req))
-                    throw new RuntimeException("Multiple resolvers has applicable " +
-                            "tryResolveRequestSpecific for " + thiz + " and " + req + ": " + resolverRegistry);
+        for (ResolverProvider.ResolutionRule<?> rule : resolverRegistry.eagerRules) {
+            if (!rule.matches(thiz, allRemainingRequests))
+                continue;
 
-                @SuppressWarnings("unchecked") BiFunction<SubstitutedWidget, PeerRequest<?>, Widget> castedF =
-                        (BiFunction<SubstitutedWidget, PeerRequest<?>, Widget>) f;
-                Widget w = castedF.apply(thiz, req.requestData); // TODO exceptionök
-                if (w == null)
-                    throw new NullPointerException(f + " returned null"); // TODO értelmesebb hibaüzenet
+            Map<PeerRequest<?>, Set<ResolutionRequest<?>>> m = new HashMap<>();
+            for (Class<? extends PeerRequest<?>> reqType : rule.supportedRequestTypes) {
+                for (ResolutionRequest<?> req : allRemainingRequests) {
+                    if (!reqType.isInstance(req.requestData))
+                        continue;
+                    if (!handledUsingPeerSpecificResolvers.add(req))
+                        throw new RuntimeException("Multiple resolvers has applicable " +
+                                "tryResolveRequestSpecific for " + thiz + " and " + req + ": " + resolverRegistry);
+                    m.computeIfAbsent(req.requestData, __ -> new HashSet<>()).add(req);
+                }
+            }
 
-                ResolverWidgetKey.OfPeerSpecificResolver key =
-                        new ResolverWidgetKey.OfPeerSpecificResolver(req);
+            Widget w = rule.invokeUnchecked(thiz);
 
-                Object prev = childrenWidgets.putIfAbsent(key, w);
-                assert prev == null;
-                if (childrenReqs.put(key, new HashMap<>(Map.of(req.requestData, new HashSet<>(Set.of(req))))) != null)
-                    throw new RuntimeException("Duplicate req key: " + key);
-            });
+            ResolverWidgetKey.OfGenericResolver key =
+                    new ResolverWidgetKey.OfGenericResolver(rule);
+
+            Object prev = childrenWidgets.putIfAbsent(key, w);
+            assert prev == null;
+            if (childrenReqs.put(key, m) != null)
+                throw new RuntimeException("Duplicate req key: " + key);
         }
 
         Set<ResolutionRequest<?>> remainedAfterPeerSpecificResolvers =
@@ -166,24 +171,23 @@ public abstract class SubstitutedWidget extends Widget {
 
         // tryResolveGeneric-eket akkor is végrehajtjuk, ha minden req-t lefednek a peer-specifikusok, hogy
         // multiple resolvers applicable hibák kijöjjenek
-        resolverRegistry.findPeerIndependentResolvers(thiz, remainingForGeneric.keySet(), (keyO, f) -> {
+        for (ResolverProvider.ResolutionRule<?> r : resolverRegistry.greedyRules) {
+            if (!r.matches(thiz, remainedAfterPeerSpecificResolvers))
+                continue;
             if (foundGenericResolver[0])
                 // TODO ezt már ResolverRegistrynek kéne detektálnia
                 throw new RuntimeException("Multiple resolvers has applicable tryResolveGeneric for " +
                         thiz + ": " + resolverRegistry);
             foundGenericResolver[0] = true;
 
-            @SuppressWarnings("unchecked") Function<SubstitutedWidget, Widget> castedF = (Function<SubstitutedWidget, Widget>) f;
-            Widget w = castedF.apply(thiz); // TODO exceptionök
-            if (w == null)
-                throw new NullPointerException(f + " returned null"); // TODO értelmesebb hibaüzenet
+            Widget w = r.invokeUnchecked(thiz);
 
             if (!remainingForGeneric.isEmpty()) {
-                ResolverWidgetKey.OfGenericResolver key = new ResolverWidgetKey.OfGenericResolver(keyO);
+                ResolverWidgetKey.OfGenericResolver key = new ResolverWidgetKey.OfGenericResolver(r);
                 childrenWidgets.put(key, w);
                 childrenReqs.put(key, remainingForGeneric);
             }
-        });
+        }
 
         if (allRemainingRequests.size() != handledUsingPeerSpecificResolvers.size() + removedBecauseDefaultValue[0]) {
             // van olyan req, amit a peer-specifikusok nem fednek le
@@ -221,7 +225,7 @@ public abstract class SubstitutedWidget extends Widget {
         s.append(": ").append(remainingReqs).append("\n").append("Refresh stack:");
         s.append(widgetState().tree.refreshStackToString());
         s.append("\nAvailable resolvers: ");
-        widgetState().tree.resolverRegistry.all().forEach(entry -> {
+        widgetState().tree.resolverRegistry.debug_allResolvers().forEach(entry -> {
             s.append("\n- ").append(entry);
         });
         return new RuntimeException(s.toString());

@@ -27,12 +27,17 @@ public interface ResolverProvider {
         throw new UnsupportedOperationException();
     }
 
+    // ennek identity equalsjére SubstitutedWidgetben a keyek dependelnek
     final class ResolutionRule<W extends SubstitutedWidget> {
 
         final @NonNull Class<W> widgetType;
         final @NonNull Function<W, Widget> f;
         // TODO ez most kicsit zavaros, mert az üres set azt jelenti hogy minden requestet elfogad
         final @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes;
+        /**
+         * ha ez true, akkor {@link #supportedRequestTypes} nem üres
+         */
+        final boolean coexistWithOtherResolvers;
 
         public ResolutionRule(@NonNull Class<W> widgetType,
                               @NonNull Function<W, Widget> f) {
@@ -42,13 +47,16 @@ public interface ResolverProvider {
                 throw new IllegalArgumentException();
             this.f = Objects.requireNonNull(f);
             this.supportedRequestTypes = Set.of();
+            this.coexistWithOtherResolvers = false;
         }
 
         private ResolutionRule(ResolutionRule<W> old,
-                               @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes) {
+                               @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes,
+                               boolean coexistWithOtherResolvers) {
             this.widgetType = old.widgetType;
             this.f = old.f;
             this.supportedRequestTypes = supportedRequestTypes;
+            this.coexistWithOtherResolvers = coexistWithOtherResolvers;
         }
 
         public ResolutionRule<W> requires(Class<? extends PeerRequest<?>> requestType) {
@@ -64,7 +72,33 @@ public interface ResolverProvider {
                 if (t.asSubclass(PeerRequest.class) == PeerRequest.class)
                     throw new IllegalArgumentException();
             });
-            return new ResolutionRule<>(this, set);
+            return new ResolutionRule<>(this, set, coexistWithOtherResolvers);
+        }
+
+        public ResolutionRule<W> coexistWithOtherResolvers() {
+            if (supportedRequestTypes.isEmpty())
+                throw new IllegalStateException("Can't coexist with other resolvers is " +
+                        "supported request types is not specified");
+            return new ResolutionRule<>(this, supportedRequestTypes, true);
+        }
+
+        boolean matches(SubstitutedWidget widget, Set<? extends ResolutionRequest<?>> reqs) {
+            if (!widgetType.isInstance(widget))
+                return false;
+            if (supportedRequestTypes.isEmpty())
+                return true;
+            return supportedRequestTypes.stream().anyMatch(supportedRequestType ->
+                    reqs.stream().anyMatch(req ->
+                            supportedRequestType.isInstance(req.requestData)));
+        }
+
+        Widget invokeUnchecked(SubstitutedWidget widgetToBeSubstituted) {
+            @SuppressWarnings("unchecked") Function<SubstitutedWidget, Widget> castedF =
+                    (Function<SubstitutedWidget, Widget>) f;
+            Widget w = castedF.apply(widgetToBeSubstituted); // TODO exceptionök
+            if (w == null)
+                throw new NullPointerException("Rule returned null: " + this); // TODO értelmesebb hibaüzenet
+            return w;
         }
 
         @Override

@@ -6,7 +6,6 @@ import ui11.Widget;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.multichild.LinearLayout.WeightMarker;
 
-import javax.sound.sampled.Line;
 import java.util.*;
 
 import static ui11.layout.multichild.LinearLayout.withWeight;
@@ -14,25 +13,18 @@ import static ui11.layout.multichild.LinearLayout.withWeight;
 // Flattens nested LinearLayout into the parent, recursively.
 // As of now, this only works if the nested LinearLayout is not provided by a generic resolver,
 // since peer requests with default values don't work with generic resolvers.
-class LinearLayoutOpt extends Widget {
+abstract class LinearLayoutOpt extends Widget {
 
-    private final LinearLayout linearLayout;
+    protected final LinearLayout linearLayout;
 
-    // a következő kettő közül pontosan az egyik nemnull
-    private final @Nullable PeerRequest<Widget> transformedWidgetRequest;
-    private final @Nullable CollapsedLLRequest collapsedLLRequest;
-
-    public LinearLayoutOpt(LinearLayout linearLayout,
-                           @Nullable PeerRequest<Widget> transformedWidgetRequest,
-                           @Nullable CollapsedLLRequest collapsedLLRequest) {
+    public LinearLayoutOpt(LinearLayout linearLayout) {
         this.linearLayout = linearLayout;
-        this.transformedWidgetRequest = transformedWidgetRequest;
-        this.collapsedLLRequest = collapsedLLRequest;
     }
 
     @Override
     protected Widget build() {
-        // TODO ha collapsedLLRequest == nulll, akkor weightokat nem is kéne lekérdezni
+        System.out.println(getClass().getSimpleName());
+        // TODO ha collapsedLLRequest == null, akkor weightokat nem is kéne lekérdezni
         return PeerRequest.requestMultiple(
                 linearLayout.items(),
                 Set.of(CollapsedLLRequest.INSTANCE, WeightMarker.WeightRequest.INSTANCE),
@@ -55,6 +47,7 @@ class LinearLayoutOpt extends Widget {
         for (int i = 0; i < items.size(); i++) {
             CollapsedLLOrNothing collapsedLLOrNothing =
                     (CollapsedLLOrNothing) results.get(CollapsedLLRequest.INSTANCE).get(i);
+            System.out.println(i+": "+collapsedLLOrNothing);
 
             if (collapsedLLOrNothing == NoCollapsedLL.NO_COLLAPSED_LL) {
                 newItems.add(withWeight(weights.get(i), items.get(i)));
@@ -77,13 +70,41 @@ class LinearLayoutOpt extends Widget {
         }
 
         LinearLayout newLL = linearLayout.withItems(newItems);
-        if (collapsedLLRequest != null) {
+        return finish(newLL, newWeights);
+    }
+
+    abstract Widget finish(LinearLayout newLL, List<Double> newWeights);
+
+    static class LLFinder extends LinearLayoutOpt {
+
+        @Inject private CollapsedLLRequest[] collapsedLLRequests;
+
+        public LLFinder(LinearLayout linearLayout) {
+            super(linearLayout);
+        }
+
+        @Override
+        Widget finish(LinearLayout newLL, List<Double> newWeights) {
+            Widget w = newLL;
+            System.out.println("LLFinder result: "+newLL);
             if (linearLayout.mainAxisAlignment() == LinearLayout.JustifyContent.STRETCH)
-                return collapsedLLRequest.createResponse(new CollapsedLL(newLL, newWeights), newLL);
-            else
-                return newLL;
-        } else {
-            assert transformedWidgetRequest != null;
+                for (CollapsedLLRequest req : collapsedLLRequests)
+                    w = req.createResponse(new CollapsedLL(newLL, newWeights), w);
+            return w;
+        }
+    }
+
+    static class LLTransformer extends LinearLayoutOpt {
+
+        private final PeerRequest<Widget> transformedWidgetRequest;
+
+        public LLTransformer(LinearLayout linearLayout, PeerRequest<Widget> transformedWidgetRequest) {
+            super(linearLayout);
+            this.transformedWidgetRequest = transformedWidgetRequest;
+        }
+
+        @Override
+        Widget finish(LinearLayout newLL, List<Double> newWeights) {
             return transformedWidgetRequest.createResponse(newLL);
         }
     }
