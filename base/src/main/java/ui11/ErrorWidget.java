@@ -1,8 +1,9 @@
 package ui11;
 
 /**
- * Megjeleníthető tartalmat (pl. hibaüzenetet) biztosít olyan widgetnek, ami exceptiont dobott,
- * amikor a tartalmát próbálta felépíteni.
+ * A widget that represents that an exception occured while building another widget.
+ * <p>
+ * The appearance can be controlled via {@link ResolverRegistry}, as in case of any {@linkplain SubstitutedWidget}.
  */
 public final class ErrorWidget extends SubstitutedWidget {
 

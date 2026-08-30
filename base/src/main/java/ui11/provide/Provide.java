@@ -16,14 +16,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 //      nem értesít observert
 
 /**
- * Az annotált metódust tartalmazó {@linkplain Widget} minden leszármazotta megkapja
- * egy inherited value-t, aminek a típusa
- * az annotált metódus visszatérési típusa (vagy a mező típusa), és értéke az annotált metódus visszatérési értéke
- * (vagy a mező esetén a mezőben található {@linkplain ui11.observable.Observable}-ben lévő érték).
+ * All descendants in the widget containing the annotated field/method will receive an inherited value,
+ * which will have a type of the annotated method's type (or field's type), and value of the annotated method's
+ * return value (or in case or fields, the value in the {@linkplain ui11.observable.Observable}).
  * <p>
- * Minden childre vonatkozik, így az {@code Element.build} által visszaadott Widgetre, és a {@code Element.instantiate}
- * által létrehozott childekre is. Azonban az az {@code Element}, melyben van az annotált metódus vagy mező,
- * saját maga nem fogja érzékelni ezt a provideolt örökölhető értéket.
+ * The widget itself that has the annotated field or method the value won't receive the provided value via
+ * {@code @Inject}.
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

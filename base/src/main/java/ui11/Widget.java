@@ -511,11 +511,12 @@ public abstract class Widget implements Cloneable {
     //      Observable::get-et. bár akkor meg nem derül ki, ha hiányzik.
 
     /**
-     * Az ezzel annotált mezők típusa csak interface lehet, és a mezőknek nem szabad finalnak lenniük. Ha egy
-     * {@linkplain ui11.observable.Observable Observable} típusú mezőt annotálunk ezzel, akkor az Observable
-     * típusváltozójában megadott típusú inherited valuet fogjuk keresni.
+     * A field annotated with this annotation must be non-final and non-static.
+     * If the field has type {@link ui11.observable.Observable Observable}, then the type searched in the ancestors
+     * will be the type argument of the {@code Observable<...>} generic type. If the field has any other interface type,
+     * then a proxy is used instead of the real value.
      * <p>
-     * Ha annotálva van ezzel, akkor {@linkplain Remember} annotációval már nem lehet.
+     * If a field is annotated with this annotation, then it cannot be annotated with {@link Remember @Remember}.
      */
     @Target(FIELD)
     @Retention(RUNTIME)
@@ -540,11 +541,11 @@ public abstract class Widget implements Cloneable {
     // emberek beállítani olyan dolgokat, amik valamiféle cache-elésre vagy perzisztenciára utalnak.
 
     /**
-     * Az ezzel annotált mezőknek nem szabad {@code final}-nak lenniük, és az {@linkplain #initState()} meghívásáig nem
-     * szabad a mező default értékén (objektumok esetén null, primitív típusok esetén 0 vagy {@code false}) kívül mást
-     * felvenniük.
+     * Fields annotated with this annotation must be non-final {@code final} and non-static, and
+     * until the invocation of {@linkplain #initState()} they must left at their default value
+     * ({@code null} in case of object fields, 0 or {@code false} in case of primitive type fields).
      * <p>
-     * Ha annotálva van ezzel, akkor {@linkplain Inject} annotációval már nem lehet.
+     * If a field is annotated with this, then it can't be annotated with {@linkplain Inject}.
      * <p>
      * This is similar to the
      * <a href="https://developer.android.com/develop/ui/compose/state#state-in-composables">{@code remember} function

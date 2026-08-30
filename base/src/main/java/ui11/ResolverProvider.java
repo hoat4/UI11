@@ -1,8 +1,9 @@
 package ui11;
 
 /**
- * Tartalmat biztosít az általa ismert típusú elemekhez. Megvalósítja egyrészt minden renderer, másrészt a jövőben
- * megvalósíthatják majd "look and feel"/"theme"-szerű modulok.
+ * Provides content for {@linkplain SubstitutedWidget SubstitutedWidgets}.
+ * <p>
+ * This interface is usually implemented by themes and platform-specific modules.
  */
 // TODO multithreading specifikálása
 public interface ResolverProvider {
