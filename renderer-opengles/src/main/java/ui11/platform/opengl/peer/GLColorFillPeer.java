@@ -17,16 +17,15 @@ import ui11.platform.opengl.rendertree.FillTrianglesWithColorRenderNode;
 public class GLColorFillPeer extends Widget {
 
     private final ColorFill colorFill;
-    private final GLSurface surface;
 
+    @Inject private GLSurface surface;
     @Inject private BufferPool bufferPool;
 
     @Remember private FillTrianglesWithColorRenderNode node;
     @Remember private OpaqueInputNode inputNode;
 
-    public GLColorFillPeer(ColorFill colorFill, GLSurface surface) {
+    public GLColorFillPeer(ColorFill colorFill) {
         this.colorFill = colorFill;
-        this.surface = surface;
     }
 
     @Override

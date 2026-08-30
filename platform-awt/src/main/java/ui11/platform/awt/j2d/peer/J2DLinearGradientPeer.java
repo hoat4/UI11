@@ -19,16 +19,15 @@ import java.awt.*;
 public class J2DLinearGradientPeer extends Widget {
 
     private final LinearGradient gradient;
-    private final J2DSurface surface;
 
+    @Inject private J2DSurface surface;
     @Inject private TextStyle textStyle;
 
     @Remember private FillPathRenderNode node;
     @Remember private OpaqueInputNode inputNode;
 
-    public J2DLinearGradientPeer(LinearGradient gradient, J2DSurface surface) {
+    public J2DLinearGradientPeer(LinearGradient gradient) {
         this.gradient = gradient;
-        this.surface = surface;
     }
 
     @Override

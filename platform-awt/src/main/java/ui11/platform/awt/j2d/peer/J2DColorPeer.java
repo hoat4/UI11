@@ -16,14 +16,14 @@ import java.awt.geom.Path2D;
 public class J2DColorPeer extends Widget {
 
     private final ColorFill colorFill;
-    private final J2DSurface surface;
+
+    @Inject private J2DSurface surface;
 
     @Remember private FillPathRenderNode node;
     @Remember private OpaqueInputNode inputNode;
 
-    public J2DColorPeer(ColorFill colorFill, J2DSurface surface) {
+    public J2DColorPeer(ColorFill colorFill) {
         this.colorFill = colorFill;
-        this.surface = surface;
     }
 
     @Override

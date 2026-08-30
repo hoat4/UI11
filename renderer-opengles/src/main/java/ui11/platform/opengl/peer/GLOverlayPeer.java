@@ -21,8 +21,8 @@ import java.util.*;
 public class GLOverlayPeer extends Widget {
 
     private final Overlay overlay;
-    private final GLSurface parentSurface;
 
+    @Inject private GLSurface parentSurface;
     @Inject private Observable<BufferPool> bufferPool;
 
     @Remember private List<GLSurface> childSurfaces;
@@ -30,9 +30,8 @@ public class GLOverlayPeer extends Widget {
     @Remember private GroupInputNode groupInputNode;
     @Remember private Map<Set<FillTrianglesWithColorRenderNode>, FillTrianglesWithColorRenderNode> mergedNodeCache;
 
-    public GLOverlayPeer(Overlay overlay, GLSurface surface) {
+    public GLOverlayPeer(Overlay overlay) {
         this.overlay = overlay;
-        this.parentSurface = surface;
     }
 
     @Override

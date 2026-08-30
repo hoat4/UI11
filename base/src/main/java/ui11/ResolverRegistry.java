@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.joining;
+
 /**
  * Can be used to control the process of lowering the {@linkplain SubstitutedWidget SubstitutedWidgets} to
  * more concrete widgets.
@@ -27,6 +29,12 @@ public final class ResolverRegistry {
     ResolverRegistry() {
     }
 
+    <W extends SubstitutedWidget> void add(ResolverProvider.ResolutionRule<W> rule) {
+        PeerIndependentResolver<W> r = new PeerIndependentResolver<>(
+                rule.supportedRequestTypes, rule.widgetType, rule.f);
+        peerIndependentResolvers.add(r);
+    }
+
     /**
      * Adds a new resolver to this resolver registry.
      * It will be applicable if the widget is an instance of the specified type or its subtypes.
@@ -38,7 +46,7 @@ public final class ResolverRegistry {
             @NonNull Function<@NonNull SW, Widget> f) {
         validateSubstitutedWidgetType(widgetType);
         Objects.requireNonNull(f);
-        peerIndependentResolvers.add(new PeerIndependentResolver<>(null, widgetType, f));
+        peerIndependentResolvers.add(new PeerIndependentResolver<>(Set.of(), widgetType, f));
     }
 
     public <SW extends SubstitutedWidget> void addPeerIndependentWithFilter(
@@ -48,7 +56,7 @@ public final class ResolverRegistry {
         validateRequestType(requestType);
         validateSubstitutedWidgetType(widgetType);
         Objects.requireNonNull(f);
-        peerIndependentResolvers.add(new PeerIndependentResolver<>(requestType, widgetType, f));
+        peerIndependentResolvers.add(new PeerIndependentResolver<>(Set.of(requestType), widgetType, f));
     }
 
     public <SW extends SubstitutedWidget, REQ extends PeerRequest<?>> void addPeerDependent(
@@ -123,7 +131,9 @@ public final class ResolverRegistry {
         for (PeerIndependentResolver<?> e : peerIndependentResolvers) {
             if (!e.widgetType.isInstance(w))
                 continue;
-            if (e.requestType != null && reqs.stream().noneMatch(e.requestType::isInstance))
+            if (!e.requestTypes.isEmpty() &&
+                    e.requestTypes.stream().allMatch(supportedRequestType ->
+                    reqs.stream().noneMatch(supportedRequestType::isInstance)))
                 continue;
             consumer.accept(e, e.f);
         }
@@ -145,12 +155,9 @@ public final class ResolverRegistry {
 
     static sealed abstract class Resolver {
 
-        final Class<? extends PeerRequest<?>> requestType; // csak peer independent esetén nullable
         final @NonNull Class<? extends SubstitutedWidget> widgetType;
 
-        public Resolver(Class<? extends PeerRequest<?>> requestType,
-                        @NonNull Class<? extends SubstitutedWidget> widgetType) {
-            this.requestType = requestType;
+        public Resolver(@NonNull Class<? extends SubstitutedWidget> widgetType) {
             this.widgetType = widgetType;
         }
     }
@@ -158,18 +165,22 @@ public final class ResolverRegistry {
     static final class PeerIndependentResolver<SW extends SubstitutedWidget> extends Resolver {
 
         private final Function<SW, Widget> f;
+        // TODO ez most kicsit zavaros, mert az üres set azt jelenti hogy minden requestet elfogad
+        final Set<Class<? extends PeerRequest<?>>> requestTypes;
 
-        public PeerIndependentResolver(@Nullable Class<? extends PeerRequest<?>> requestType,
+        public PeerIndependentResolver(@NonNull Set<Class<? extends PeerRequest<?>>> requestTypes,
                                        @NonNull Class<SW> widgetType,
                                        @NonNull Function<@NonNull SW, @NonNull Widget> f) {
-            super(requestType, widgetType);
+            super(widgetType);
+            this.requestTypes = requestTypes;
             this.f = f;
         }
 
         @Override
         public String toString() {
             return ReflectionUtil.simpleName(widgetType) + " " +
-                    (requestType != null ? ReflectionUtil.simpleName(requestType) : "<any request>") +
+                    (requestTypes.isEmpty() ? "<any request>" : requestTypes.stream().
+                            map(ReflectionUtil::simpleName).collect(joining(", ", "[", "]"))) +
                     " " + f;
         }
     }
@@ -177,11 +188,13 @@ public final class ResolverRegistry {
     static final class PeerDependentResolver<SW extends SubstitutedWidget, REQ extends PeerRequest<?>> extends Resolver {
 
         private final BiFunction<SW, REQ, Widget> f;
+        final Class<? extends PeerRequest<?>> requestType;
 
         public PeerDependentResolver(@NonNull Class<REQ> requestType,
                                      @NonNull Class<SW> widgetType,
                                      @NonNull BiFunction<@NonNull SW, @NonNull REQ, @NonNull Widget> f) {
-            super(requestType, widgetType);
+            super(widgetType);
+            this.requestType = requestType;
             this.f = f;
         }
 

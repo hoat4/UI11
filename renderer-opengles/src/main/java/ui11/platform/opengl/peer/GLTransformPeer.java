@@ -22,15 +22,15 @@ import ui11.platform.opengl.rendertree.TransformRenderNode;
 public class GLTransformPeer extends Widget {
 
     private final Transform transform;
-    private final GLSurface parentSurface;
+
+    @Inject private GLSurface parentSurface;
 
     @Remember private TransformedSurface surface;
     @Remember private TransformRenderNode node;
     @Remember private TransformInputNode inputNode;
 
-    public GLTransformPeer(Transform transform, GLSurface surface) {
+    public GLTransformPeer(Transform transform) {
         this.transform = transform;
-        this.parentSurface = surface;
     }
 
     @Override

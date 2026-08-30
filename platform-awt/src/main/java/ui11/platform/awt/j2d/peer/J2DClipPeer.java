@@ -20,16 +20,16 @@ import java.awt.geom.Area;
 public class J2DClipPeer extends Widget {
 
     private final Clip clip;
-    private final J2DSurface parentSurface;
+
+    @Inject private J2DSurface parentSurface;
 
     @Remember private ClipPathRenderNode clipNode;
     @Remember private FillPathRenderNode fillPathNode;
     @Remember private ClipPathInputNode clipInputNode;
     @Remember private J2DSurface childSurface;
 
-    public J2DClipPeer(Clip clip, J2DSurface surface) {
+    public J2DClipPeer(Clip clip) {
         this.clip = clip;
-        this.parentSurface = surface;
     }
 
     @Override

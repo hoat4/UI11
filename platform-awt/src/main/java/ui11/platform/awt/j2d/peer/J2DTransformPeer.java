@@ -24,15 +24,15 @@ import java.awt.geom.NoninvertibleTransformException;
 public class J2DTransformPeer extends Widget {
 
     private final Transform transform;
-    private final J2DSurface parentSurface;
+
+    @Inject private J2DSurface parentSurface;
 
     @Remember private TransformedSurface childSurface;
     @Remember private TransformRenderNode node;
     @Remember private TransformInputNode inputNode;
 
-    public J2DTransformPeer(Transform transform, J2DSurface surface) {
+    public J2DTransformPeer(Transform transform) {
         this.transform = transform;
-        this.parentSurface = surface;
     }
 
     @Override

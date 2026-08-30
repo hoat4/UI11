@@ -30,8 +30,8 @@ public class J2DSVGImageViewPeer extends Widget {
     private static final Logger logger = LoggerFactory.getLogger(J2DSVGImageViewPeer.class);
 
     private final SVGImageView svgImageView;
-    private final J2DSurface surface;
 
+    @Inject private J2DSurface surface;
     @Inject private TextStyle textStyle;
     @Inject(required = false) private URLResolver urlResolver;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
@@ -40,9 +40,8 @@ public class J2DSVGImageViewPeer extends Widget {
     @Remember private OpaqueInputNode inputNode;
     @Remember private TextStyle prevTextStyle;
 
-    public J2DSVGImageViewPeer(SVGImageView svgImageView, J2DSurface surface) {
+    public J2DSVGImageViewPeer(SVGImageView svgImageView) {
         this.svgImageView = svgImageView;
-        this.surface = surface;
     }
 
     @Override

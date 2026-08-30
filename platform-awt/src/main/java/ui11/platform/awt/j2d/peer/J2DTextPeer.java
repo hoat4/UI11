@@ -20,8 +20,8 @@ public class J2DTextPeer extends Widget {
     private static final Canvas C = new Canvas(); // font metricshez
 
     private final Text text;
-    private final J2DSurface surface;
 
+    @Inject(required = false) private J2DSurface surface;
     @Inject private TextStyle textStyle;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
 
@@ -33,9 +33,8 @@ public class J2DTextPeer extends Widget {
     @Remember private Color prevColor;
     @Remember private Font prevFont;
 
-    public J2DTextPeer(Text text, J2DSurface surface) {
+    public J2DTextPeer(Text text) {
         this.text = text;
-        this.surface = surface;
     }
 
     @Override

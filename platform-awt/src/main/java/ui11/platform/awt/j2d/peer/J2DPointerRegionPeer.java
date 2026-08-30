@@ -10,13 +10,13 @@ import ui11.platform.awt.j2d.inputtree.ListenerInputNode;
 public class J2DPointerRegionPeer extends Widget {
 
     private final PointerRegion pointerRegion;
-    private final J2DSurface surface;
+
+    @Inject private J2DSurface surface;
 
     @Remember private ListenerInputNode inputNode;
 
-    public J2DPointerRegionPeer(PointerRegion pointerRegion, J2DSurface surface) {
+    public J2DPointerRegionPeer(PointerRegion pointerRegion) {
         this.pointerRegion = pointerRegion;
-        this.surface = surface;
     }
 
     @Override

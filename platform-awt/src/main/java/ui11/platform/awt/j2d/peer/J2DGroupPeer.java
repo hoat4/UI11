@@ -18,15 +18,15 @@ import java.util.List;
 public class J2DGroupPeer extends Widget {
 
     private final Overlay overlay;
-    private final J2DSurface parentSurface;
+
+    @Inject private J2DSurface parentSurface;
 
     @Remember private List<J2DSurface> childSurfaces;
     @Remember private GroupRenderNode groupNode;
     @Remember private GroupInputNode groupInputNode;
 
-    public J2DGroupPeer(Overlay overlay, J2DSurface parentSurface) {
+    public J2DGroupPeer(Overlay overlay) {
         this.overlay = overlay;
-        this.parentSurface = parentSurface;
     }
 
     @Override

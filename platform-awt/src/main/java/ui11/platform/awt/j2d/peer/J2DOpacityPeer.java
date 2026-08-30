@@ -10,13 +10,13 @@ import ui11.platform.awt.j2d.rendertree.OpacityRenderNode;
 public class J2DOpacityPeer extends Widget {
 
     private final Opacity opacity;
-    private final J2DSurface surface;
+
+    @Inject private J2DSurface surface;
 
     @Remember private OpacityRenderNode opacityRenderNode;
 
-    public J2DOpacityPeer(Opacity opacity, J2DSurface surface) {
+    public J2DOpacityPeer(Opacity opacity) {
         this.opacity = opacity;
-        this.surface = surface;
     }
 
     @Override
