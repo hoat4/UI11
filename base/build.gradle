@@ -19,4 +19,5 @@ dependencies  {
     testImplementation 'org.openjdk.jmh:jmh-generator-annprocess:1.18';
     testImplementation project(":layout-constraint")
     testImplementation project(":platform-awt")
+    testImplementation project(":renderer-java2d")
 }

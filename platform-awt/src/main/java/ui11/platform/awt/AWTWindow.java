@@ -16,11 +16,12 @@ import ui11.input.pointer.PointerRegion.PointerListener;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.MutableObservable;
 import ui11.platform.awt.AWTEnterContentListenerPeer.AWTEnterContentListenerPeerState;
-import ui11.platform.awt.j2d.*;
-import ui11.platform.awt.j2d.J2DSurface.J2DSurfaceWithOwnShape;
-import ui11.platform.awt.j2d.inputtree.InputNode.PickContext;
-import ui11.platform.awt.j2d.inputtree.InputNode.PickContext.PickStackItem;
-import ui11.platform.awt.j2d.rendertree.RenderNode.RenderTreePrinter;
+import ui11.renderer.j2d.J2DNodeHolder;
+import ui11.renderer.j2d.J2DSurface.RootJ2DSurface;
+import ui11.renderer.j2d.RenderingContext;
+import ui11.renderer.j2d.inputtree.InputNode.PickContext;
+import ui11.renderer.j2d.inputtree.InputNode.PickContext.PickStackItem;
+import ui11.renderer.j2d.rendertree.RenderNode.RenderTreePrinter;
 import ui11.provide.Provide;
 import ui11.provide.Provider;
 import ui11.text.TextAlign;
@@ -32,7 +33,6 @@ import ui11.window.Shell;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.util.EnumSet;
@@ -48,10 +48,7 @@ public class AWTWindow {
     private final AWTWindowImpl frame;
     private final InvalidationPoint repaintInvalidationPoint = new InvalidationPoint();
 
-    public final CoordinateSpaceRoot windowCoordinateSystemRoot = new CoordinateSpaceRoot();
-
-    private final MutableObservable<Size> size = MutableObservable.ofNullable();
-    private final J2DSurface rootSurface = new RootJ2DSurface();
+    private final RootJ2DSurface rootSurface = new RootJ2DSurface();
     private final MutableObservable<J2DNodeHolder> rootNodeHolder = MutableObservable.ofNullable();
 
     private final BufferStrategy bs;
@@ -77,7 +74,7 @@ public class AWTWindow {
     }
 
     private void updateSize() {
-        size.set(new Size(frame.innerWidth(), frame.innerHeight()));
+        rootSurface.size.set(new Size(frame.innerWidth(), frame.innerHeight()));
     }
 
     class Root extends Widget {
@@ -316,24 +313,6 @@ public class AWTWindow {
         private Vec2 displayScale() {
             AffineTransform t = getGraphicsConfiguration().getDefaultTransform();
             return new Vec2(t.getScaleX(), t.getScaleY());
-        }
-    }
-
-    public class RootJ2DSurface extends J2DSurfaceWithOwnShape {
-
-        public AWTWindow window() {
-            return AWTWindow.this;
-        }
-
-        @Override
-        public Size size() {
-            return AWTWindow.this.size.get();
-        }
-
-        @Override
-        public Shape shape() {
-            Size size = size();
-            return new Rectangle2D.Double(0, 0, size.width(), size.height());
         }
     }
 }

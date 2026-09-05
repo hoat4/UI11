@@ -1,14 +1,6 @@
 dependencies {
     api project(":base")
     api project(":desktop")
-    implementation project(":layout-constraint") // azért hogy TextPeer tudjon preferredsizeot megadni
-
-    implementation project(":imageio")
-    //implementation project(":renderer-common")
-    api project(":graphics")
-    api project(":input")
-    api project(":text")
-
-    implementation "com.github.weisj:jsvg:2.1.0"
-    implementation project(":task")
+    implementation project(":renderer-java2d")
+    implementation project(":animation")
 }

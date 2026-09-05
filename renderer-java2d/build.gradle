@@ -1,0 +1,15 @@
+dependencies {
+    api project(":graphics")
+    api project(":input")
+    api project(":text")
+
+    implementation project(":imageio")
+    //implementation project(":renderer-common")
+
+    implementation project(":layout-constraint") // azért hogy TextPeer tudjon preferredsizeot megadni
+
+    // for SVG implementation
+    implementation "com.github.weisj:jsvg:2.1.0"
+    implementation project(":desktop")
+    implementation project(":task")
+}
