@@ -37,11 +37,6 @@ public abstract sealed class J2DSurface
     }
 
     @Override
-    public double devicePixelRatio() {
-        return 1;
-    }
-
-    @Override
     public CoordinateSpace coordinateSpace() {
         return root.get().coordinateSpaceRoot.origin;
     }

@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/layout-opt/ui11.layout-opt.main.iml" filepath="$PROJECT_DIR$/.idea/modules/layout-opt/ui11.layout-opt.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/layout-opt/ui11.layout-opt.test.iml" filepath="$PROJECT_DIR$/.idea/modules/layout-opt/ui11.layout-opt.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/media/ui11.media.test.iml" filepath="$PROJECT_DIR$/.idea/modules/media/ui11.media.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/renderer-java2d/ui11.renderer-java2d.main.iml" filepath="$PROJECT_DIR$/.idea/modules/renderer-java2d/ui11.renderer-java2d.main.iml" />
     </modules>
   </component>
 </project>

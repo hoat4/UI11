@@ -14,6 +14,7 @@ import ui11.WidgetTree;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
 import ui11.geom.Location.CoordinateSpaceRoot;
+import ui11.graphics.GraphicsOutputInfo;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.Scope;
 import ui11.provide.Provide;
@@ -29,7 +30,7 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
 
-public class DOMEnvironment implements Shell, Scheduler {
+public class DOMEnvironment implements Shell, Scheduler, GraphicsOutputInfo {
 
     // TODO hogy lehessen "normal" letter-spacingre visszaállítani?
 
@@ -97,6 +98,11 @@ public class DOMEnvironment implements Shell, Scheduler {
 
             @Provide
             Scheduler scheduler() {
+                return DOMEnvironment.this;
+            }
+
+            @Provide
+            GraphicsOutputInfo graphicsOutputInfo() {
                 return DOMEnvironment.this;
             }
 
@@ -215,5 +221,10 @@ public class DOMEnvironment implements Shell, Scheduler {
 
     public void onUncaughtExceptionInEventHandler(Throwable e, Object event, Object source) {
         logger.error("Event handler of " + source + " failed to process " + event, e);
+    }
+
+    @Override
+    public double devicePixelRatio() {
+        return window.getWindow().getDevicePixelRatio();
     }
 }

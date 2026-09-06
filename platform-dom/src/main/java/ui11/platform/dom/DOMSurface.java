@@ -63,11 +63,6 @@ public class DOMSurface extends Surface<DOMElementHolder> {
         return new Size(rect.getWidth(), rect.getHeight());
     }
 
-    @Override
-    public double devicePixelRatio() {
-        return env.window.getWindow().getDevicePixelRatio();
-    }
-
     void update(ProxySurface proxySurface, CumulatingPropList cumulativePropList,
                 TextStyle ts) {
         proxySurface.s = this;

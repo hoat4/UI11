@@ -36,11 +36,6 @@ public abstract sealed class GLSurface
     public abstract Vec2 renderNodeTranslation();
 
     @Override
-    public double devicePixelRatio() {
-        return 1;
-    }
-
-    @Override
     public CoordinateSpace coordinateSpace() {
         return root.get().coordinateSpaceRoot.origin;
     }

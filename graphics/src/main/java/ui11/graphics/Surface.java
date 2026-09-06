@@ -23,8 +23,6 @@ public abstract class Surface<P> extends PeerRequest<P> {
      */
     public abstract Size size();
 
-    public abstract double devicePixelRatio();
-
     public abstract CoordinateSpace coordinateSpace();
 
     // TODO ehelyett valszeg egy shape getter kéne, csak nem világos hogy mi legyen a típusa

@@ -56,13 +56,6 @@ public class DOMWidgetWrapper extends Widget {
         }
 
         @Override
-        public double devicePixelRatio() {
-            if (s == null)
-                throw new IllegalStateException();
-            return s.devicePixelRatio();
-        }
-
-        @Override
         public CoordinateSpace coordinateSpace() {
             if (s == null)
                 throw new IllegalStateException();
