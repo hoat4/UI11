@@ -1,6 +1,8 @@
 apply plugin: "java"
 
 dependencies {
+    api project(":renderer-common")
+
     implementation project(":base")
     implementation project(":graphics")
     implementation project(":input")

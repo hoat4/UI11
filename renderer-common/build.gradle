@@ -1,0 +1,6 @@
+dependencies {
+    api project(":geom")
+    api project(":observable") // ListenerInputNode
+    api project(":input") // ListenerInputNode
+    api project(":graphics")
+}

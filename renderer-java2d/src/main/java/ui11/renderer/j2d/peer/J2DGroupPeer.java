@@ -3,6 +3,8 @@ package ui11.renderer.j2d.peer;
 import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Overlay;
+import ui11.renderer.input.InputNode;
+import ui11.renderer.input.ListenerInputNode;
 import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DVisualContentRequest.ShapeInheritingJ2DSurface;

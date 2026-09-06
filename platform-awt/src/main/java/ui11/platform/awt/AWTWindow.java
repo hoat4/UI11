@@ -1,11 +1,18 @@
 package ui11.platform.awt;
 
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.*;
+import ui11.PeerRequest;
+import ui11.SubstitutedWidget;
+import ui11.Widget;
 import ui11.animation.Scheduler;
-import ui11.geom.*;
 import ui11.color.Color;
+import ui11.geom.Length;
+import ui11.geom.Location;
+import ui11.geom.Size;
+import ui11.geom.Vec2;
+import ui11.graphics.VisualContentRequest;
 import ui11.input.gesture.EnterContentListener.EnterContent.KeyboardEnterContentSource;
 import ui11.input.keyboard.KeyCombination;
 import ui11.input.keyboard.KeyCombination.Modifier;
@@ -15,14 +22,14 @@ import ui11.input.pointer.PointerRegion.PointerListener;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.MutableObservable;
 import ui11.platform.awt.AWTEnterContentListenerPeer.AWTEnterContentListenerPeerState;
-import ui11.renderer.j2d.J2DNodeHolder;
-import ui11.renderer.j2d.J2DVisualContentRequest.RootJ2DSurface;
-import ui11.renderer.j2d.RenderingContext;
-import ui11.renderer.j2d.inputtree.InputNode.PickContext;
-import ui11.renderer.j2d.inputtree.InputNode.PickContext.PickStackItem;
-import ui11.renderer.j2d.rendertree.RenderNode.RenderTreePrinter;
 import ui11.provide.Provide;
 import ui11.provide.Provider;
+import ui11.renderer.Renderer;
+import ui11.renderer.RendererProvider;
+import ui11.renderer.Surface;
+import ui11.renderer.input.InputNode;
+import ui11.renderer.input.InputNode.PickContext;
+import ui11.renderer.input.InputNode.PickContext.PickStackItem;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 import ui11.text.TextStyle.FontStyle;
@@ -32,11 +39,8 @@ import ui11.window.Shell;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
-import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
-import java.util.EnumSet;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 
 public class AWTWindow {
 
@@ -47,10 +51,12 @@ public class AWTWindow {
     private final AWTWindowImpl frame;
     private final InvalidationPoint repaintInvalidationPoint = new InvalidationPoint();
 
-    private final RootJ2DSurface rootSurface = new RootJ2DSurface();
-    private final MutableObservable<J2DNodeHolder> rootNodeHolder = MutableObservable.ofNullable();
+    private final Renderer<?, ?> renderer;
 
-    private final BufferStrategy bs;
+    private final Location.CoordinateSpaceRoot coordinateSpaceRoot = new Location.CoordinateSpaceRoot();
+    private final MutableObservable<@Nullable Size> size = MutableObservable.ofNullable();
+    private final VisualContentRequest<?> rootSurface;
+    private final MutableObservable<Object> rootNodeHolder = MutableObservable.ofNullable();
 
     private PointerListener currentMousePress;
 
@@ -69,11 +75,26 @@ public class AWTWindow {
         updateSize();
 
         frame.createBufferStrategy(2);
-        bs = frame.getBufferStrategy();
+
+        Surface surface = new AWTFrameSurface(frame, frame.getBufferStrategy());
+        Renderer<?, ?> r = null;
+        for (RendererProvider provider : ServiceLoader.load(RendererProvider.class)) {
+            Renderer<?, ?> r2 = provider.tryProvide(surface);
+            if (r2 != null)
+                if (r != null)
+                    throw new RuntimeException("Multiple renderer available for " + surface +
+                            ", at least: " + r + " and " + r2);
+                else
+                    r = r2;
+        }
+        if (r == null)
+            throw new RuntimeException("No renderer available for " + surface);
+        renderer = r;
+        rootSurface = r.createRootContentRequest(coordinateSpaceRoot, size);
     }
 
     private void updateSize() {
-        rootSurface.size.set(new Size(frame.innerWidth(), frame.innerHeight()));
+        size.set(new Size(frame.innerWidth(), frame.innerHeight()));
     }
 
     class Root extends Widget {
@@ -98,7 +119,7 @@ public class AWTWindow {
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
-            return PeerRequest.requestSingle(content, rootSurface, result->{
+            return PeerRequest.requestSingle(content, rootSurface, result -> {
                 rootNodeHolder.set(result);
                 // TODO repaint kéne, ha rootPeer megváltozik
 
@@ -140,42 +161,28 @@ public class AWTWindow {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private InputNode inputNode(Object holder) {
+        return ((Renderer<Object, ?>) renderer).inputNode(holder);
+    }
+
     private void redraw() {
-        if (false) {
-            System.out.println();
-            System.out.println("Render tree: ");
-            System.out.print(RenderTreePrinter.toString(rootNodeHolder.get().renderNode()));
-            System.out.println("Render tree end");
-            System.out.println();
-        }
-
-        RenderingContext ctx = new RenderingContext(frame.innerWidth(), frame.innerHeight());
-        rootNodeHolder.get().renderNode().render(ctx);
-        BufferedImage image = ctx.finish();
-        // constructor inits Graphics2D renderingHints
-
-        Graphics2D g = (Graphics2D) bs.getDrawGraphics();
-        g.setTransform(new AffineTransform());
-        double scaleX = frame.getGraphicsConfiguration().getDefaultTransform().getScaleX();
-        double scaleY = frame.getGraphicsConfiguration().getDefaultTransform().getScaleY();
-
-        int x = (int) Math.round(frame.getInsets().left * scaleX);
-        int y = (int) Math.round(frame.getInsets().top * scaleY);
-        g.drawImage(image, x, y, null);
-
-        g.dispose();
-        bs.show();
+        @SuppressWarnings("unchecked")
+        Renderer<Object, Object> rendererCasted = (Renderer<Object, Object>) renderer;
+        Object holder = rootNodeHolder.get();
+        Object renderNode = rendererCasted.renderNode(holder);
+        rendererCasted.render(renderNode);
     }
 
     private void onMouseMove(Vec2 point) {
-        AWTMouse.INSTANCE.location.set(new Location(rootSurface.coordinateSpace(), point));
+        AWTMouse.INSTANCE.location.set(new Location(coordinateSpaceRoot.origin, point));
     }
 
     private void onMousePress(Vec2 point) {
-        AWTMouse.INSTANCE.location.set(new Location(rootSurface.coordinateSpace(), point));
+        AWTMouse.INSTANCE.location.set(new Location(coordinateSpaceRoot.origin, point));
 
         PickContext pickContext = new PickContext();
-        rootNodeHolder.get().inputNode().pick(pickContext, point);
+        inputNode(rootNodeHolder.get()).pick(pickContext, point.withZW(0, 1));
 
         List<PickStackItem> result = pickContext.result();
         if (result == null)
@@ -193,7 +200,7 @@ public class AWTWindow {
     }
 
     private void onMouseRelease(Vec2 point) {
-        AWTMouse.INSTANCE.location.set(new Location(rootSurface.coordinateSpace(), point));
+        AWTMouse.INSTANCE.location.set(new Location(coordinateSpaceRoot.origin, point));
 
         if (currentMousePress == null)
             logger.info("No active mouse release callback for " + point);
@@ -204,7 +211,7 @@ public class AWTWindow {
         }
     }
 
-    private class AWTWindowImpl extends Frame {
+    class AWTWindowImpl extends Frame {
 
         AWTWindowImpl() {
              /*

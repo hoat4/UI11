@@ -10,7 +10,7 @@ import ui11.observable.MutableObservable;
 import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DVisualContentRequest.J2DSurfaceWithOwnShape;
-import ui11.renderer.j2d.inputtree.InputNode;
+import ui11.renderer.input.InputNode;
 import ui11.renderer.j2d.inputtree.TransformInputNode;
 import ui11.renderer.j2d.inputtree.TransparentInputNode;
 import ui11.renderer.j2d.rendertree.EmptyRenderNode;

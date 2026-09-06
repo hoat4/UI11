@@ -1,4 +1,4 @@
-package ui11.platform.opengl.inputtree;
+package ui11.renderer.input;
 
 import ui11.geom.Vec4;
 import ui11.input.pointer.PointerRegion;

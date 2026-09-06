@@ -1,7 +1,10 @@
 dependencies {
+    api project(":renderer-common")
     api project(":graphics")
     api project(":input")
     api project(":text")
+
+    implementation project(":platform-awt") // AWTFrameSurface
 
     implementation project(":imageio")
     //implementation project(":renderer-common")

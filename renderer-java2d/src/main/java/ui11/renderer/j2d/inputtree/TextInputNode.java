@@ -1,7 +1,8 @@
 package ui11.renderer.j2d.inputtree;
 
-import ui11.geom.Vec2;
+import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
+import ui11.renderer.input.InputNode;
 import ui11.renderer.j2d.RenderingContext;
 
 import java.awt.*;
@@ -20,7 +21,7 @@ public class TextInputNode extends InputNode {
     private TextLayout textLayout;
 
     @Override
-    public boolean pick(PickContext pickContext, Vec2 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         String text = this.text.get();
         Font font = this.font.get();
         InputNode child = this.child.get();

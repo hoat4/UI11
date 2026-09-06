@@ -7,7 +7,7 @@ import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DVisualContentRequest.ShapeInheritingJ2DSurface;
 import ui11.renderer.j2d.inputtree.ClipPathInputNode;
-import ui11.renderer.j2d.inputtree.InputNode;
+import ui11.renderer.input.InputNode;
 import ui11.renderer.j2d.inputtree.TransparentInputNode;
 import ui11.renderer.j2d.rendertree.ClipPathRenderNode;
 import ui11.renderer.j2d.rendertree.EmptyRenderNode;

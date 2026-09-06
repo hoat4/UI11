@@ -1,8 +1,10 @@
 package ui11.platform.opengl.inputtree;
 
 import ui11.geom.Vec4;
+import ui11.renderer.input.InputNode;
 
 public class TransparentInputNode extends InputNode {
+
     public static final TransparentInputNode INSTANCE = new TransparentInputNode();
 
     private TransparentInputNode() {

@@ -3,6 +3,7 @@ package ui11.platform.opengl.inputtree;
 import ui11.geom.Mat4;
 import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
+import ui11.renderer.input.InputNode;
 
 import java.util.Objects;
 

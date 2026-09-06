@@ -5,7 +5,7 @@ import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.GLVisualContentRequest;
-import ui11.platform.opengl.inputtree.ListenerInputNode;
+import ui11.renderer.input.ListenerInputNode;
 
 public class GLPointerRegionPeer extends Widget {
 

@@ -8,7 +8,7 @@ import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.GLVisualContentRequest.ShapeInheritingGLSurface;
 import ui11.platform.opengl.Shape2D;
 import ui11.platform.opengl.inputtree.ClipPathInputNode;
-import ui11.platform.opengl.inputtree.InputNode;
+import ui11.renderer.input.InputNode;
 import ui11.platform.opengl.inputtree.TransparentInputNode;
 import ui11.platform.opengl.rendertree.*;
 

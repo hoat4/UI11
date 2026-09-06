@@ -91,8 +91,13 @@ public abstract sealed class J2DVisualContentRequest
 
     public static class RootJ2DSurface extends J2DSurfaceWithOwnShape {
 
-        public final Location.CoordinateSpaceRoot coordinateSpaceRoot = new Location.CoordinateSpaceRoot();
-        public final MutableObservable<Size> size = MutableObservable.ofNullable();
+        public final Location.CoordinateSpaceRoot coordinateSpaceRoot;
+        public final Observable<Size> size;
+
+        public RootJ2DSurface(Location.CoordinateSpaceRoot coordinateSpaceRoot, Observable<Size> size) {
+            this.coordinateSpaceRoot = coordinateSpaceRoot;
+            this.size = size;
+        }
 
         @Override
         public Size size() {

@@ -1,7 +1,8 @@
 package ui11.renderer.j2d.inputtree;
 
-import ui11.geom.Vec2;
+import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
+import ui11.renderer.input.InputNode;
 
 import java.awt.*;
 
@@ -16,7 +17,7 @@ public class StrokeInputNode extends InputNode {
     private BasicStroke strokeForStrokedShape;
 
     @Override
-    public boolean pick(PickContext pickContext, Vec2 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         Shape shape = this.shape.get();
         BasicStroke stroke = this.stroke.get();
 

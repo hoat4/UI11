@@ -3,6 +3,7 @@ dependencies {
 
     testImplementation project(":layout-constraint")
     testImplementation project(":platform-awt")
+    testImplementation project(":renderer-java2d")
 }
 
 // évek óta bug, és nem javítják ki: https://github.com/gradle/gradle/issues/4046

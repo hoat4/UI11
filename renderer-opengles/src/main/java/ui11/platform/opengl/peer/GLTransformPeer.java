@@ -12,7 +12,7 @@ import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.GLVisualContentRequest.GLSurfaceWithOwnShape;
 import ui11.platform.opengl.Shape2D;
-import ui11.platform.opengl.inputtree.InputNode;
+import ui11.renderer.input.InputNode;
 import ui11.platform.opengl.inputtree.TransformInputNode;
 import ui11.platform.opengl.inputtree.TransparentInputNode;
 import ui11.platform.opengl.rendertree.EmptyRenderNode;

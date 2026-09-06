@@ -1,6 +1,6 @@
 package ui11.renderer.j2d;
 
-import ui11.renderer.j2d.inputtree.InputNode;
+import ui11.renderer.input.InputNode;
 import ui11.renderer.j2d.rendertree.RenderNode;
 
 import org.jspecify.annotations.NonNull;

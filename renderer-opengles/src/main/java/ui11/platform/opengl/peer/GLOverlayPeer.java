@@ -14,6 +14,8 @@ import ui11.platform.opengl.rendertree.EmptyRenderNode;
 import ui11.platform.opengl.rendertree.FillTrianglesWithColorRenderNode;
 import ui11.platform.opengl.rendertree.GroupRenderNode;
 import ui11.platform.opengl.rendertree.RenderNode;
+import ui11.renderer.input.InputNode;
+import ui11.renderer.input.ListenerInputNode;
 
 import java.nio.ByteBuffer;
 import java.util.*;

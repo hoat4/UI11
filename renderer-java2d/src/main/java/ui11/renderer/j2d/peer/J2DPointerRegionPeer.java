@@ -3,9 +3,9 @@ package ui11.renderer.j2d.peer;
 import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
+import ui11.renderer.input.ListenerInputNode;
 import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
-import ui11.renderer.j2d.inputtree.ListenerInputNode;
 
 public class J2DPointerRegionPeer extends Widget {
 

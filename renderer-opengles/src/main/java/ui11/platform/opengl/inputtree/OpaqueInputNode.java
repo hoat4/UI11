@@ -3,6 +3,7 @@ package ui11.platform.opengl.inputtree;
 import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
 import ui11.platform.opengl.Shape2D;
+import ui11.renderer.input.InputNode;
 
 public class OpaqueInputNode extends InputNode {
 

@@ -1,6 +1,8 @@
 dependencies {
     api project(":base")
     api project(":desktop")
-    implementation project(":renderer-java2d")
+    implementation project(":renderer-common")
     implementation project(":animation")
+    implementation project(":input")
+    implementation project(":text") // TODO
 }

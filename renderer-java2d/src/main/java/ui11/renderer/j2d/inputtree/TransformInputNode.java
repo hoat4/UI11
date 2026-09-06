@@ -1,7 +1,9 @@
 package ui11.renderer.j2d.inputtree;
 
 import ui11.geom.Vec2;
+import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
+import ui11.renderer.input.InputNode;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
@@ -14,7 +16,7 @@ public class TransformInputNode extends InputNode {
     public final MutableObservable<InputNode> child = MutableObservable.ofNullable();
 
     @Override
-    public boolean pick(PickContext pickContext, Vec2 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         // inverzt lehet hogy érdemes lenne kiszámítani előre, mert ugyan 2D affin mátrixot könnyű invertálni,
         // de az exception dobása lehet hogy sok idő.
 
@@ -27,6 +29,7 @@ public class TransformInputNode extends InputNode {
             return false;
         }
 
-        return child.get().pick(pickContext, new Vec2(transformedPoint.getX(), transformedPoint.getY()));
+        // TODO
+        return child.get().pick(pickContext, new Vec4(transformedPoint.getX(), transformedPoint.getY(), 0, 1));
     }
 }

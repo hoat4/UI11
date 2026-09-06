@@ -1,7 +1,8 @@
 package ui11.renderer.j2d.inputtree;
 
-import ui11.geom.Vec2;
+import ui11.geom.Vec4;
 import ui11.observable.ObservableList;
+import ui11.renderer.input.InputNode;
 
 public class GroupInputNode extends InputNode {
 
@@ -12,7 +13,7 @@ public class GroupInputNode extends InputNode {
     public final ObservableList<InputNode> children = new ObservableList<>();
 
     @Override
-    public boolean pick(PickContext pickContext, Vec2 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         for (InputNode n : children.reversed()) {
             if (n.pick(pickContext, p))
                 return true;
