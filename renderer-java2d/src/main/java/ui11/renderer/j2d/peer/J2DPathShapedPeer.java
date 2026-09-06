@@ -6,8 +6,8 @@ import ui11.geom.Path;
 import ui11.geom.Size;
 import ui11.graphics.shaper.PathShaped;
 import ui11.observable.MutableObservable;
-import ui11.renderer.j2d.J2DSurface;
-import ui11.renderer.j2d.J2DSurface.J2DSurfaceWithOwnShape;
+import ui11.renderer.j2d.J2DVisualContentRequest;
+import ui11.renderer.j2d.J2DVisualContentRequest.J2DSurfaceWithOwnShape;
 import ui11.renderer.j2d.J2DUtil;
 
 import java.awt.*;
@@ -17,7 +17,7 @@ public class J2DPathShapedPeer extends Widget {
 
     private final PathShaped pathShaped;
 
-    @Inject private J2DSurface parentSurface;
+    @Inject private J2DVisualContentRequest parentSurface;
 
     @Remember private ClippedSurface childSurface;
 

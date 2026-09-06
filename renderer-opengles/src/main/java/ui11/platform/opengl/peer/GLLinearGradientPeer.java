@@ -2,13 +2,11 @@ package ui11.platform.opengl.peer;
 
 import ui11.Widget;
 import ui11.geom.Vec2;
-import ui11.graphics.Surface;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
-import ui11.observable.Observable;
 import ui11.platform.opengl.BufferPool;
 import ui11.platform.opengl.GLNodeHolder;
-import ui11.platform.opengl.GLSurface;
+import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.Shape2D;
 import ui11.platform.opengl.inputtree.OpaqueInputNode;
 import ui11.platform.opengl.inputtree.TransparentInputNode;
@@ -20,7 +18,7 @@ import ui11.text.TextStyle;
 public class GLLinearGradientPeer extends Widget {
 
     private final LinearGradient gradient;
-    private final GLSurface surface;
+    private final GLVisualContentRequest surface;
 
     @Inject private TextStyle textStyle;
     @Inject private BufferPool bufferPool;
@@ -28,7 +26,7 @@ public class GLLinearGradientPeer extends Widget {
     @Remember private FillTrianglesWithColorRenderNode node;
     @Remember private OpaqueInputNode inputNode;
 
-    public GLLinearGradientPeer(LinearGradient gradient, GLSurface surface) {
+    public GLLinearGradientPeer(LinearGradient gradient, GLVisualContentRequest surface) {
         this.gradient = gradient;
         this.surface = surface;
     }

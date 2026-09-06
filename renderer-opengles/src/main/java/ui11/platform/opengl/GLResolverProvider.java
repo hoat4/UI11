@@ -15,9 +15,9 @@ public class GLResolverProvider implements ResolverProvider {
 
     @Override
     public void configure(ResolverRegistry r) {
-        r.registerForContextType(GLSurface.class, ColorFill.class, GLColorFillPeer::new);
-        r.registerForContextType(GLSurface.class, Overlay.class, GLOverlayPeer::new);
-        r.registerForContextType(GLSurface.class, Transform.class, GLTransformPeer::new);
-        r.registerForContextType(GLSurface.class, RectangleShaped.class, GLRectShapedPeer::new);
+        r.registerForContextType(GLVisualContentRequest.class, ColorFill.class, GLColorFillPeer::new);
+        r.registerForContextType(GLVisualContentRequest.class, Overlay.class, GLOverlayPeer::new);
+        r.registerForContextType(GLVisualContentRequest.class, Transform.class, GLTransformPeer::new);
+        r.registerForContextType(GLVisualContentRequest.class, RectangleShaped.class, GLRectShapedPeer::new);
     }
 }

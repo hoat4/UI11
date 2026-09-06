@@ -3,7 +3,7 @@ package ui11.platform.opengl.peer;
 
 import ui11.Widget;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.color.Color;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
@@ -24,7 +24,7 @@ public class GLTextPeer extends Widget {
 
     private final Text text;
 
-    @Inject private Observable<Surface> surface;
+    @Inject private Observable<VisualContentRequest> surface;
     @Inject private Observable<TextStyle> textStyle;
     @Inject(required = false) private Observable<BoxConstraints> constraints;
 

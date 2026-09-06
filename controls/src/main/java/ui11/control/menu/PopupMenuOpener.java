@@ -2,11 +2,11 @@ package ui11.control.menu;
 
 import ui11.*;
 import ui11.geom.Vec2;
+import ui11.graphics.VisualContentRequest;
 import ui11.observable.SimpleScope;
 import ui11.control.DialogContainer.DialogContainerState;
 import ui11.geom.Location;
 import ui11.geom.Rect;
-import ui11.graphics.Surface;
 import ui11.input.pointer.Pointer.StandardMouseButton;
 import ui11.input.gesture.ClickListener;
 import ui11.input.pointer.MouseRegion;
@@ -21,7 +21,7 @@ public class PopupMenuOpener extends Widget {
     private final Function<SimpleScope, ? extends Widget> menuSupplier;
     @Nullable private final Function<Rect, Vec2> openAt;
 
-    @Inject private Surface surface;
+    @Inject private VisualContentRequest surface;
     @Inject private DialogContainerState dialogContainerState;
 
     // TODO openAt equals?

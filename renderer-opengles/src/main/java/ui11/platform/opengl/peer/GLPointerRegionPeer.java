@@ -4,17 +4,17 @@ import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.platform.opengl.GLNodeHolder;
-import ui11.platform.opengl.GLSurface;
+import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.inputtree.ListenerInputNode;
 
 public class GLPointerRegionPeer extends Widget {
 
     private final PointerRegion pointerRegion;
-    private final GLSurface surface;
+    private final GLVisualContentRequest surface;
 
     @Remember private ListenerInputNode inputNode;
 
-    public GLPointerRegionPeer(PointerRegion pointerRegion, GLSurface surface) {
+    public GLPointerRegionPeer(PointerRegion pointerRegion, GLVisualContentRequest surface) {
         this.pointerRegion = pointerRegion;
         this.surface = surface;
     }

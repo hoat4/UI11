@@ -23,21 +23,21 @@ public class J2DWidgetResolver implements ResolverProvider {
 
     @Override
     public void configure(ResolverRegistry r) {
-        r.registerForContextType(J2DSurface.class, PointerRegion.class, PointerRegion::content);
-        r.registerForContextType(J2DSurface.class, Empty.class,
+        r.registerForContextType(J2DVisualContentRequest.class, PointerRegion.class, PointerRegion::content);
+        r.registerForContextType(J2DVisualContentRequest.class, Empty.class,
                 empty -> new ColorFill(Color.TRANSPARENT) /* TODO egér viselkedés így más lesz */);
 
-        r.registerForContextType(J2DSurface.class, ColorFill.class, J2DColorPeer::new);
-        r.registerForContextType(J2DSurface.class, Overlay.class, J2DGroupPeer::new);
-        r.registerForContextType(J2DSurface.class, PathShaped.class, J2DPathShapedPeer::new);
-        r.registerForContextType(J2DSurface.class, Clip.class, J2DClipPeer::new);
-        r.registerForContextType(J2DSurface.class, Transform.class, J2DTransformPeer::new);
-        r.registerForContextTypes(Set.of(J2DSurface.class, BoxLayoutResult.SizeRequest.class),
+        r.registerForContextType(J2DVisualContentRequest.class, ColorFill.class, J2DColorPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, Overlay.class, J2DGroupPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, PathShaped.class, J2DPathShapedPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, Clip.class, J2DClipPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, Transform.class, J2DTransformPeer::new);
+        r.registerForContextTypes(Set.of(J2DVisualContentRequest.class, BoxLayoutResult.SizeRequest.class),
                 Text.class, J2DTextPeer::new);
-        r.registerForContextType(J2DSurface.class, PointerRegion.class, J2DPointerRegionPeer::new);
-        r.registerForContextType(J2DSurface.class, Stroke.class, J2DStrokePeer::new);
-        r.registerForContextType(J2DSurface.class, LinearGradient.class, J2DLinearGradientPeer::new);
-        r.registerForContextType(J2DSurface.class, SVGImageView.class, J2DSVGImageViewPeer::new);
-        r.registerForContextType(J2DSurface.class, Opacity.class, J2DOpacityPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, PointerRegion.class, J2DPointerRegionPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, Stroke.class, J2DStrokePeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, LinearGradient.class, J2DLinearGradientPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, SVGImageView.class, J2DSVGImageViewPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, Opacity.class, J2DOpacityPeer::new);
     }
 }

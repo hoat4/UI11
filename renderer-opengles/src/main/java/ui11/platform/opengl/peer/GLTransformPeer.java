@@ -9,8 +9,8 @@ import ui11.geom.Vec2;
 import ui11.graphics.effect.Transform;
 import ui11.observable.MutableObservable;
 import ui11.platform.opengl.GLNodeHolder;
-import ui11.platform.opengl.GLSurface;
-import ui11.platform.opengl.GLSurface.GLSurfaceWithOwnShape;
+import ui11.platform.opengl.GLVisualContentRequest;
+import ui11.platform.opengl.GLVisualContentRequest.GLSurfaceWithOwnShape;
 import ui11.platform.opengl.Shape2D;
 import ui11.platform.opengl.inputtree.InputNode;
 import ui11.platform.opengl.inputtree.TransformInputNode;
@@ -23,7 +23,7 @@ public class GLTransformPeer extends Widget {
 
     private final Transform transform;
 
-    @Inject private GLSurface parentSurface;
+    @Inject private GLVisualContentRequest parentSurface;
 
     @Remember private TransformedSurface surface;
     @Remember private TransformRenderNode node;
@@ -53,7 +53,7 @@ public class GLTransformPeer extends Widget {
             return PeerRequest.requestSingle(transform.content(), surface, parentSurface::createResponse);
         }
 
-        // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
+        // ezt a size beállítás után kell, hogy child tudja hivatkozni VisualContentRequest.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 

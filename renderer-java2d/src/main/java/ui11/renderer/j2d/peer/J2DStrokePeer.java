@@ -3,11 +3,11 @@ package ui11.renderer.j2d.peer;
 import ui11.Widget;
 import ui11.geom.Path;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.graphics.shaper.Stroke;
 import ui11.observable.MutableObservable;
-import ui11.renderer.j2d.J2DSurface;
-import ui11.renderer.j2d.J2DSurface.J2DSurfaceWithOwnShape;
+import ui11.renderer.j2d.J2DVisualContentRequest;
+import ui11.renderer.j2d.J2DVisualContentRequest.J2DSurfaceWithOwnShape;
 import ui11.renderer.j2d.J2DUtil;
 import ui11.provide.Provider;
 import ui11.text.TextStyle;
@@ -19,7 +19,7 @@ public class J2DStrokePeer extends Widget {
 
     private final Stroke stroke;
 
-    @Inject private J2DSurface parentSurface;
+    @Inject private J2DVisualContentRequest parentSurface;
     @Inject private TextStyle textStyle;
 
     @Remember private StrokeSurface surface;
@@ -41,7 +41,7 @@ public class J2DStrokePeer extends Widget {
         surface.parent.set(parentSurface);
         surface.updateShape(stroke.path(), new BasicStroke((float) thickness));
 
-        return new Provider<>(Surface.class, surface, stroke.texture());
+        return new Provider<>(VisualContentRequest.class, surface, stroke.texture());
     }
 
     private static class StrokeSurface extends J2DSurfaceWithOwnShape {

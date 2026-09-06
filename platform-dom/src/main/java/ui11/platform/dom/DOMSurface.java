@@ -8,7 +8,7 @@ import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Mat4;
 import ui11.geom.Size;
 import ui11.geom.Vec2;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.input.focus.FocusListener;
 import ui11.input.pointer.WithCursor.Cursor;
 import ui11.input.pointer.WithCursor.StandardCursor;
@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class DOMSurface extends Surface<DOMElementHolder> {
+public class DOMSurface extends VisualContentRequest<DOMElementHolder> {
 
     private static final String CLASS_WRAPPED_TEXT = "tw";
     private static final String CLASS_NON_WRAPPED_TEXT = "w";

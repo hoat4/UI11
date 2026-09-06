@@ -3,7 +3,7 @@ package ui11.platform.dom;
 import ui11.Widget;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.provide.Provider;
 import ui11.text.TextStyle;
 
@@ -32,7 +32,7 @@ public class DOMWidgetWrapper extends Widget {
         InheritedTextStyle inheritedTextStyle = new InheritedTextStyle(this.inheritedTextStyle);
         // InheritedTextStyle-t és CumulatingPropListet majd össze lehetne vonni
         return new Provider<>(CumulatingPropList.class, CumulatingPropList.CLEAR,
-                new Provider<>(Surface.class, proxySurface,
+                new Provider<>(VisualContentRequest.class, proxySurface,
                         new Provider<>(InheritedTextStyle.class, inheritedTextStyle,
                                 w
                         )
@@ -40,9 +40,9 @@ public class DOMWidgetWrapper extends Widget {
         );
     }
 
-    static class ProxySurface extends Surface<DOMElementHolder> {
+    static class ProxySurface extends VisualContentRequest<DOMElementHolder> {
 
-        Surface s;
+        VisualContentRequest s;
 
         protected ProxySurface() {
             super(DOMElementHolder.class);

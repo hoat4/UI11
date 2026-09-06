@@ -14,7 +14,7 @@ import ui11.geom.Mat4;
 import ui11.geom.Vec2;
 import ui11.observable.MutableObservable;
 import ui11.platform.opengl.BufferPool;
-import ui11.platform.opengl.GLSurface;
+import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
 import ui11.platform.opengl.rendertree.RenderNode;
 import ui11.provide.Provider;
@@ -52,7 +52,7 @@ public class WindowImpl {
     DisplayList currentDisplayList;
 
     final MutableObservable<ViewSize> innerSize = MutableObservable.withInitial(new ViewSize(300, 300));
-    private final GLSurface.RootGLSurface rootSurface;
+    private final GLVisualContentRequest.RootGLSurface rootSurface;
 
     private final CompositorTimingThread compositionTimingThread;
 
@@ -60,7 +60,7 @@ public class WindowImpl {
         this.rootWidget = rootWidget;
 
         glassApp = Application.GetApplication();
-        rootSurface = new GLSurface.RootGLSurface(innerSize.map(vs -> new Vec2(vs.width, vs.height)));
+        rootSurface = new GLVisualContentRequest.RootGLSurface(innerSize.map(vs -> new Vec2(vs.width, vs.height)));
 
         window = glassApp.createWindow(null,
                 Window.TITLED | Window.CLOSABLE | Window.MAXIMIZABLE | Window.MINIMIZABLE);

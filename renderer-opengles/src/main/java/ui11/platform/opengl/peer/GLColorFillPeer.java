@@ -2,11 +2,10 @@ package ui11.platform.opengl.peer;
 
 import ui11.Widget;
 import ui11.geom.Vec2;
-import ui11.graphics.Surface;
 import ui11.graphics.fill.ColorFill;
 import ui11.platform.opengl.BufferPool;
 import ui11.platform.opengl.GLNodeHolder;
-import ui11.platform.opengl.GLSurface;
+import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.Shape2D;
 import ui11.platform.opengl.inputtree.OpaqueInputNode;
 import ui11.platform.opengl.inputtree.TransparentInputNode;
@@ -18,7 +17,7 @@ public class GLColorFillPeer extends Widget {
 
     private final ColorFill colorFill;
 
-    @Inject private GLSurface surface;
+    @Inject private GLVisualContentRequest surface;
     @Inject private BufferPool bufferPool;
 
     @Remember private FillTrianglesWithColorRenderNode node;

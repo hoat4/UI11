@@ -5,7 +5,7 @@ import ui11.geom.Vec2;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
 import ui11.renderer.j2d.J2DNodeHolder;
-import ui11.renderer.j2d.J2DSurface;
+import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DUtil;
 import ui11.renderer.j2d.inputtree.OpaqueInputNode;
 import ui11.renderer.j2d.inputtree.TransparentInputNode;
@@ -19,7 +19,7 @@ public class J2DLinearGradientPeer extends Widget {
 
     private final LinearGradient gradient;
 
-    @Inject private J2DSurface surface;
+    @Inject private J2DVisualContentRequest surface;
     @Inject private TextStyle textStyle;
 
     @Remember private FillPathRenderNode node;
@@ -38,7 +38,7 @@ public class J2DLinearGradientPeer extends Widget {
     @Override
     protected Widget build() {
         Shape shape = surface.shape();
-        if (shape == J2DSurface.INFINITE_SHAPE)
+        if (shape == J2DVisualContentRequest.INFINITE_SHAPE)
             return surface.createResponse(new J2DNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
 
         float[] fractions = new float[gradient.stops().size()];

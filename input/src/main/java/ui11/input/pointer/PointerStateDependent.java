@@ -3,9 +3,9 @@ package ui11.input.pointer;
 import org.jspecify.annotations.NonNull;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
+import ui11.graphics.VisualContentRequest;
 import ui11.observable.MutableObservable;
 import ui11.geom.Location;
-import ui11.graphics.Surface;
 import ui11.input.pointer.MouseRegion.MouseListener;
 import ui11.input.pointer.Pointer.StandardMouseButton;
 
@@ -73,7 +73,7 @@ class PointerStateDependentImpl extends Widget {
 
     private final PointerStateDependent pointerStateDependent;
 
-    @Inject private Surface surface;
+    @Inject private VisualContentRequest surface;
 
     @Remember private MutableObservable<Boolean> isHover;
     @Remember private MutableObservable<PressState> isPressed;

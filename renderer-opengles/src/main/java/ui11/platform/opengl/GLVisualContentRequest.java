@@ -5,23 +5,23 @@ import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.geom.Vec2;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
 
-import static ui11.platform.opengl.GLSurface.GLSurfaceWithOwnShape;
-import static ui11.platform.opengl.GLSurface.ShapeInheritingGLSurface;
+import static ui11.platform.opengl.GLVisualContentRequest.GLSurfaceWithOwnShape;
+import static ui11.platform.opengl.GLVisualContentRequest.ShapeInheritingGLSurface;
 
-public abstract sealed class GLSurface
-        extends Surface<GLNodeHolder>
+public abstract sealed class GLVisualContentRequest
+        extends VisualContentRequest<GLNodeHolder>
         permits GLSurfaceWithOwnShape, ShapeInheritingGLSurface {
 
-    public final MutableObservable<GLSurface> parent = MutableObservable.ofNullable();
+    public final MutableObservable<GLVisualContentRequest> parent = MutableObservable.ofNullable();
 
     private final Observable<RootGLSurface> root = parent.map(p ->
             p == null ? (RootGLSurface) this : p.root.get());
 
-    protected GLSurface() {
+    protected GLVisualContentRequest() {
         super(GLNodeHolder.class);
     }
 
@@ -46,7 +46,7 @@ public abstract sealed class GLSurface
         return shape().contains(p.x(), p.y());
     }
 
-    public static final class ShapeInheritingGLSurface extends GLSurface {
+    public static final class ShapeInheritingGLSurface extends GLVisualContentRequest {
 
         @Override
         public Shape2D shape() {
@@ -69,7 +69,7 @@ public abstract sealed class GLSurface
         }
     }
 
-    public static non-sealed abstract class GLSurfaceWithOwnShape extends GLSurface {
+    public static non-sealed abstract class GLSurfaceWithOwnShape extends GLVisualContentRequest {
         // itt lehetne tárolni shape-függő cacheelt fill nodeot
     }
 

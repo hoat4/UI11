@@ -8,8 +8,8 @@ import ui11.geom.Size;
 import ui11.graphics.effect.Transform;
 import ui11.observable.MutableObservable;
 import ui11.renderer.j2d.J2DNodeHolder;
-import ui11.renderer.j2d.J2DSurface;
-import ui11.renderer.j2d.J2DSurface.J2DSurfaceWithOwnShape;
+import ui11.renderer.j2d.J2DVisualContentRequest;
+import ui11.renderer.j2d.J2DVisualContentRequest.J2DSurfaceWithOwnShape;
 import ui11.renderer.j2d.inputtree.InputNode;
 import ui11.renderer.j2d.inputtree.TransformInputNode;
 import ui11.renderer.j2d.inputtree.TransparentInputNode;
@@ -25,7 +25,7 @@ public class J2DTransformPeer extends Widget {
 
     private final Transform transform;
 
-    @Inject private J2DSurface parentSurface;
+    @Inject private J2DVisualContentRequest parentSurface;
 
     @Remember private TransformedSurface childSurface;
     @Remember private TransformRenderNode node;
@@ -50,7 +50,7 @@ public class J2DTransformPeer extends Widget {
         childSurface.parent.set(parentSurface);
         boolean nonDegenerateTransform = childSurface.update(transform.transformation());
 
-        // ezt a size beállítás után kell, hogy child tudja hivatkozni Surface.size-on keresztül.
+        // ezt a size beállítás után kell, hogy child tudja hivatkozni VisualContentRequest.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
@@ -116,9 +116,9 @@ public class J2DTransformPeer extends Widget {
 
         boolean update(Mat4 t) {
             Shape parentShape = parent.get().shape();
-            if (parentShape == J2DSurface.INFINITE_SHAPE) {
-                prevParentShape = J2DSurface.INFINITE_SHAPE;
-                shape.set(J2DSurface.INFINITE_SHAPE);
+            if (parentShape == J2DVisualContentRequest.INFINITE_SHAPE) {
+                prevParentShape = J2DVisualContentRequest.INFINITE_SHAPE;
+                shape.set(J2DVisualContentRequest.INFINITE_SHAPE);
                 return false;
             }
             if (!parentShape.equals(prevParentShape) ||
@@ -131,11 +131,11 @@ public class J2DTransformPeer extends Widget {
                 try {
                     shape.set(awtAffineTransformation.createInverse().createTransformedShape(parentShape));
                 } catch (NoninvertibleTransformException noninvertibleTransformException) {
-                    shape.set(J2DSurface.INFINITE_SHAPE);
+                    shape.set(J2DVisualContentRequest.INFINITE_SHAPE);
                 }
                 prevParentShape = parentShape;
             }
-            return shape.get() != J2DSurface.INFINITE_SHAPE;
+            return shape.get() != J2DVisualContentRequest.INFINITE_SHAPE;
         }
 
         @Override

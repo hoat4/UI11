@@ -6,14 +6,14 @@ import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.graphics.shaper.RectangleShaped;
 import ui11.platform.opengl.ClippedSurface;
-import ui11.platform.opengl.GLSurface;
+import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.Shape2D;
 
 public class GLRectShapedPeer extends Widget {
 
     private final RectangleShaped rectShaped;
 
-    @Inject private GLSurface parentSurface;
+    @Inject private GLVisualContentRequest parentSurface;
 
     @Remember private ClippedSurface childSurface;
 

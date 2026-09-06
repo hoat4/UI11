@@ -6,8 +6,8 @@ import ui11.graphics.effect.Overlay;
 import ui11.observable.Observable;
 import ui11.platform.opengl.BufferPool;
 import ui11.platform.opengl.GLNodeHolder;
-import ui11.platform.opengl.GLSurface;
-import ui11.platform.opengl.GLSurface.ShapeInheritingGLSurface;
+import ui11.platform.opengl.GLVisualContentRequest;
+import ui11.platform.opengl.GLVisualContentRequest.ShapeInheritingGLSurface;
 import ui11.platform.opengl.Shape2D;
 import ui11.platform.opengl.inputtree.*;
 import ui11.platform.opengl.rendertree.EmptyRenderNode;
@@ -22,10 +22,10 @@ public class GLOverlayPeer extends Widget {
 
     private final Overlay overlay;
 
-    @Inject private GLSurface parentSurface;
+    @Inject private GLVisualContentRequest parentSurface;
     @Inject private Observable<BufferPool> bufferPool;
 
-    @Remember private List<GLSurface> childSurfaces;
+    @Remember private List<GLVisualContentRequest> childSurfaces;
     @Remember private GroupRenderNode groupNode;
     @Remember private GroupInputNode groupInputNode;
     @Remember private Map<Set<FillTrianglesWithColorRenderNode>, FillTrianglesWithColorRenderNode> mergedNodeCache;
@@ -48,7 +48,7 @@ public class GLOverlayPeer extends Widget {
             if (i == childSurfaces.size())
                 childSurfaces.add(new ShapeInheritingGLSurface());
 
-            GLSurface surface = childSurfaces.get(i);
+            GLVisualContentRequest surface = childSurfaces.get(i);
             surface.parent.set(parentSurface);
         }
 

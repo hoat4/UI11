@@ -4,8 +4,8 @@ import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Overlay;
 import ui11.renderer.j2d.J2DNodeHolder;
-import ui11.renderer.j2d.J2DSurface;
-import ui11.renderer.j2d.J2DSurface.ShapeInheritingJ2DSurface;
+import ui11.renderer.j2d.J2DVisualContentRequest;
+import ui11.renderer.j2d.J2DVisualContentRequest.ShapeInheritingJ2DSurface;
 import ui11.renderer.j2d.inputtree.*;
 import ui11.renderer.j2d.rendertree.EmptyRenderNode;
 import ui11.renderer.j2d.rendertree.GroupRenderNode;
@@ -19,9 +19,9 @@ public class J2DGroupPeer extends Widget {
 
     private final Overlay overlay;
 
-    @Inject private J2DSurface parentSurface;
+    @Inject private J2DVisualContentRequest parentSurface;
 
-    @Remember private List<J2DSurface> childSurfaces;
+    @Remember private List<J2DVisualContentRequest> childSurfaces;
     @Remember private GroupRenderNode groupNode;
     @Remember private GroupInputNode groupInputNode;
 
@@ -42,7 +42,7 @@ public class J2DGroupPeer extends Widget {
             if (i == childSurfaces.size())
                 childSurfaces.add(new ShapeInheritingJ2DSurface());
 
-            J2DSurface surface = childSurfaces.get(i);
+            J2DVisualContentRequest surface = childSurfaces.get(i);
             surface.parent.set(parentSurface);
         }
 

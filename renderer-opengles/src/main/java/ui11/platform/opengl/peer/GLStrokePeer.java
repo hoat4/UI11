@@ -4,12 +4,12 @@ package ui11.platform.opengl.peer;
 import ui11.Widget;
 import ui11.geom.Path;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.graphics.shaper.Stroke;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
-import ui11.platform.opengl.GLSurface;
-import ui11.platform.opengl.GLSurface.GLSurfaceWithOwnShape;
+import ui11.platform.opengl.GLVisualContentRequest;
+import ui11.platform.opengl.GLVisualContentRequest.GLSurfaceWithOwnShape;
 import ui11.platform.opengl.J2DUtil;
 import ui11.provide.Provider;
 import ui11.text.TextStyle;
@@ -21,7 +21,7 @@ public class GLStrokePeer extends Widget {
 
     private final Stroke stroke;
 
-    @Inject private Observable<Surface> parentSurface;
+    @Inject private Observable<VisualContentRequest> parentSurface;
     @Inject private Observable<TextStyle> textStyle;
 
     @State private StrokeSurface surface;
@@ -40,10 +40,10 @@ public class GLStrokePeer extends Widget {
         double thickness = stroke.thickness().px() + stroke.thickness().em() * textStyle.get().size();
         // relative része nincs a thicknessnek, ld. Stroke konstruktora
 
-        surface.parent.set((GLSurface) parentSurface.get());
+        surface.parent.set((GLVisualContentRequest) parentSurface.get());
         surface.updateShape(stroke.path(), new BasicStroke((float) thickness));
 
-        return new Provider<>(Surface.class, surface, stroke.texture());
+        return new Provider<>(VisualContentRequest.class, surface, stroke.texture());
     }
 
     private static class StrokeSurface extends GLSurfaceWithOwnShape {

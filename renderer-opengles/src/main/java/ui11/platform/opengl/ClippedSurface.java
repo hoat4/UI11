@@ -4,7 +4,7 @@ import ui11.geom.Size;
 import ui11.geom.Vec2;
 import ui11.observable.MutableObservable;
 
-public class ClippedSurface extends GLSurface.GLSurfaceWithOwnShape {
+public class ClippedSurface extends GLVisualContentRequest.GLSurfaceWithOwnShape {
 
     private final MutableObservable<Shape2D> shape = MutableObservable.ofNullable();
     private final MutableObservable<Size> size = MutableObservable.ofNullable();

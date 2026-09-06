@@ -11,7 +11,7 @@ import ui11.geom.Size;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.media.SVGImageView;
 import ui11.renderer.j2d.J2DNodeHolder;
-import ui11.renderer.j2d.J2DSurface;
+import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.inputtree.OpaqueInputNode;
 import ui11.renderer.j2d.rendertree.SVGDocumentRenderNode;
 import ui11.task.BackgroundTask;
@@ -31,7 +31,7 @@ public class J2DSVGImageViewPeer extends Widget {
 
     private final SVGImageView svgImageView;
 
-    @Inject private J2DSurface surface;
+    @Inject private J2DVisualContentRequest surface;
     @Inject private TextStyle textStyle;
     @Inject(required = false) private URLResolver urlResolver;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;

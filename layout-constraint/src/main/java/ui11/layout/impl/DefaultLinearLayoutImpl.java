@@ -8,7 +8,6 @@ import ui11.Widget;
 import ui11.geom.Axis;
 import ui11.geom.Rect;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
 import ui11.layout.helper.LayoutHelper;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.multichild.LinearLayout.WeightMarker;

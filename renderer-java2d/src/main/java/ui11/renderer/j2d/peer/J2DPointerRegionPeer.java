@@ -4,14 +4,14 @@ import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.renderer.j2d.J2DNodeHolder;
-import ui11.renderer.j2d.J2DSurface;
+import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.inputtree.ListenerInputNode;
 
 public class J2DPointerRegionPeer extends Widget {
 
     private final PointerRegion pointerRegion;
 
-    @Inject private J2DSurface surface;
+    @Inject private J2DVisualContentRequest surface;
 
     @Remember private ListenerInputNode inputNode;
 

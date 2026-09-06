@@ -4,35 +4,35 @@ import ui11.geom.Location;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Size;
 import ui11.geom.Vec2;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
-import ui11.renderer.j2d.J2DSurface.J2DSurfaceWithOwnShape;
-import ui11.renderer.j2d.J2DSurface.ShapeInheritingJ2DSurface;
+import ui11.renderer.j2d.J2DVisualContentRequest.J2DSurfaceWithOwnShape;
+import ui11.renderer.j2d.J2DVisualContentRequest.ShapeInheritingJ2DSurface;
 import ui11.renderer.j2d.rendertree.FillPathRenderNode;
 import ui11.renderer.j2d.rendertree.RenderNode;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
-// TODO @Inject Surface most nem működik
+// TODO @Inject VisualContentRequest most nem működik
 
-public abstract sealed class J2DSurface
-        extends Surface<J2DNodeHolder>
+public abstract sealed class J2DVisualContentRequest
+        extends VisualContentRequest<J2DNodeHolder>
         permits J2DSurfaceWithOwnShape, ShapeInheritingJ2DSurface {
 
     public static final Shape INFINITE_SHAPE = new Rectangle2D.Double(
             Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
             Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
 
-    public final MutableObservable<J2DSurface> parent = MutableObservable.ofNullable();
+    public final MutableObservable<J2DVisualContentRequest> parent = MutableObservable.ofNullable();
 
     private final Observable<RootJ2DSurface> root = parent.map(p ->
             p == null ? (RootJ2DSurface) this : p.root.get());
 
     public abstract Shape shape();
 
-    public J2DSurface() {
+    public J2DVisualContentRequest() {
         super(J2DNodeHolder.class);
     }
 
@@ -47,7 +47,7 @@ public abstract sealed class J2DSurface
         return shape().contains(p.x(), p.y());
     }
 
-    public static final class ShapeInheritingJ2DSurface extends J2DSurface {
+    public static final class ShapeInheritingJ2DSurface extends J2DVisualContentRequest {
 
         @Override
         public Shape shape() {
@@ -65,7 +65,7 @@ public abstract sealed class J2DSurface
         }
     }
 
-    public static non-sealed abstract class J2DSurfaceWithOwnShape extends J2DSurface {
+    public static non-sealed abstract class J2DSurfaceWithOwnShape extends J2DVisualContentRequest {
 
         private FillPathRenderNode fillPathRenderNode;
 

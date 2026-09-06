@@ -8,25 +8,22 @@ import ui11.geom.Size;
 
 // TODO ez az interface nem jó, mert nem lehet rá értelmes equals/hashCodeot definiálni
 
-/**
- * Megadja, hogy milyen mérete van egy illető Elementnek, és mi a lokális koordináta-rendszere.
- */
-public abstract class Surface<P> extends PeerRequest<P> {
+public abstract class VisualContentRequest<P> extends PeerRequest<P> {
 
-    protected Surface(Class<P> peerType) {
+    protected VisualContentRequest(Class<P> peerType) {
         super(peerType);
     }
 
     /**
-     * a visszaadott érték az elem saját koordináta-rendszerében értendő; tehát felmenők által végzett
-     * transzformációk előtti méret
+     * The returned value is in the widget's {@linkplain #coordinateSpace() own coordinate space}, so
+     * the size before the ascendant's transformations.
      */
     public abstract Size size();
 
     public abstract CoordinateSpace coordinateSpace();
 
-    // TODO ehelyett valszeg egy shape getter kéne, csak nem világos hogy mi legyen a típusa
-    // meg valójában többféle shapeje lehet egy elementnek:
+    // TODO instead this, a shape getter would be better, but it's not clear what its type should be
+    // also, different shapes can exist for a widget:
     // - hitbox
     // - visual bounds
     // - layout bounds

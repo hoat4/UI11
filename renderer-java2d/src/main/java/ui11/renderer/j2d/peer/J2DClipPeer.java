@@ -4,8 +4,8 @@ import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Clip;
 import ui11.renderer.j2d.J2DNodeHolder;
-import ui11.renderer.j2d.J2DSurface;
-import ui11.renderer.j2d.J2DSurface.ShapeInheritingJ2DSurface;
+import ui11.renderer.j2d.J2DVisualContentRequest;
+import ui11.renderer.j2d.J2DVisualContentRequest.ShapeInheritingJ2DSurface;
 import ui11.renderer.j2d.inputtree.ClipPathInputNode;
 import ui11.renderer.j2d.inputtree.InputNode;
 import ui11.renderer.j2d.inputtree.TransparentInputNode;
@@ -21,12 +21,12 @@ public class J2DClipPeer extends Widget {
 
     private final Clip clip;
 
-    @Inject private J2DSurface parentSurface;
+    @Inject private J2DVisualContentRequest parentSurface;
 
     @Remember private ClipPathRenderNode clipNode;
     @Remember private FillPathRenderNode fillPathNode;
     @Remember private ClipPathInputNode clipInputNode;
-    @Remember private J2DSurface childSurface;
+    @Remember private J2DVisualContentRequest childSurface;
 
     public J2DClipPeer(Clip clip) {
         this.clip = clip;
@@ -53,7 +53,7 @@ public class J2DClipPeer extends Widget {
     }
 
     private RenderNode makeRenderNode(RenderNode childNode, Shape awtShape) {
-        if (awtShape == J2DSurface.INFINITE_SHAPE)
+        if (awtShape == J2DVisualContentRequest.INFINITE_SHAPE)
             return EmptyRenderNode.INSTANCE;
 
         // TODO ha childNode teljesen beleesik awtShapebe, akkor nem kéne ClipNodeot létrehozni
@@ -80,7 +80,7 @@ public class J2DClipPeer extends Widget {
     }
 
     private InputNode makeInputNode(InputNode childNode, Shape awtShape) {
-        if (awtShape == J2DSurface.INFINITE_SHAPE)
+        if (awtShape == J2DVisualContentRequest.INFINITE_SHAPE)
             return TransparentInputNode.INSTANCE;
 
         if (childNode == TransparentInputNode.INSTANCE)

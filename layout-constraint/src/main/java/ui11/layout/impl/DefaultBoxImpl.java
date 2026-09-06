@@ -7,7 +7,7 @@ import ui11.decoration.Box;
 import ui11.decoration.Box.BorderSpec;
 import ui11.decoration.Box.BoxShadow;
 import ui11.geom.*;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.graphics.effect.Overlay;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
@@ -31,7 +31,7 @@ public class DefaultBoxImpl extends Widget {
 
     @Inject private TextStyle ts;
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
-    @Inject(required = false) private Surface surface;
+    @Inject(required = false) private VisualContentRequest surface;
 
     public DefaultBoxImpl(Box box) {
         this.box = box;
@@ -220,7 +220,7 @@ public class DefaultBoxImpl extends Widget {
 
         if (constraints == null) {
             if (surface == null)
-                throw new IllegalStateException("no " + Surface.class.getSimpleName() + " or " +
+                throw new IllegalStateException("no " + VisualContentRequest.class.getSimpleName() + " or " +
                         BoxConstraints.class.getSimpleName() + " provided for " + this);
             constraints = BoxConstraints.tight(surface.size());
         }

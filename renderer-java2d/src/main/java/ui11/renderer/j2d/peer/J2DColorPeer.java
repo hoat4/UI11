@@ -3,7 +3,7 @@ package ui11.renderer.j2d.peer;
 import ui11.Widget;
 import ui11.graphics.fill.ColorFill;
 import ui11.renderer.j2d.J2DNodeHolder;
-import ui11.renderer.j2d.J2DSurface;
+import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DUtil;
 import ui11.renderer.j2d.inputtree.OpaqueInputNode;
 import ui11.renderer.j2d.inputtree.TransparentInputNode;
@@ -16,7 +16,7 @@ public class J2DColorPeer extends Widget {
 
     private final ColorFill colorFill;
 
-    @Inject private J2DSurface surface;
+    @Inject private J2DVisualContentRequest surface;
 
     @Remember private FillPathRenderNode node;
     @Remember private OpaqueInputNode inputNode;
@@ -35,7 +35,7 @@ public class J2DColorPeer extends Widget {
     protected Widget build() {
         Shape shape = surface.shape();
 
-        if (shape == J2DSurface.INFINITE_SHAPE)
+        if (shape == J2DVisualContentRequest.INFINITE_SHAPE)
             return surface.createResponse(new J2DNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
 
         // TODO ezt observeli J2DGroupPeer isOpaque miatt, és valamiért invalidálni próbálja J2DGroupPeert ez,

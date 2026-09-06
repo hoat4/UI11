@@ -4,12 +4,12 @@ package ui11.platform.opengl.peer;
 import ui11.Widget;
 import ui11.geom.Path;
 import ui11.geom.Size;
-import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.graphics.shaper.PathShaped;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
-import ui11.platform.opengl.GLSurface;
-import ui11.platform.opengl.GLSurface.GLSurfaceWithOwnShape;
+import ui11.platform.opengl.GLVisualContentRequest;
+import ui11.platform.opengl.GLVisualContentRequest.GLSurfaceWithOwnShape;
 import ui11.platform.opengl.J2DUtil;
 import ui11.provide.Provider;
 
@@ -20,7 +20,7 @@ public class GLPathShapedPeer extends Widget {
 
     private final PathShaped pathShaped;
 
-    @Inject private Observable<Surface> parentSurface;
+    @Inject private Observable<VisualContentRequest> parentSurface;
 
     @State private ClippedSurface childSurface;
 
@@ -35,9 +35,9 @@ public class GLPathShapedPeer extends Widget {
 
     @Override
     protected Widget build() {
-        childSurface.parent.set((GLSurface) parentSurface.get());
+        childSurface.parent.set((GLVisualContentRequest) parentSurface.get());
         childSurface.updateShape(pathShaped.shape());
-        return new Provider<>(Surface.class, childSurface, pathShaped.content());
+        return new Provider<>(VisualContentRequest.class, childSurface, pathShaped.content());
     }
 
     private static class ClippedSurface extends GLSurfaceWithOwnShape {

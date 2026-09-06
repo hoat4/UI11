@@ -4,8 +4,8 @@ import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Clip;
 import ui11.platform.opengl.GLNodeHolder;
-import ui11.platform.opengl.GLSurface;
-import ui11.platform.opengl.GLSurface.ShapeInheritingGLSurface;
+import ui11.platform.opengl.GLVisualContentRequest;
+import ui11.platform.opengl.GLVisualContentRequest.ShapeInheritingGLSurface;
 import ui11.platform.opengl.Shape2D;
 import ui11.platform.opengl.inputtree.ClipPathInputNode;
 import ui11.platform.opengl.inputtree.InputNode;
@@ -15,13 +15,13 @@ import ui11.platform.opengl.rendertree.*;
 public class GLClipPeer extends Widget {
 
     private final Clip clip;
-    private final GLSurface parentSurface;
+    private final GLVisualContentRequest parentSurface;
 
     @Remember private ClipPathRenderNode clipNode;
     @Remember private ClipPathInputNode clipInputNode;
-    @Remember private GLSurface childSurface;
+    @Remember private GLVisualContentRequest childSurface;
 
-    public GLClipPeer(Clip clip, GLSurface parentSurface) {
+    public GLClipPeer(Clip clip, GLVisualContentRequest parentSurface) {
         this.clip = clip;
         this.parentSurface = parentSurface;
     }
