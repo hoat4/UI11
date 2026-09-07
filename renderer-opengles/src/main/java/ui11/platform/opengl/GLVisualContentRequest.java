@@ -8,12 +8,13 @@ import ui11.geom.Vec2;
 import ui11.graphics.VisualContentRequest;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
+import ui11.platform.opengl.rendertree.GLNode;
 
 import static ui11.platform.opengl.GLVisualContentRequest.GLSurfaceWithOwnShape;
 import static ui11.platform.opengl.GLVisualContentRequest.ShapeInheritingGLSurface;
 
 public abstract sealed class GLVisualContentRequest
-        extends VisualContentRequest<GLNodeHolder>
+        extends VisualContentRequest<GLNode>
         permits GLSurfaceWithOwnShape, ShapeInheritingGLSurface {
 
     public final MutableObservable<GLVisualContentRequest> parent = MutableObservable.ofNullable();
@@ -22,7 +23,7 @@ public abstract sealed class GLVisualContentRequest
             p == null ? (RootGLSurface) this : p.root.get());
 
     protected GLVisualContentRequest() {
-        super(GLNodeHolder.class);
+        super(GLNode.class);
     }
 
     /**

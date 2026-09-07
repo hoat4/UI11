@@ -1,23 +1,27 @@
-package ui11.renderer.j2d.inputtree;
+/*
+// TODO
+
+package ui11.renderer.j2d.rendertree;
 
 import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
+import ui11.renderer.Node;
 import ui11.renderer.input.InputNode;
 
 import java.awt.*;
 
-public class StrokeInputNode extends InputNode {
+public class GenericStrokeNode extends Node {
 
     public final MutableObservable<BasicStroke> stroke = MutableObservable.ofNullable();
     public final MutableObservable<Shape> shape = MutableObservable.ofNullable();
-    public final MutableObservable<InputNode> child = MutableObservable.ofNullable();
+    public final MutableObservable<J2DNode> child = MutableObservable.ofNullable();
 
     private Shape strokedShape;
     private Shape shapeForStrokedShape;
     private BasicStroke strokeForStrokedShape;
 
     @Override
-    public boolean pick(PickContext pickContext, Vec4 p) {
+    public boolean pick(InputNode.PickContext pickContext, Vec4 p) {
         Shape shape = this.shape.get();
         BasicStroke stroke = this.stroke.get();
 
@@ -33,3 +37,4 @@ public class StrokeInputNode extends InputNode {
             return false;
     }
 }
+*/

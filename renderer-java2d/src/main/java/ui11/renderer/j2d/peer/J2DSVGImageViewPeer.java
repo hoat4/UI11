@@ -10,10 +10,8 @@ import ui11.Widget;
 import ui11.geom.Size;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.media.SVGImageView;
-import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
-import ui11.renderer.j2d.inputtree.OpaqueInputNode;
-import ui11.renderer.j2d.rendertree.SVGDocumentRenderNode;
+import ui11.renderer.j2d.rendertree.SVGDocumentNode;
 import ui11.task.BackgroundTask;
 import ui11.task.TaskStatus;
 import ui11.text.Text;
@@ -36,8 +34,7 @@ public class J2DSVGImageViewPeer extends Widget {
     @Inject(required = false) private URLResolver urlResolver;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
 
-    @Remember private SVGDocumentRenderNode node;
-    @Remember private OpaqueInputNode inputNode;
+    @Remember private SVGDocumentNode node;
     @Remember private TextStyle prevTextStyle;
 
     public J2DSVGImageViewPeer(SVGImageView svgImageView) {
@@ -46,8 +43,7 @@ public class J2DSVGImageViewPeer extends Widget {
 
     @Override
     protected void initState() {
-        node = new SVGDocumentRenderNode();
-        inputNode = new OpaqueInputNode();
+        node = new SVGDocumentNode();
     }
 
     @Override
@@ -89,9 +85,8 @@ public class J2DSVGImageViewPeer extends Widget {
         node.svgDocument.set(loadedDocument);
         Size size = surface.size();
         node.size.set(size);
-        inputNode.shape.set(new Rectangle2D.Double(0, 0, size.width(), size.height()));
         FloatSize docSize = loadedDocument.size();
-        Widget result = surface.createResponse(new J2DNodeHolder(node, inputNode));
+        Widget result = surface.createResponse(node);
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             // TODO constraintset figyelembe kéne venni
             BoxLayoutResult.OfChosenSize chosenSize =

@@ -8,7 +8,6 @@ import ui11.color.Color;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.observable.Observable;
-import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.J2DUtil;
 import ui11.platform.opengl.inputtree.OpaqueInputNode;
 import ui11.provide.UpValueWrapper;
@@ -29,7 +28,6 @@ public class GLTextPeer extends Widget {
     @Inject(required = false) private Observable<BoxConstraints> constraints;
 
     @State private TextRenderNode node;
-    @State private OpaqueInputNode inputNode;
 
     @State private String prevText;
     @State private TextStyle prevTextStyle;
@@ -75,10 +73,7 @@ public class GLTextPeer extends Widget {
         inputNode.shape.set(new Rectangle(w, h));
 
         Size preferredSize = constraints.get() == null ? null : constraints.get().clamp(new Size(w, h));
-        return new UpValueWrapper(new BoxLayoutResult(preferredSize), new UpValueWrapper(new GLNodeHolder(
-                node,
-                inputNode
-        )));
+        return new UpValueWrapper(new BoxLayoutResult(preferredSize), new UpValueWrapper(node));
     }
 
     @Nonnull

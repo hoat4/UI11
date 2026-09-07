@@ -4,14 +4,11 @@ import ui11.Widget;
 import ui11.geom.Vec2;
 import ui11.graphics.fill.ColorFill;
 import ui11.platform.opengl.BufferPool;
-import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.Shape2D;
-import ui11.platform.opengl.inputtree.OpaqueInputNode;
-import ui11.platform.opengl.inputtree.TransparentInputNode;
 import ui11.platform.opengl.renderer.Shaders;
-import ui11.platform.opengl.rendertree.EmptyRenderNode;
-import ui11.platform.opengl.rendertree.FillTrianglesWithColorRenderNode;
+import ui11.platform.opengl.rendertree.EmptyNode;
+import ui11.platform.opengl.rendertree.FillTrianglesWithColorNode;
 
 public class GLColorFillPeer extends Widget {
 
@@ -20,8 +17,7 @@ public class GLColorFillPeer extends Widget {
     @Inject private GLVisualContentRequest surface;
     @Inject private BufferPool bufferPool;
 
-    @Remember private FillTrianglesWithColorRenderNode node;
-    @Remember private OpaqueInputNode inputNode;
+    @Remember private FillTrianglesWithColorNode node;
 
     public GLColorFillPeer(ColorFill colorFill) {
         this.colorFill = colorFill;
@@ -29,8 +25,7 @@ public class GLColorFillPeer extends Widget {
 
     @Override
     protected void initState() {
-        node = new FillTrianglesWithColorRenderNode();
-        inputNode = new OpaqueInputNode();
+        node = new FillTrianglesWithColorNode();
     }
 
     @Override
@@ -39,27 +34,30 @@ public class GLColorFillPeer extends Widget {
         Vec2 renderNodeTranslation = surface.renderNodeTranslation();
 
         if (shape == Shape2D.InfinitePlane.INFINITE_PLANE)
-            return surface.createResponse(new GLNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
+            return surface.createResponse(EmptyNode.INSTANCE);
 
-        inputNode.shape.set(shape);
+        node.shape.set(shape);
 
-        if (colorFill.color().equals(ui11.color.Color.TRANSPARENT))
-            return surface.createResponse(new GLNodeHolder(EmptyRenderNode.INSTANCE, inputNode));
+        if (colorFill.color().equals(ui11.color.Color.TRANSPARENT)) {
+            node.vertices.set(null);
+        } else {
+            // vertex buffert csak akkor kéne újra előállítani, ha megváltozott a shape
 
-        int estimatedVertexCount = shape.estimateTriangleCount() * 3;
-        BufferPool.GrowableVertexBuffer buf = bufferPool.allocate(
-                estimatedVertexCount * Shaders.SolidPolygonShader.BYTES_PER_VERTEX);
-        int colorInt = colorFill.color().toSRGB().toRGBA(buf.order());
-        shape.toTriangles((a, b, c) -> {
-            buf.ensureRemaining(Shaders.SolidPolygonShader.BYTES_PER_VERTEX * 3);
-            buf.put(a.plus(renderNodeTranslation));
-            buf.put(colorInt);
-            buf.put(b.plus(renderNodeTranslation));
-            buf.put(colorInt);
-            buf.put(c.plus(renderNodeTranslation));
-            buf.put(colorInt);
-        });
-        node.vertices.set(buf.finish());
-        return surface.createResponse(new GLNodeHolder(node, inputNode));
+            int estimatedVertexCount = shape.estimateTriangleCount() * 3;
+            BufferPool.GrowableVertexBuffer buf = bufferPool.allocate(
+                    estimatedVertexCount * Shaders.SolidPolygonShader.BYTES_PER_VERTEX);
+            int colorInt = colorFill.color().toSRGB().toRGBA(buf.order());
+            shape.toTriangles((a, b, c) -> {
+                buf.ensureRemaining(Shaders.SolidPolygonShader.BYTES_PER_VERTEX * 3);
+                buf.put(a.plus(renderNodeTranslation));
+                buf.put(colorInt);
+                buf.put(b.plus(renderNodeTranslation));
+                buf.put(colorInt);
+                buf.put(c.plus(renderNodeTranslation));
+                buf.put(colorInt);
+            });
+            node.vertices.set(buf.finish());
+        }
+        return surface.createResponse(node);
     }
 }

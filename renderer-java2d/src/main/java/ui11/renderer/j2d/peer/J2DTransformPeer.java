@@ -7,15 +7,11 @@ import ui11.geom.Mat4;
 import ui11.geom.Size;
 import ui11.graphics.effect.Transform;
 import ui11.observable.MutableObservable;
-import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DVisualContentRequest.J2DSurfaceWithOwnShape;
-import ui11.renderer.input.InputNode;
-import ui11.renderer.j2d.inputtree.TransformInputNode;
-import ui11.renderer.j2d.inputtree.TransparentInputNode;
-import ui11.renderer.j2d.rendertree.EmptyRenderNode;
-import ui11.renderer.j2d.rendertree.RenderNode;
-import ui11.renderer.j2d.rendertree.TransformRenderNode;
+import ui11.renderer.j2d.rendertree.EmptyNode;
+import ui11.renderer.j2d.rendertree.J2DNode;
+import ui11.renderer.j2d.rendertree.TransformNode;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -28,8 +24,7 @@ public class J2DTransformPeer extends Widget {
     @Inject private J2DVisualContentRequest parentSurface;
 
     @Remember private TransformedSurface childSurface;
-    @Remember private TransformRenderNode node;
-    @Remember private TransformInputNode inputNode;
+    @Remember private TransformNode node;
 
     public J2DTransformPeer(Transform transform) {
         this.transform = transform;
@@ -38,8 +33,7 @@ public class J2DTransformPeer extends Widget {
     @Override
     protected void initState() {
         childSurface = new TransformedSurface();
-        node = new TransformRenderNode();
-        inputNode = new TransformInputNode();
+        node = new TransformNode();
     }
 
     @Override
@@ -55,24 +49,21 @@ public class J2DTransformPeer extends Widget {
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
         return PeerRequest.requestSingle(transform.content(), childSurface, result -> {
-            return parentSurface.createResponse(new J2DNodeHolder(
+            return parentSurface.createResponse(
                     nonDegenerateTransform ?
-                            makeRenderNode(result.renderNode()) :
-                            EmptyRenderNode.INSTANCE,
-                    nonDegenerateTransform ?
-                            makeInputNode(result.inputNode()) :
-                            TransparentInputNode.INSTANCE
-            ));
+                            makeNode(result) :
+                            EmptyNode.INSTANCE
+            );
         });
     }
 
-    private RenderNode makeRenderNode(RenderNode childNode) {
-        if (transform.transformation().isIdentity() || childNode instanceof EmptyRenderNode)
+    private J2DNode makeNode(J2DNode childNode) {
+        if (transform.transformation().isIdentity() || childNode instanceof EmptyNode)
             return childNode;
 
         AffineTransform tx = childSurface.awtAffineTransformation;
 
-        if (childNode instanceof TransformRenderNode childTransformNode) {
+        if (childNode instanceof TransformNode childTransformNode) {
             node.child.set(childTransformNode.child.get());
             tx = new AffineTransform(tx);
             tx.concatenate(childTransformNode.transformation.get());
@@ -86,26 +77,6 @@ public class J2DTransformPeer extends Widget {
             node.transformation.set(new AffineTransform(tx));
         }
         return node;
-    }
-
-    private InputNode makeInputNode(InputNode childNode) {
-        if (transform.transformation().isIdentity() || childNode == TransparentInputNode.INSTANCE)
-            return childNode;
-
-        AffineTransform tx = childSurface.awtAffineTransformation;
-
-        if (childNode instanceof TransformInputNode childTransformNode) {
-            inputNode.child.set(childTransformNode.child.get());
-            tx = new AffineTransform(tx);
-            tx.concatenate(childTransformNode.transformation.get());
-            inputNode.transformation.set(tx);
-
-            // lehetne még pl. Transform-Clip-Transform-... láncokat összevonni
-        } else {
-            inputNode.child.set(childNode);
-            inputNode.transformation.set(tx);
-        }
-        return inputNode;
     }
 
     private static class TransformedSurface extends J2DSurfaceWithOwnShape {

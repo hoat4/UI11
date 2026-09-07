@@ -6,14 +6,14 @@ import ui11.graphics.VisualContentRequest;
 import ui11.observable.Observable;
 import ui11.platform.awt.AWTFrameSurface;
 import ui11.renderer.Renderer;
-import ui11.renderer.input.InputNode;
-import ui11.renderer.j2d.rendertree.RenderNode;
+import ui11.renderer.j2d.rendertree.J2DNode;
+import ui11.renderer.j2d.rendertree.J2DNode.J2DRenderTreePrinter;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
-public class J2DRenderer implements Renderer<J2DNodeHolder, RenderNode> {
+public class J2DRenderer implements Renderer<J2DNode> {
 
     private final AWTFrameSurface surface;
 
@@ -23,28 +23,18 @@ public class J2DRenderer implements Renderer<J2DNodeHolder, RenderNode> {
     }
 
     @Override
-    public VisualContentRequest<J2DNodeHolder> createRootContentRequest(
+    public VisualContentRequest<J2DNode> createRootContentRequest(
             Location.CoordinateSpaceRoot coordinateSpaceRoot,
             Observable<Size> size) {
         return new J2DVisualContentRequest.RootJ2DSurface(coordinateSpaceRoot, size);
     }
 
     @Override
-    public InputNode inputNode(J2DNodeHolder holder) {
-        return holder.inputNode();
-    }
-
-    @Override
-    public RenderNode renderNode(J2DNodeHolder holder) {
-        return holder.renderNode();
-    }
-
-    @Override
-    public void render(RenderNode root) {
+    public void render(J2DNode root) {
         if (false) {
             System.out.println();
             System.out.println("Render tree: ");
-            System.out.print(RenderNode.RenderTreePrinter.toString(root));
+            System.out.print(new J2DRenderTreePrinter().toString(root));
             System.out.println("Render tree end");
             System.out.println();
         }

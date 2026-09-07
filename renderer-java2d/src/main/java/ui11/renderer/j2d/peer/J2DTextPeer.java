@@ -5,11 +5,9 @@ import ui11.Widget;
 import ui11.color.Color;
 import ui11.geom.Size;
 import ui11.layout.protocol.BoxLayoutResult;
-import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DUtil;
-import ui11.renderer.j2d.inputtree.OpaqueInputNode;
-import ui11.renderer.j2d.rendertree.TextRenderNode;
+import ui11.renderer.j2d.rendertree.PaintedTextNode;
 import ui11.text.Text;
 import ui11.text.TextStyle;
 
@@ -25,8 +23,7 @@ public class J2DTextPeer extends Widget {
     @Inject private TextStyle textStyle;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
 
-    @Remember private TextRenderNode node;
-    @Remember private OpaqueInputNode inputNode;
+    @Remember private PaintedTextNode node;
 
     @Remember private String prevText;
     @Remember private TextStyle prevTextStyle;
@@ -39,8 +36,7 @@ public class J2DTextPeer extends Widget {
 
     @Override
     protected void initState() {
-        node = new TextRenderNode();
-        inputNode = new OpaqueInputNode();
+        node = new PaintedTextNode();
     }
 
     @SuppressWarnings("DataFlowIssue")
@@ -68,16 +64,11 @@ public class J2DTextPeer extends Widget {
         int w = fm.stringWidth(text);
         int h = fm.getHeight();
 
-        inputNode.shape.set(new Rectangle(w, h));
-
         Widget result;
         if (surface == null)
             result = null;
         else
-            result = surface.createResponse(new J2DNodeHolder(
-                    node,
-                    inputNode
-            ));
+            result = surface.createResponse(node);
 
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             Size size = sizeRequest.constraints().clamp(new Size(w, h));

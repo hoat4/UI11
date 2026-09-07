@@ -4,8 +4,10 @@ import com.github.weisj.jsvg.SVGDocument;
 import com.github.weisj.jsvg.renderer.PlatformSupport;
 import com.github.weisj.jsvg.view.ViewBox;
 import ui11.geom.Size;
+import ui11.geom.Vec4;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.MutableObservable;
+import ui11.renderer.input.InputNode;
 import ui11.renderer.j2d.RenderingContext;
 
 import org.jspecify.annotations.NonNull;
@@ -14,7 +16,7 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.ImageObserver;
 
-public class SVGDocumentRenderNode extends RenderNode {
+public class SVGDocumentNode extends J2DNode {
 
     public final MutableObservable<SVGDocument> svgDocument = MutableObservable.ofNullable();
     public final MutableObservable<Font> font = MutableObservable.ofNullable();
@@ -33,6 +35,11 @@ public class SVGDocumentRenderNode extends RenderNode {
         svgDocument.get().renderWithPlatform(platformSupportImpl, ctx.g,
                 new ViewBox((float) size.get().width(), (float) size.get().height()));
         ctx.g.setTransform(prevTransform);
+    }
+
+    @Override
+    public boolean pick(InputNode.PickContext pickContext, Vec4 p) {
+        throw new RuntimeException("TODO SVG mouse events");
     }
 
     @Override

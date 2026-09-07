@@ -3,15 +3,11 @@ package ui11.renderer.j2d.peer;
 import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Overlay;
-import ui11.renderer.input.InputNode;
-import ui11.renderer.input.ListenerInputNode;
-import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DVisualContentRequest.ShapeInheritingJ2DSurface;
-import ui11.renderer.j2d.inputtree.*;
-import ui11.renderer.j2d.rendertree.EmptyRenderNode;
-import ui11.renderer.j2d.rendertree.GroupRenderNode;
-import ui11.renderer.j2d.rendertree.RenderNode;
+import ui11.renderer.j2d.rendertree.EmptyNode;
+import ui11.renderer.j2d.rendertree.GroupNode;
+import ui11.renderer.j2d.rendertree.J2DNode;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -24,8 +20,7 @@ public class J2DGroupPeer extends Widget {
     @Inject private J2DVisualContentRequest parentSurface;
 
     @Remember private List<J2DVisualContentRequest> childSurfaces;
-    @Remember private GroupRenderNode groupNode;
-    @Remember private GroupInputNode groupInputNode;
+    @Remember private GroupNode groupNode;
 
     public J2DGroupPeer(Overlay overlay) {
         this.overlay = overlay;
@@ -34,8 +29,7 @@ public class J2DGroupPeer extends Widget {
     @Override
     protected void initState() {
         childSurfaces = new ArrayList<>();
-        groupNode = new GroupRenderNode();
-        groupInputNode = new GroupInputNode();
+        groupNode = new GroupNode();
     }
 
     @Override
@@ -54,45 +48,23 @@ public class J2DGroupPeer extends Widget {
         return PeerRequest.requestMultiple(overlay.items(), childSurfaces, this::doBuild);
     }
 
-    private Widget doBuild(List<? extends J2DNodeHolder> childrenResolutionResults) {
-        List<RenderNode> childRenderNodes = new ArrayList<>();
-        List<InputNode> childInputNodes = new ArrayList<>();
+    private Widget doBuild(List<? extends J2DNode> childrenResolutionResults) {
+        List<J2DNode> children = new ArrayList<>();
 
-        Shape shape = parentSurface.shape();
-
-        for (J2DNodeHolder h : childrenResolutionResults) {
-            if (!(h.renderNode() instanceof EmptyRenderNode))
-                childRenderNodes.add(h.renderNode());
-            if (!(h.inputNode() instanceof TransparentInputNode)) {
-                if (isOpaque(h.inputNode(), shape))
-                    childInputNodes.clear();
-                childInputNodes.add(h.inputNode());
-            }
+        for (J2DNode h : childrenResolutionResults) {
+            if (!(h instanceof EmptyNode))
+                children.add(h);
         }
 
-        return parentSurface.createResponse(new J2DNodeHolder(
-                switch (childRenderNodes.size()) {
-                    case 0 -> EmptyRenderNode.INSTANCE;
-                    case 1 -> childRenderNodes.getFirst();
+        return parentSurface.createResponse(
+                switch (children.size()) {
+                    case 0 -> EmptyNode.INSTANCE;
+                    case 1 -> children.getFirst();
                     default -> {
-                        groupNode.children.setAll(childRenderNodes);
+                        groupNode.children.setAll(children);
                         yield groupNode;
                     }
-                },
-                switch (childInputNodes.size()) {
-                    case 0 -> TransparentInputNode.INSTANCE;
-                    case 1 -> childInputNodes.getFirst();
-                    default -> {
-                        groupInputNode.children.setAll(childInputNodes);
-                        yield groupInputNode;
-                    }
                 }
-        ));
-    }
-
-    private static boolean isOpaque(InputNode node, Shape shape) {
-        while (node instanceof ListenerInputNode listenerInputNode)
-            node = listenerInputNode.child.get();
-        return node instanceof OpaqueInputNode opaqueInputNode && opaqueInputNode.shape.get().equals(shape);
+        );
     }
 }

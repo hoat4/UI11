@@ -1,4 +1,7 @@
-package ui11.renderer.j2d.inputtree;
+// TODO
+
+/*
+package ui11.renderer.j2d.rendertree;
 
 import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
@@ -9,11 +12,11 @@ import java.awt.*;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 
-public class TextInputNode extends InputNode {
+public class GenericTextNode {
 
     public final MutableObservable<String> text = MutableObservable.ofNullable();
     public final MutableObservable<Font> font = MutableObservable.ofNullable();
-    public final MutableObservable<InputNode> child = MutableObservable.ofNullable();
+    public final MutableObservable<J2DNode> child = MutableObservable.ofNullable();
 
     private String boundsForText;
     private Font boundsForFont;
@@ -21,7 +24,7 @@ public class TextInputNode extends InputNode {
     private TextLayout textLayout;
 
     @Override
-    public boolean pick(PickContext pickContext, Vec4 p) {
+    public boolean pick(InputNode.PickContext pickContext, Vec4 p) {
         String text = this.text.get();
         Font font = this.font.get();
         InputNode child = this.child.get();
@@ -29,8 +32,6 @@ public class TextInputNode extends InputNode {
         boolean fontChanged = !font.equals(boundsForFont);
 
         if (fontChanged || !text.equals(boundsForText)) {
-            // TODO ez más FontMetrics (WFontMetrics), mint amit TextRenderNode használ (FontDesignMetrics),
-            //      de nem értem hogy miért
             FontMetrics fontMetrics = C.getFontMetrics(font);
             if (fontChanged) {
                 maxAscent = fontMetrics.getMaxAscent();
@@ -60,3 +61,4 @@ public class TextInputNode extends InputNode {
 
     private static final Canvas C = new Canvas();
 }
+ */

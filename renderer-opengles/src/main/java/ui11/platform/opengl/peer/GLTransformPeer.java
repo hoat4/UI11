@@ -8,16 +8,12 @@ import ui11.geom.Size;
 import ui11.geom.Vec2;
 import ui11.graphics.effect.Transform;
 import ui11.observable.MutableObservable;
-import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.GLVisualContentRequest.GLSurfaceWithOwnShape;
 import ui11.platform.opengl.Shape2D;
-import ui11.renderer.input.InputNode;
-import ui11.platform.opengl.inputtree.TransformInputNode;
-import ui11.platform.opengl.inputtree.TransparentInputNode;
-import ui11.platform.opengl.rendertree.EmptyRenderNode;
-import ui11.platform.opengl.rendertree.RenderNode;
-import ui11.platform.opengl.rendertree.TransformRenderNode;
+import ui11.platform.opengl.rendertree.EmptyNode;
+import ui11.platform.opengl.rendertree.GLNode;
+import ui11.platform.opengl.rendertree.TransformNode;
 
 public class GLTransformPeer extends Widget {
 
@@ -26,8 +22,7 @@ public class GLTransformPeer extends Widget {
     @Inject private GLVisualContentRequest parentSurface;
 
     @Remember private TransformedSurface surface;
-    @Remember private TransformRenderNode node;
-    @Remember private TransformInputNode inputNode;
+    @Remember private TransformNode node;
 
     public GLTransformPeer(Transform transform) {
         this.transform = transform;
@@ -36,8 +31,7 @@ public class GLTransformPeer extends Widget {
     @Override
     protected void initState() {
         surface = new TransformedSurface();
-        node = new TransformRenderNode();
-        inputNode = new TransformInputNode();
+        node = new TransformNode();
     }
 
     @Override
@@ -49,7 +43,7 @@ public class GLTransformPeer extends Widget {
         boolean nonDegenerateTransform = surface.update(transform.transformation());
 
         if (surface.renderNodeTranslation.snoop() != null) {
-            // ilyenkor nem kell TransformRenderNode
+            // ilyenkor nem kell TransformNode
             return PeerRequest.requestSingle(transform.content(), surface, parentSurface::createResponse);
         }
 
@@ -58,53 +52,34 @@ public class GLTransformPeer extends Widget {
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
         return PeerRequest.requestSingle(transform.content(), surface, result -> {
-            return parentSurface.createResponse(new GLNodeHolder(
+            return parentSurface.createResponse(
                     nonDegenerateTransform ?
-                            makeRenderNode(result.renderNode()) :
-                            EmptyRenderNode.INSTANCE,
-                    nonDegenerateTransform ?
-                            makeInputNode(result.inputNode()) :
-                            TransparentInputNode.INSTANCE
-            ));
+                            makeNode(result) :
+                            EmptyNode.INSTANCE
+            );
         });
     }
 
-    private RenderNode makeRenderNode(RenderNode childNode) {
-        if (transform.transformation().isIdentity() || childNode instanceof EmptyRenderNode)
+    private GLNode makeNode(GLNode childNode) {
+        if (transform.transformation().isIdentity() || childNode instanceof EmptyNode)
             return childNode;
 
         Mat4 tx = surface.matrix;
 
-        if (childNode instanceof TransformRenderNode childTransformNode) {
+        if (childNode instanceof TransformNode childTransformNode) {
             node.child.set(childTransformNode.child.get());
             tx = tx.mul(childTransformNode.transformation.get());
             node.transformation.set(tx);
+            node.inverseMatrix.set(childTransformNode.inverseMatrix.get().mul(surface.inverseMatrix));
 
             // lehetne még pl. Transform-Clip-Transform-... láncokat összevonni
         } else {
             node.child.set(childNode);
             node.transformation.set(tx);
+            node.inverseMatrix.set(surface.inverseMatrix);
         }
+
         return node;
-    }
-
-    private InputNode makeInputNode(InputNode childNode) {
-        if (transform.transformation().isIdentity() || childNode == TransparentInputNode.INSTANCE)
-            return childNode;
-
-        Mat4 tx = surface.inverseMatrix;
-
-        if (childNode instanceof TransformInputNode childTransformNode) {
-            inputNode.child.set(childTransformNode.child.get());
-            tx = childTransformNode.inverseMatrix.get().mul(tx);
-            inputNode.inverseMatrix.set(tx);
-
-            // lehetne még pl. Transform-Clip-Transform-... láncokat összevonni
-        } else {
-            inputNode.child.set(childNode);
-            inputNode.inverseMatrix.set(tx);
-        }
-        return inputNode;
     }
 
     private static class TransformedSurface extends GLSurfaceWithOwnShape {

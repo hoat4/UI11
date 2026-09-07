@@ -24,6 +24,7 @@ import ui11.observable.MutableObservable;
 import ui11.platform.awt.AWTEnterContentListenerPeer.AWTEnterContentListenerPeerState;
 import ui11.provide.Provide;
 import ui11.provide.Provider;
+import ui11.renderer.Node;
 import ui11.renderer.Renderer;
 import ui11.renderer.RendererProvider;
 import ui11.renderer.Surface;
@@ -51,12 +52,12 @@ public class AWTWindow {
     private final AWTWindowImpl frame;
     private final InvalidationPoint repaintInvalidationPoint = new InvalidationPoint();
 
-    private final Renderer<?, ?> renderer;
+    private final Renderer<?> renderer;
 
     private final Location.CoordinateSpaceRoot coordinateSpaceRoot = new Location.CoordinateSpaceRoot();
     private final MutableObservable<@Nullable Size> size = MutableObservable.ofNullable();
-    private final VisualContentRequest<?> rootSurface;
-    private final MutableObservable<Object> rootNodeHolder = MutableObservable.ofNullable();
+    private final VisualContentRequest<? extends Node> rootSurface;
+    private final MutableObservable<? extends Node> rootNodeHolder = MutableObservable.ofNullable();
 
     private PointerListener currentMousePress;
 
@@ -77,9 +78,9 @@ public class AWTWindow {
         frame.createBufferStrategy(2);
 
         Surface surface = new AWTFrameSurface(frame, frame.getBufferStrategy());
-        Renderer<?, ?> r = null;
+        Renderer<?> r = null;
         for (RendererProvider provider : ServiceLoader.load(RendererProvider.class)) {
-            Renderer<?, ?> r2 = provider.tryProvide(surface);
+            Renderer<?> r2 = provider.tryProvide(surface);
             if (r2 != null)
                 if (r != null)
                     throw new RuntimeException("Multiple renderer available for " + surface +
@@ -120,7 +121,10 @@ public class AWTWindow {
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
             return PeerRequest.requestSingle(content, rootSurface, result -> {
-                rootNodeHolder.set(result);
+                @SuppressWarnings("unchecked")
+                MutableObservable<Node> rootNodeHolderCasted = (MutableObservable<Node>) rootNodeHolder;
+                rootNodeHolderCasted.set(result);
+
                 // TODO repaint kéne, ha rootPeer megváltozik
 
                 if (!frame.isVisible()) // TODO onResume kéne, csak az túl korán van
@@ -161,17 +165,10 @@ public class AWTWindow {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private InputNode inputNode(Object holder) {
-        return ((Renderer<Object, ?>) renderer).inputNode(holder);
-    }
-
     private void redraw() {
         @SuppressWarnings("unchecked")
-        Renderer<Object, Object> rendererCasted = (Renderer<Object, Object>) renderer;
-        Object holder = rootNodeHolder.get();
-        Object renderNode = rendererCasted.renderNode(holder);
-        rendererCasted.render(renderNode);
+        Renderer<Node> rendererCasted = (Renderer<Node>) renderer;
+        rendererCasted.render(rootNodeHolder.get());
     }
 
     private void onMouseMove(Vec2 point) {
@@ -182,7 +179,7 @@ public class AWTWindow {
         AWTMouse.INSTANCE.location.set(new Location(coordinateSpaceRoot.origin, point));
 
         PickContext pickContext = new PickContext();
-        inputNode(rootNodeHolder.get()).pick(pickContext, point.withZW(0, 1));
+        rootNodeHolder.get().pick(pickContext, point.withZW(0, 1));
 
         List<PickStackItem> result = pickContext.result();
         if (result == null)

@@ -16,8 +16,9 @@ import ui11.observable.MutableObservable;
 import ui11.platform.opengl.BufferPool;
 import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
-import ui11.platform.opengl.rendertree.RenderNode;
+import ui11.platform.opengl.rendertree.GLNode;
 import ui11.provide.Provider;
+import ui11.renderer.Node;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 
@@ -103,12 +104,12 @@ public class WindowImpl {
 
                 /*
                 System.out.println("New render tree. Viewport size: "+innerSize.get());
-                System.out.println(RenderNode.RenderTreePrinter.toString(rootRenderNode));
+                System.out.println(new J2DRenderTreePrinter().toString(rootRenderNode));
                 System.out.println();
                  */
 
-                    System.out.println(RenderNode.RenderTreePrinter.toString(result.renderNode()));
-                    result.renderNode().addToDisplayList(initialTransform, displayList);
+                    System.out.println(new Node.RenderTreePrinter().toString(result));
+                    result.addToDisplayList(initialTransform, displayList);
                     currentDisplayList = displayList;
                     repaint();
 

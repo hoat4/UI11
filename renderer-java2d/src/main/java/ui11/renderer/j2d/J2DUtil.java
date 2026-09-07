@@ -82,30 +82,6 @@ public class J2DUtil {
         return j2dPath;
     }
 
-    public static String debugToString(Object value) {
-        if (value instanceof Path2D.Double path) {
-            PathIterator pathIterator = path.getPathIterator(null);
-            StringJoiner sj = new StringJoiner("; ");
-            while (!pathIterator.isDone()) {
-                double[] coords = new double[6];
-                int type = pathIterator.currentSegment(coords);
-                switch (type) {
-                    case SEG_MOVETO->sj.add("MOVETO ("+coords[0]+","+coords[1]+")");
-                    case SEG_LINETO -> sj.add("LINETO ("+coords[0]+","+coords[1]+")");
-                    case SEG_QUADTO -> sj.add("QUADTO ("+coords[0]+","+coords[1]+"),("+
-                            coords[2]+","+coords[3]+")");
-                    case SEG_CUBICTO -> sj.add("CUBICTO ("+coords[0]+","+coords[1]+"),("+
-                            coords[2]+","+coords[3]+"),("+coords[4]+","+coords[5]+")");
-                    case SEG_CLOSE -> sj.add("CLOSE");
-                }
-                pathIterator.next();
-            }
-            return "Path2D.Double: " + sj;
-        }
-
-        return String.valueOf(value);
-    }
-
     /**
      * @param a probably outer
      * @param b probably inner

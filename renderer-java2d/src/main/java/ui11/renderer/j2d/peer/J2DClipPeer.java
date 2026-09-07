@@ -3,16 +3,12 @@ package ui11.renderer.j2d.peer;
 import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Clip;
-import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DVisualContentRequest.ShapeInheritingJ2DSurface;
-import ui11.renderer.j2d.inputtree.ClipPathInputNode;
-import ui11.renderer.input.InputNode;
-import ui11.renderer.j2d.inputtree.TransparentInputNode;
-import ui11.renderer.j2d.rendertree.ClipPathRenderNode;
-import ui11.renderer.j2d.rendertree.EmptyRenderNode;
-import ui11.renderer.j2d.rendertree.FillPathRenderNode;
-import ui11.renderer.j2d.rendertree.RenderNode;
+import ui11.renderer.j2d.rendertree.ClipPathNode;
+import ui11.renderer.j2d.rendertree.EmptyNode;
+import ui11.renderer.j2d.rendertree.FillPathNode;
+import ui11.renderer.j2d.rendertree.J2DNode;
 
 import java.awt.*;
 import java.awt.geom.Area;
@@ -23,9 +19,8 @@ public class J2DClipPeer extends Widget {
 
     @Inject private J2DVisualContentRequest parentSurface;
 
-    @Remember private ClipPathRenderNode clipNode;
-    @Remember private FillPathRenderNode fillPathNode;
-    @Remember private ClipPathInputNode clipInputNode;
+    @Remember private ClipPathNode clipNode;
+    @Remember private FillPathNode fillPathNode;
     @Remember private J2DVisualContentRequest childSurface;
 
     public J2DClipPeer(Clip clip) {
@@ -34,9 +29,8 @@ public class J2DClipPeer extends Widget {
 
     @Override
     protected void initState() {
-        clipNode = new ClipPathRenderNode();
-        fillPathNode = new FillPathRenderNode();
-        clipInputNode = new ClipPathInputNode();
+        clipNode = new ClipPathNode();
+        fillPathNode = new FillPathNode();
         childSurface = new ShapeInheritingJ2DSurface();
     }
 
@@ -45,28 +39,25 @@ public class J2DClipPeer extends Widget {
         childSurface.parent.set(parentSurface);
 
         return PeerRequest.requestSingle(clip.content(), childSurface, result -> {
-            return parentSurface.createResponse(new J2DNodeHolder(
-                    makeRenderNode(result.renderNode(), childSurface.shape()),
-                    makeInputNode(result.inputNode(), childSurface.shape())
-            ));
+            return parentSurface.createResponse(makeNode(result, childSurface.shape()));
         });
     }
 
-    private RenderNode makeRenderNode(RenderNode childNode, Shape awtShape) {
+    private J2DNode makeNode(J2DNode childNode, Shape awtShape) {
         if (awtShape == J2DVisualContentRequest.INFINITE_SHAPE)
-            return EmptyRenderNode.INSTANCE;
+            return EmptyNode.INSTANCE;
 
         // TODO ha childNode teljesen beleesik awtShapebe, akkor nem kéne ClipNodeot létrehozni
         switch (childNode) {
-            case EmptyRenderNode emptyRenderNode -> {
-                return EmptyRenderNode.INSTANCE;
+            case EmptyNode emptyRenderNode -> {
+                return EmptyNode.INSTANCE;
             }
-            case FillPathRenderNode childFillPathNode -> {
+            case FillPathNode childFillPathNode -> {
                 fillPathNode.paint.set(childFillPathNode.paint.get());
                 fillPathNode.shape.set(intersection(awtShape, childFillPathNode.shape.get()));
                 return fillPathNode;
             }
-            case ClipPathRenderNode childClipNode -> {
+            case ClipPathNode childClipNode -> {
                 clipNode.content.set(childClipNode.content.get());
                 clipNode.shape.set(intersection(awtShape, childClipNode.shape.get()));
                 return clipNode;
@@ -76,19 +67,6 @@ public class J2DClipPeer extends Widget {
                 clipNode.shape.set(awtShape);
                 return clipNode;
             }
-        }
-    }
-
-    private InputNode makeInputNode(InputNode childNode, Shape awtShape) {
-        if (awtShape == J2DVisualContentRequest.INFINITE_SHAPE)
-            return TransparentInputNode.INSTANCE;
-
-        if (childNode == TransparentInputNode.INSTANCE)
-            return childNode;
-        else {
-            clipInputNode.child.set(childNode);
-            clipInputNode.shape.set(awtShape);
-            return clipInputNode;
         }
     }
 

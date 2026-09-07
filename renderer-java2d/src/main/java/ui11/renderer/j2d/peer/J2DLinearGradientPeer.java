@@ -4,13 +4,10 @@ import ui11.Widget;
 import ui11.geom.Vec2;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
-import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.J2DUtil;
-import ui11.renderer.j2d.inputtree.OpaqueInputNode;
-import ui11.renderer.j2d.inputtree.TransparentInputNode;
-import ui11.renderer.j2d.rendertree.EmptyRenderNode;
-import ui11.renderer.j2d.rendertree.FillPathRenderNode;
+import ui11.renderer.j2d.rendertree.EmptyNode;
+import ui11.renderer.j2d.rendertree.FillPathNode;
 import ui11.text.TextStyle;
 
 import java.awt.*;
@@ -22,8 +19,7 @@ public class J2DLinearGradientPeer extends Widget {
     @Inject private J2DVisualContentRequest surface;
     @Inject private TextStyle textStyle;
 
-    @Remember private FillPathRenderNode node;
-    @Remember private OpaqueInputNode inputNode;
+    @Remember private FillPathNode node;
 
     public J2DLinearGradientPeer(LinearGradient gradient) {
         this.gradient = gradient;
@@ -31,15 +27,14 @@ public class J2DLinearGradientPeer extends Widget {
 
     @Override
     protected void initState() {
-        node = new FillPathRenderNode();
-        inputNode = new OpaqueInputNode();
+        node = new FillPathNode();
     }
 
     @Override
     protected Widget build() {
         Shape shape = surface.shape();
         if (shape == J2DVisualContentRequest.INFINITE_SHAPE)
-            return surface.createResponse(new J2DNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
+            return surface.createResponse(EmptyNode.INSTANCE);
 
         float[] fractions = new float[gradient.stops().size()];
         Color[] colors = new Color[gradient.stops().size()];
@@ -73,12 +68,11 @@ public class J2DLinearGradientPeer extends Widget {
                 (float) (w / 2 + s.x()), (float) (h / 2 + s.y()),
                 fractions, colors);
 
-        // EmptyRenderNode?
+        // EmptyNode?
 
         node.paint.set(paint);
         node.shape.set(shape);
-        inputNode.shape.set(shape);
 
-        return surface.createResponse(new J2DNodeHolder(node, inputNode));
+        return surface.createResponse(node);
     }
 }

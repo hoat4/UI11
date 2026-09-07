@@ -1,18 +1,15 @@
-package ui11.platform.opengl.rendertree;
+package ui11.renderer;
 
-import ui11.geom.Mat4;
-import ui11.platform.opengl.renderer.displaylist.DisplayList;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import ui11.geom.Vec4;
+import ui11.renderer.input.InputNode;
 
-public abstract class RenderNode {
+public abstract class Node {
 
-    public abstract void addToDisplayList(Mat4 transform, DisplayList displayList);
+    public abstract boolean pick(InputNode.PickContext pickContext, Vec4 p);
 
     public abstract void debugPrint(RenderTreePrinter out);
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
-    }
 
     public static class RenderTreePrinter {
 
@@ -21,11 +18,15 @@ public abstract class RenderNode {
         private final StringBuilder sb = new StringBuilder();
         private int indent = 1;
 
-        private RenderTreePrinter() {
+        public RenderTreePrinter() {
+        }
+
+        protected @NonNull String valueToString(@Nullable Object value) {
+            return String.valueOf(value);
         }
 
         public void prop(String name, Object value) {
-            String valueStr = String.valueOf(value);
+            String valueStr = valueToString(value);
             if (valueStr.contains("\n")) {
                 sb.append('\n');
                 for (int i = 0; i < indent; i++)
@@ -38,7 +39,7 @@ public abstract class RenderNode {
             }
         }
 
-        public void child(String name, RenderNode value) {
+        public void child(String name, Node value) {
             sb.append('\n');
             for (int i = 0; i < indent; i++)
                 sb.append(INDENT);
@@ -48,12 +49,14 @@ public abstract class RenderNode {
             indent--;
         }
 
-        public static String toString(RenderNode root) {
-            RenderTreePrinter p = new RenderTreePrinter();
-            p.sb.append(root.toString());
-            root.debugPrint(p);
-            p.sb.append('\n');
-            return p.sb.toString();
+        public String toString(Node root) {
+            if (!sb.isEmpty())
+                throw new IllegalStateException();
+
+            sb.append(root.toString());
+            root.debugPrint(this);
+            sb.append('\n');
+            return sb.toString();
         }
     }
 }

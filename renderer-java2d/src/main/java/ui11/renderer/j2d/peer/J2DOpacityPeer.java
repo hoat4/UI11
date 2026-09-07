@@ -3,9 +3,8 @@ package ui11.renderer.j2d.peer;
 import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Opacity;
-import ui11.renderer.j2d.J2DNodeHolder;
 import ui11.renderer.j2d.J2DVisualContentRequest;
-import ui11.renderer.j2d.rendertree.OpacityRenderNode;
+import ui11.renderer.j2d.rendertree.OpacityNode;
 
 public class J2DOpacityPeer extends Widget {
 
@@ -13,7 +12,7 @@ public class J2DOpacityPeer extends Widget {
 
     @Inject private J2DVisualContentRequest surface;
 
-    @Remember private OpacityRenderNode opacityRenderNode;
+    @Remember private OpacityNode opacityNode;
 
     public J2DOpacityPeer(Opacity opacity) {
         this.opacity = opacity;
@@ -21,18 +20,15 @@ public class J2DOpacityPeer extends Widget {
 
     @Override
     protected void initState() {
-        opacityRenderNode = new OpacityRenderNode();
+        opacityNode = new OpacityNode();
     }
 
     @Override
     protected Widget build() {
         return PeerRequest.requestSingle(opacity.content(), surface, result -> {
-            opacityRenderNode.opacity.set(opacity.opacity());
-            opacityRenderNode.content.set(result.renderNode());
-            return surface.createResponse(new J2DNodeHolder(
-                    opacityRenderNode,
-                    result.inputNode()
-            ));
+            opacityNode.opacity.set(opacity.opacity());
+            opacityNode.content.set(result);
+            return surface.createResponse(opacityNode);
         });
     }
 }

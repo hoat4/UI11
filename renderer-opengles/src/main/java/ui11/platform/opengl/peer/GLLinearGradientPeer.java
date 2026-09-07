@@ -5,14 +5,11 @@ import ui11.geom.Vec2;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
 import ui11.platform.opengl.BufferPool;
-import ui11.platform.opengl.GLNodeHolder;
 import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.Shape2D;
-import ui11.platform.opengl.inputtree.OpaqueInputNode;
-import ui11.platform.opengl.inputtree.TransparentInputNode;
 import ui11.platform.opengl.renderer.Shaders;
-import ui11.platform.opengl.rendertree.EmptyRenderNode;
-import ui11.platform.opengl.rendertree.FillTrianglesWithColorRenderNode;
+import ui11.platform.opengl.rendertree.EmptyNode;
+import ui11.platform.opengl.rendertree.FillTrianglesWithColorNode;
 import ui11.text.TextStyle;
 
 public class GLLinearGradientPeer extends Widget {
@@ -23,8 +20,7 @@ public class GLLinearGradientPeer extends Widget {
     @Inject private TextStyle textStyle;
     @Inject private BufferPool bufferPool;
 
-    @Remember private FillTrianglesWithColorRenderNode node;
-    @Remember private OpaqueInputNode inputNode;
+    @Remember private FillTrianglesWithColorNode node;
 
     public GLLinearGradientPeer(LinearGradient gradient, GLVisualContentRequest surface) {
         this.gradient = gradient;
@@ -33,15 +29,14 @@ public class GLLinearGradientPeer extends Widget {
 
     @Override
     protected void initState() {
-        node = new FillTrianglesWithColorRenderNode();
-        inputNode = new OpaqueInputNode();
+        node = new FillTrianglesWithColorNode();
     }
 
     @Override
     protected Widget build() {
         Shape2D shape = surface.shape();
         if (shape == Shape2D.InfinitePlane.INFINITE_PLANE)
-            return surface.createResponse(new GLNodeHolder(EmptyRenderNode.INSTANCE, TransparentInputNode.INSTANCE));
+            return surface.createResponse(EmptyNode.INSTANCE);
 
         double emSize = textStyle.size();
         double deg = gradient.angleDeg();
@@ -79,11 +74,11 @@ public class GLLinearGradientPeer extends Widget {
         shape.toTriangles(triangleSplitter);
         node.vertices.set(buf.finish());
 
-        // EmptyRenderNode?
+        // EmptyNode?
 
-        inputNode.shape.set(shape);
+        node.shape.set(shape);
 
-        return surface.createResponse(new GLNodeHolder(node, inputNode));
+        return surface.createResponse(node);
     }
 
     private static class TriangleSplitter implements Shape2D.Triangle2DConsumer {

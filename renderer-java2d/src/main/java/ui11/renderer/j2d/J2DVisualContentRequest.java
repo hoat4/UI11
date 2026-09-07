@@ -9,8 +9,8 @@ import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
 import ui11.renderer.j2d.J2DVisualContentRequest.J2DSurfaceWithOwnShape;
 import ui11.renderer.j2d.J2DVisualContentRequest.ShapeInheritingJ2DSurface;
-import ui11.renderer.j2d.rendertree.FillPathRenderNode;
-import ui11.renderer.j2d.rendertree.RenderNode;
+import ui11.renderer.j2d.rendertree.FillPathNode;
+import ui11.renderer.j2d.rendertree.J2DNode;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -18,7 +18,7 @@ import java.awt.geom.Rectangle2D;
 // TODO @Inject VisualContentRequest most nem működik
 
 public abstract sealed class J2DVisualContentRequest
-        extends VisualContentRequest<J2DNodeHolder>
+        extends VisualContentRequest<J2DNode>
         permits J2DSurfaceWithOwnShape, ShapeInheritingJ2DSurface {
 
     public static final Shape INFINITE_SHAPE = new Rectangle2D.Double(
@@ -33,7 +33,7 @@ public abstract sealed class J2DVisualContentRequest
     public abstract Shape shape();
 
     public J2DVisualContentRequest() {
-        super(J2DNodeHolder.class);
+        super(J2DNode.class);
     }
 
     @Override
@@ -67,7 +67,7 @@ public abstract sealed class J2DVisualContentRequest
 
     public static non-sealed abstract class J2DSurfaceWithOwnShape extends J2DVisualContentRequest {
 
-        private FillPathRenderNode fillPathRenderNode;
+        private FillPathNode fillPathRenderNode;
 
         // Ilyen szándékosan nincs ShapeInheritingJ2DSurface-ben,
         // - group esetén nem jü: két valamit egymásra rajzolni majd clippelni nem ugyanaz,
@@ -77,12 +77,12 @@ public abstract sealed class J2DVisualContentRequest
         //   de nyilván mást kell makeFillRenderNode-nak csinálnia, mint a parentjének  .
 
         /**
-         * ez {@link FillPathRenderNode}-ot ad vissza, de subclassok felülírják, hogy
+         * ez {@link FillPathNode}-ot ad vissza, de subclassok felülírják, hogy
          * hatékonyabbat adjon vissza
          */
-        public RenderNode makeFillRenderNode(Paint paint) {
+        public J2DNode makeFillRenderNode(Paint paint) {
             if (fillPathRenderNode == null)
-                fillPathRenderNode = new FillPathRenderNode();
+                fillPathRenderNode = new FillPathNode();
             fillPathRenderNode.shape.set(shape());
             fillPathRenderNode.paint.set(paint);
             return fillPathRenderNode;
