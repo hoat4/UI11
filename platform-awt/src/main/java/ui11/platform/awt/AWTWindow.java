@@ -124,7 +124,7 @@ public class AWTWindow {
                 MutableObservable<Node> rootNodeHolderCasted = (MutableObservable<Node>) rootNodeHolder;
                 rootNodeHolderCasted.set(result);
 
-                // TODO repaint kéne, ha rootPeer megváltozik
+                // Repainter subscribes to rootNodeHolder, so it will be notified about a root node change
 
                 if (!frame.isVisible()) // TODO onResume kéne, csak az túl korán van
                     frame.setVisible(true);
