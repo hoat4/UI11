@@ -4,7 +4,7 @@ import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
-import ui11.renderer.input.InputNode;
+import ui11.renderer.input.PickContext;
 import ui11.renderer.j2d.RenderingContext;
 
 import java.awt.*;
@@ -39,13 +39,16 @@ public class PaintedTextNode extends J2DNode {
     }
 
     @Override
-    public boolean pick(InputNode.PickContext pickContext, Vec4 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         String text = this.text.get();
         Font font = this.font.get();
 
         ensureBoundsInit(font, text);
 
-        return Rect.of(new Size(width, height)).contains(p.to2D());
+        if (Rect.of(new Size(width, height)).contains(p.to2D()))
+            return pickContext.addResult();
+        else
+            return false;
     }
 
     private void ensureBoundsInit(Font font, String text) {

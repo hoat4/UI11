@@ -15,8 +15,6 @@ import ui11.renderer.j2d.rendertree.J2DNode;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
-// TODO @Inject VisualContentRequest most nem működik
-
 public abstract sealed class J2DVisualContentRequest
         extends VisualContentRequest<J2DNode>
         permits J2DSurfaceWithOwnShape, ShapeInheritingJ2DSurface {

@@ -5,7 +5,7 @@ import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
 import ui11.platform.opengl.Shape2D;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
-import ui11.renderer.input.InputNode;
+import ui11.renderer.input.PickContext;
 
 public class ClipNode extends GLNode {
 
@@ -18,7 +18,7 @@ public class ClipNode extends GLNode {
     }
 
     @Override
-    public boolean pick(InputNode.PickContext pickContext, Vec4 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         if (!shape.get().contains(p.x(), p.y()))
             return false;
         return content.get().pick(pickContext, p);

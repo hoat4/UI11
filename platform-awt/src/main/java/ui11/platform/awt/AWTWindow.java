@@ -28,9 +28,8 @@ import ui11.renderer.Node;
 import ui11.renderer.Renderer;
 import ui11.renderer.RendererProvider;
 import ui11.renderer.Surface;
-import ui11.renderer.input.InputNode;
-import ui11.renderer.input.InputNode.PickContext;
-import ui11.renderer.input.InputNode.PickContext.PickStackItem;
+import ui11.renderer.input.PickContext;
+import ui11.renderer.input.PickContext.PickStackItem;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 import ui11.text.TextStyle.FontStyle;
@@ -188,7 +187,7 @@ public class AWTWindow {
             logger.info("No mouse input region found for " + point);
         else {
             for (PickStackItem item : result.reversed()) {
-                currentMousePress = item.n().listener.onPointerDown(
+                currentMousePress = item.n().listener().onPointerDown(
                         AWTMouse.INSTANCE, StandardMouseButton.PRIMARY /* TODO */);
                 if (currentMousePress != null)
                     break;

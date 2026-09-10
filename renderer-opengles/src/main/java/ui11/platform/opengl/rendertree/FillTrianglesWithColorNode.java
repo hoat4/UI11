@@ -8,7 +8,7 @@ import ui11.platform.opengl.Shape2D;
 import ui11.platform.opengl.renderer.Shaders;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
 import ui11.platform.opengl.renderer.displaylist.SolidTrianglesItem;
-import ui11.renderer.input.InputNode;
+import ui11.renderer.input.PickContext;
 
 public class FillTrianglesWithColorNode extends GLNode {
 
@@ -26,7 +26,7 @@ public class FillTrianglesWithColorNode extends GLNode {
     }
 
     @Override
-    public boolean pick(InputNode.PickContext pickContext, Vec4 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         if (shape.get().contains(p.x(), p.y()))
             return pickContext.addResult();
         else

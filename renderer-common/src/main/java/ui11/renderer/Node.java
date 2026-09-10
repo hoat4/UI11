@@ -3,11 +3,11 @@ package ui11.renderer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.geom.Vec4;
-import ui11.renderer.input.InputNode;
+import ui11.renderer.input.PickContext;
 
 public abstract class Node {
 
-    public abstract boolean pick(InputNode.PickContext pickContext, Vec4 p);
+    public abstract boolean pick(PickContext pickContext, Vec4 p);
 
     public abstract void debugPrint(RenderTreePrinter out);
 

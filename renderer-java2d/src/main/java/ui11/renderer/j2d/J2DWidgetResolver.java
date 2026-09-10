@@ -36,5 +36,6 @@ public class J2DWidgetResolver implements ResolverProvider {
         r.registerForContextType(J2DVisualContentRequest.class, LinearGradient.class, J2DLinearGradientPeer::new);
         r.registerForContextType(J2DVisualContentRequest.class, SVGImageView.class, J2DSVGImageViewPeer::new);
         r.registerForContextType(J2DVisualContentRequest.class, Opacity.class, J2DOpacityPeer::new);
+        r.registerForContextType(J2DVisualContentRequest.class, PointerRegion.class, J2DPointerRegionPeer::new);
     }
 }

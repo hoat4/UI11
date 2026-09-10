@@ -2,7 +2,7 @@ package ui11.renderer.j2d.rendertree;
 
 import ui11.geom.Vec4;
 import ui11.observable.MutableObservable;
-import ui11.renderer.input.InputNode;
+import ui11.renderer.input.PickContext;
 import ui11.renderer.j2d.RenderingContext;
 
 import java.awt.geom.AffineTransform;
@@ -22,7 +22,7 @@ public class TransformNode extends J2DNode {
     }
 
     @Override
-    public boolean pick(InputNode.PickContext pickContext, Vec4 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         // inverzt lehet hogy érdemes lenne kiszámítani előre, mert ugyan 2D affin mátrixot könnyű invertálni,
         // de az exception dobása lehet hogy sok idő.
 

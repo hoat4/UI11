@@ -73,7 +73,7 @@ class PointerStateDependentImpl extends Widget {
 
     private final PointerStateDependent pointerStateDependent;
 
-    @Inject private VisualContentRequest surface;
+    @Inject(required = false) private VisualContentRequest surface;
 
     @Remember private MutableObservable<Boolean> isHover;
     @Remember private MutableObservable<PressState> isPressed;

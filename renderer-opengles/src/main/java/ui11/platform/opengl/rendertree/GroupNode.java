@@ -4,7 +4,7 @@ import ui11.geom.Mat4;
 import ui11.geom.Vec4;
 import ui11.observable.ObservableList;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
-import ui11.renderer.input.InputNode;
+import ui11.renderer.input.PickContext;
 
 public class GroupNode extends GLNode {
 
@@ -21,7 +21,7 @@ public class GroupNode extends GLNode {
     }
 
     @Override
-    public boolean pick(InputNode.PickContext pickContext, Vec4 p) {
+    public boolean pick(PickContext pickContext, Vec4 p) {
         for (GLNode n : children.reversed()) {
             if (n.pick(pickContext, p))
                 return true;

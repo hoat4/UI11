@@ -588,14 +588,16 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         RelativeKey relativeKey = new RelativeKey(keyPart1, keyPart2);
         Objects.requireNonNull(content);
 
-        if (!idsCanBeAssigned)
-            throw new IllegalStateException(Widget.class.getSimpleName() + ".withID can be only called " +
-                    "inside " + Widget.class.getSimpleName() + ".build");
+        //if (!idsCanBeAssigned)
+        //    throw new IllegalStateException(Widget.class.getSimpleName() + ".withID can be only called " +
+        //            "inside " + Widget.class.getSimpleName() + ".build");
         // Azért nem lehet 2 build között, mert lehetetlenné tenné az obsolete keyek eltávolítását:
         // ha jön egy következő build, amiben már nem szerepel, akkor nem tudjuk, hogy azért
         // nem szerepel, mert már nem kell a kérdéses widget, vagy csak mert a build után fog jönni.
         // Esetleg lehetne megengedni, hogy a build után, de a subtree refreshjében is szabad,
         // de nem világos, hogy hogyan lehetne a subtree-t definiálni.
+        // mégis megengedjük hogy builden kívül, mert DefaultBoxImplnek kellett layoutPhase2-ben.
+        // TODO akkor azt kéne, hogy a refresh cycle végén töröljük az elavultnak bizonyult keyeket.
 
         if (relativeKeysToGlobalKeys == null)
             relativeKeysToGlobalKeys = new HashMap<>();
@@ -769,8 +771,9 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         }
 
         /**
-         * csak retrieveValue vagy resume után szabad meghívni, ha a widget előtte
-         * FLAG_NEEDS_IV_RETRIEVE vagy !FLAG_ACTIVE állapotban volt
+         * Csak retrieveValue vagy resume után szabad meghívni, ha a widget előtte
+         * FLAG_NEEDS_IV_RETRIEVE vagy !FLAG_ACTIVE állapotban volt.
+         * Továbbá csak refresh közben, mivel exception messageben kiírhatja a refresh stack tartalmát is.
          */
         T currentValue(boolean optional, String fieldOrParameterName) {
             if (!widgetState.hasFlag(FLAG_ACTIVE))
@@ -785,7 +788,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                     // TODO hibaüzenet esetén field nevet hogy kéne kiírni? (InjectionFieldInfo::debugName)
                     throw new RuntimeException("inherited value for " +
                             type.getName() + " (used by " + fieldOrParameterName + ")" +
-                            " not supplied for " + widgetState /* TODO + "; Ancestors: " */);
+                            " not supplied for " + widgetState + "; Ancestors: " +
+                            widgetState.tree.refreshStackToString());
                 }
             else
                 return type.cast(value);
