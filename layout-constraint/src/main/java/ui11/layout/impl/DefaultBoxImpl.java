@@ -7,6 +7,7 @@ import ui11.decoration.Box;
 import ui11.decoration.Box.BorderSpec;
 import ui11.decoration.Box.BoxShadow;
 import ui11.geom.*;
+import ui11.graphics.Surface;
 import ui11.graphics.VisualContentRequest;
 import ui11.graphics.effect.Overlay;
 import ui11.graphics.fill.LinearGradient;
@@ -31,7 +32,7 @@ public class DefaultBoxImpl extends Widget {
 
     @Inject private TextStyle ts;
     @Inject(required = false) private BoxLayoutResult.SizeRequest sizeRequest;
-    @Inject(required = false) private VisualContentRequest surface;
+    @Inject(required = false) private Surface surface;
 
     public DefaultBoxImpl(Box box) {
         this.box = box;

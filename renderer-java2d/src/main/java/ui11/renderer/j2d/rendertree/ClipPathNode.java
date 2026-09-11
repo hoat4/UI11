@@ -14,6 +14,8 @@ public class ClipPathNode extends J2DNode {
 
     @Override
     public void render(RenderingContext ctx) {
+        // TODO egymásba ágyazott clippek összeolvasztása, valamint clipbe ágyazott fill esetén nem kell clip
+
         ctx.withClip(this.shape.get(), () -> {
             this.content.get().render(ctx);
         });

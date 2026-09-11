@@ -3,6 +3,7 @@ package ui11.input.pointer;
 import org.jspecify.annotations.NonNull;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
+import ui11.graphics.Surface;
 import ui11.graphics.VisualContentRequest;
 import ui11.observable.MutableObservable;
 import ui11.geom.Location;
@@ -73,7 +74,7 @@ class PointerStateDependentImpl extends Widget {
 
     private final PointerStateDependent pointerStateDependent;
 
-    @Inject(required = false) private VisualContentRequest surface;
+    @Inject(required = false) private Surface surface;
 
     @Remember private MutableObservable<Boolean> isHover;
     @Remember private MutableObservable<PressState> isPressed;
@@ -115,7 +116,8 @@ class PointerStateDependentImpl extends Widget {
 
             @Override
             public void drag(Location location) {
-                boolean hover = surface.hitTest(location);
+                // TODO hover kiszámításakor itt clippelt shapeet vagy egészet kéne használni?
+                boolean hover = surface.inputShape().contains(location);
                 isHover.set(hover);
                 isPressed.set(hover ? PressState.PRESSED : PressState.DRAGGED_OUT);
             }

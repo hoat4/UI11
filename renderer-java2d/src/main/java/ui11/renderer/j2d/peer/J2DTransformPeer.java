@@ -2,28 +2,25 @@ package ui11.renderer.j2d.peer;
 
 import ui11.PeerRequest;
 import ui11.Widget;
-import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Mat4;
-import ui11.geom.Size;
+import ui11.graphics.Surface;
 import ui11.graphics.effect.Transform;
-import ui11.observable.MutableObservable;
+import ui11.renderer.j2d.J2DSurface.TransformedJ2DSurface;
 import ui11.renderer.j2d.J2DVisualContentRequest;
-import ui11.renderer.j2d.J2DVisualContentRequest.J2DSurfaceWithOwnShape;
 import ui11.renderer.j2d.rendertree.EmptyNode;
 import ui11.renderer.j2d.rendertree.J2DNode;
 import ui11.renderer.j2d.rendertree.TransformNode;
 
-import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 
 public class J2DTransformPeer extends Widget {
 
     private final Transform transform;
 
-    @Inject private J2DVisualContentRequest parentSurface;
+    @Inject private Surface parentSurface;
+    @Inject private J2DVisualContentRequest parentRequest;
 
-    @Remember private TransformedSurface childSurface;
+    @Remember private TransformedJ2DSurface childSurface;
     @Remember private TransformNode node;
 
     public J2DTransformPeer(Transform transform) {
@@ -32,7 +29,7 @@ public class J2DTransformPeer extends Widget {
 
     @Override
     protected void initState() {
-        childSurface = new TransformedSurface();
+        childSurface = new TransformedJ2DSurface();
         node = new TransformNode();
     }
 
@@ -41,15 +38,16 @@ public class J2DTransformPeer extends Widget {
         // TODO mi történjen, ha 0-ra scaleelünk egy ColorFillt vagy hasonlót (aminek végtelen a mérete)?
         //      most jelenleg eltüntetjük. ha mégsem kéne eltüntetni, módosítsuk lent a kódot.
 
-        childSurface.parent.set(parentSurface);
-        boolean nonDegenerateTransform = childSurface.update(transform.transformation());
+        boolean nonDegenerateTransform = childSurface.update(
+                parentSurface, transform.transformation());
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni VisualContentRequest.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
-        return PeerRequest.requestSingle(transform.content(), childSurface, result -> {
-            return parentSurface.createResponse(
+        J2DVisualContentRequest childReq = new J2DVisualContentRequest(childSurface);
+        return PeerRequest.requestSingle(transform.content(), childReq, result -> {
+            return parentRequest.createResponse(
                     nonDegenerateTransform ?
                             makeNode(result) :
                             EmptyNode.INSTANCE
@@ -61,7 +59,13 @@ public class J2DTransformPeer extends Widget {
         if (transform.transformation().isIdentity() || childNode instanceof EmptyNode)
             return childNode;
 
-        AffineTransform tx = childSurface.awtAffineTransformation;
+        AffineTransform tx = new AffineTransform();
+        Mat4 t = transform.transformation(); // TODO 3D esetén kéne fallback, nem eldobni
+        tx.setTransform(
+                t.m00(), t.m01(),
+                t.m10(), t.m11(),
+                t.m30(), t.m31()
+        );
 
         if (childNode instanceof TransformNode childTransformNode) {
             node.child.set(childTransformNode.child.get());
@@ -77,62 +81,5 @@ public class J2DTransformPeer extends Widget {
             node.transformation.set(new AffineTransform(tx));
         }
         return node;
-    }
-
-    private static class TransformedSurface extends J2DSurfaceWithOwnShape {
-
-        private final AffineTransform awtAffineTransformation = new AffineTransform();
-        private Shape prevParentShape;
-        private final MutableObservable<Shape> shape = MutableObservable.ofNullable();
-
-        boolean update(Mat4 t) {
-            Shape parentShape = parent.get().shape();
-            if (parentShape == J2DVisualContentRequest.INFINITE_SHAPE) {
-                prevParentShape = J2DVisualContentRequest.INFINITE_SHAPE;
-                shape.set(J2DVisualContentRequest.INFINITE_SHAPE);
-                return false;
-            }
-            if (!parentShape.equals(prevParentShape) ||
-                    !equals2DComponents(awtAffineTransformation, t)) {
-                awtAffineTransformation.setTransform(
-                        t.m00(), t.m01(),
-                        t.m10(), t.m11(),
-                        t.m30(), t.m31()
-                );
-                try {
-                    shape.set(awtAffineTransformation.createInverse().createTransformedShape(parentShape));
-                } catch (NoninvertibleTransformException noninvertibleTransformException) {
-                    shape.set(J2DVisualContentRequest.INFINITE_SHAPE);
-                }
-                prevParentShape = parentShape;
-            }
-            return shape.get() != J2DVisualContentRequest.INFINITE_SHAPE;
-        }
-
-        @Override
-        public Shape shape() {
-            if (shape.get() == null)
-                throw new IllegalStateException();
-            return shape.get();
-        }
-
-        @Override
-        public Size size() {
-            throw new RuntimeException("TODO");
-        }
-
-        @Override
-        public CoordinateSpace coordinateSpace() {
-            throw new RuntimeException("TODO");
-        }
-
-        private static boolean equals2DComponents(AffineTransform a, Mat4 t) {
-            return Double.doubleToLongBits(t.m00()) == Double.doubleToLongBits(a.getScaleX()) &&
-                    Double.doubleToLongBits(t.m01()) == Double.doubleToLongBits(a.getShearY()) &&
-                    Double.doubleToLongBits(t.m10()) == Double.doubleToLongBits(a.getShearX()) &&
-                    Double.doubleToLongBits(t.m11()) == Double.doubleToLongBits(a.getScaleY()) &&
-                    Double.doubleToLongBits(t.m30()) == Double.doubleToLongBits(a.getTranslateX()) &&
-                    Double.doubleToLongBits(t.m31()) == Double.doubleToLongBits(a.getTranslateY());
-        }
     }
 }

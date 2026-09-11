@@ -6,6 +6,7 @@ import ui11.observable.*;
 import ui11.observable.Observable;
 
 import java.lang.reflect.Array;
+import java.sql.Ref;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -714,7 +715,18 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         boolean retrieveValue() {
             Object newValue;
 
-            if (PeerRequest.class.isAssignableFrom(type) && PeerRequest.class != type) {
+            ReflectiveIVFactory reflectiveIVFactory = ReflectiveIVFactory.CV.get(type);
+            if (reflectiveIVFactory != null) {
+                newValue = widgetState.tree.getIVForCurrentWidget(
+                        widgetState, ResolutionRequestCollection.class, true);
+                if (newValue != WidgetTree.IV_NOT_PROVIDED) {
+                    ResolutionRequestCollection coll =
+                            (ResolutionRequestCollection) newValue;
+                    newValue = reflectiveIVFactory.makeValue(coll);
+                    if (newValue == null)
+                        newValue = WidgetTree.IV_NOT_PROVIDED;
+                }
+            } else if (PeerRequest.class.isAssignableFrom(type) && PeerRequest.class != type) {
                 newValue = widgetState.tree.getIVForCurrentWidget(
                         widgetState, ResolutionRequestCollection.class, true);
                 if (newValue != WidgetTree.IV_NOT_PROVIDED) {

@@ -60,11 +60,6 @@ public abstract sealed class GLVisualContentRequest
         }
 
         @Override
-        public boolean hitTest(Location point) {
-            return parent.get().hitTest(point);
-        }
-
-        @Override
         public Vec2 renderNodeTranslation() {
             return parent.get().renderNodeTranslation();
         }

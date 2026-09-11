@@ -1,20 +1,20 @@
 package ui11.control.menu;
 
-import ui11.*;
-import ui11.geom.Vec2;
-import ui11.observable.MutableObservable;
+import ui11.Widget;
 import ui11.animation.Scheduler;
+import ui11.color.Color;
 import ui11.geom.Location;
 import ui11.geom.Size;
-import ui11.color.Color;
+import ui11.geom.Vec2;
+import ui11.graphics.Surface;
 import ui11.graphics.fill.ColorFill;
-import ui11.graphics.VisualContentRequest;
 import ui11.input.gesture.ClickListener;
-import ui11.layout.singlechild.Align;
 import ui11.layout.Gap;
+import ui11.layout.singlechild.Align;
+import ui11.observable.MutableObservable;
 
-import static ui11.graphics.effect.Overlay.overlay;
 import static ui11.geom.Length.px;
+import static ui11.graphics.effect.Overlay.overlay;
 
 public class MenuOverlay extends Widget {
 
@@ -22,7 +22,7 @@ public class MenuOverlay extends Widget {
     private final Runnable close;
     private final Widget menu;
 
-    @Inject private VisualContentRequest surface;
+    @Inject private Surface surface;
     @Inject private Scheduler scheduler;
 
     @Remember private MutableObservable<Boolean> hasSurface;

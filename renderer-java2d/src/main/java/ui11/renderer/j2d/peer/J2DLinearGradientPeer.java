@@ -1,7 +1,10 @@
 package ui11.renderer.j2d.peer;
 
 import ui11.Widget;
+import ui11.geom.Rect;
 import ui11.geom.Vec2;
+import ui11.geom.Shape;
+import ui11.graphics.Surface;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
 import ui11.renderer.j2d.J2DVisualContentRequest;
@@ -16,7 +19,8 @@ public class J2DLinearGradientPeer extends Widget {
 
     private final LinearGradient gradient;
 
-    @Inject private J2DVisualContentRequest surface;
+    @Inject private J2DVisualContentRequest request;
+    @Inject private Surface surface;
     @Inject private TextStyle textStyle;
 
     @Remember private FillPathNode node;
@@ -32,15 +36,16 @@ public class J2DLinearGradientPeer extends Widget {
 
     @Override
     protected Widget build() {
-        Shape shape = surface.shape();
-        if (shape == J2DVisualContentRequest.INFINITE_SHAPE)
-            return surface.createResponse(EmptyNode.INSTANCE);
+        Shape shape = surface.layoutShape();
+        if (J2DUtil.isNotVisible(shape, surface))
+            return request.createResponse(EmptyNode.INSTANCE);
+        Rect bounds = shape.bounds(surface.coordinateSpace());
 
         float[] fractions = new float[gradient.stops().size()];
         Color[] colors = new Color[gradient.stops().size()];
         double emSize = textStyle.size();
         double deg = gradient.angleDeg();
-        double w = surface.size().width(), h = surface.size().height();
+        double w = bounds.width(), h = bounds.height();
 
         deg -= 90;
         if (deg < 0)
@@ -71,8 +76,8 @@ public class J2DLinearGradientPeer extends Widget {
         // EmptyNode?
 
         node.paint.set(paint);
-        node.shape.set(shape);
+        node.shape.set(J2DUtil.shapeToJ2D(shape, surface.coordinateSpace()));
 
-        return surface.createResponse(node);
+        return request.createResponse(node);
     }
 }

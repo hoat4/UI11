@@ -46,6 +46,7 @@ public record Rect(Vec2 origin, Size size) {
         return new Rect(left, top, right-left, bottom-top);
     }
 
+    // TODO ezt át kéne nevezni ofPoints-ra, mert így meg lehet ezt hívni véletlenül of(Size) helyett
     public static Rect of(Vec2... minimumContainedVec2s) {
         if (minimumContainedVec2s.length == 0)
             throw new IllegalArgumentException();

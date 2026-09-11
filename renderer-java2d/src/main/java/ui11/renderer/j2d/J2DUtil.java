@@ -1,16 +1,14 @@
 package ui11.renderer.j2d;
 
 import ui11.color.RGBColor;
+import ui11.geom.Shape;
 import ui11.geom.Vec2;
 import ui11.geom.*;
 import ui11.geom.Path.*;
 import ui11.color.Color;
+import ui11.graphics.Surface;
 
-import java.awt.*;
 import java.awt.geom.*;
-import java.util.StringJoiner;
-
-import static java.awt.geom.PathIterator.*;
 
 public class J2DUtil {
 
@@ -86,7 +84,7 @@ public class J2DUtil {
      * @param a probably outer
      * @param b probably inner
      */
-    public static Shape intersection(Shape a, Shape b) {
+    public static java.awt.Shape intersection(java.awt.Shape a, java.awt.Shape b) {
         if (a.contains(b.getBounds2D()))
             return b;
         else {
@@ -94,5 +92,28 @@ public class J2DUtil {
             area.intersect(new Area(b));
             return area;
         }
+    }
+
+    // nem J2D-specifikus, de egyelőre ide rakjuk
+    public static boolean isNotVisible(Shape shape, Surface surface) {
+        return Shape.degenerateShape().equals(shape) ||
+                shape.bounds(surface.coordinateSpace()).size().equals(Size.ZERO);
+    }
+
+    // TODO fillRect ugyanaz mint fill(Rectangle)?
+    public static java.awt.Shape shapeToJ2D(Shape shape, Location.CoordinateSpace coordinateSpace) {
+        Rect rect = shape.asRect(coordinateSpace);
+        if (rect != null)
+            return rect(rect);
+        Path path = shape.asPath(coordinateSpace);
+        return pathToJ2D(path);
+    }
+
+    public static Path pathFromJ2D(java.awt.Shape shape) {
+        throw new RuntimeException("TODO");
+    }
+
+    public static Shape shapeFromJ2D(java.awt.Shape shape, Location.CoordinateSpace coordinateSpace) {
+        throw new RuntimeException("TODO");
     }
 }

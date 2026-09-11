@@ -27,7 +27,6 @@ import ui11.provide.Provider;
 import ui11.renderer.Node;
 import ui11.renderer.Renderer;
 import ui11.renderer.RendererProvider;
-import ui11.renderer.Surface;
 import ui11.renderer.input.PickContext;
 import ui11.renderer.input.PickContext.PickStackItem;
 import ui11.text.TextAlign;
@@ -53,9 +52,9 @@ public class AWTWindow {
 
     private final Renderer<?> renderer;
 
-    private final Location.CoordinateSpaceRoot coordinateSpaceRoot = new Location.CoordinateSpaceRoot();
     private final MutableObservable<@Nullable Size> size = MutableObservable.ofNullable();
-    private final VisualContentRequest<? extends Node> rootSurface;
+    private final AWTFrameSurface surface;
+    private final VisualContentRequest<? extends Node> rootContentRequest;
     private final MutableObservable<? extends Node> rootNodeHolder = MutableObservable.ofNullable();
 
     private PointerListener currentMousePress;
@@ -76,7 +75,7 @@ public class AWTWindow {
 
         frame.createBufferStrategy(2);
 
-        Surface surface = new AWTFrameSurface(frame, frame.getBufferStrategy());
+        surface = new AWTFrameSurface(frame, frame.getBufferStrategy());
         Renderer<?> r = null;
         for (RendererProvider provider : ServiceLoader.load(RendererProvider.class)) {
             Renderer<?> r2 = provider.tryProvide(surface);
@@ -90,7 +89,7 @@ public class AWTWindow {
         if (r == null)
             throw new RuntimeException("No renderer available for " + surface);
         renderer = r;
-        rootSurface = r.createRootContentRequest(coordinateSpaceRoot, size);
+        rootContentRequest = r.createRootContentRequest(surface);
     }
 
     private void updateSize() {
@@ -119,7 +118,7 @@ public class AWTWindow {
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
-            return PeerRequest.requestSingle(content, rootSurface, result -> {
+            return PeerRequest.requestSingle(content, rootContentRequest, result -> {
                 @SuppressWarnings("unchecked")
                 MutableObservable<Node> rootNodeHolderCasted = (MutableObservable<Node>) rootNodeHolder;
                 rootNodeHolderCasted.set(result);
@@ -171,11 +170,11 @@ public class AWTWindow {
     }
 
     private void onMouseMove(Vec2 point) {
-        AWTMouse.INSTANCE.location.set(new Location(coordinateSpaceRoot.origin, point));
+        AWTMouse.INSTANCE.location.set(new Location(surface.coordinateSpace(), point));
     }
 
     private void onMousePress(Vec2 point) {
-        AWTMouse.INSTANCE.location.set(new Location(coordinateSpaceRoot.origin, point));
+        AWTMouse.INSTANCE.location.set(new Location(surface.coordinateSpace(), point));
 
         PickContext pickContext = new PickContext();
         rootNodeHolder.get().pick(pickContext, point.withZW(0, 1));
@@ -196,7 +195,7 @@ public class AWTWindow {
     }
 
     private void onMouseRelease(Vec2 point) {
-        AWTMouse.INSTANCE.location.set(new Location(coordinateSpaceRoot.origin, point));
+        AWTMouse.INSTANCE.location.set(new Location(surface.coordinateSpace(), point));
 
         if (currentMousePress == null)
             logger.info("No active mouse release callback for " + point);

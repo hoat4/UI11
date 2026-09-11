@@ -1,10 +1,8 @@
 package ui11.renderer.j2d;
 
-import ui11.geom.Location;
-import ui11.geom.Size;
 import ui11.graphics.VisualContentRequest;
-import ui11.observable.Observable;
 import ui11.platform.awt.AWTFrameSurface;
+import ui11.renderer.RenderableSurface;
 import ui11.renderer.Renderer;
 import ui11.renderer.j2d.rendertree.J2DNode;
 import ui11.renderer.j2d.rendertree.J2DNode.J2DRenderTreePrinter;
@@ -24,14 +22,13 @@ public class J2DRenderer implements Renderer<J2DNode> {
 
     @Override
     public VisualContentRequest<J2DNode> createRootContentRequest(
-            Location.CoordinateSpaceRoot coordinateSpaceRoot,
-            Observable<Size> size) {
-        return new J2DVisualContentRequest.RootJ2DSurface(coordinateSpaceRoot, size);
+            RenderableSurface surface) {
+        return new J2DVisualContentRequest(surface);
     }
 
     @Override
     public void render(J2DNode root) {
-        if (false) {
+        if (true) {
             System.out.println();
             System.out.println("Render tree: ");
             System.out.print(new J2DRenderTreePrinter().toString(root));

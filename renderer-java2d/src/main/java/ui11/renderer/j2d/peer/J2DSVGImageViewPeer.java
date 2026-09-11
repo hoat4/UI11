@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.Widget;
 import ui11.geom.Size;
+import ui11.graphics.Surface;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.media.SVGImageView;
 import ui11.renderer.j2d.J2DVisualContentRequest;
@@ -29,7 +30,8 @@ public class J2DSVGImageViewPeer extends Widget {
 
     private final SVGImageView svgImageView;
 
-    @Inject private J2DVisualContentRequest surface;
+    @Inject private J2DVisualContentRequest request;
+    @Inject private Surface surface;
     @Inject private TextStyle textStyle;
     @Inject(required = false) private URLResolver urlResolver;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
@@ -86,7 +88,7 @@ public class J2DSVGImageViewPeer extends Widget {
         Size size = surface.size();
         node.size.set(size);
         FloatSize docSize = loadedDocument.size();
-        Widget result = surface.createResponse(node);
+        Widget result = request.createResponse(node);
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             // TODO constraintset figyelembe kéne venni
             BoxLayoutResult.OfChosenSize chosenSize =

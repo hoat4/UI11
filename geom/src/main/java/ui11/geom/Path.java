@@ -2,6 +2,7 @@ package ui11.geom;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 public record Path(List<PathElement> items) {
 
@@ -42,6 +43,31 @@ public record Path(List<PathElement> items) {
                 lineTo(rect.bottomLeft()).
                 close().
                 build();
+    }
+
+    public Path transform(UnaryOperator<Vec2> transformation) {
+        List<PathElement> l = new ArrayList<>();
+        for (PathElement e : items) {
+            l.add(switch (e) {
+                case MoveTo(Vec2 p) -> new MoveTo(transformation.apply(p));
+                case LineTo(Vec2 p) -> new LineTo(transformation.apply(p));
+                case QuadCurveTo(Vec2 p1, Vec2 control) ->
+                        new QuadCurveTo(transformation.apply(p1), transformation.apply(control));
+                case CubicCurveTo(Vec2 p1, Vec2 control1, Vec2 control2) ->
+                        new CubicCurveTo(transformation.apply(p1), transformation.apply(control1),
+                                transformation.apply(control2));
+                case Close() -> new Close();
+            });
+        }
+        return new Path(l);
+    }
+
+    public Path transform(Mat4 transformation) {
+        return transform(transformation::transform);
+    }
+
+    public Rect bounds() {
+        throw new RuntimeException("TODO");
     }
 
     public sealed interface PathElement {

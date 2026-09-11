@@ -4,6 +4,7 @@ import org.jspecify.annotations.NonNull;
 import ui11.PeerRequest;
 import ui11.Widget;
 import ui11.geom.Size;
+import ui11.graphics.Surface;
 import ui11.graphics.VisualContentRequest;
 import ui11.layout.protocol.BoxLayoutResult;
 
@@ -17,7 +18,7 @@ public class LayoutHelper extends Widget {
 
     // TODO keys missing from this
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
-    @Inject(required = false) private VisualContentRequest<?> surface;
+    @Inject(required = false) private Surface surface;
 
     public LayoutHelper(LayoutHelperDelegate delegate) {
         this.delegate = Objects.requireNonNull(delegate);
