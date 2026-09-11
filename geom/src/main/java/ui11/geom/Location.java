@@ -1,5 +1,7 @@
 package ui11.geom;
 
+import org.jspecify.annotations.NonNull;
+
 import java.util.Objects;
 
 /**
@@ -80,7 +82,8 @@ public final class Location {
          * Létrehoz egy másik koordináta-rendszert, melynek pontjait a paraméterben megadott transzformációval lehet
          * transzformálni a jelenlegi koordináta-rendszerbe.
          */
-        public CoordinateSpace withTransformation(Mat4 transformation) {
+        public CoordinateSpace withTransformation(@NonNull Mat4 transformation) {
+            Objects.requireNonNull(transformation);
             return new CoordinateSpace(base, transformationToBase.mul(transformation));
         }
     }

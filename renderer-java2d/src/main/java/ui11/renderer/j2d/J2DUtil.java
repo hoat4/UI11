@@ -9,6 +9,8 @@ import ui11.color.Color;
 import ui11.graphics.Surface;
 
 import java.awt.geom.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class J2DUtil {
 
@@ -114,6 +116,25 @@ public class J2DUtil {
     }
 
     public static Shape shapeFromJ2D(java.awt.Shape shape, Location.CoordinateSpace coordinateSpace) {
-        throw new RuntimeException("TODO");
+        // TODO special-case Rectangle2D
+
+        PathIterator pathIterator = shape.getPathIterator(new AffineTransform());
+        List<PathElement> pathElements = new ArrayList<>();
+        double[] coords = new double[3 * 2];
+        while (!pathIterator.isDone()) {
+            int pathSegmentType = pathIterator.currentSegment(coords);
+            pathElements.add(switch (pathSegmentType) {
+                case PathIterator.SEG_MOVETO -> new MoveTo(new Vec2(coords[0], coords[1]));
+                case PathIterator.SEG_LINETO -> new LineTo(new Vec2(coords[0], coords[1]));
+                case PathIterator.SEG_QUADTO ->
+                        new QuadCurveTo(new Vec2(coords[0], coords[1]), new Vec2(coords[2], coords[3]));
+                case PathIterator.SEG_CUBICTO -> new CubicCurveTo(
+                        new Vec2(coords[0], coords[1]), new Vec2(coords[2], coords[3]), new Vec2(coords[4], coords[5]));
+                case PathIterator.SEG_CLOSE -> new Close();
+                default -> throw new RuntimeException("unknown path segment: " + pathSegmentType);
+            });
+            pathIterator.next();
+        }
+        return Shape.ofPath(new Path(pathElements), coordinateSpace);
     }
 }

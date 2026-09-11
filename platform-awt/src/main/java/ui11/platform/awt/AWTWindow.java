@@ -49,10 +49,10 @@ public class AWTWindow {
     private final Widget content;
     private final AWTWindowImpl frame;
     private final InvalidationPoint repaintInvalidationPoint = new InvalidationPoint();
+    private final InvalidationPoint sizeInvalidationPoint = new InvalidationPoint();
 
     private final Renderer<?> renderer;
 
-    private final MutableObservable<@Nullable Size> size = MutableObservable.ofNullable();
     private final AWTFrameSurface surface;
     private final VisualContentRequest<? extends Node> rootContentRequest;
     private final MutableObservable<? extends Node> rootNodeHolder = MutableObservable.ofNullable();
@@ -71,7 +71,6 @@ public class AWTWindow {
         frame.setSize(300, 300);
         frame.setLocationRelativeTo(null);
         frame.addNotify();
-        updateSize();
 
         frame.createBufferStrategy(2);
 
@@ -90,10 +89,6 @@ public class AWTWindow {
             throw new RuntimeException("No renderer available for " + surface);
         renderer = r;
         rootContentRequest = r.createRootContentRequest(surface);
-    }
-
-    private void updateSize() {
-        size.set(new Size(frame.innerWidth(), frame.innerHeight()));
     }
 
     class Root extends Widget {
@@ -228,7 +223,7 @@ public class AWTWindow {
                 g.fillRect(0, 0, 200, 100);
                 frame.getBufferStrategy().show();
                  */
-                    updateSize();
+                sizeInvalidationPoint.invalidate();
                 }
             });
             addMouseListener(new MouseAdapter() {
@@ -290,11 +285,13 @@ public class AWTWindow {
         }
 
         int innerWidth() {
+            sizeInvalidationPoint.subscribe();
             Insets insets = getInsets();
             return (int) Math.round((getWidth() - insets.left - insets.right) * displayScale().x());
         }
 
         int innerHeight() {
+            sizeInvalidationPoint.subscribe();
             Insets insets = getInsets();
             return (int) Math.round((getHeight() - insets.top - insets.bottom) * displayScale().y());
         }

@@ -2,6 +2,7 @@ package ui11.platform.awt;
 
 import ui11.geom.*;
 import ui11.geom.Shape;
+import ui11.observable.InvalidationPoint;
 import ui11.renderer.RenderableSurface;
 
 import java.awt.*;

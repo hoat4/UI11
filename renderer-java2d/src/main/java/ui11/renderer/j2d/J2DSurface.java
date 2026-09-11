@@ -95,6 +95,7 @@ public abstract sealed class J2DSurface implements Surface {
 
         public boolean update(Surface parentSurface, @NonNull Mat4 transformation) {
             parent.set(parentSurface);
+            this.transformation.set(transformation);
 
             Shape parentShape = parent.get().layoutShape(); // TODO többi shape?
             if (Shape.degenerateShape().equals(parentShape))

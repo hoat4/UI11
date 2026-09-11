@@ -62,7 +62,6 @@ public sealed abstract class Shape {
                 return new RectShape(rect.translate(new Vec2(-transformation.m30(), -transformation.m31())),
                         coordinateSpace.withTransformation(transformation));
             else
-
                 throw new RuntimeException("TODO");
         }
 
@@ -91,6 +90,14 @@ public sealed abstract class Shape {
         public int hashCode() {
             throw new RuntimeException("TODO");
         }
+
+        @Override
+        public String toString() {
+            return "RectShape{" +
+                    "rect=" + rect +
+                    ", coordinateSpace=" + coordinateSpace +
+                    '}';
+        }
     }
 
     private static final class PathShape extends Shape {
@@ -110,7 +117,7 @@ public sealed abstract class Shape {
 
         @Override
         public Rect bounds(Location.CoordinateSpace coordinateSpace) {
-            throw new RuntimeException("TODO");
+            return asPath(coordinateSpace).bounds();
         }
 
         @Override
@@ -120,7 +127,7 @@ public sealed abstract class Shape {
 
         @Override
         public @Nullable Rect asRect(Location.CoordinateSpace coordinateSpace) {
-            throw new RuntimeException("TODO");
+            return null; // TODO
         }
 
         @Override
@@ -139,6 +146,14 @@ public sealed abstract class Shape {
         @Override
         public int hashCode() {
             throw new RuntimeException("TODO");
+        }
+
+        @Override
+        public String toString() {
+            return "PathShape{" +
+                    "path=" + path +
+                    ", coordinateSpace=" + coordinateSpace +
+                    '}';
         }
     }
 

@@ -28,7 +28,7 @@ public class J2DRenderer implements Renderer<J2DNode> {
 
     @Override
     public void render(J2DNode root) {
-        if (true) {
+        if (false) {
             System.out.println();
             System.out.println("Render tree: ");
             System.out.print(new J2DRenderTreePrinter().toString(root));

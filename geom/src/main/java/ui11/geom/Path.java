@@ -67,9 +67,10 @@ public record Path(List<PathElement> items) {
     }
 
     public Rect bounds() {
-        throw new RuntimeException("TODO");
+        return PathBounds.computePathBounds(this);
     }
 
+    // PathSegment?
     public sealed interface PathElement {
     }
 
