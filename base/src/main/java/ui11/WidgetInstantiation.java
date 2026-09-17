@@ -20,7 +20,8 @@ import java.util.Set;
 record WidgetInstantiation(
         @Nullable WidgetState<?> parent,
         @NonNull WidgetState<?> child,
-        @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs) {
+        @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs,
+        long sequenceNumber) {
     WidgetInstantiation {
         Objects.requireNonNull(child);
         Objects.requireNonNull(directIVs);

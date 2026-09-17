@@ -602,7 +602,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
         if (relativeKeysToGlobalKeys == null)
             relativeKeysToGlobalKeys = new HashMap<>();
-        GlobalKey globalKey = relativeKeysToGlobalKeys.computeIfAbsent(relativeKey, __ -> new GlobalKey());
+        GlobalKey globalKey = relativeKeysToGlobalKeys.computeIfAbsent(relativeKey, __ ->
+                new GlobalKey(this, keyPart1, keyPart2));
         globalKey.used = true;
         return globalKey.wrap(content);
     }

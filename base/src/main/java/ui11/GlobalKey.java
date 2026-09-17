@@ -12,6 +12,15 @@ final class GlobalKey {
     // ennek csak ezért azért nem lehet rögtön értéket adni, mert WidgetTree-t nem ismerjük
     private WidgetState<GlobalKeyWidgetImpl> widgetState;
 
+    private WidgetState<?> debug_w;
+    private Object debug_k1, debug_k2;
+
+    GlobalKey(WidgetState<?> debug_w, Object debug_k1, Object debug_k2) {
+        this.debug_w = debug_w;
+        this.debug_k1 = debug_k1;
+        this.debug_k2 = debug_k2;
+    }
+
     @NonNull Widget wrap(@NonNull Widget widget) {
         // TODO detektálni kéne, ha egy refresh cycle-n belül 2 eltérő widgetet is próbálnak belerakni?
         content.set(widget);
@@ -51,6 +60,12 @@ final class GlobalKey {
             if (w == null)
                 throw new RuntimeException(/* TODO "Content has been removed"*/);
             return w;
+        }
+
+        @Override
+        public String toString() {
+            return GlobalKeyWidgetImpl.class.getSimpleName() + "{w=" + debug_w +
+                    ", k1=" + debug_k1 + ", k2=" + debug_k2 + "}";
         }
     }
 }

@@ -6,6 +6,7 @@ import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 
+@PeerRequest.AtMostOnce
 public abstract class VisualContentRequest<P> extends PeerRequest<P> {
 
     public final Surface surface;

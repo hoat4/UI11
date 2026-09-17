@@ -38,6 +38,7 @@ public class J2DClipPeer extends Widget {
 
         return PeerRequest.requestSingle(clip.content(), new J2DVisualContentRequest(childSurface), result -> {
             return parentRequest.createResponse(makeNode(result, childSurface.clipShape()));
+            // TODO itt nem kéne a createResponse-ba next-ként visszaadni clip.content()-et?
         });
     }
 

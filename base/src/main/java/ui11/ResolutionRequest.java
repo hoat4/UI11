@@ -37,6 +37,10 @@ final class ResolutionRequest<P> {
         this.widget = widget;
     }
 
+    PeerRequest.PeerRequestMetadata metadata() {
+        return PeerRequest.PeerRequestMetadata.CV.get(requestData.getClass());
+    }
+
     void setResult(Object peer) {
         Objects.requireNonNull(peer);
         P castedResult = requestData.peerType().cast(peer);
@@ -67,6 +71,8 @@ final class ResolutionRequest<P> {
 
     @Override
     public String toString() {
-        return super.toString() + " [requestData=" + requestData + "]";
+        return super.toString() + " [" +
+                "requestData=" + requestData + ", " +
+                "baseForAtMostOnce=" + metadata().baseForAtMostOnce + "]";
     }
 }

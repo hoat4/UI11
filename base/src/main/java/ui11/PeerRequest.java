@@ -4,6 +4,8 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -11,6 +13,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
@@ -201,5 +205,46 @@ public abstract class PeerRequest<P> {
                             l -> then.apply(l.stream())
                     );
                 });
+    }
+
+    static final class PeerRequestMetadata {
+
+        final @NonNull Class<? extends PeerRequest<?>> type;
+        final @Nullable Class<? extends PeerRequest<?>> baseForAtMostOnce;
+
+        private PeerRequestMetadata(
+                @NonNull Class<? extends PeerRequest<?>> type,
+                @Nullable Class<? extends PeerRequest<?>> baseForAtMostOnce) {
+            this.type = type;
+            this.baseForAtMostOnce = baseForAtMostOnce;
+        }
+
+        static final ClassValue<PeerRequestMetadata> CV = new ClassValue<PeerRequestMetadata>() {
+            @Override
+            protected PeerRequestMetadata computeValue(Class<?> type) {
+                Class<? extends PeerRequest<?>> baseForAtMostOnce = null;
+                for (Class<?> c = type; c != null; c = c.getSuperclass())
+                    if (c.isAnnotationPresent(AtMostOnce.class))
+                        if (baseForAtMostOnce == null) {
+                            @SuppressWarnings("unchecked") Class<? extends PeerRequest<?>> casted =
+                                    (Class<? extends PeerRequest<?>>) c.asSubclass(PeerRequest.class);
+                            baseForAtMostOnce = casted;
+                        } else
+                            throw new RuntimeException("Multiple classes annotated with @" + AtMostOnce.class.getSimpleName() +
+                                    " in superclasses of " + type.getName());
+
+                @SuppressWarnings("unchecked") Class<? extends PeerRequest<?>> casted =
+                        (Class<? extends PeerRequest<?>>) type.asSubclass(PeerRequest.class);
+                return new PeerRequestMetadata(casted, baseForAtMostOnce);
+            }
+        };
+    }
+
+    // TODO név
+    // ez most egyelőre nincs ellenőrizve, csak le vannak vágva a régebbi refreshhez tartozó req példányok öröklődéskor,
+    // ha ez az annotáció be van rakva
+    @Retention(RUNTIME)
+    @Target(TYPE)
+    public @interface AtMostOnce {
     }
 }
