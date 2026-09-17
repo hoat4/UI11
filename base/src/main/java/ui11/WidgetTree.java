@@ -44,7 +44,6 @@ public final class WidgetTree {
     private long laterValidationCheckGenerator;
 
     long beganRefreshID, finishedRefreshID = -1;
-    private long widgetInstantiationCounter;
 
     final ResolverRegistry resolverRegistry;
 
@@ -414,7 +413,7 @@ public final class WidgetTree {
             }
         }
 
-        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs, ++widgetInstantiationCounter);
+        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs, beganRefreshID);
         if (reqs != null)
             for (ResolutionRequest<?> req : reqs)
                 req.reqWI = wi;
@@ -436,14 +435,14 @@ public final class WidgetTree {
         class Item {
             final WidgetState<?> w;
             final Object value;
-            final long widgetInstantiationSequenceNumber;
+            final long widgetInstantiationRefreshID;
             int parentIndex;
 
-            Item(WidgetState<?> w, Object value, long widgetInstantiationSequenceNumber) {
+            Item(WidgetState<?> w, Object value, long widgetInstantiationRefreshID) {
                 Objects.requireNonNull(w);
                 this.w = w;
                 this.value = value;
-                this.widgetInstantiationSequenceNumber = widgetInstantiationSequenceNumber;
+                this.widgetInstantiationRefreshID = widgetInstantiationRefreshID;
             }
         }
         record IVOriginAndPriority(List<Item> origin, long priority) {
@@ -482,9 +481,10 @@ public final class WidgetTree {
             if (edge.parent() == null) {
                 assert edge == root;
                 Object visibleValue = IV_NOT_PROVIDED;
-                long maxSeqNum = 0;
+                // the refreshID of the last refresh that is involved in adding a widget between the IV's provider and the consumer
+                long lastInvolvedRefresh = 0;
                 for (Item item : stack.reversed()) {
-                    maxSeqNum = Math.max(maxSeqNum, item.widgetInstantiationSequenceNumber);
+                    lastInvolvedRefresh = Math.max(lastInvolvedRefresh, item.widgetInstantiationRefreshID);
                     if (item.value != IV_NOT_PROVIDED) {
                         visibleValue = item.value;
                         break;
@@ -493,17 +493,17 @@ public final class WidgetTree {
                 if (visibleValue == IV_NOT_PROVIDED)
                     visibleValue = value;
                 else
-                    assert maxSeqNum != 0;
-                IVOriginAndPriority ivOriginAndPriority = new IVOriginAndPriority(List.copyOf(stack), maxSeqNum);
+                    assert lastInvolvedRefresh != 0;
+                IVOriginAndPriority ivOriginAndPriority = new IVOriginAndPriority(List.copyOf(stack), lastInvolvedRefresh);
                 if (!differentValues.containsKey(visibleValue))
                     differentValues.put(visibleValue, ivOriginAndPriority);
                 else {
                     IVOriginAndPriority existing = differentValues.get(visibleValue);
-                    if (existing.priority < ivOriginAndPriority.priority)
+                    if (existing.priority < ivOriginAndPriority.priority) // TODO itt helyes a "<"?
                         differentValues.put(visibleValue, ivOriginAndPriority);
                 }
             } else {
-                stack.push(new Item(edge.parent(), value, edge.sequenceNumber()));
+                stack.push(new Item(edge.parent(), value, edge.instantiatedAt()));
             }
         }
 
