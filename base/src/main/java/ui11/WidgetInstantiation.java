@@ -5,7 +5,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 // parentet azért kell, mert ezt használjuk akkor WidgetState.parents listában is,
 // hogy lehessen ismerni IV-ket RefreshStack.pushIVs-ben.
@@ -16,11 +15,13 @@ import java.util.Set;
  * @param parent     akkor null, ha a gyökér a {@linkplain #child()}
  * @param child
  * @param directIVs
+ * @param instantiatedAt ez egy refreshID
  */
 record WidgetInstantiation(
         @Nullable WidgetState<?> parent,
         @NonNull WidgetState<?> child,
-        @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs) {
+        @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs,
+        long instantiatedAt) {
     WidgetInstantiation {
         Objects.requireNonNull(child);
         Objects.requireNonNull(directIVs);

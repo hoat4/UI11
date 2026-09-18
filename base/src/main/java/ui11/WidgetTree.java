@@ -12,6 +12,8 @@ import ui11.provide.Provider;
 import java.util.*;
 import java.util.concurrent.Executor;
 
+import static java.util.stream.Collectors.toMap;
+
 /**
  * The container for all content in a widget tree. This class is not usually used by applications, instead it is used by
  * platform-specific windowing system and rendering implementation modules.
@@ -411,12 +413,17 @@ public final class WidgetTree {
             }
         }
 
-        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs);
+        WidgetInstantiation wi = new WidgetInstantiation(parent, w, ivs, beganRefreshID);
         if (reqs != null)
             for (ResolutionRequest<?> req : reqs)
                 req.reqWI = wi;
         return wi;
     }
+
+    // TODO ezt az IV prioritásos dolgot át kéne gondolni alaposabban.
+    //      Most az lett a működés, hogy a req coll-t adó widgetig menve a legmagasabb a
+    //      seq numberű widget instantiation a prioritás.
+    //      De ez tényleg helyes működés, vagy csak arra elég hogy IDTest lefusson?
 
     /**
      * @return {@link #IV_NOT_PROVIDED}, ha nincs
@@ -428,19 +435,23 @@ public final class WidgetTree {
         class Item {
             final WidgetState<?> w;
             final Object value;
+            final long widgetInstantiationRefreshID;
             int parentIndex;
 
-            Item(WidgetState<?> w, Object value) {
+            Item(WidgetState<?> w, Object value, long widgetInstantiationRefreshID) {
                 Objects.requireNonNull(w);
                 this.w = w;
                 this.value = value;
+                this.widgetInstantiationRefreshID = widgetInstantiationRefreshID;
             }
         }
+        record IVOriginAndPriority(List<Item> origin, long priority) {
+        }
 
-        Map<Object, List<Item>> differentValues = new IdentityHashMap<>();
+        Map<Object, IVOriginAndPriority> differentValues = new IdentityHashMap<>();
 
         Deque<Item> stack = new LinkedList<>();
-        stack.push(new Item(widgetState, IV_NOT_PROVIDED));
+        stack.push(new Item(widgetState, IV_NOT_PROVIDED, 0));
 
         // TODO ez így exponenciálisan lassul, ha sok elágazás van.
         //      úgy kéne hogy ha egy node-ot már bejártunk és nincs új információ, akkor ne menjünk oda újra.
@@ -470,7 +481,10 @@ public final class WidgetTree {
             if (edge.parent() == null) {
                 assert edge == root;
                 Object visibleValue = IV_NOT_PROVIDED;
+                // the refreshID of the last refresh that is involved in adding a widget between the IV's provider and the consumer
+                long lastInvolvedRefresh = 0;
                 for (Item item : stack.reversed()) {
+                    lastInvolvedRefresh = Math.max(lastInvolvedRefresh, item.widgetInstantiationRefreshID);
                     if (item.value != IV_NOT_PROVIDED) {
                         visibleValue = item.value;
                         break;
@@ -478,27 +492,36 @@ public final class WidgetTree {
                 }
                 if (visibleValue == IV_NOT_PROVIDED)
                     visibleValue = value;
+                else
+                    assert lastInvolvedRefresh != 0;
+                IVOriginAndPriority ivOriginAndPriority = new IVOriginAndPriority(List.copyOf(stack), lastInvolvedRefresh);
                 if (!differentValues.containsKey(visibleValue))
-                    differentValues.put(visibleValue, List.copyOf(stack));
+                    differentValues.put(visibleValue, ivOriginAndPriority);
+                else {
+                    IVOriginAndPriority existing = differentValues.get(visibleValue);
+                    if (existing.priority < ivOriginAndPriority.priority) // TODO itt helyes a "<"?
+                        differentValues.put(visibleValue, ivOriginAndPriority);
+                }
             } else {
-                stack.push(new Item(edge.parent(), value));
+                stack.push(new Item(edge.parent(), value, edge.instantiatedAt()));
             }
         }
 
         assert !differentValues.isEmpty();
         if (differentValues.size() > 1) {
             if (type == ResolutionRequestCollection.class) {
-                Set<ResolutionRequestCollection> colls =
-                        (Set<ResolutionRequestCollection>) (Set<?>) differentValues.keySet();
-                return ResolutionRequestCollection.combine(colls);
+                return ResolutionRequestCollection.combine(differentValues.entrySet().stream().collect(toMap(
+                        e -> (ResolutionRequestCollection) e.getKey(),
+                        e -> e.getValue().priority()
+                )));
             }
 
             StringBuilder sb = new StringBuilder("Different values for inherited value " + type.getName() + ":");
-            for (Map.Entry<Object, List<Item>> e : differentValues.entrySet()) {
+            for (Map.Entry<Object, IVOriginAndPriority> e : differentValues.entrySet()) {
                 sb.append("\n- ").append(e.getKey());
                 sb.append("\n  Found at: ");
-                int i = e.getValue().size();
-                for (Item item : e.getValue().reversed())
+                int i = e.getValue().origin.size();
+                for (Item item : e.getValue().origin.reversed())
                     sb.append("\n   ").append(--i).append(".: ").append(item.w);
             }
             throw new RuntimeException(sb.toString());

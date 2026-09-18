@@ -2,6 +2,7 @@ package ui11.graphics;
 
 import ui11.ExposeRequest;
 
+@PeerRequest.AtMostOnce
 public abstract class VisualContentRequest<P> extends ExposeRequest<P> {
 
     public final Surface surface;
