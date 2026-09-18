@@ -12,17 +12,17 @@ subprojects {
             languageVersion = JavaLanguageVersion.of(21)
         }
     }
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = "UTF-8"
+        options.compilerArgs << "--enable-preview"
+        options.compilerArgs << "--release" << "21"
+        options.compilerArgs << "-parameters"
+//            options.compilerArgs << "--add-modules"
+//            options.compilerArgs << "jdk.incubator.vector"
+    }
 
     // át kéne állni újabb nyelv verzióra, és akkor nem kéne --enable-preview
     afterEvaluate {
-        tasks.withType(JavaCompile) {
-            options.encoding = "UTF-8"
-            options.compilerArgs << "--enable-preview"
-            //options.compilerArgs << "--release" << "21"
-            options.compilerArgs << "-parameters"
-//            options.compilerArgs << "--add-modules"
-//            options.compilerArgs << "jdk.incubator.vector"
-        }
         tasks.withType(Test) {
             jvmArgs "--enable-preview"
         }

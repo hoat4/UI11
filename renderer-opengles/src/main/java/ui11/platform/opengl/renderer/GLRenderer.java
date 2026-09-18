@@ -5,6 +5,8 @@ import org.lwjgl.egl.*;
 import org.lwjgl.system.JNI;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import ui11.graphics.VisualContentRequest;
+import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
 import ui11.platform.opengl.renderer.displaylist.DisplayListItem;
 
@@ -15,6 +17,9 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 import org.lwjgl.opengles.GLES;
+import ui11.platform.opengl.rendertree.GLNode;
+import ui11.renderer.RenderableSurface;
+import ui11.renderer.Renderer;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -29,7 +34,7 @@ import static org.lwjgl.egl.EGL13.EGL_CONTEXT_CLIENT_VERSION;
 import static org.lwjgl.egl.EGL13.EGL_OPENGL_ES2_BIT;
 import static org.lwjgl.opengles.GLES20.*;
 
-public class GLRenderer {
+public class GLRenderer implements Renderer<GLNode> {
 
     private final long eglDisplay;
     private final long hwnd;
@@ -196,5 +201,15 @@ public class GLRenderer {
     public void swapBuffers() {
         eglSwapInterval(eglDisplay, 0);
         eglSwapBuffers(eglDisplay, eglSurface);
+    }
+
+    @Override
+    public VisualContentRequest<GLNode> createRootContentRequest(RenderableSurface surface) {
+        return new GLVisualContentRequest(surface);
+    }
+
+    @Override
+    public void render(GLNode root) {
+
     }
 }
