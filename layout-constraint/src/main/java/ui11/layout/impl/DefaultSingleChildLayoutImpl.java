@@ -1,7 +1,8 @@
 package ui11.layout.impl;
 
 import org.jspecify.annotations.NonNull;
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.geom.Mat4;
 import ui11.geom.Rect;
@@ -40,7 +41,7 @@ public final class DefaultSingleChildLayoutImpl extends Widget {
                 Objects.requireNonNull(childConstraints);
 
                 BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
-                return PeerRequest.requestSingle(singleChildLayout.child(), sizeReq, result -> {
+                return ExposeRequest.requestSingle(singleChildLayout.child(), sizeReq, result -> {
                     return switch (result) {
                         case BoxLayoutResult.OfGone _ -> empty(); // mert overlay(gone()) is ugyanaz mint empty()
                         case BoxLayoutResult.OfChosenSize r -> {
@@ -53,7 +54,7 @@ public final class DefaultSingleChildLayoutImpl extends Widget {
                             Objects.requireNonNull(containerSize);
                             containerSize = containerConstraints.clamp(containerSize);
 
-                            yield sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(containerSize));
+                            yield (Widget) new Expose<BoxLayoutResult>(sizeRequest, new BoxLayoutResult.OfChosenSize(containerSize));
                         }
                     };
                 });
@@ -67,7 +68,7 @@ public final class DefaultSingleChildLayoutImpl extends Widget {
                 Objects.requireNonNull(childConstraints);
 
                 BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
-                return PeerRequest.requestSingle(singleChildLayout.child(), sizeReq, result -> {
+                return ExposeRequest.requestSingle(singleChildLayout.child(), sizeReq, result -> {
                     return switch (result) {
                         case BoxLayoutResult.OfGone _ -> empty(); // mert overlay(gone()) is ugyanaz mint empty()
                         case BoxLayoutResult.OfChosenSize r -> {

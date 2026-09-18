@@ -1,6 +1,7 @@
 package ui11.renderer.j2d.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.geom.Mat4;
 import ui11.graphics.Surface;
@@ -46,12 +47,11 @@ public class J2DTransformPeer extends Widget {
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
         J2DVisualContentRequest childReq = new J2DVisualContentRequest(childSurface);
-        return PeerRequest.requestSingle(transform.content(), childReq, result -> {
-            return parentRequest.createResponse(
-                    nonDegenerateTransform ?
-                            makeNode(result) :
-                            EmptyNode.INSTANCE
-            );
+        return ExposeRequest.requestSingle(transform.content(), childReq, result -> {
+            J2DNode peer = nonDegenerateTransform ?
+                    makeNode(result) :
+                    EmptyNode.INSTANCE;
+            return new Expose<>(parentRequest, peer);
         });
     }
 

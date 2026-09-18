@@ -60,7 +60,7 @@ public abstract class SubstitutedWidget extends Widget {
 
     /**
      * Asks the available {@linkplain ResolverProvider resolvers} to create a peer for each
-     * {@linkplain PeerRequest request}. This method is not intended to be called by an application,
+     * {@linkplain ExposeRequest request}. This method is not intended to be called by an application,
      * instead it will be called by the {@linkplain WidgetTree widget tree refresher} as any other widget.
      * <p>
      * If no peer could be created for a request, then it will be
@@ -120,7 +120,7 @@ public abstract class SubstitutedWidget extends Widget {
         Set<? extends ResolutionRequest<?>> allRemainingRequests = new LinkedHashSet<>(peerCreationRequestCollection.requests());
 
         Map<ResolverWidgetKey, Widget> childrenWidgets = new HashMap<>();
-        Map<ResolverWidgetKey, Map<PeerRequest<?>, Set<ResolutionRequest<?>>>> childrenReqs = new HashMap<>();
+        Map<ResolverWidgetKey, Map<ExposeRequest<?>, Set<ResolutionRequest<?>>>> childrenReqs = new HashMap<>();
 
         ResolverRegistry resolverRegistry = widgetState().tree.resolverRegistry;
 
@@ -131,8 +131,8 @@ public abstract class SubstitutedWidget extends Widget {
             if (!rule.matches(thiz, allRemainingRequests))
                 continue;
 
-            Map<PeerRequest<?>, Set<ResolutionRequest<?>>> m = new HashMap<>();
-            for (Class<? extends PeerRequest<?>> reqType : rule.supportedRequestTypes) {
+            Map<ExposeRequest<?>, Set<ResolutionRequest<?>>> m = new HashMap<>();
+            for (Class<? extends ExposeRequest<?>> reqType : rule.supportedRequestTypes) {
                 for (ResolutionRequest<?> req : allRemainingRequests) {
                     if (!reqType.isInstance(req.requestData))
                         continue;
@@ -172,7 +172,7 @@ public abstract class SubstitutedWidget extends Widget {
                 return false;
         });
 
-        Map<PeerRequest<?>, Set<ResolutionRequest<?>>> remainingForGeneric =
+        Map<ExposeRequest<?>, Set<ResolutionRequest<?>>> remainingForGeneric =
                 remainedAfterPeerSpecificResolvers.stream().
                         collect(groupingBy(r -> r.requestData, toSet()));
 
@@ -212,10 +212,10 @@ public abstract class SubstitutedWidget extends Widget {
             }
         }
 
-        Map<ResolverWidgetKey, Set<PeerRequest<?>>> childrenReqs2 =
+        Map<ResolverWidgetKey, Set<ExposeRequest<?>>> childrenReqs2 =
                 childrenReqs.entrySet().stream().collect(toMap(Map.Entry::getKey,
                         e -> e.getValue().keySet()));
-        return PeerRequest.requestMultiple(childrenWidgets, childrenReqs2, results -> {
+        return ExposeRequest.requestMultiple(childrenWidgets, childrenReqs2, results -> {
             results.forEach((req, resultsByKey) -> {
                 resultsByKey.forEach((key, result) -> {
                     for (ResolutionRequest<?> parentResolutionRequest : childrenReqs.get(key).get(req))

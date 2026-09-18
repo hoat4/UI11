@@ -1,5 +1,6 @@
 package ui11.renderer.j2d.peer;
 
+import ui11.Expose;
 import ui11.Widget;
 import ui11.geom.Rect;
 import ui11.geom.Vec2;
@@ -38,7 +39,7 @@ public class J2DLinearGradientPeer extends Widget {
     protected Widget build() {
         Shape shape = surface.layoutShape();
         if (J2DUtil.isNotVisible(shape, surface))
-            return request.createResponse(EmptyNode.INSTANCE);
+            return new Expose<>(request, EmptyNode.INSTANCE);
         Rect bounds = shape.bounds(surface.coordinateSpace());
 
         float[] fractions = new float[gradient.stops().size()];
@@ -78,6 +79,6 @@ public class J2DLinearGradientPeer extends Widget {
         node.paint.set(paint);
         node.shape.set(J2DUtil.shapeToJ2D(shape, surface.coordinateSpace()));
 
-        return request.createResponse(node);
+        return new Expose<>(request, node);
     }
 }

@@ -1,6 +1,7 @@
 package ui11.platform.opengl.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Clip;
 import ui11.platform.opengl.GLVisualContentRequest;
@@ -32,10 +33,8 @@ public class GLClipPeer extends Widget {
         childSurface.parent.set(parentSurface);
 
         Widget widget = clip.content();
-        return PeerRequest.requestSingle(widget, childSurface, result -> {
-            return parentSurface.createResponse(
-                    makeRenderNode(result, childSurface.shape())
-            );
+        return ExposeRequest.requestSingle(widget, childSurface, result -> {
+            return new Expose<>(parentSurface, makeRenderNode(result, childSurface.shape()));
         });
     }
 

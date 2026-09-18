@@ -50,7 +50,7 @@ public class TestStealDelegate2 {
 
         @Override
         protected Widget build() {
-            return PeerRequest.requestSingle(w, TestStealDelegate.UV.UVRequest.INSTANCE, result -> {
+            return ExposeRequest.requestSingle(w, TestStealDelegate.UV.UVRequest.INSTANCE, result -> {
                 System.out.println(result);
                 return Component.ComponentResult.INSTANCE;
             });

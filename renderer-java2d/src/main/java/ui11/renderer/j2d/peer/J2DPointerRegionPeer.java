@@ -1,6 +1,7 @@
 package ui11.renderer.j2d.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.input.pointer.PointerRegion;
 import ui11.renderer.j2d.J2DVisualContentRequest;
@@ -26,10 +27,10 @@ public class J2DPointerRegionPeer extends Widget {
     @Override
     protected Widget build() {
         Widget content = pointerRegion.content();
-        return PeerRequest.requestSingle(content, surface, result -> {
+        return ExposeRequest.requestSingle(content, surface, result -> {
             node.child.set(result);
             node.listener = pointerRegion;
-            return surface.createResponse(node, content);
+            return new Expose<>(surface, node, content);
         });
     }
 }

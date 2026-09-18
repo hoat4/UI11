@@ -1,6 +1,7 @@
 package ui11.renderer.j2d.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.graphics.Surface;
 import ui11.graphics.shaper.PathShaped;
@@ -29,10 +30,10 @@ public class J2DPathShapedPeer extends Widget {
     protected Widget build() {
         childSurface.parent.set(parentSurface);
         childSurface.updateShape(pathShaped.shape());
-        return PeerRequest.requestSingle(
+        return ExposeRequest.requestSingle(
                 pathShaped.content(),
                 new J2DVisualContentRequest(childSurface),
-                parentRequest::createResponse
+                peer -> new Expose<>(parentRequest, peer)
         );
     }
 }

@@ -1,16 +1,14 @@
 package ui11.platform.awt;
 
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.PeerRequest;
+import ui11.ExposeRequest;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
 import ui11.geom.Length;
 import ui11.geom.Location;
-import ui11.geom.Size;
 import ui11.geom.Vec2;
 import ui11.graphics.VisualContentRequest;
 import ui11.input.gesture.EnterContentListener.EnterContent.KeyboardEnterContentSource;
@@ -113,7 +111,7 @@ public class AWTWindow {
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
-            return PeerRequest.requestSingle(content, rootContentRequest, result -> {
+            return ExposeRequest.requestSingle(content, rootContentRequest, result -> {
                 @SuppressWarnings("unchecked")
                 MutableObservable<Node> rootNodeHolderCasted = (MutableObservable<Node>) rootNodeHolder;
                 rootNodeHolderCasted.set(result);

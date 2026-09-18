@@ -6,7 +6,6 @@ import ui11.observable.*;
 import ui11.observable.Observable;
 
 import java.lang.reflect.Array;
-import java.sql.Ref;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -726,7 +725,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                     if (newValue == null)
                         newValue = WidgetTree.IV_NOT_PROVIDED;
                 }
-            } else if (PeerRequest.class.isAssignableFrom(type) && PeerRequest.class != type) {
+            } else if (ExposeRequest.class.isAssignableFrom(type) && ExposeRequest.class != type) {
                 newValue = widgetState.tree.getIVForCurrentWidget(
                         widgetState, ResolutionRequestCollection.class, true);
                 if (newValue != WidgetTree.IV_NOT_PROVIDED) {
@@ -734,7 +733,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                             (ResolutionRequestCollection) newValue;
                     newValue = findResolutionRequest(coll);
                 }
-            } else if (PeerRequest[].class.isAssignableFrom(type) && PeerRequest[].class != type) {
+            } else if (ExposeRequest[].class.isAssignableFrom(type) && ExposeRequest[].class != type) {
                 newValue = widgetState.tree.getIVForCurrentWidget(
                         widgetState, ResolutionRequestCollection.class, true);
                 if (newValue != WidgetTree.IV_NOT_PROVIDED) {
@@ -754,8 +753,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
         private @NonNull Object findResolutionRequest(ResolutionRequestCollection coll) {
             Object newValue;
-            @SuppressWarnings("unchecked") Class<? extends PeerRequest<?>> castedType =
-                    (Class<? extends PeerRequest<?>>) type.asSubclass(PeerRequest.class);
+            @SuppressWarnings("unchecked") Class<? extends ExposeRequest<?>> castedType =
+                    (Class<? extends ExposeRequest<?>>) type.asSubclass(ExposeRequest.class);
             List<? extends ResolutionRequest<?>> reqs = coll.byType(castedType);
             newValue = switch (reqs.size()) {
                 case 0 -> WidgetTree.IV_NOT_PROVIDED;
@@ -771,8 +770,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         // tömb
         private @NonNull Object findResolutionRequests(ResolutionRequestCollection coll) {
             @SuppressWarnings("unchecked")
-            Class<? extends PeerRequest<?>> pcrType = (Class<? extends PeerRequest<?>>)
-                    type.getComponentType().asSubclass(PeerRequest.class);
+            Class<? extends ExposeRequest<?>> pcrType = (Class<? extends ExposeRequest<?>>)
+                    type.getComponentType().asSubclass(ExposeRequest.class);
 
             List<? extends ResolutionRequest<?>> reqs = coll.byType(pcrType);
             Object[] result = (Object[]) Array.newInstance(pcrType, reqs.size());

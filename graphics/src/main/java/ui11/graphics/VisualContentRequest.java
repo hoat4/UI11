@@ -1,12 +1,8 @@
 package ui11.graphics;
 
-import ui11.PeerRequest;
-import ui11.geom.Location;
-import ui11.geom.Location.CoordinateSpace;
-import ui11.geom.Rect;
-import ui11.geom.Size;
+import ui11.ExposeRequest;
 
-public abstract class VisualContentRequest<P> extends PeerRequest<P> {
+public abstract class VisualContentRequest<P> extends ExposeRequest<P> {
 
     public final Surface surface;
 

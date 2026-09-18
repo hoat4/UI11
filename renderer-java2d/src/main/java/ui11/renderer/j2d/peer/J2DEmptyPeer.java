@@ -1,13 +1,9 @@
 package ui11.renderer.j2d.peer;
 
+import ui11.Expose;
 import ui11.Widget;
-import ui11.graphics.fill.ColorFill;
-import ui11.renderer.j2d.J2DUtil;
 import ui11.renderer.j2d.J2DVisualContentRequest;
 import ui11.renderer.j2d.rendertree.EmptyNode;
-import ui11.renderer.j2d.rendertree.FillPathNode;
-
-import java.awt.*;
 
 public class J2DEmptyPeer extends Widget {
 
@@ -20,6 +16,6 @@ public class J2DEmptyPeer extends Widget {
 
     @Override
     protected Widget build() {
-        return surface.createResponse(EmptyNode.INSTANCE);
+        return new Expose<>(surface, EmptyNode.INSTANCE);
     }
 }

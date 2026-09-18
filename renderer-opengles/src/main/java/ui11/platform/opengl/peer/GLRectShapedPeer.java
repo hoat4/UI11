@@ -1,6 +1,7 @@
 package ui11.platform.opengl.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.geom.Rect;
 import ui11.geom.Size;
@@ -31,6 +32,6 @@ public class GLRectShapedPeer extends Widget {
         Size size = rectShaped.shape();
         childSurface.parent.set(parentSurface);
         childSurface.updateShape(new Shape2D.RectShape(Rect.of(size)), size, parentSurface.renderNodeTranslation());
-        return PeerRequest.requestSingle(rectShaped.content(), childSurface, parentSurface::createResponse);
+        return ExposeRequest.requestSingle(rectShaped.content(), childSurface, peer -> new Expose<>(parentSurface, peer));
     }
 }

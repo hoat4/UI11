@@ -1,5 +1,6 @@
 package ui11.platform.opengl.peer;
 
+import ui11.Expose;
 import ui11.Widget;
 import ui11.geom.Vec2;
 import ui11.graphics.fill.ColorFill;
@@ -34,7 +35,7 @@ public class GLColorFillPeer extends Widget {
         Vec2 renderNodeTranslation = surface.renderNodeTranslation();
 
         if (shape == Shape2D.InfinitePlane.INFINITE_PLANE)
-            return surface.createResponse(EmptyNode.INSTANCE);
+            return new Expose<>(surface, EmptyNode.INSTANCE);
 
         node.shape.set(shape);
 
@@ -58,6 +59,6 @@ public class GLColorFillPeer extends Widget {
             });
             node.vertices.set(buf.finish());
         }
-        return surface.createResponse(node);
+        return new Expose<>(surface, node);
     }
 }

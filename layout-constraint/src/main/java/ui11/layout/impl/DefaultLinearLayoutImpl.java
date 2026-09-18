@@ -3,7 +3,8 @@ package ui11.layout.impl;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.geom.Axis;
 import ui11.geom.Rect;
@@ -141,7 +142,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
                     /* max width */ Double.POSITIVE_INFINITY,
                     /* max height */ containerConstraints.max(linearLayout.crossAxis())
             ));
-            return PeerRequest.requestMultiple(items, Set.of(sizeReq, WeightRequest.INSTANCE),
+            return ExposeRequest.requestMultiple(items, Set.of(sizeReq, WeightRequest.INSTANCE),
                     results -> layoutPhase2(
                             (List<? extends BoxLayoutResult>) results.get(sizeReq),
                             (List<? extends WeightMarker>) results.get(WeightRequest.INSTANCE)));
@@ -253,7 +254,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
                     }
                     double heightFinal = height;
                     int itemCountFinal = itemCount;
-                    return PeerRequest.requestMultiple(reqWidgets, reqs, resolutionResults -> {
+                    return ExposeRequest.requestMultiple(reqWidgets, reqs, resolutionResults -> {
                         double height2 = heightFinal;
                         for (BoxLayoutResult layoutResult : resolutionResults) {
                             switch (layoutResult) {
@@ -279,7 +280,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
                 Axis mainAxis = linearLayout.mainAxis();
                 Size containerSize = Size.of(mainAxis, containerWidth, height);
                 BoxLayoutResult.OfChosenSize chosenSize = new BoxLayoutResult.OfChosenSize(containerSize);
-                return sizeRequest.createResponse(chosenSize);
+                return new Expose<>(sizeRequest, chosenSize);
             } else {
                 Axis mainAxis = linearLayout.mainAxis();
 

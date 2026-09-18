@@ -14,7 +14,7 @@ import java.util.List;
 class ReflectiveIVFactory {
 
     private final Method m;
-    final Class<? extends PeerRequest<?>> peerReqType;
+    final Class<? extends ExposeRequest<?>> peerReqType;
 
     private ReflectiveIVFactory(Method m) {
         this.m = m;
@@ -27,12 +27,12 @@ class ReflectiveIVFactory {
                     "method not static");
         Class<?> peerReqType = m.getParameterTypes()[0].getComponentType();
         assert peerReqType != null;
-        if (!PeerRequest.class.isAssignableFrom(peerReqType) || peerReqType == PeerRequest.class)
+        if (!ExposeRequest.class.isAssignableFrom(peerReqType) || peerReqType == ExposeRequest.class)
             throw new RuntimeException("@" + FromPeerRequests.class.getSimpleName() + " method " + ReflectionUtil.memberToShortString(m) + " invalid: " +
-                    "component of parameter type is not subtype of " + PeerRequest.class.getSimpleName());
+                    "component of parameter type is not subtype of " + ExposeRequest.class.getSimpleName());
 
         @SuppressWarnings("unchecked")
-        Class<? extends PeerRequest<?>> casted = (Class<? extends PeerRequest<?>>) peerReqType;
+        Class<? extends ExposeRequest<?>> casted = (Class<? extends ExposeRequest<?>>) peerReqType;
         this.peerReqType = casted;
     }
 
@@ -60,7 +60,7 @@ class ReflectiveIVFactory {
     @Nullable
     Object makeValue(ResolutionRequestCollection resolutionRequestCollection) {
         List<? extends ResolutionRequest<?>> reqs = resolutionRequestCollection.byType(peerReqType);
-        PeerRequest<?>[] result = (PeerRequest<?>[]) Array.newInstance(peerReqType, reqs.size());
+        ExposeRequest<?>[] result = (ExposeRequest<?>[]) Array.newInstance(peerReqType, reqs.size());
         for (int i = 0; i < reqs.size(); i++)
             result[i] = peerReqType.cast(reqs.get(i).requestData);
 

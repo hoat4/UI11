@@ -1,6 +1,7 @@
 package ui11.platform.opengl.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Overlay;
 import ui11.platform.opengl.GLVisualContentRequest;
@@ -44,7 +45,7 @@ public class GLOverlayPeer extends Widget {
         if (childSurfaces.size() > overlay.items().size())
             childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
 
-        return PeerRequest.requestMultiple(overlay.items(), childSurfaces, this::doBuild);
+        return ExposeRequest.requestMultiple(overlay.items(), childSurfaces, this::doBuild);
     }
 
     private Widget doBuild(List<? extends GLNode> childrenResolutionResults) {
@@ -55,15 +56,14 @@ public class GLOverlayPeer extends Widget {
                 children.add(h);
         }
 
-        return parentSurface.createResponse(
-                switch (children.size()) {
-                    case 0 -> EmptyNode.INSTANCE;
-                    case 1 -> children.getFirst();
-                    default -> {
-                        groupNode.children.setAll(children);
-                        yield groupNode;
-                    }
-                }
-        );
+        GLNode peer = switch (children.size()) {
+            case 0 -> EmptyNode.INSTANCE;
+            case 1 -> children.getFirst();
+            default -> {
+                groupNode.children.setAll(children);
+                yield groupNode;
+            }
+        };
+        return new Expose<>(parentSurface, peer);
     }
 }

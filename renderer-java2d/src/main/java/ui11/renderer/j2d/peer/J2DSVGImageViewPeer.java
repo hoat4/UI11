@@ -6,6 +6,7 @@ import com.github.weisj.jsvg.view.FloatSize;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ui11.Expose;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.graphics.Surface;
@@ -19,7 +20,6 @@ import ui11.text.Text;
 import ui11.text.TextStyle;
 import ui11.window.Shell.URLResolver;
 
-import java.awt.geom.Rectangle2D;
 import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.Callable;
@@ -88,12 +88,12 @@ public class J2DSVGImageViewPeer extends Widget {
         Size size = surface.size();
         node.size.set(size);
         FloatSize docSize = loadedDocument.size();
-        Widget result = request.createResponse(node);
+        Widget result = new Expose<>(request, node);
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             // TODO constraintset figyelembe kéne venni
             BoxLayoutResult.OfChosenSize chosenSize =
                     new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height));
-            result = sizeRequest.createResponse(chosenSize, result);
+            result = new Expose<>(sizeRequest, chosenSize, result);
         }
         return result;
     }

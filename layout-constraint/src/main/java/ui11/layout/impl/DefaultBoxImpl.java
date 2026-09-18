@@ -1,6 +1,7 @@
 package ui11.layout.impl;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.decoration.Box;
@@ -77,7 +78,7 @@ public class DefaultBoxImpl extends Widget {
             );
             BoxConstraints childConstraints = constraints.subtract(allPadding);
             BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
-            return PeerRequest.requestSingle(box.content(), sizeReq, r -> {
+            return ExposeRequest.requestSingle(box.content(), sizeReq, r -> {
                 Size childSize = switch (r) {
                     case BoxLayoutResult.OfGone _ -> Size.ZERO;
                     case BoxLayoutResult.OfChosenSize ofChosenSize -> ofChosenSize.size();
@@ -137,7 +138,7 @@ public class DefaultBoxImpl extends Widget {
 
         Widget w = canvas.build();
         if (sizeRequest != null)
-            w = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(containerSize), w);
+            w = new Expose<>(sizeRequest, new BoxLayoutResult.OfChosenSize(containerSize), w);
         return w;
     }
 

@@ -1,6 +1,7 @@
 package ui11.renderer.j2d.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.graphics.effect.Opacity;
 import ui11.renderer.j2d.J2DVisualContentRequest;
@@ -25,10 +26,10 @@ public class J2DOpacityPeer extends Widget {
 
     @Override
     protected Widget build() {
-        return PeerRequest.requestSingle(opacity.content(), surface, result -> {
+        return ExposeRequest.requestSingle(opacity.content(), surface, result -> {
             opacityNode.opacity.set(opacity.opacity());
             opacityNode.content.set(result);
-            return surface.createResponse(opacityNode);
+            return new Expose<>(surface, opacityNode);
         });
     }
 }

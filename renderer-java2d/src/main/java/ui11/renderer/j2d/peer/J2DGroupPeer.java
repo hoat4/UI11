@@ -1,6 +1,7 @@
 package ui11.renderer.j2d.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.graphics.Surface;
 import ui11.graphics.effect.Overlay;
@@ -32,7 +33,7 @@ public class J2DGroupPeer extends Widget {
 
     @Override
     protected Widget build() {
-        return PeerRequest.requestOnMultipleWidgets(
+        return ExposeRequest.requestOnMultipleWidgets(
                 overlay.items(),
                 new J2DVisualContentRequest(surface),
                 this::doBuild
@@ -47,15 +48,14 @@ public class J2DGroupPeer extends Widget {
                 children.add(h);
         }
 
-        return parentRequest.createResponse(
-                switch (children.size()) {
-                    case 0 -> EmptyNode.INSTANCE;
-                    case 1 -> children.getFirst();
-                    default -> {
-                        groupNode.children.setAll(children);
-                        yield groupNode;
-                    }
-                }
-        );
+        J2DNode peer = switch (children.size()) {
+            case 0 -> EmptyNode.INSTANCE;
+            case 1 -> children.getFirst();
+            default -> {
+                groupNode.children.setAll(children);
+                yield groupNode;
+            }
+        };
+        return new Expose<>(parentRequest, peer);
     }
 }

@@ -1,5 +1,6 @@
 package ui11.platform.opengl.peer;
 
+import ui11.Expose;
 import ui11.Widget;
 import ui11.geom.Vec2;
 import ui11.graphics.fill.LinearGradient;
@@ -36,7 +37,7 @@ public class GLLinearGradientPeer extends Widget {
     protected Widget build() {
         Shape2D shape = surface.shape();
         if (shape == Shape2D.InfinitePlane.INFINITE_PLANE)
-            return surface.createResponse(EmptyNode.INSTANCE);
+            return new Expose<>(surface, EmptyNode.INSTANCE);
 
         double emSize = textStyle.size();
         double deg = gradient.angleDeg();
@@ -78,7 +79,7 @@ public class GLLinearGradientPeer extends Widget {
 
         node.shape.set(shape);
 
-        return surface.createResponse(node);
+        return new Expose<>(surface, node);
     }
 
     private static class TriangleSplitter implements Shape2D.Triangle2DConsumer {

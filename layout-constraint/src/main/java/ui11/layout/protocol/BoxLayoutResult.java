@@ -1,7 +1,7 @@
 package ui11.layout.protocol;
 
 import org.jspecify.annotations.NonNull;
-import ui11.PeerRequest;
+import ui11.ExposeRequest;
 import ui11.geom.Size;
 
 import java.util.Objects;
@@ -18,7 +18,7 @@ public sealed interface BoxLayoutResult {
     record OfGone() implements BoxLayoutResult {
     }
 
-    public static class SizeRequest extends PeerRequest<BoxLayoutResult> {
+    public static class SizeRequest extends ExposeRequest<BoxLayoutResult> {
 
         private final BoxConstraints constraints;
 

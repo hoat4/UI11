@@ -1,6 +1,7 @@
 package ui11.renderer.j2d.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.geom.Shape;
 import ui11.graphics.Surface;
@@ -36,8 +37,9 @@ public class J2DClipPeer extends Widget {
     protected Widget build() {
         childSurface.parent.set(parentSurface);
 
-        return PeerRequest.requestSingle(clip.content(), new J2DVisualContentRequest(childSurface), result -> {
-            return parentRequest.createResponse(makeNode(result, childSurface.clipShape()));
+        return ExposeRequest.requestSingle(clip.content(), new J2DVisualContentRequest(childSurface), result -> {
+            J2DNode peer = makeNode(result, childSurface.clipShape());
+            return new Expose<>(parentRequest, peer);
         });
     }
 

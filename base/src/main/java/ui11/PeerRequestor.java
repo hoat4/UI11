@@ -1,11 +1,9 @@
 package ui11;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
@@ -17,9 +15,7 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
  * The requests can be accessed by declaring a {@link ui11.Widget.Inject @Inject} field in a widget whose type is the array type of the request
  * type. The array's value will be the current peer requests that should be fulfilled. The array won't contain two
  * {@linkplain Object#equals(Object) same} element twice.
- * A widget can provide response to a request by returning the value of
- * {@linkplain PeerRequest#createResponse(Object) Request.createResponse} or
- * {@linkplain PeerRequest#createResponse(Object, Widget)}.
+ * A widget can provide response to a request by returning an instance of {@link Expose}.
  */
 abstract sealed class PeerRequestor extends Widget {
 
@@ -33,70 +29,16 @@ abstract sealed class PeerRequestor extends Widget {
      */
     abstract WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren);
 
-    static final class ResponseWidget<P> extends Widget {
-
-        private final @NonNull PeerRequest<P> request;
-        private final @NonNull P peer;
-        private final @Nullable Widget chainedWidget;
-
-        @Inject private ResolutionRequestCollection peerCreationRequestCollection;
-
-        public ResponseWidget(@NonNull PeerRequest<P> request, @NonNull P peer, @Nullable Widget chainedWidget) {
-            this.request = request;
-            this.peer = peer;
-            this.chainedWidget = chainedWidget;
-        }
-
-        @Override
-        protected Widget build() {
-            Map<PeerRequest<?>, Set<ResolutionRequest<?>>> remaining = new HashMap<>();
-            for (ResolutionRequest<?> resolutionRequest : peerCreationRequestCollection.requests()) {
-                if (resolutionRequest.requestData.peerType().isInstance(peer) &&
-                        request.equals(resolutionRequest.requestData)) {
-                    // TODO ha már kapott resultot ebben a refreshben, akkor az újabbakat ignorálnia kéne vagy beraknia?
-                    resolutionRequest.setResult(peer);
-                } else {
-                    remaining.computeIfAbsent(resolutionRequest.requestData, __ -> new HashSet<>()).add(resolutionRequest);
-                }
-            }
-
-            if (remaining.keySet().stream().allMatch(req -> req.defaultValue() != null)) {
-                // ugyanaz mint SubstitutedWidget elején
-                remaining.forEach((req, resReqs) -> {
-                    for (ResolutionRequest<?> resReq : resReqs)
-                        resReq.setResult(req.defaultValue());
-                });
-                return new WidgetTree.ChainEnd();
-            }
-
-            if (chainedWidget == null)
-                throw new RuntimeException("TODO remaining reqs: " + remaining);
-
-            return PeerRequest.requestOnSingleWidget(chainedWidget, remaining.keySet(), respMap -> {
-                remaining.forEach((req, resReqs) -> {
-                    Object result2 = respMap.get(req);
-                    assert result2 != null;
-
-                    for (ResolutionRequest<?> resReq : resReqs) {
-                        // TODO lásd fenti kommentek
-                        resReq.setResult(result2);
-                    }
-                });
-                return new WidgetTree.ChainEnd();
-            });
-        }
-    }
-
     static final class CreatePeerForSingle<P> extends PeerRequestor {
 
         private final Widget widget;
-        private final PeerRequest<P> request;
+        private final ExposeRequest<P> request;
         private final Function<P, Widget> f;
 
         @Remember private ResolutionRequest<P> req;
 
         @NullMarked
-        public CreatePeerForSingle(Widget widget, PeerRequest<P> request, Function<P, Widget> f) {
+        public CreatePeerForSingle(Widget widget, ExposeRequest<P> request, Function<P, Widget> f) {
             this.widget = widget;
             this.request = request;
             this.f = f;
@@ -150,13 +92,13 @@ abstract sealed class PeerRequestor extends Widget {
     static final class CreatePeersForList<P> extends PeerRequestor {
 
         private final List<? extends Widget> widgets;
-        private final List<? extends PeerRequest<P>> requests;
+        private final List<? extends ExposeRequest<P>> requests;
         private final Function<? super List<P>, Widget> f;
 
         @Remember private ResolutionRequest<P>[] reqs;
 
         public CreatePeersForList(List<? extends Widget> widgets,
-                                  List<? extends PeerRequest<P>> requests,
+                                  List<? extends ExposeRequest<P>> requests,
                                   Function<? super List<P>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
@@ -236,14 +178,14 @@ abstract sealed class PeerRequestor extends Widget {
     static final class CreatePeersForMap<P, K> extends PeerRequestor {
 
         private final Map<K, ? extends Widget> widgets;
-        private final Map<K, ? extends Set<PeerRequest<P>>> requests;
-        private final Function<? super Map<PeerRequest<P>, Map<K, P>>, Widget> f;
+        private final Map<K, ? extends Set<ExposeRequest<P>>> requests;
+        private final Function<? super Map<ExposeRequest<P>, Map<K, P>>, Widget> f;
 
         @Remember private Map<K, Set<ResolutionRequest<P>>> reqs;
 
         public CreatePeersForMap(Map<K, ? extends Widget> widgets,
-                                 Map<K, ? extends Set<PeerRequest<P>>> requests,
-                                 Function<? super Map<PeerRequest<P>, Map<K, P>>, Widget> f) {
+                                 Map<K, ? extends Set<ExposeRequest<P>>> requests,
+                                 Function<? super Map<ExposeRequest<P>, Map<K, P>>, Widget> f) {
             this.widgets = widgets;
             this.requests = requests;
             this.f = f;
@@ -277,12 +219,12 @@ abstract sealed class PeerRequestor extends Widget {
             for (Map.Entry<K, ? extends Widget> entry : withID("widgets", widgets).entrySet()) {
                 K key = entry.getKey();
                 Widget widget = entry.getValue();
-                Set<PeerRequest<P>> reqDatas = this.requests.get(key);
+                Set<ExposeRequest<P>> reqDatas = this.requests.get(key);
 
                 Set<ResolutionRequest<P>> oldSet = reqs.getOrDefault(key, Collections.emptySet());
                 Set<ResolutionRequest<P>> newSet = new HashSet<>();
 
-                for (PeerRequest<P> req : reqDatas) {
+                for (ExposeRequest<P> req : reqDatas) {
                     ResolutionRequest<P> existing = oldSet.stream().
                             filter(rr -> Objects.equals(rr.requestData, req) &&
                                     Objects.equals(rr.widget, widget)).
@@ -316,17 +258,17 @@ abstract sealed class PeerRequestor extends Widget {
         private static class MapRRFinisher<K, P> extends FinisherWidget {
 
             private final Map<K, Set<ResolutionRequest<P>>> reqs;
-            private final Function<? super Map<PeerRequest<P>, Map<K, P>>, Widget> f;
+            private final Function<? super Map<ExposeRequest<P>, Map<K, P>>, Widget> f;
 
             public MapRRFinisher(Map<K, Set<ResolutionRequest<P>>> reqs,
-                                 Function<? super Map<PeerRequest<P>, Map<K, P>>, Widget> f) {
+                                 Function<? super Map<ExposeRequest<P>, Map<K, P>>, Widget> f) {
                 this.reqs = reqs;
                 this.f = f;
             }
 
             @Override
             protected Widget build() {
-                Map<PeerRequest<P>, Map<K, P>> results = new HashMap<>();
+                Map<ExposeRequest<P>, Map<K, P>> results = new HashMap<>();
 
                 reqs.forEach((k, reqs) -> {
                     for (ResolutionRequest<P> req : reqs) {

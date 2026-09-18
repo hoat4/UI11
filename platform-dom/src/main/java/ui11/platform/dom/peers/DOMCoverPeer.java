@@ -2,7 +2,7 @@ package ui11.platform.dom.peers;
 
 import org.jspecify.annotations.NonNull;
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.PeerRequest;
+import ui11.ExposeRequest;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.layout.singlechild.Cover;
@@ -28,7 +28,7 @@ public class DOMCoverPeer extends DOMPeerBase<HTMLElement> {
     @Override
     protected Widget doBuild() {
         CSSBackgroundImagePeerCreationRequest req = CSSBackgroundImagePeerCreationRequest.INSTANCE;
-        return PeerRequest.requestSingle(cover.content(), req, result -> {
+        return ExposeRequest.requestSingle(cover.content(), req, result -> {
             elem().getStyle().setProperty("background-image", "url(" + result.uri.toString() + ")");
             return endingWidget();
         });

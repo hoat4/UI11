@@ -1,6 +1,7 @@
 package ui11.renderer.j2d.peer;
 
 import org.jspecify.annotations.NonNull;
+import ui11.Expose;
 import ui11.Widget;
 import ui11.color.Color;
 import ui11.geom.Size;
@@ -68,14 +69,14 @@ public class J2DTextPeer extends Widget {
         if (surface == null)
             result = null;
         else
-            result = surface.createResponse(node);
+            result = new Expose<>(surface, node);
 
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             Size size = sizeRequest.constraints().clamp(new Size(w, h));
             if (result == null)
-                result = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(size));
+                result = new Expose<>(sizeRequest, new BoxLayoutResult.OfChosenSize(size));
             else
-                result = sizeRequest.createResponse(new BoxLayoutResult.OfChosenSize(size), result);
+                result = new Expose<>(sizeRequest, new BoxLayoutResult.OfChosenSize(size), result);
         }
 
         return result;

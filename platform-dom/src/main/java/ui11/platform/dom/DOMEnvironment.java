@@ -7,14 +7,10 @@ import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
-import ui11.PeerRequest;
-import ui11.SubstitutedWidget;
-import ui11.Widget;
-import ui11.WidgetTree;
+import ui11.*;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
 import ui11.geom.Location.CoordinateSpaceRoot;
-import ui11.graphics.Surface;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.Scope;
 import ui11.provide.Provide;
@@ -131,7 +127,7 @@ public class DOMEnvironment implements Shell, Scheduler {
 
                 Widget contentRoot = new RootWidgetWrapper(new DOMWidgetWrapper(widget));
                 final DOMPeerBase.DOMPeerCreationRequest rootContentReq = DOMPeerBase.DOMPeerCreationRequest.INSTANCE;
-                return PeerRequest.requestSingle(contentRoot, rootContentReq, result -> {
+                return ExposeRequest.requestSingle(contentRoot, rootContentReq, result -> {
                     element.setInnerHTML("");
                     element.appendChild(result.element());
                     return new SubstitutedWidget() {

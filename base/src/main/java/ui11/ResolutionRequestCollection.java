@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @param requests the map key is {@linkplain PeerRequest#peerType() peer type}
+ * @param requests the map key is {@linkplain ExposeRequest#peerType() peer type}
  */
 record ResolutionRequestCollection(@NonNull Set<? extends ResolutionRequest<?>> requests) {
 
@@ -25,7 +25,7 @@ record ResolutionRequestCollection(@NonNull Set<? extends ResolutionRequest<?>> 
         return getClass().getSimpleName() + requests;
     }
 
-    public List<? extends ResolutionRequest<?>> byType(Class<? extends PeerRequest<?>> type) {
+    public List<? extends ResolutionRequest<?>> byType(Class<? extends ExposeRequest<?>> type) {
         return requests.stream().
                 filter(r -> type.isInstance(r.requestData)).
                 toList();

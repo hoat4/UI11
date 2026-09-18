@@ -4,7 +4,7 @@ import com.sun.glass.ui.Application;
 import com.sun.glass.ui.View;
 import com.sun.glass.ui.Window;
 import ui.platform.glass.windows.CompositorTimingThread;
-import ui11.PeerRequest;
+import ui11.ExposeRequest;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
 import ui11.WidgetTree;
@@ -16,7 +16,6 @@ import ui11.observable.MutableObservable;
 import ui11.platform.opengl.BufferPool;
 import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
-import ui11.platform.opengl.rendertree.GLNode;
 import ui11.provide.Provider;
 import ui11.renderer.Node;
 import ui11.text.TextAlign;
@@ -100,7 +99,7 @@ public class WindowImpl {
                 );
 
 
-                return PeerRequest.requestSingle(w, rootSurface, result -> {
+                return ExposeRequest.requestSingle(w, rootSurface, result -> {
 
                 /*
                 System.out.println("New render tree. Viewport size: "+innerSize.get());

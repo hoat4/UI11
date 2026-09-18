@@ -1,11 +1,11 @@
 package ui11.layout.helper;
 
 import org.jspecify.annotations.NonNull;
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.geom.Size;
 import ui11.graphics.Surface;
-import ui11.graphics.VisualContentRequest;
 import ui11.layout.protocol.BoxLayoutResult;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ public class LayoutHelper extends Widget {
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests)
             w.add(delegate.computePreferredSize(sizeRequest));
 
-        return PeerRequest.requestMultiple(w, List.of(sizeRequests), sizes -> {
+        return ExposeRequest.requestMultiple(w, List.of(sizeRequests), sizes -> {
             Widget prev;
             if (surface == null)
                 prev = null;
@@ -43,9 +43,9 @@ public class LayoutHelper extends Widget {
 
             for (int i = sizeRequests.length - 1; i >= 0; i--) {
                 if (prev == null)
-                    prev = sizeRequests[i].createResponse(sizes.get(i));
+                    prev = new Expose<>(sizeRequests[i], sizes.get(i));
                 else
-                    prev = sizeRequests[i].createResponse(sizes.get(i), prev);
+                    prev = new Expose<>(sizeRequests[i], sizes.get(i), prev);
             }
 
             assert prev != null;

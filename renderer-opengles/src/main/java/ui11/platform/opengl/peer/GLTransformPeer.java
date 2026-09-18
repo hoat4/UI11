@@ -1,6 +1,7 @@
 package ui11.platform.opengl.peer;
 
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Mat4;
@@ -44,19 +45,18 @@ public class GLTransformPeer extends Widget {
 
         if (surface.renderNodeTranslation.snoop() != null) {
             // ilyenkor nem kell TransformNode
-            return PeerRequest.requestSingle(transform.content(), surface, parentSurface::createResponse);
+            return ExposeRequest.requestSingle(transform.content(), surface, peer -> new Expose<>(parentSurface, peer));
         }
 
         // ezt a size beállítás után kell, hogy child tudja hivatkozni VisualContentRequest.size-on keresztül.
         // degenerateTransform esetén is végrehajtjuk, mert általában animáció közben keletkezhetnek
         // pl. 0-s scaleek, ettől nem kell a child widgetnek pause meg resume-ot kapnia.
 
-        return PeerRequest.requestSingle(transform.content(), surface, result -> {
-            return parentSurface.createResponse(
-                    nonDegenerateTransform ?
-                            makeNode(result) :
-                            EmptyNode.INSTANCE
-            );
+        return ExposeRequest.requestSingle(transform.content(), surface, result -> {
+            GLNode peer = nonDegenerateTransform ?
+                    makeNode(result) :
+                    EmptyNode.INSTANCE;
+            return new Expose<>(parentSurface, peer);
         });
     }
 

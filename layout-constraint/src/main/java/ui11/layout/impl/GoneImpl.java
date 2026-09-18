@@ -1,5 +1,6 @@
 package ui11.layout.impl;
 
+import ui11.Expose;
 import ui11.Widget;
 import ui11.layout.protocol.BoxLayoutResult;
 
@@ -18,10 +19,11 @@ public class GoneImpl extends Widget {
             throw new RuntimeException("G b sR 0");
 
         BoxLayoutResult.SizeRequest r = sizeRequests[0];
-        Widget w = r.createResponse(new BoxLayoutResult.OfGone());
+        Widget w = new Expose<>(r, new BoxLayoutResult.OfGone());
         for (int i = 1; i < sizeRequests.length; i++) {
             r = sizeRequests[i];
-            w = r.createResponse(new BoxLayoutResult.OfGone(), w);
+            BoxLayoutResult peer = new BoxLayoutResult.OfGone();
+            w = new Expose<>(r, peer, w);
         }
         return w;
     }

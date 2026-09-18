@@ -40,14 +40,14 @@ public final class ResolverRegistry {
     }
 
     public <SW extends SubstitutedWidget> void registerForContextType(
-            @NonNull Class<? extends PeerRequest<?>> requestType,
+            @NonNull Class<? extends ExposeRequest<?>> requestType,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
         register(new ResolutionRule<>(widgetType, f, Set.of(requestType), false));
     }
 
     public <SW extends SubstitutedWidget> void registerForContextTypes(
-            @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes,
+            @NonNull Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
         if (supportedRequestTypes.isEmpty())
@@ -56,14 +56,14 @@ public final class ResolverRegistry {
     }
 
     public <SW extends SubstitutedWidget> void registerPeerResolver(
-            @NonNull Class<? extends PeerRequest<?>> requestType,
+            @NonNull Class<? extends ExposeRequest<?>> requestType,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
         register(new ResolutionRule<>(widgetType, f, Set.of(requestType), true));
     }
 
     public <SW extends SubstitutedWidget> void registerPeerResolver(
-            @NonNull Set<Class<? extends PeerRequest<?>>> requestTypes,
+            @NonNull Set<Class<? extends ExposeRequest<?>>> requestTypes,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
         if (requestTypes.isEmpty())
@@ -113,7 +113,7 @@ public final class ResolverRegistry {
         final @NonNull Class<W> widgetType;
         final @NonNull Function<W, Widget> f;
         // TODO ez most kicsit zavaros, mert az üres set azt jelenti hogy minden requestet elfogad
-        final @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes;
+        final @NonNull Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes;
         /**
          * ha ez true, akkor {@link #supportedRequestTypes} nem üres
          */
@@ -124,7 +124,7 @@ public final class ResolverRegistry {
          */
         public ResolutionRule(@NonNull Class<W> widgetType,
                               @NonNull Function<W, Widget> f,
-                              @NonNull Set<Class<? extends PeerRequest<?>>> supportedRequestTypes,
+                              @NonNull Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes,
                               boolean isPeerResolver) {
             this.widgetType = Objects.requireNonNull(widgetType);
             widgetType.asSubclass(SubstitutedWidget.class);
@@ -132,9 +132,9 @@ public final class ResolverRegistry {
                 throw new IllegalArgumentException();
             this.f = Objects.requireNonNull(f);
 
-            Set<Class<? extends PeerRequest<?>>> set = Set.copyOf(supportedRequestTypes);
+            Set<Class<? extends ExposeRequest<?>>> set = Set.copyOf(supportedRequestTypes);
             set.forEach(t -> {
-                if (t.asSubclass(PeerRequest.class) == PeerRequest.class)
+                if (t.asSubclass(ExposeRequest.class) == ExposeRequest.class)
                     throw new IllegalArgumentException();
             });
             this.supportedRequestTypes = set;

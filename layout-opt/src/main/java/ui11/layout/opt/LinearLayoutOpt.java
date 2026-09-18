@@ -1,7 +1,8 @@
 package ui11.layout.opt;
 
 import org.jspecify.annotations.Nullable;
-import ui11.PeerRequest;
+import ui11.Expose;
+import ui11.ExposeRequest;
 import ui11.Widget;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.multichild.LinearLayout.WeightMarker;
@@ -29,14 +30,14 @@ class LinearLayoutOpt extends Widget {
     @Override
     protected Widget build() {
         // TODO ha collapsedLLRequest == null, akkor weightokat nem is kéne lekérdezni
-        return PeerRequest.requestMultiple(
+        return ExposeRequest.requestMultiple(
                 linearLayout.items(),
                 Set.of(CollapsedLLRequest.INSTANCE, WeightMarker.WeightRequest.INSTANCE),
                 this::processResults
         );
     }
 
-    private Widget processResults(Map<PeerRequest<?>, ? extends List<?>> results) {
+    private Widget processResults(Map<ExposeRequest<?>, ? extends List<?>> results) {
         List<? extends Widget> items = linearLayout.items();
 
         @SuppressWarnings("unchecked")
@@ -75,12 +76,14 @@ class LinearLayoutOpt extends Widget {
         LinearLayout newLL = linearLayout.withItems(newItems);
         Widget w = transformedWidgetRequest.apply(newLL);
         if (linearLayout.mainAxisAlignment() == LinearLayout.JustifyContent.STRETCH)
-            for (CollapsedLLRequest req : collapsedLLRequests)
-                w = req.createResponse(new CollapsedLL(newLL, newWeights), w);
+            for (CollapsedLLRequest req : collapsedLLRequests) {
+                CollapsedLLOrNothing peer = new CollapsedLL(newLL, newWeights);
+                w = new Expose<>(req, peer, w);
+            }
         return w;
     }
 
-    static class CollapsedLLRequest extends PeerRequest<CollapsedLLOrNothing> {
+    static class CollapsedLLRequest extends ExposeRequest<CollapsedLLOrNothing> {
 
         static final CollapsedLLRequest INSTANCE = new CollapsedLLRequest();
 

@@ -36,7 +36,7 @@ public class TestStealDelegate {
 
         @Override
         protected Widget build() {
-            return PeerRequest.requestSingle(w, UV.UVRequest.INSTANCE, result->{
+            return ExposeRequest.requestSingle(w, UV.UVRequest.INSTANCE, result->{
                 System.out.println(result);
                 return Component.ComponentResult.INSTANCE;
             });
@@ -66,7 +66,7 @@ public class TestStealDelegate {
 
     static class UV extends SubstitutedWidget {
 
-        static class UVRequest extends PeerRequest<UV> {
+        static class UVRequest extends ExposeRequest<UV> {
 
             static final UVRequest INSTANCE = new UVRequest();
 
