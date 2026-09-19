@@ -1,5 +1,6 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -196,35 +197,35 @@ public abstract class ExposeRequest<P> {
                 });
     }
 
-    static final class PeerRequestMetadata {
+    static final class RequestMetadata {
 
-        final @NonNull Class<? extends PeerRequest<?>> type;
-        final @Nullable Class<? extends PeerRequest<?>> baseForAtMostOnce;
+        final @NonNull Class<? extends ExposeRequest<?>> type;
+        final @Nullable Class<? extends ExposeRequest<?>> baseForAtMostOnce;
 
-        private PeerRequestMetadata(
-                @NonNull Class<? extends PeerRequest<?>> type,
-                @Nullable Class<? extends PeerRequest<?>> baseForAtMostOnce) {
+        private RequestMetadata(
+                @NonNull Class<? extends ExposeRequest<?>> type,
+                @Nullable Class<? extends ExposeRequest<?>> baseForAtMostOnce) {
             this.type = type;
             this.baseForAtMostOnce = baseForAtMostOnce;
         }
 
-        static final ClassValue<PeerRequestMetadata> CV = new ClassValue<PeerRequestMetadata>() {
+        static final ClassValue<RequestMetadata> CV = new ClassValue<RequestMetadata>() {
             @Override
-            protected PeerRequestMetadata computeValue(Class<?> type) {
-                Class<? extends PeerRequest<?>> baseForAtMostOnce = null;
+            protected RequestMetadata computeValue(Class<?> type) {
+                Class<? extends ExposeRequest<?>> baseForAtMostOnce = null;
                 for (Class<?> c = type; c != null; c = c.getSuperclass())
                     if (c.isAnnotationPresent(AtMostOnce.class))
                         if (baseForAtMostOnce == null) {
-                            @SuppressWarnings("unchecked") Class<? extends PeerRequest<?>> casted =
-                                    (Class<? extends PeerRequest<?>>) c.asSubclass(PeerRequest.class);
+                            @SuppressWarnings("unchecked") Class<? extends ExposeRequest<?>> casted =
+                                    (Class<? extends ExposeRequest<?>>) c.asSubclass(ExposeRequest.class);
                             baseForAtMostOnce = casted;
                         } else
                             throw new RuntimeException("Multiple classes annotated with @" + AtMostOnce.class.getSimpleName() +
                                     " in superclasses of " + type.getName());
 
-                @SuppressWarnings("unchecked") Class<? extends PeerRequest<?>> casted =
-                        (Class<? extends PeerRequest<?>>) type.asSubclass(PeerRequest.class);
-                return new PeerRequestMetadata(casted, baseForAtMostOnce);
+                @SuppressWarnings("unchecked") Class<? extends ExposeRequest<?>> casted =
+                        (Class<? extends ExposeRequest<?>>) type.asSubclass(ExposeRequest.class);
+                return new RequestMetadata(casted, baseForAtMostOnce);
             }
         };
     }

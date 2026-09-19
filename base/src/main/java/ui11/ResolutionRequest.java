@@ -37,8 +37,8 @@ final class ResolutionRequest<P> {
         this.widget = widget;
     }
 
-    PeerRequest.PeerRequestMetadata metadata() {
-        return PeerRequest.PeerRequestMetadata.CV.get(requestData.getClass());
+    ExposeRequest.RequestMetadata metadata() {
+        return ExposeRequest.RequestMetadata.CV.get(requestData.getClass());
     }
 
     void setResult(Object peer) {

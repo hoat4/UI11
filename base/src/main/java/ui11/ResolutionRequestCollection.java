@@ -17,7 +17,7 @@ record ResolutionRequestCollection(@NonNull Set<? extends ResolutionRequest<?>> 
         requests = Set.copyOf(requests);
 
         for (ResolutionRequest<?> req : requests) {
-            Class<? extends PeerRequest<?>> base = req.metadata().baseForAtMostOnce;
+            Class<? extends ExposeRequest<?>> base = req.metadata().baseForAtMostOnce;
             if (base == null)
                 continue;
             Set<ResolutionRequest<?>> duplicates = requests.stream().
@@ -29,7 +29,7 @@ record ResolutionRequestCollection(@NonNull Set<? extends ResolutionRequest<?>> 
     }
 
     static ResolutionRequestCollection combine(Map<ResolutionRequestCollection, Long> requestCollections) {
-        Map<@Nullable Class<? extends PeerRequest<?>>, Set<ResolutionRequest<?>>> reqsByBase = new HashMap<>();
+        Map<@Nullable Class<? extends ExposeRequest<?>>, Set<ResolutionRequest<?>>> reqsByBase = new HashMap<>();
         Map<ResolutionRequest<?>, Long> times = new HashMap<>();
         requestCollections.forEach((reqColl, time) -> {
             for (ResolutionRequest<?> req : reqColl.requests) {
