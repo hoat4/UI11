@@ -49,7 +49,7 @@ public class AWTWindow {
     private final InvalidationPoint repaintInvalidationPoint = new InvalidationPoint();
     private final InvalidationPoint sizeInvalidationPoint = new InvalidationPoint();
 
-    private final Renderer<?> renderer;
+    private final Renderer<?, ?> renderer;
 
     private final AWTFrameSurface surface;
     private final VisualContentRequest<? extends Node> rootContentRequest;
@@ -73,20 +73,8 @@ public class AWTWindow {
         frame.createBufferStrategy(2);
 
         surface = new AWTFrameSurface(frame, frame.getBufferStrategy());
-        Renderer<?> r = null;
-        for (RendererProvider provider : ServiceLoader.load(RendererProvider.class)) {
-            Renderer<?> r2 = provider.tryProvide(surface);
-            if (r2 != null)
-                if (r != null)
-                    throw new RuntimeException("Multiple renderer available for " + surface +
-                            ", at least: " + r + " and " + r2);
-                else
-                    r = r2;
-        }
-        if (r == null)
-            throw new RuntimeException("No renderer available for " + surface);
-        renderer = r;
-        rootContentRequest = r.createRootContentRequest(surface);
+        renderer = Renderer.create(surface);
+        rootContentRequest = renderer.createRootContentRequest();
     }
 
     class Root extends Widget {
@@ -158,8 +146,13 @@ public class AWTWindow {
 
     private void redraw() {
         @SuppressWarnings("unchecked")
-        Renderer<Node> rendererCasted = (Renderer<Node>) renderer;
-        rendererCasted.render(rootNodeHolder.get());
+        Renderer<Node, ?> rendererCasted = (Renderer<Node, ?>) renderer;
+        doRedraw(rendererCasted);
+    }
+
+    private <D> void doRedraw(Renderer<Node, D> rendererCasted) {
+        D displayList = rendererCasted.prepare(rootNodeHolder.get());
+        rendererCasted.render(displayList);
     }
 
     private void onMouseMove(Vec2 point) {

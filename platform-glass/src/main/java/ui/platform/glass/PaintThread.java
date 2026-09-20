@@ -1,55 +1,48 @@
 package ui.platform.glass;
 
-import com.sun.glass.ui.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.geom.Mat4;
 import ui11.geom.Vec2;
 import ui11.color.Color;
 import ui11.platform.opengl.BufferPool;
-import ui11.platform.opengl.renderer.GLRenderer;
 import ui11.platform.opengl.renderer.Shaders;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
 import ui11.platform.opengl.renderer.displaylist.SolidTrianglesItem;
+import ui11.renderer.Renderer;
 
-public class PaintThread extends Thread {
+public class PaintThread<D> extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(PaintThread.class);
 
-    private final long hwnd;
-    private final View view;
     private final SchedulerImpl scheduler;
-    public volatile GLRenderer renderer;
+    private final Renderer<?, D> renderer;
     private long traceBegin;
 
-    public PaintThread(View view, SchedulerImpl scheduler) {
-        this.hwnd = view.getNativeView();
-        this.view = view;
+    public PaintThread(Renderer<?, D> renderer, SchedulerImpl scheduler) {
+        this.renderer = renderer;
         this.scheduler = scheduler;
     }
-
 
     @Override
     public void run() {
         //System.load("C:\\Program Files\\Microsoft PIX\\2509.25\\WinPixGpuCapturer.dll");
         try {
-            renderer = new GLRenderer(hwnd);
-            renderer.traceSwaps = SchedulerImpl.TRACE_ANIMATION;
+            renderer.initializeRenderThreadLocals();
 
             traceBegin = System.nanoTime();
 
             while (true) {
-                DisplayList task = scheduler.takeNextSubmittedFrame();
+                Frame<D> frame = scheduler.takeNextSubmittedFrame();
 
-                trace("Run render task: " + task);
+                trace("Run render task: " + frame);
                 //addDebugItem(task);
-                renderer.render(task);
-                renderer.swapBuffers();
+                renderer.render(frame.displayList);
 
                 // ezt lehet hogy a swapBuffers előtt kéne
                 // TODO ha megváltozik közben a view méret, akkor nem is kéne várakozni (illetve a renderer.run-t is
                 //      meg kéne szakítani)
-                task.renderDoneCallbacks.forEach(DisplayList.RenderDoneCallback::renderFinished);
+                frame.renderDoneCallbacks.forEach(Frame.RenderDoneCallback::renderFinished);
 
                 trace("Swapped");
             }

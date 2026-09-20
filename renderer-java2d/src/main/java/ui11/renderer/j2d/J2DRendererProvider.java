@@ -8,7 +8,7 @@ import ui11.renderer.RenderableSurface;
 
 public class J2DRendererProvider implements RendererProvider {
     @Override
-    public @Nullable Renderer<?> tryProvide(RenderableSurface surface) {
+    public @Nullable Renderer<?, ?> tryProvide(RenderableSurface surface) {
         if (surface instanceof AWTFrameSurface awtFrameSurface)
             return new J2DRenderer(awtFrameSurface);
         else

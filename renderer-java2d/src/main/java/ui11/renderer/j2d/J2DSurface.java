@@ -5,20 +5,12 @@ import ui11.geom.*;
 import ui11.geom.Shape;
 import ui11.graphics.Surface;
 import ui11.observable.MutableObservable;
+import ui11.renderer.Subsurface;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
-public abstract sealed class J2DSurface implements Surface {
-
-    public final MutableObservable<Surface> parent = MutableObservable.ofNullable();
-
-    public @NonNull Surface parent() {
-        Surface p = parent.get();
-        if (p == null)
-            throw new IllegalStateException("No parent");
-        return p;
-    }
+public abstract sealed class J2DSurface extends Subsurface {
 
     @Override
     public Location.CoordinateSpace coordinateSpace() {

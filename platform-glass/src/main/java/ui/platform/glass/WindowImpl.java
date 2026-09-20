@@ -11,13 +11,13 @@ import ui11.WidgetTree;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
 import ui11.geom.Mat4;
-import ui11.geom.Vec2;
+import ui11.graphics.VisualContentRequest;
 import ui11.observable.MutableObservable;
 import ui11.platform.opengl.BufferPool;
-import ui11.platform.opengl.GLVisualContentRequest;
 import ui11.platform.opengl.renderer.displaylist.DisplayList;
 import ui11.provide.Provider;
 import ui11.renderer.Node;
+import ui11.renderer.Renderer;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 
@@ -41,26 +41,26 @@ public class WindowImpl {
     private final Widget rootWidget;
     private View view;
 
-    private final SchedulerImpl scheduler = new SchedulerImpl();
+    private final SchedulerImpl<?> scheduler = new SchedulerImpl<>();
     final PaintThread paintThread;
 
     /**
      * UI szálból írjuk és olvassuk
      */
-    private final List<DisplayList.RenderDoneCallback> executeNextPaintTaskOnPlatformThread = new ArrayList<>();
+    private final List<Frame.RenderDoneCallback> executeNextPaintTaskOnPlatformThread = new ArrayList<>();
 
-    DisplayList currentDisplayList;
+    Object currentDisplayList;
 
     final MutableObservable<ViewSize> innerSize = MutableObservable.withInitial(new ViewSize(300, 300));
-    private final GLVisualContentRequest.RootGLSurface rootSurface;
+    private final GlassSurface rootSurface;
 
     private final CompositorTimingThread compositionTimingThread;
+    private final VisualContentRequest<?> rootContentRequest;
 
     public WindowImpl(Widget rootWidget) {
         this.rootWidget = rootWidget;
 
         glassApp = Application.GetApplication();
-        rootSurface = new GLVisualContentRequest.RootGLSurface(innerSize.map(vs -> new Vec2(vs.width, vs.height)));
 
         window = glassApp.createWindow(null,
                 Window.TITLED | Window.CLOSABLE | Window.MAXIMIZABLE | Window.MINIMIZABLE);
@@ -74,10 +74,14 @@ public class WindowImpl {
         //renderer = new PrismRenderer(view);
         window.setView(view);
 
-        paintThread = new PaintThread(view, scheduler);
-        paintThread.start();
+        rootSurface = new GlassSurface(view, this);
 
-        BufferPool bufferPool = new BufferPool();
+        Renderer<?, ?> renderer = Renderer.create(rootSurface);
+        paintThread = new PaintThread<>(renderer, scheduler);
+        paintThread.start();
+        rootContentRequest = renderer.createRootContentRequest();
+
+        BufferPool bufferPool = new BufferPool(); // TODO ezt nem ide kéne
 
         Widget rootComponent = new Widget() {
 
@@ -89,32 +93,17 @@ public class WindowImpl {
                 w = new Provider<>(BufferPool.class, bufferPool, w);
                 w = new Provider<>(Scheduler.class, scheduler, w);
 
-                DisplayList displayList = new DisplayList(innerSize.get().width, innerSize.get().height);
-
-                Mat4 initialTransform = new Mat4(
-                        2.0 / displayList.viewportWidth, 0, 0, -1,
-                        0, -2.0 / displayList.viewportHeight, 0, 1,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1
-                );
-
-
-                return ExposeRequest.requestSingle(w, rootSurface, result -> {
-
-                /*
-                System.out.println("New render tree. Viewport size: "+innerSize.get());
-                System.out.println(new J2DRenderTreePrinter().toString(rootRenderNode));
-                System.out.println();
-                 */
-
-                    System.out.println(new Node.RenderTreePrinter().toString(result));
-                    result.addToDisplayList(initialTransform, displayList);
-                    currentDisplayList = displayList;
+                return ExposeRequest.requestSingle(w, rootContentRequest, result -> {
+                    currentDisplayList = treeToDisplayList(result);
                     repaint();
 
                     return new SubstitutedWidget() {
                     };
                 });
+            }
+
+            private <N extends Node, D> Object treeToDisplayList(Object result) {
+                return ((Renderer<N, D>) renderer).prepare((N) result);
             }
         };
 
@@ -139,9 +128,9 @@ public class WindowImpl {
         if (currentDisplayList == null)
             return;
 
-        currentDisplayList.renderDoneCallbacks.addAll(executeNextPaintTaskOnPlatformThread);
+        List<Frame.RenderDoneCallback> callbacks = List.copyOf(executeNextPaintTaskOnPlatformThread);
         executeNextPaintTaskOnPlatformThread.clear();
-        scheduler.submitFrame(currentDisplayList);
+        scheduler.submitFrame(new Frame(currentDisplayList, callbacks));
     }
 
     void submitTask(Runnable task) {
@@ -151,8 +140,8 @@ public class WindowImpl {
     /**
      * platform szálból van hívva
      */
-    void onResize(ViewSize viewSize, DisplayList.RenderDoneCallback resizePaintCallback) {
-        if (paintThread.renderer == null) {
+    void onResize(ViewSize viewSize, Frame.RenderDoneCallback resizePaintCallback) {
+        if (paintThread == null) {
             // még csak most nyitódik az ablak
             resizePaintCallback.willNotRender();
             submitTask(() -> {

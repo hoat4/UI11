@@ -2,7 +2,9 @@ package ui11.platform.opengl.peer;
 
 import ui11.Expose;
 import ui11.Widget;
+import ui11.geom.Shape;
 import ui11.geom.Vec2;
+import ui11.graphics.Surface;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
 import ui11.platform.opengl.BufferPool;
@@ -16,16 +18,16 @@ import ui11.text.TextStyle;
 public class GLLinearGradientPeer extends Widget {
 
     private final LinearGradient gradient;
-    private final GLVisualContentRequest surface;
 
+    @Inject private Surface surface;
+    @Inject private GLVisualContentRequest request;
     @Inject private TextStyle textStyle;
     @Inject private BufferPool bufferPool;
 
     @Remember private FillTrianglesWithColorNode node;
 
-    public GLLinearGradientPeer(LinearGradient gradient, GLVisualContentRequest surface) {
+    public GLLinearGradientPeer(LinearGradient gradient) {
         this.gradient = gradient;
-        this.surface = surface;
     }
 
     @Override
@@ -35,9 +37,10 @@ public class GLLinearGradientPeer extends Widget {
 
     @Override
     protected Widget build() {
-        Shape2D shape = surface.shape();
-        if (shape == Shape2D.InfinitePlane.INFINITE_PLANE)
-            return new Expose<>(surface, EmptyNode.INSTANCE);
+        Shape shape2 = surface.layoutShape();
+        if (Shape.degenerateShape().equals(shape2))
+            return new Expose<>(request, EmptyNode.INSTANCE);
+        Shape2D shape = Shape2D.of(shape2, surface.coordinateSpace());
 
         double emSize = textStyle.size();
         double deg = gradient.angleDeg();
@@ -71,7 +74,7 @@ public class GLLinearGradientPeer extends Widget {
         }
 
         TriangleSplitter triangleSplitter = new TriangleSplitter(
-                direction.rotate90CounterClockwise(), lineStarts, colors, buf, surface.renderNodeTranslation());
+                direction.rotate90CounterClockwise(), lineStarts, colors, buf);
         shape.toTriangles(triangleSplitter);
         node.vertices.set(buf.finish());
 
@@ -79,7 +82,7 @@ public class GLLinearGradientPeer extends Widget {
 
         node.shape.set(shape);
 
-        return new Expose<>(surface, node);
+        return new Expose<>(request, node);
     }
 
     private static class TriangleSplitter implements Shape2D.Triangle2DConsumer {
@@ -88,16 +91,14 @@ public class GLLinearGradientPeer extends Widget {
         private final Vec2[] lines;
         private final int[] colors;
         private final BufferPool.GrowableVertexBuffer out;
-        private final Vec2 renderNodeTranslation;
         private int currentColor;
 
         public TriangleSplitter(Vec2 perpendicularDirection, Vec2[] lines, int[] colors,
-                                BufferPool.GrowableVertexBuffer out, Vec2 renderNodeTranslation) {
+                                BufferPool.GrowableVertexBuffer out) {
             this.perpendicularDirection = perpendicularDirection;
             this.lines = lines;
             this.colors = colors;
             this.out = out;
-            this.renderNodeTranslation = renderNodeTranslation;
         }
 
         @Override
@@ -209,11 +210,11 @@ public class GLLinearGradientPeer extends Widget {
 
         private void emitTriangle(Vec2 a, Vec2 b, Vec2 c) {
             out.ensureRemaining(Shaders.SolidPolygonShader.BYTES_PER_VERTEX * 3);
-            out.put(a.plus(renderNodeTranslation));
+            out.put(a);
             out.put(currentColor);
-            out.put(b.plus(renderNodeTranslation));
+            out.put(b);
             out.put(currentColor);
-            out.put(c.plus(renderNodeTranslation));
+            out.put(c);
             out.put(currentColor);
         }
 

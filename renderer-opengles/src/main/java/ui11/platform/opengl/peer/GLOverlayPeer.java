@@ -3,9 +3,9 @@ package ui11.platform.opengl.peer;
 import ui11.Expose;
 import ui11.ExposeRequest;
 import ui11.Widget;
+import ui11.graphics.Surface;
 import ui11.graphics.effect.Overlay;
 import ui11.platform.opengl.GLVisualContentRequest;
-import ui11.platform.opengl.GLVisualContentRequest.ShapeInheritingGLSurface;
 import ui11.platform.opengl.rendertree.EmptyNode;
 import ui11.platform.opengl.rendertree.GLNode;
 import ui11.platform.opengl.rendertree.GroupNode;
@@ -17,9 +17,9 @@ public class GLOverlayPeer extends Widget {
 
     private final Overlay overlay;
 
-    @Inject private GLVisualContentRequest parentSurface;
+    @Inject private Surface surface;
+    @Inject private GLVisualContentRequest parentRequest;
 
-    @Remember private List<GLVisualContentRequest> childSurfaces;
     @Remember private GroupNode groupNode;
 
     public GLOverlayPeer(Overlay overlay) {
@@ -28,24 +28,16 @@ public class GLOverlayPeer extends Widget {
 
     @Override
     protected void initState() {
-        childSurfaces = new ArrayList<>();
         groupNode = new GroupNode();
     }
 
     @Override
     protected Widget build() {
-        for (int i = 0; i < overlay.items().size(); i++) {
-            if (i == childSurfaces.size())
-                childSurfaces.add(new ShapeInheritingGLSurface());
-
-            GLVisualContentRequest surface = childSurfaces.get(i);
-            surface.parent.set(parentSurface);
-        }
-
-        if (childSurfaces.size() > overlay.items().size())
-            childSurfaces.subList(overlay.items().size(), childSurfaces.size()).clear();
-
-        return ExposeRequest.requestMultiple(overlay.items(), childSurfaces, this::doBuild);
+        return ExposeRequest.requestOnMultipleWidgets(
+                overlay.items(),
+                new GLVisualContentRequest(surface),
+                this::doBuild
+        );
     }
 
     private Widget doBuild(List<? extends GLNode> childrenResolutionResults) {
@@ -64,6 +56,6 @@ public class GLOverlayPeer extends Widget {
                 yield groupNode;
             }
         };
-        return new Expose<>(parentSurface, peer);
+        return new Expose<>(parentRequest, peer);
     }
 }

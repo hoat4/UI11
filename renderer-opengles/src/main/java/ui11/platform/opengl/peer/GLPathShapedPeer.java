@@ -22,7 +22,7 @@ public class GLPathShapedPeer extends Widget {
 
     @Inject private Observable<VisualContentRequest> parentSurface;
 
-    @State private ClippedSurface childSurface;
+    @State private ShapedSurface childSurface;
 
     public GLPathShapedPeer(PathShaped pathShaped) {
         this.pathShaped = pathShaped;
@@ -30,7 +30,7 @@ public class GLPathShapedPeer extends Widget {
 
     @Override
     protected void initState() {
-        childSurface = new ClippedSurface();
+        childSurface = new ShapedSurface();
     }
 
     @Override
@@ -40,7 +40,7 @@ public class GLPathShapedPeer extends Widget {
         return new Provider<>(VisualContentRequest.class, childSurface, pathShaped.content());
     }
 
-    private static class ClippedSurface extends GLSurfaceWithOwnShape {
+    private static class ShapedSurface extends GLSurfaceWithOwnShape {
 
         private Path shape;
 

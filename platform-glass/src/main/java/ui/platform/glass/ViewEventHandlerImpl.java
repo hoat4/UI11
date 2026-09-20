@@ -5,7 +5,6 @@ import com.sun.glass.ui.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui.platform.glass.windows.DirectCompositionAPI;
-import ui11.platform.opengl.renderer.displaylist.DisplayList;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +52,7 @@ class ViewEventHandlerImpl extends View.EventHandler {
                 Boolean[] result = {null};
                 if (SchedulerImpl.TRACE_ANIMATION)
                     System.out.println("Resized to " + newWidth + ", " + newHeight);
-                window.onResize(new WindowImpl.ViewSize(newWidth, newHeight), new DisplayList.RenderDoneCallback() {
+                window.onResize(new WindowImpl.ViewSize(newWidth, newHeight), new Frame.RenderDoneCallback() {
                     @Override
                     public void renderFinished() {
                         synchronized (countDownLock) {

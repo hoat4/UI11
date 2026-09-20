@@ -2,7 +2,6 @@ package ui11.renderer.j2d;
 
 import ui11.graphics.VisualContentRequest;
 import ui11.platform.awt.AWTFrameSurface;
-import ui11.renderer.RenderableSurface;
 import ui11.renderer.Renderer;
 import ui11.renderer.j2d.rendertree.J2DNode;
 import ui11.renderer.j2d.rendertree.J2DNode.J2DRenderTreePrinter;
@@ -11,7 +10,7 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
-public class J2DRenderer implements Renderer<J2DNode> {
+public class J2DRenderer implements Renderer<J2DNode, Image> {
 
     private final AWTFrameSurface surface;
 
@@ -21,13 +20,12 @@ public class J2DRenderer implements Renderer<J2DNode> {
     }
 
     @Override
-    public VisualContentRequest<J2DNode> createRootContentRequest(
-            RenderableSurface surface) {
+    public VisualContentRequest<J2DNode> createRootContentRequest() {
         return new J2DVisualContentRequest(surface);
     }
 
     @Override
-    public void render(J2DNode root) {
+    public Image prepare(J2DNode root) {
         if (false) {
             System.out.println();
             System.out.println("Render tree: ");
@@ -39,6 +37,16 @@ public class J2DRenderer implements Renderer<J2DNode> {
         RenderingContext ctx = new RenderingContext(surface.width(), surface.height());
         root.render(ctx);
         BufferedImage image = ctx.finish();
+        return image;
+    }
+
+    @Override
+    public void initializeRenderThreadLocals() {
+        // nop
+    }
+
+    @Override
+    public void render(Image image) {
         // constructor inits Graphics2D renderingHints
 
         Graphics2D g = (Graphics2D) surface.bufferStrategy().getDrawGraphics();

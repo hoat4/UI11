@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 
 // TODO animációhoz kéne valami időt (becsült present time) előállítani az aktuálisan generált frameről.
 //      System.nanoTime vagy egyéb CPU idő nem jó, mert az ingadozik, nem igazodik a display frameratehez.
-public class SchedulerImpl implements Scheduler {
+public class SchedulerImpl<D> implements Scheduler {
 
     static final boolean TRACE_ANIMATION = true;
     private static final Logger logger = LoggerFactory.getLogger(WindowImpl.class);
@@ -24,12 +24,12 @@ public class SchedulerImpl implements Scheduler {
     private final InvalidationPoint animationFrameIP = new InvalidationPoint();
 
     private final Object frameSubmitLock = new Object();
-    private DisplayList submittedFrame;
+    private Frame<D> submittedFrame;
 
     /**
      * csak UI szálból szabad meghívni
      */
-    public void submitFrame(DisplayList displayList) {
+    void submitFrame(Frame<D> displayList) {
         synchronized (frameSubmitLock) {
             if (submittedFrame != null) {
                 displayList.renderDoneCallbacks.addAll(0, submittedFrame.renderDoneCallbacks);
@@ -43,8 +43,8 @@ public class SchedulerImpl implements Scheduler {
     /**
      * paint szálból van meghívva
      */
-    public DisplayList takeNextSubmittedFrame() throws InterruptedException {
-        DisplayList frame;
+    Frame<D> takeNextSubmittedFrame() throws InterruptedException {
+        Frame<D> frame;
         synchronized (frameSubmitLock) {
             while (submittedFrame == null)
                 frameSubmitLock.wait();

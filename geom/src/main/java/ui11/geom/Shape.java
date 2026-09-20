@@ -3,7 +3,7 @@ package ui11.geom;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-public sealed abstract class Shape {
+public abstract class Shape {
 
     public abstract boolean contains(Location point);
 
