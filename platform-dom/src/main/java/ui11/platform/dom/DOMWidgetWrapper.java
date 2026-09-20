@@ -2,11 +2,14 @@ package ui11.platform.dom;
 
 import ui11.Widget;
 import ui11.geom.Location.CoordinateSpace;
+import ui11.geom.Shape;
 import ui11.geom.Size;
+import ui11.graphics.Surface;
 import ui11.graphics.VisualContentRequest;
 import ui11.provide.Provider;
 import ui11.text.TextStyle;
 
+// TODO ezt DOMPeerCreationRequestnek valahogy magától létre kéne hoznia
 public class DOMWidgetWrapper extends Widget {
 
     private final Widget w;
@@ -32,38 +35,54 @@ public class DOMWidgetWrapper extends Widget {
         InheritedTextStyle inheritedTextStyle = new InheritedTextStyle(this.inheritedTextStyle);
         // InheritedTextStyle-t és CumulatingPropListet majd össze lehetne vonni
         return new Provider<>(CumulatingPropList.class, CumulatingPropList.CLEAR,
-                new Provider<>(VisualContentRequest.class, proxySurface,
-                        new Provider<>(InheritedTextStyle.class, inheritedTextStyle,
-                                w
-                        )
+                new Provider<>(InheritedTextStyle.class, inheritedTextStyle,
+                        w
                 )
         );
     }
 
-    static class ProxySurface extends VisualContentRequest<DOMElementHolder> {
+    static class ProxySurface implements Surface {
 
-        VisualContentRequest s;
+        DOMSurface s;
 
-        protected ProxySurface() {
-            super(DOMElementHolder.class);
+        @Override
+        public boolean hasVisiblePart() {
+            return s.hasVisiblePart();
+        }
+
+        @Override
+        public double devicePixelRatio() {
+            return s.devicePixelRatio();
+        }
+
+        @Override
+        public Shape inputShape() {
+            return s.inputShape();
+        }
+
+        @Override
+        public Shape clipShape() {
+            return s.clipShape();
+        }
+
+        @Override
+        public Shape layoutShape() {
+            return s.layoutShape();
         }
 
         @Override
         public Size size() {
-            if (s == null)
-                throw new IllegalStateException();
             return s.size();
         }
 
         @Override
         public CoordinateSpace coordinateSpace() {
-            if (s == null)
-                throw new IllegalStateException();
             return s.coordinateSpace();
         }
 
-        // TODO equals/hashCode?
+// TODO equals/hashCode?
     }
 
-    record InheritedTextStyle(TextStyle ts) {}
+    record InheritedTextStyle(TextStyle ts) {
+    }
 }

@@ -7,7 +7,7 @@ import ui11.Widget;
 import ui11.color.Color;
 import ui11.color.RGBColor;
 import ui11.geom.Length;
-import ui11.graphics.VisualContentRequest;
+import ui11.graphics.Surface;
 import ui11.layout.Insets;
 import ui11.platform.dom.DOMWidgetWrapper.InheritedTextStyle;
 import ui11.platform.dom.DOMWidgetWrapper.ProxySurface;
@@ -32,7 +32,8 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     @Inject private CumulatingPropList cumulativePropList;
     @Inject private InheritedTextStyle lastAppliedTextStyle;
     @Inject private TextStyle textStyle;
-    @Inject private VisualContentRequest inheritedSurface;
+    @Inject private Surface inheritedSurface;
+    @Inject private DOMPeerCreationRequest inheritedPeerCreationRequest;
 
     @Remember private DOMSurface elementHolder;
 
@@ -122,7 +123,7 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected Widget wrapResult(DOMElementHolder h) {
-        return new Expose<>(inheritedSurface, h);
+        return new Expose<>(inheritedPeerCreationRequest, h);
     }
 
     protected final DOMEnvironment env() {

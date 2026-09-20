@@ -6,8 +6,10 @@ import org.teavm.jso.dom.html.HTMLElement;
 import ui11.control.Tooltip;
 import ui11.geom.Location.CoordinateSpace;
 import ui11.geom.Mat4;
+import ui11.geom.Shape;
 import ui11.geom.Size;
 import ui11.geom.Vec2;
+import ui11.graphics.Surface;
 import ui11.graphics.VisualContentRequest;
 import ui11.input.focus.FocusListener;
 import ui11.input.pointer.WithCursor.Cursor;
@@ -22,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class DOMSurface extends VisualContentRequest<DOMElementHolder> {
+public class DOMSurface implements Surface {
 
     private static final String CLASS_WRAPPED_TEXT = "tw";
     private static final String CLASS_NON_WRAPPED_TEXT = "w";
@@ -36,12 +38,26 @@ public class DOMSurface extends VisualContentRequest<DOMElementHolder> {
     List<PointerRegion> pointerListeners = List.of();
 
     public DOMSurface(DOMEnvironment env, HTMLElement element) {
-        super(DOMElementHolder.class);
         this.env = env;
         this.element = element;
 
         env.window.setData(this.element, this);
         // htmlElement.setAttribute("data-re", toString());
+    }
+
+    @Override
+    public Shape layoutShape() {
+        throw new RuntimeException("TODO");
+    }
+
+    @Override
+    public Shape clipShape() {
+        throw new RuntimeException("TODO");
+    }
+
+    @Override
+    public Shape inputShape() {
+        throw new RuntimeException("TODO");
     }
 
     @Override
@@ -61,6 +77,16 @@ public class DOMSurface extends VisualContentRequest<DOMElementHolder> {
             throw new RuntimeException("TODO observer size changes");
         DOMRect rect = (DOMRect) element.getBoundingClientRect();
         return new Size(rect.getWidth(), rect.getHeight());
+    }
+
+    @Override
+    public double devicePixelRatio() {
+        return env.window.getWindow().getDevicePixelRatio();
+    }
+
+    @Override
+    public boolean hasVisiblePart() {
+        throw new RuntimeException("TODO");
     }
 
     void update(ProxySurface proxySurface, CumulatingPropList cumulativePropList,
