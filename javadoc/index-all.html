@@ -52,12 +52,14 @@ loadScripts(document, 'script');</script>
 <a href="#I:B">B</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:D">D</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:F">F</a>&nbsp;<a href="#I:H">H</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:M">M</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:P">P</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<a href="#I:U">U</a>&nbsp;<a href="#I:V">V</a>&nbsp;<a href="#I:W">W</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a>
 <h2 class="title" id="I:B">B</h2>
 <dl class="index">
+<dt><a href="ui11/Expose.html#build()" class="member-name-link">build()</a> - Method in class ui11.<a href="ui11/Expose.html" title="class in ui11">Expose</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="ui11/provide/Provider.html#build()" class="member-name-link">build()</a> - Method in class ui11.provide.<a href="ui11/provide/Provider.html" title="class in ui11.provide">Provider</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/SubstitutedWidget.html#build()" class="member-name-link">build()</a> - Method in class ui11.<a href="ui11/SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a></dt>
 <dd>
 <div class="block">Asks the available <a href="ui11/ResolverProvider.html" title="interface in ui11">resolvers</a> to create a peer for each
- <a href="ui11/PeerRequest.html" title="class in ui11">request</a>.</div>
+ <a href="ui11/ExposeRequest.html" title="class in ui11">request</a>.</div>
 </dd>
 <dt><a href="ui11/Widget.html#build()" class="member-name-link">build()</a> - Method in class ui11.<a href="ui11/Widget.html" title="class in ui11">Widget</a></dt>
 <dd>
@@ -72,14 +74,10 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/WidgetTree.html#create(ui11.Widget,java.util.concurrent.Executor)" class="member-name-link">create(Widget, Executor)</a> - Static method in class ui11.<a href="ui11/WidgetTree.html" title="class in ui11">WidgetTree</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#createResponse(P)" class="member-name-link">createResponse(P)</a> - Method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
-<dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#createResponse(P,ui11.Widget)" class="member-name-link">createResponse(P, Widget)</a> - Method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
-<dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:D">D</h2>
 <dl class="index">
-<dt><a href="ui11/PeerRequest.html#defaultValue()" class="member-name-link">defaultValue()</a> - Method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#defaultValue()" class="member-name-link">defaultValue()</a> - Method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>
 <div class="block">Ha nem <code>null</code>, akkor van defaultja, ekkor az első <a href="ui11/SubstitutedWidget.html" title="class in ui11">SubstitutedWidgetnél</a>
  meg fog állni a keresése.</div>
@@ -99,6 +97,22 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="ui11/ErrorWidget.html#%3Cinit%3E(java.lang.Throwable)" class="member-name-link">ErrorWidget(Throwable)</a> - Constructor for class ui11.<a href="ui11/ErrorWidget.html" title="class in ui11">ErrorWidget</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="ui11/Expose.html" class="type-name-link" title="class in ui11">Expose&lt;P&gt;</a> - Class in <a href="ui11/package-summary.html">ui11</a></dt>
+<dd>
+<div class="block">A special widget which can be used to expose a value to ancestors.</div>
+</dd>
+<dt><a href="ui11/Expose.html#%3Cinit%3E(ui11.ExposeRequest,P)" class="member-name-link">Expose(ExposeRequest&lt;P&gt;, P)</a> - Constructor for class ui11.<a href="ui11/Expose.html" title="class in ui11">Expose</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="ui11/Expose.html#%3Cinit%3E(ui11.ExposeRequest,P,ui11.Widget)" class="member-name-link">Expose(ExposeRequest&lt;P&gt;, P, Widget)</a> - Constructor for class ui11.<a href="ui11/Expose.html" title="class in ui11">Expose</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="ui11/ExposeRequest.html" class="type-name-link" title="class in ui11">ExposeRequest&lt;P&gt;</a> - Class in <a href="ui11/package-summary.html">ui11</a></dt>
+<dd>
+<div class="block">Describes what information to query about a widget (or multiple widgets).</div>
+</dd>
+<dt><a href="ui11/ExposeRequest.html#%3Cinit%3E(java.lang.Class)" class="member-name-link">ExposeRequest(Class&lt;P&gt;)</a> - Constructor for class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="ui11/ExposeRequest.AtMostOnce.html" class="type-name-link" title="annotation interface in ui11">ExposeRequest.AtMostOnce</a> - Annotation Interface in <a href="ui11/package-summary.html">ui11</a></dt>
+<dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:F">F</h2>
 <dl class="index">
@@ -108,6 +122,8 @@ loadScripts(document, 'script');</script>
  <a href="ui11/ResolverProvider.html" title="interface in ui11">ResolverProviders</a> can't provide a resolver.</div>
 </dd>
 <dt><a href="ui11/SubstitutedWidget.html#forSubstitution()" class="member-name-link">forSubstitution()</a> - Method in class ui11.<a href="ui11/SubstitutedWidget.html" title="class in ui11">SubstitutedWidget</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="ui11/provide/FromPeerRequests.html" class="type-name-link" title="annotation interface in ui11.provide">FromPeerRequests</a> - Annotation Interface in <a href="ui11/provide/package-summary.html">ui11.provide</a></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:H">H</h2>
@@ -158,13 +174,7 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:P">P</h2>
 <dl class="index">
-<dt><a href="ui11/PeerRequest.html" class="type-name-link" title="class in ui11">PeerRequest&lt;P&gt;</a> - Class in <a href="ui11/package-summary.html">ui11</a></dt>
-<dd>
-<div class="block">Describes what information to query about a widget (or multiple widgets).</div>
-</dd>
-<dt><a href="ui11/PeerRequest.html#%3Cinit%3E(java.lang.Class)" class="member-name-link">PeerRequest(Class&lt;P&gt;)</a> - Constructor for class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
-<dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#peerType()" class="member-name-link">peerType()</a> - Method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#peerType()" class="member-name-link">peerType()</a> - Method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/provide/Provide.html" class="type-name-link" title="annotation interface in ui11.provide">Provide</a> - Annotation Interface in <a href="ui11/provide/package-summary.html">ui11.provide</a></dt>
 <dd>
@@ -187,31 +197,31 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Adds a new resolver to this resolver registry.</div>
 </dd>
-<dt><a href="ui11/ResolverRegistry.html#registerForContextType(java.lang.Class,java.lang.Class,java.util.function.Function)" class="member-name-link">registerForContextType(Class&lt;? extends PeerRequest&lt;?&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
+<dt><a href="ui11/ResolverRegistry.html#registerForContextType(java.lang.Class,java.lang.Class,java.util.function.Function)" class="member-name-link">registerForContextType(Class&lt;? extends ExposeRequest&lt;?&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/ResolverRegistry.html#registerForContextTypes(java.util.Set,java.lang.Class,java.util.function.Function)" class="member-name-link">registerForContextTypes(Set&lt;Class&lt;? extends PeerRequest&lt;?&gt;&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
+<dt><a href="ui11/ResolverRegistry.html#registerForContextTypes(java.util.Set,java.lang.Class,java.util.function.Function)" class="member-name-link">registerForContextTypes(Set&lt;Class&lt;? extends ExposeRequest&lt;?&gt;&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/ResolverRegistry.html#registerPeerResolver(java.lang.Class,java.lang.Class,java.util.function.Function)" class="member-name-link">registerPeerResolver(Class&lt;? extends PeerRequest&lt;?&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
+<dt><a href="ui11/ResolverRegistry.html#registerPeerResolver(java.lang.Class,java.lang.Class,java.util.function.Function)" class="member-name-link">registerPeerResolver(Class&lt;? extends ExposeRequest&lt;?&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/ResolverRegistry.html#registerPeerResolver(java.util.Set,java.lang.Class,java.util.function.Function)" class="member-name-link">registerPeerResolver(Set&lt;Class&lt;? extends PeerRequest&lt;?&gt;&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
+<dt><a href="ui11/ResolverRegistry.html#registerPeerResolver(java.util.Set,java.lang.Class,java.util.function.Function)" class="member-name-link">registerPeerResolver(Set&lt;Class&lt;? extends ExposeRequest&lt;?&gt;&gt;&gt;, Class&lt;SW&gt;, Function&lt;SW, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/ResolverRegistry.html#registerTransformer(java.lang.Class,java.util.function.BiFunction)" class="member-name-link">registerTransformer(Class&lt;SW&gt;, BiFunction&lt;SW, UnaryOperator&lt;Widget&gt;, Widget&gt;)</a> - Method in class ui11.<a href="ui11/ResolverRegistry.html" title="class in ui11">ResolverRegistry</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#requestingCollector(ui11.PeerRequest,java.util.function.Function)" class="member-name-link">requestingCollector(PeerRequest&lt;P&gt;, Function&lt;Stream&lt;P&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#requestingCollector(ui11.ExposeRequest,java.util.function.Function)" class="member-name-link">requestingCollector(ExposeRequest&lt;P&gt;, Function&lt;Stream&lt;P&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#requestMultiple(java.util.List,java.util.List,java.util.function.Function)" class="member-name-link">requestMultiple(List&lt;? extends Widget&gt;, List&lt;? extends PeerRequest&lt;P&gt;&gt;, Function&lt;List&lt;P&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#requestMultiple(java.util.List,java.util.List,java.util.function.Function)" class="member-name-link">requestMultiple(List&lt;? extends Widget&gt;, List&lt;? extends ExposeRequest&lt;P&gt;&gt;, Function&lt;List&lt;P&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#requestMultiple(java.util.List,java.util.Set,java.util.function.Function)" class="member-name-link">requestMultiple(List&lt;? extends Widget&gt;, Set&lt;PeerRequest&lt;?&gt;&gt;, Function&lt;Map&lt;PeerRequest&lt;?&gt;, ? extends List&lt;?&gt;&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#requestMultiple(java.util.List,java.util.Set,java.util.function.Function)" class="member-name-link">requestMultiple(List&lt;? extends Widget&gt;, Set&lt;ExposeRequest&lt;?&gt;&gt;, Function&lt;Map&lt;ExposeRequest&lt;?&gt;, ? extends List&lt;?&gt;&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#requestMultiple(java.util.Map,java.util.Map,java.util.function.Function)" class="member-name-link">requestMultiple(Map&lt;K, ? extends Widget&gt;, Map&lt;K, Set&lt;PeerRequest&lt;?&gt;&gt;&gt;, Function&lt;Map&lt;PeerRequest&lt;?&gt;, Map&lt;K, ?&gt;&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#requestMultiple(java.util.Map,java.util.Map,java.util.function.Function)" class="member-name-link">requestMultiple(Map&lt;K, ? extends Widget&gt;, Map&lt;K, Set&lt;ExposeRequest&lt;?&gt;&gt;&gt;, Function&lt;Map&lt;ExposeRequest&lt;?&gt;, Map&lt;K, ?&gt;&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#requestOnMultipleWidgets(java.util.List,ui11.PeerRequest,java.util.function.Function)" class="member-name-link">requestOnMultipleWidgets(List&lt;? extends Widget&gt;, PeerRequest&lt;P&gt;, Function&lt;List&lt;P&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#requestOnMultipleWidgets(java.util.List,ui11.ExposeRequest,java.util.function.Function)" class="member-name-link">requestOnMultipleWidgets(List&lt;? extends Widget&gt;, ExposeRequest&lt;P&gt;, Function&lt;List&lt;P&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#requestOnMultipleWidgets(java.util.Map,ui11.PeerRequest,java.util.function.Function)" class="member-name-link">requestOnMultipleWidgets(Map&lt;K, ? extends Widget&gt;, PeerRequest&lt;P&gt;, Function&lt;Map&lt;K, P&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#requestOnMultipleWidgets(java.util.Map,ui11.ExposeRequest,java.util.function.Function)" class="member-name-link">requestOnMultipleWidgets(Map&lt;K, ? extends Widget&gt;, ExposeRequest&lt;P&gt;, Function&lt;Map&lt;K, P&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#requestOnSingleWidget(ui11.Widget,java.util.Set,java.util.function.Function)" class="member-name-link">requestOnSingleWidget(Widget, Set&lt;REQ&gt;, Function&lt;Map&lt;REQ, RES&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#requestOnSingleWidget(ui11.Widget,java.util.Set,java.util.function.Function)" class="member-name-link">requestOnSingleWidget(Widget, Set&lt;REQ&gt;, Function&lt;Map&lt;REQ, RES&gt;, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="ui11/PeerRequest.html#requestSingle(ui11.Widget,ui11.PeerRequest,java.util.function.Function)" class="member-name-link">requestSingle(Widget, PeerRequest&lt;P&gt;, Function&lt;P, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/PeerRequest.html" title="class in ui11">PeerRequest</a></dt>
+<dt><a href="ui11/ExposeRequest.html#requestSingle(ui11.Widget,ui11.ExposeRequest,java.util.function.Function)" class="member-name-link">requestSingle(Widget, ExposeRequest&lt;P&gt;, Function&lt;P, Widget&gt;)</a> - Static method in class ui11.<a href="ui11/ExposeRequest.html" title="class in ui11">ExposeRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="ui11/Widget.Inject.html#required()" class="member-name-link">required()</a> - Element in annotation interface ui11.<a href="ui11/Widget.Inject.html" title="annotation interface in ui11">Widget.Inject</a></dt>
 <dd>&nbsp;</dd>
