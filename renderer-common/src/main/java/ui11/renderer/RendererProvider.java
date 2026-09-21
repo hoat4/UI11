@@ -5,5 +5,5 @@ import org.jspecify.annotations.Nullable;
 public interface RendererProvider {
 
     @Nullable
-    Renderer<?, ?> tryProvide(RenderableSurface surface);
+    Renderer<?> tryProvide(RenderableSurface surface);
 }

@@ -2,24 +2,18 @@ package ui.platform.glass;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui11.geom.Mat4;
-import ui11.geom.Vec2;
-import ui11.color.Color;
-import ui11.platform.opengl.BufferPool;
-import ui11.platform.opengl.renderer.Shaders;
-import ui11.platform.opengl.renderer.displaylist.DisplayList;
-import ui11.platform.opengl.renderer.displaylist.SolidTrianglesItem;
 import ui11.renderer.Renderer;
+import ui11.renderer.layer.Layer;
 
-public class PaintThread<D> extends Thread {
+public class PaintThread<L extends Layer> extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(PaintThread.class);
 
     private final SchedulerImpl scheduler;
-    private final Renderer<?, D> renderer;
+    private final Renderer<L> renderer;
     private long traceBegin;
 
-    public PaintThread(Renderer<?, D> renderer, SchedulerImpl scheduler) {
+    public PaintThread(Renderer<L> renderer, SchedulerImpl scheduler) {
         this.renderer = renderer;
         this.scheduler = scheduler;
     }
@@ -33,11 +27,11 @@ public class PaintThread<D> extends Thread {
             traceBegin = System.nanoTime();
 
             while (true) {
-                Frame<D> frame = scheduler.takeNextSubmittedFrame();
+                Frame<L> frame = scheduler.takeNextSubmittedFrame();
 
                 trace("Run render task: " + frame);
                 //addDebugItem(task);
-                renderer.render(frame.displayList);
+                renderer.render(frame.rootLayer, frame.viewportWidth, frame.viewportHeight);
 
                 // ezt lehet hogy a swapBuffers előtt kéne
                 // TODO ha megváltozik közben a view méret, akkor nem is kéne várakozni (illetve a renderer.run-t is
@@ -60,6 +54,7 @@ public class PaintThread<D> extends Thread {
         return (System.nanoTime() - begin) / 1000000;
     }
 
+    /*
     private void addDebugItem(DisplayList displayList) {
         BufferPool.GrowableVertexBuffer b = new BufferPool().allocate(12 * Shaders.SolidPolygonShader.BYTES_PER_VERTEX);
         b.put(new Vec2(-1, -1));
@@ -90,10 +85,11 @@ public class PaintThread<D> extends Thread {
         b.put(Color.RED.toRGBA(b.order()));
         b.put(new Vec2(-1, 1));
         b.put(Color.RED.toRGBA(b.order()));
-         */
+         *
 
         SolidTrianglesItem debugItem = new SolidTrianglesItem(
                 Mat4.IDENTITY, b.finish());
         displayList.items.add(debugItem);
     }
+     */
 }

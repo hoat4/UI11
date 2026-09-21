@@ -3,4 +3,6 @@ dependencies {
     api project(":observable") // ListenerInputNode
     api project(":input") // ListenerInputNode
     api project(":graphics")
+
+    implementation project(":text") // TextStyle / font size miatt
 }

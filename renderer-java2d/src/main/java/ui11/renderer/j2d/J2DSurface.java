@@ -5,7 +5,7 @@ import ui11.geom.*;
 import ui11.geom.Shape;
 import ui11.graphics.Surface;
 import ui11.observable.MutableObservable;
-import ui11.renderer.Subsurface;
+import ui11.renderer.subsurface.Subsurface;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;

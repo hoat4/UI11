@@ -10,14 +10,11 @@ import ui11.Widget;
 import ui11.WidgetTree;
 import ui11.animation.Scheduler;
 import ui11.color.Color;
-import ui11.geom.Mat4;
-import ui11.graphics.VisualContentRequest;
 import ui11.observable.MutableObservable;
-import ui11.platform.opengl.BufferPool;
-import ui11.platform.opengl.renderer.displaylist.DisplayList;
 import ui11.provide.Provider;
-import ui11.renderer.Node;
 import ui11.renderer.Renderer;
+import ui11.renderer.layer.Item;
+import ui11.renderer.layer.Layer;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 
@@ -49,13 +46,12 @@ public class WindowImpl {
      */
     private final List<Frame.RenderDoneCallback> executeNextPaintTaskOnPlatformThread = new ArrayList<>();
 
-    Object currentDisplayList;
-
     final MutableObservable<ViewSize> innerSize = MutableObservable.withInitial(new ViewSize(300, 300));
     private final GlassSurface rootSurface;
 
     private final CompositorTimingThread compositionTimingThread;
-    private final VisualContentRequest<?> rootContentRequest;
+    private final Item.ItemRequest rootContentRequest;
+    private final Layer rootLayer;
 
     public WindowImpl(Widget rootWidget) {
         this.rootWidget = rootWidget;
@@ -76,12 +72,11 @@ public class WindowImpl {
 
         rootSurface = new GlassSurface(view, this);
 
-        Renderer<?, ?> renderer = Renderer.create(rootSurface);
+        Renderer<?> renderer = Renderer.create(rootSurface);
         paintThread = new PaintThread<>(renderer, scheduler);
         paintThread.start();
-        rootContentRequest = renderer.createRootContentRequest();
-
-        BufferPool bufferPool = new BufferPool(); // TODO ezt nem ide kéne
+        rootContentRequest = new Item.ItemRequest(rootSurface);
+        rootLayer = renderer.createLayer(null);
 
         Widget rootComponent = new Widget() {
 
@@ -90,20 +85,16 @@ public class WindowImpl {
                 Widget w = rootWidget;
 
                 w = new Provider<>(TextStyle.class, DEFAULT_TEXT_STYLE, w);
-                w = new Provider<>(BufferPool.class, bufferPool, w);
+                w = new Provider<>(Renderer.class, renderer, w);
                 w = new Provider<>(Scheduler.class, scheduler, w);
 
                 return ExposeRequest.requestSingle(w, rootContentRequest, result -> {
-                    currentDisplayList = treeToDisplayList(result);
+                    rootLayer.setContent(result);
                     repaint();
 
                     return new SubstitutedWidget() {
                     };
                 });
-            }
-
-            private <N extends Node, D> Object treeToDisplayList(Object result) {
-                return ((Renderer<N, D>) renderer).prepare((N) result);
             }
         };
 
@@ -125,12 +116,9 @@ public class WindowImpl {
     }
 
     public void repaint() {
-        if (currentDisplayList == null)
-            return;
-
         List<Frame.RenderDoneCallback> callbacks = List.copyOf(executeNextPaintTaskOnPlatformThread);
         executeNextPaintTaskOnPlatformThread.clear();
-        scheduler.submitFrame(new Frame(currentDisplayList, callbacks));
+        scheduler.submitFrame(new Frame(rootLayer, callbacks, rootSurface.width(), rootSurface.height()));
     }
 
     void submitTask(Runnable task) {

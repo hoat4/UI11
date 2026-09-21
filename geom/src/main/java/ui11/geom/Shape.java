@@ -83,6 +83,11 @@ public abstract class Shape {
 
         @Override
         public boolean equals(Object obj) {
+            if (!(obj instanceof Shape shape))
+                return false;
+            Rect otherRect = shape.asRect(coordinateSpace);
+            if (otherRect != null)
+                return rect.equals(otherRect);
             throw new RuntimeException("TODO");
         }
 
