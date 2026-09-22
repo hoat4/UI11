@@ -63,6 +63,7 @@ public record Path(List<PathElement> items) {
     }
 
     public Path transform(Mat4 transformation) {
+        // TODO ha transformation nagyjából identity, akkor this-t kéne returnülni
         return transform(transformation::transform);
     }
 

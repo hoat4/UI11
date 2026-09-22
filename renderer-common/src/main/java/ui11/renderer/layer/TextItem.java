@@ -1,13 +1,14 @@
 package ui11.renderer.layer;
 
 import ui11.color.Color;
-import ui11.geom.Shape;
+import ui11.geom.Location;
+import ui11.geom.Vec2;
+import ui11.renderer.TextRenderer;
 
 import java.util.Collection;
 import java.util.List;
 
-public record SolidFillShapeItem(Shape shape, Color color) implements Item {
-
+public record TextItem(TextRenderer.TextLayout text, Location.CoordinateSpace origin) implements Item {
     @Override
     public Collection<? extends Layer> referredSublayers() {
         return List.of();
@@ -15,6 +16,6 @@ public record SolidFillShapeItem(Shape shape, Color color) implements Item {
 
     @Override
     public void visit(Layer.LayerUpdater layerUpdater) {
-        layerUpdater.fill(shape, color);
+        layerUpdater.text(text, origin);
     }
 }

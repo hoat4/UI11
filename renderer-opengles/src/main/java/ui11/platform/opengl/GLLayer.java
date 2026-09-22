@@ -2,6 +2,7 @@ package ui11.platform.opengl;
 
 import ui11.geom.Location;
 import ui11.geom.Mat4;
+import ui11.observable.MutableObservable;
 import ui11.renderer.layer.Layer;
 
 import static org.lwjgl.opengles.GLES20.*;
@@ -17,8 +18,7 @@ public class GLLayer extends Layer {
     private final BufferPool bufferPool;
     private final Location.CoordinateSpace coordinateSpace;
 
-    // TODO content módosításakor új render
-    private BufferPool.ReleaseableBuffer content;
+    private final MutableObservable<BufferPool.ReleaseableBuffer> content = MutableObservable.ofNullable();
 
     public GLLayer(BufferPool bufferPool, Location.CoordinateSpace coordinateSpace) {
         this.bufferPool = bufferPool;
@@ -35,14 +35,14 @@ public class GLLayer extends Layer {
     }
 
     public void setContent(BufferPool.ReleaseableBuffer content) {
-        this.content = content;
+        this.content.set(content);
     }
 
     public void render(RenderingContext context) {
-        if (content == null)
+        BufferPool.ReleaseableBuffer buffer = this.content.get();
+        if (buffer == null)
             throw new IllegalStateException();
 
-        BufferPool.ReleaseableBuffer buffer = this.content;
         Mat4 transformMat = context.ndcCoordinateSpace.transformationTo(this.coordinateSpace);
 
         Shaders.SolidPolygonShader shader = context.shaders.solidPolygonShader;

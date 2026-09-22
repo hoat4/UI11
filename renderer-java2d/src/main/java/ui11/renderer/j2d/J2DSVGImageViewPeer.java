@@ -1,4 +1,4 @@
-package ui11.renderer.j2d.peer;
+package ui11.renderer.j2d;
 
 import com.github.weisj.jsvg.SVGDocument;
 import com.github.weisj.jsvg.parser.SVGLoader;
@@ -12,14 +12,14 @@ import ui11.geom.Size;
 import ui11.graphics.Surface;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.media.SVGImageView;
-import ui11.renderer.j2d.J2DVisualContentRequest;
-import ui11.renderer.j2d.rendertree.SVGDocumentNode;
+import ui11.renderer.layer.Item;
 import ui11.task.BackgroundTask;
 import ui11.task.TaskStatus;
 import ui11.text.Text;
 import ui11.text.TextStyle;
 import ui11.window.Shell.URLResolver;
 
+import java.awt.*;
 import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.Callable;
@@ -30,22 +30,17 @@ public class J2DSVGImageViewPeer extends Widget {
 
     private final SVGImageView svgImageView;
 
-    @Inject private J2DVisualContentRequest request;
+    @Inject(required = false) private Item.ItemRequest request;
     @Inject private Surface surface;
     @Inject private TextStyle textStyle;
     @Inject(required = false) private URLResolver urlResolver;
     @Inject private BoxLayoutResult.SizeRequest[] sizeRequests;
 
-    @Remember private SVGDocumentNode node;
     @Remember private TextStyle prevTextStyle;
+    @Remember private Font awtFont;
 
     public J2DSVGImageViewPeer(SVGImageView svgImageView) {
         this.svgImageView = svgImageView;
-    }
-
-    @Override
-    protected void initState() {
-        node = new SVGDocumentNode();
     }
 
     @Override
@@ -79,22 +74,32 @@ public class J2DSVGImageViewPeer extends Widget {
     }
 
     private @NonNull Widget displayLoadedDocument(SVGDocument loadedDocument) {
+        if (surface == null && sizeRequests.length == 0)
+            throw new RuntimeException("No surface and no size requests");
+
         if (!textStyle.equals(prevTextStyle)) {
-            node.font.set(J2DTextPeer.awtFont(textStyle));
+            awtFont = J2DTextLayoutCalculator.awtFont(textStyle);
             prevTextStyle = textStyle;
         }
 
-        node.svgDocument.set(loadedDocument);
-        Size size = surface.size();
-        node.size.set(size);
         FloatSize docSize = loadedDocument.size();
-        Widget result = new Expose<>(request, node);
+        Widget result;
+        if (surface == null) {
+            result = null;
+        } else {
+            Size size = surface.size();
+            result = new Expose<>(request, new SVGItem(loadedDocument, awtFont, size, surface.coordinateSpace()));
+        }
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             // TODO constraintset figyelembe kéne venni
             BoxLayoutResult.OfChosenSize chosenSize =
                     new BoxLayoutResult.OfChosenSize(new Size(docSize.width, docSize.height));
-            result = new Expose<>(sizeRequest, chosenSize, result);
+            if (result == null)
+                result = new Expose<>(sizeRequest, chosenSize);
+            else
+                result = new Expose<>(sizeRequest, chosenSize, result);
         }
+        assert result != null;
         return result;
     }
 

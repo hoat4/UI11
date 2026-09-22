@@ -25,8 +25,11 @@ import ui11.provide.Provider;
 import ui11.renderer.Node;
 import ui11.renderer.Renderer;
 import ui11.renderer.RendererProvider;
+import ui11.renderer.TextRenderer;
 import ui11.renderer.input.PickContext;
 import ui11.renderer.input.PickContext.PickStackItem;
+import ui11.renderer.layer.Item;
+import ui11.renderer.layer.Layer;
 import ui11.text.TextAlign;
 import ui11.text.TextStyle;
 import ui11.text.TextStyle.FontStyle;
@@ -49,11 +52,11 @@ public class AWTWindow {
     private final InvalidationPoint repaintInvalidationPoint = new InvalidationPoint();
     private final InvalidationPoint sizeInvalidationPoint = new InvalidationPoint();
 
-    private final Renderer<?, ?> renderer;
+    private final Renderer<?> renderer;
 
     private final AWTFrameSurface surface;
-    private final VisualContentRequest<? extends Node> rootContentRequest;
-    private final MutableObservable<? extends Node> rootNodeHolder = MutableObservable.ofNullable();
+    private final Item.ItemRequest rootContentRequest;
+    private final Layer rootLayer;
 
     private PointerListener currentMousePress;
 
@@ -74,7 +77,8 @@ public class AWTWindow {
 
         surface = new AWTFrameSurface(frame, frame.getBufferStrategy());
         renderer = Renderer.create(surface);
-        rootContentRequest = renderer.createRootContentRequest();
+        rootContentRequest = new Item.ItemRequest(surface);
+        rootLayer = renderer.createLayer(null);
     }
 
     class Root extends Widget {
@@ -95,15 +99,16 @@ public class AWTWindow {
             Widget content = new Provider<>(TextStyle.class, rootTextStyle, AWTWindow.this.content);
             content = new Provider<>(AWTWindow.class, AWTWindow.this, content);
             content = new Provider<>(Shell.class, AWTDesktopProvider.DEFAULT_SHELL, content);
+            content = new Provider<>(Renderer.class, renderer, content);
+            if (renderer instanceof TextRenderer textRenderer) // TODO
+                content = new Provider<>(TextRenderer.class, textRenderer, content);
+
             // TODO mi legyen ha a root widget peerjét nem sikerül létrehozni?
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
             return ExposeRequest.requestSingle(content, rootContentRequest, result -> {
-                @SuppressWarnings("unchecked")
-                MutableObservable<Node> rootNodeHolderCasted = (MutableObservable<Node>) rootNodeHolder;
-                rootNodeHolderCasted.set(result);
-
+                rootLayer.setContent(result);
                 // Repainter subscribes to rootNodeHolder, so it will be notified about a root node change
 
                 if (!frame.isVisible()) // TODO onResume kéne, csak az túl korán van
@@ -146,13 +151,8 @@ public class AWTWindow {
 
     private void redraw() {
         @SuppressWarnings("unchecked")
-        Renderer<Node, ?> rendererCasted = (Renderer<Node, ?>) renderer;
-        doRedraw(rendererCasted);
-    }
-
-    private <D> void doRedraw(Renderer<Node, D> rendererCasted) {
-        D displayList = rendererCasted.prepare(rootNodeHolder.get());
-        rendererCasted.render(displayList);
+        Renderer<Layer> rendererCasted = (Renderer<Layer>) renderer;
+        rendererCasted.render(rootLayer, surface.width(), surface.height());
     }
 
     private void onMouseMove(Vec2 point) {
@@ -163,7 +163,7 @@ public class AWTWindow {
         AWTMouse.INSTANCE.location.set(new Location(surface.coordinateSpace(), point));
 
         PickContext pickContext = new PickContext();
-        rootNodeHolder.get().pick(pickContext, point.withZW(0, 1));
+        rootLayer.pick(pickContext, point.withZW(0, 1));
 
         List<PickStackItem> result = pickContext.result();
         if (result == null)
@@ -214,7 +214,7 @@ public class AWTWindow {
                 g.fillRect(0, 0, 200, 100);
                 frame.getBufferStrategy().show();
                  */
-                sizeInvalidationPoint.invalidate();
+                    sizeInvalidationPoint.invalidate();
                 }
             });
             addMouseListener(new MouseAdapter() {

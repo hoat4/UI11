@@ -5,6 +5,7 @@ import ui11.geom.Location;
 import ui11.geom.Rect;
 import ui11.geom.Shape;
 import ui11.geom.Vec2;
+import ui11.renderer.TextRenderer;
 import ui11.renderer.layer.Layer;
 
 class GLLayerUpdater implements Layer.LayerUpdater {
@@ -42,6 +43,16 @@ class GLLayerUpdater implements Layer.LayerUpdater {
 
     @Override
     public void fill(Shape shape, Layer sublayer) {
+        throw new RuntimeException("TODO");
+    }
+
+    @Override
+    public void blend(double opacity, Layer sublayer) {
+        throw new RuntimeException("TODO");
+    }
+
+    @Override
+    public void text(TextRenderer.TextLayout text, Location.CoordinateSpace color) {
         throw new RuntimeException("TODO");
     }
 

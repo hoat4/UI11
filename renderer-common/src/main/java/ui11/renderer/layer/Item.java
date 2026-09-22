@@ -3,11 +3,21 @@ package ui11.renderer.layer;
 import ui11.graphics.Surface;
 import ui11.graphics.VisualContentRequest;
 
+import java.util.Collection;
+import java.util.List;
+
 public interface Item {
+
+    Collection<? extends Layer> referredSublayers();
 
     void visit(Layer.LayerUpdater layerUpdater);
 
     Item EMPTY = new Item() {
+
+        @Override
+        public Collection<? extends Layer> referredSublayers() {
+            return List.of();
+        }
 
         @Override
         public void visit(Layer.LayerUpdater layerUpdater) {
@@ -15,7 +25,7 @@ public interface Item {
 
         @Override
         public String toString() {
-            return Item.class.getSimpleName()+".EMPTY";
+            return Item.class.getSimpleName() + ".EMPTY";
         }
     };
 

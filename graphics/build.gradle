@@ -5,4 +5,6 @@ dependencies {
 
     testImplementation project(":platform-awt")
     testImplementation project(":layout-constraint")
+    testImplementation project(":renderer-java2d")
+    testImplementation project(":text")
 }

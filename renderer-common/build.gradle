@@ -5,4 +5,5 @@ dependencies {
     api project(":graphics")
 
     implementation project(":text") // TextStyle / font size miatt
+    implementation project(":layout-constraint") // text size miatt
 }
