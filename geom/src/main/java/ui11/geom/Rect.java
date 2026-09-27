@@ -43,7 +43,7 @@ public record Rect(Vec2 origin, Size size) {
     }
 
     public static Rect ofTopRightBottomLeft(double top, double right, double bottom, double left) {
-        return new Rect(left, top, right-left, bottom-top);
+        return new Rect(left, top, right - left, bottom - top);
     }
 
     // TODO ezt át kéne nevezni ofPoints-ra, mert így meg lehet ezt hívni véletlenül of(Size) helyett
@@ -204,6 +204,18 @@ public record Rect(Vec2 origin, Size size) {
 
     public Rect translate(Vec2 v) {
         return new Rect(origin.plus(v), size);
+    }
+
+    /**
+     * Floor left and top side, ceil right and bottom
+     */
+    public Rect floorCeil() {
+        return Rect.ofTopRightBottomLeft(
+                Math.floor(top()),
+                Math.ceil(right()),
+                Math.ceil(bottom()),
+                Math.floor(left())
+        );
     }
 
     @Override

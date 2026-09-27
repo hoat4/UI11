@@ -14,26 +14,19 @@ import ui11.renderer.layer.Layer;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.ImageObserver;
-import java.util.Collection;
-import java.util.List;
 
 public record SVGItem(SVGDocument document, Font font, Size size,
                       Location.CoordinateSpace coordinateSpace) implements Item {
-    @Override
-    public Collection<? extends Layer> referredSublayers() {
-        return List.of();
-    }
 
     @Override
     public void visit(Layer.LayerUpdater layerUpdater) {
-        J2DLayer.J2DLayerUpdater u = (J2DLayer.J2DLayerUpdater) layerUpdater;
-        u.addTask(g -> {
-            AffineTransform prevTransform = g.getTransform();
-            g.transform(u.transformation(coordinateSpace));
-            document.renderWithPlatform(new PlatformSupportImpl(font), g,
-                    new ViewBox((float) size.width(), (float) size.height()));
-            g.setTransform(prevTransform);
-        });
+        J2DLayerUpdater u = (J2DLayerUpdater) layerUpdater;
+        Graphics2D g = u.g;
+        AffineTransform prevTransform = g.getTransform();
+        g.transform(u.transformation(coordinateSpace));
+        document.renderWithPlatform(new PlatformSupportImpl(font), g,
+                new ViewBox((float) size.width(), (float) size.height()));
+        g.setTransform(prevTransform);
     }
 
     private static class PlatformSupportImpl implements PlatformSupport {
@@ -51,7 +44,7 @@ public record SVGItem(SVGDocument document, Font font, Size size,
             @Override
             public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
                 animationIP.invalidate();
-                return (infoflags & (ALLBITS|ABORT)) == 0;
+                return (infoflags & (ALLBITS | ABORT)) == 0;
             }
         };
 

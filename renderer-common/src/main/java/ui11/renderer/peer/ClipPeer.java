@@ -50,7 +50,7 @@ public class ClipPeer extends Widget {
 
         // TODO ha childNode teljesen beleesik awtShapebe, akkor nem kéne ClipNodeot létrehozni
         // TODO ha childben is clip van, akkor a kettőnek a metszetét kéne venni
-        childLayer = renderer.createLayer(childLayer);
+        childLayer = renderer.createLayer(childLayer, clipShape);
         childLayer.setContent(childNode);
         return new ClipItem(clipShape, childLayer);
     }

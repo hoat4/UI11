@@ -30,7 +30,7 @@ public class PointerRegionPeer extends Widget {
         return ExposeRequest.requestSingle(content, new Item.ItemRequest(surface), result -> {
             // TODO if (!surface.hasNoVisibleInputPart()) ???
 
-            childLayer = renderer.createLayer(childLayer);
+            childLayer = renderer.createLayer(childLayer, surface.clipShape());
             childLayer.setContent(result);
             childLayer.pointerListener = pointerRegion;
             return new Expose<>(parentRequest, new BlendItem(1, childLayer), content);

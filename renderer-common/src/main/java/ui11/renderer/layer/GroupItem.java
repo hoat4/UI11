@@ -1,7 +1,6 @@
 package ui11.renderer.layer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public record GroupItem(List<? extends Item> items) implements Item {
@@ -19,12 +18,6 @@ public record GroupItem(List<? extends Item> items) implements Item {
             case 1 -> children.getFirst();
             default -> new GroupItem(children);
         };
-    }
-
-    @Override
-    public Collection<? extends Layer> referredSublayers() {
-        // see comment in visit method
-        throw new RuntimeException("should not reach here");
     }
 
     @Override

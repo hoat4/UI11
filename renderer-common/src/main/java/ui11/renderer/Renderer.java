@@ -1,13 +1,15 @@
 package ui11.renderer;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.geom.Shape;
 import ui11.renderer.layer.Layer;
 
 import java.util.ServiceLoader;
 
 public interface Renderer<L extends Layer> {
 
-    L createLayer(@Nullable Layer previous);
+    L createLayer(@Nullable Layer previous, @NonNull Shape visiblePart);
 
     /**
      * If there is a separate paint thread, this will be called in that thread only once, before all renders.

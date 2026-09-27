@@ -10,7 +10,6 @@ import ui11.color.Color;
 import ui11.geom.Length;
 import ui11.geom.Location;
 import ui11.geom.Vec2;
-import ui11.graphics.VisualContentRequest;
 import ui11.input.gesture.EnterContentListener.EnterContent.KeyboardEnterContentSource;
 import ui11.input.keyboard.KeyCombination;
 import ui11.input.keyboard.KeyCombination.Modifier;
@@ -22,9 +21,7 @@ import ui11.observable.MutableObservable;
 import ui11.platform.awt.AWTEnterContentListenerPeer.AWTEnterContentListenerPeerState;
 import ui11.provide.Provide;
 import ui11.provide.Provider;
-import ui11.renderer.Node;
 import ui11.renderer.Renderer;
-import ui11.renderer.RendererProvider;
 import ui11.renderer.TextRenderer;
 import ui11.renderer.input.PickContext;
 import ui11.renderer.input.PickContext.PickStackItem;
@@ -56,7 +53,7 @@ public class AWTWindow {
 
     private final AWTFrameSurface surface;
     private final Item.ItemRequest rootContentRequest;
-    private final Layer rootLayer;
+    private final MutableObservable<Layer> rootLayer;
 
     private PointerListener currentMousePress;
 
@@ -78,7 +75,7 @@ public class AWTWindow {
         surface = new AWTFrameSurface(frame, frame.getBufferStrategy());
         renderer = Renderer.create(surface);
         rootContentRequest = new Item.ItemRequest(surface);
-        rootLayer = renderer.createLayer(null);
+        rootLayer = MutableObservable.ofNullable();
     }
 
     class Root extends Widget {
@@ -108,8 +105,8 @@ public class AWTWindow {
             //      a hibaüzenetet (Text widget) tudná resolvolni
 
             return ExposeRequest.requestSingle(content, rootContentRequest, result -> {
-                rootLayer.setContent(result);
-                // Repainter subscribes to rootNodeHolder, so it will be notified about a root node change
+                rootLayer.set(renderer.createLayer(rootLayer.get(), surface.clipShape()));
+                rootLayer.get().setContent(result);
 
                 if (!frame.isVisible()) // TODO onResume kéne, csak az túl korán van
                     frame.setVisible(true);
@@ -152,7 +149,7 @@ public class AWTWindow {
     private void redraw() {
         @SuppressWarnings("unchecked")
         Renderer<Layer> rendererCasted = (Renderer<Layer>) renderer;
-        rendererCasted.render(rootLayer, surface.width(), surface.height());
+        rendererCasted.render(rootLayer.get(), surface.width(), surface.height());
     }
 
     private void onMouseMove(Vec2 point) {
@@ -163,7 +160,7 @@ public class AWTWindow {
         AWTMouse.INSTANCE.location.set(new Location(surface.coordinateSpace(), point));
 
         PickContext pickContext = new PickContext();
-        rootLayer.pick(pickContext, point.withZW(0, 1));
+        rootLayer.get().pick(pickContext, point.withZW(0, 1));
 
         List<PickStackItem> result = pickContext.result();
         if (result == null)

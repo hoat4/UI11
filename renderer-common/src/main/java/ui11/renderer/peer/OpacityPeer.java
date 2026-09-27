@@ -31,7 +31,7 @@ public class OpacityPeer extends Widget {
                 // TODO childLayer destroy?
                 return new Expose<>(parentRequest, Item.EMPTY);
 
-            childLayer = renderer.createLayer(childLayer);
+            childLayer = renderer.createLayer(childLayer, surface.clipShape());
             childLayer.setContent(result);
             return new Expose<>(parentRequest, new BlendItem(opacity.opacity(), childLayer), opacity.content());
         });

@@ -1,8 +1,10 @@
 package ui.platform.glass;
 
+import ui11.renderer.layer.Layer;
+
 import java.util.List;
 
-class Frame<L> {
+class Frame<L extends Layer> {
 
     public final L rootLayer;
     public final List<RenderDoneCallback> renderDoneCallbacks;

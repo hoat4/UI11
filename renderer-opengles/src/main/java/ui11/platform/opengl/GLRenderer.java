@@ -1,9 +1,11 @@
 package ui11.platform.opengl;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengles.GLES;
 import ui11.geom.Location;
 import ui11.geom.Mat4;
+import ui11.geom.Shape;
 import ui11.platform.opengl.context.EGLContext;
 import ui11.platform.opengl.context.OpenGLContext;
 import ui11.renderer.NativeWindowSurface;
@@ -27,7 +29,7 @@ public class GLRenderer implements Renderer<GLLayer> {
     }
 
     @Override
-    public GLLayer createLayer(@Nullable Layer previous) {
+    public GLLayer createLayer(@Nullable Layer previous, @NonNull Shape visiblePart) {
         if (previous instanceof GLLayer glLayer)
             return glLayer;
         else

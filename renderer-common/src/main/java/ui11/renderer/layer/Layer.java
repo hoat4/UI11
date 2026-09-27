@@ -27,7 +27,6 @@ public abstract class Layer {
             }
         }
 
-        List<Layer> sublayers = new ArrayList<>();
         List<Cursor> stack = new ArrayList<>();
         stack.add(new Cursor(List.of(item)));
         LayerUpdater layerUpdater = createLayerUpdater();
@@ -42,11 +41,9 @@ public abstract class Layer {
                 stack.add(new Cursor(groupItem.items()));
             else {
                 item.visit(layerUpdater);
-                sublayers.addAll(item.referredSublayers());
             }
         }
-        layerUpdater.finish();
-        this.sublayers = sublayers;
+        this.sublayers = layerUpdater.finish();
     }
 
     public abstract LayerUpdater createLayerUpdater();
@@ -69,6 +66,6 @@ public abstract class Layer {
 
         void text(TextRenderer.TextLayout text, Location.CoordinateSpace color);
 
-        void finish();
+        List<Layer> finish();
     }
 }

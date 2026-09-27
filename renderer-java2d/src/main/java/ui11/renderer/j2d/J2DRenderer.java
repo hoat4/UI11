@@ -2,14 +2,16 @@ package ui11.renderer.j2d;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.geom.Shape;
+import ui11.geom.Size;
 import ui11.platform.awt.AWTFrameSurface;
+import ui11.renderer.FramebufferSize;
 import ui11.renderer.Renderer;
 import ui11.renderer.TextRenderer;
 import ui11.renderer.layer.Layer;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
 
 public class J2DRenderer implements Renderer<J2DLayer>, TextRenderer {
 
@@ -21,11 +23,15 @@ public class J2DRenderer implements Renderer<J2DLayer>, TextRenderer {
     }
 
     @Override
-    public J2DLayer createLayer(@Nullable Layer previous) {
+    public J2DLayer createLayer(@Nullable Layer previous, @NonNull Shape visiblePart) {
+        J2DLayer layer;
         if (previous instanceof J2DLayer l)
-            return l;
+            layer = l;
         else
-            return new J2DLayer(surface.coordinateSpace()); // TODO coordinateSpace
+            layer = new J2DLayer(surface.coordinateSpace()); // TODO coordinateSpace
+        Size size = visiblePart.bounds(surface.coordinateSpace()).floorCeil().size();
+        layer.bufferSize = new FramebufferSize((int) size.width(), (int) size.height());
+        return layer;
     }
 
     @Override
@@ -45,16 +51,14 @@ public class J2DRenderer implements Renderer<J2DLayer>, TextRenderer {
         }
          */
 
-        RenderingContext ctx = new RenderingContext(surface.width(), surface.height());
-        rootLayer.execute(ctx);
-        BufferedImage image = ctx.finish();
+        int leftInset = surface.leftInset();
+        int topInset = surface.topInset();
 
         Graphics2D g = (Graphics2D) surface.bufferStrategy().getDrawGraphics();
         g.setTransform(new AffineTransform());
-        int x = surface.leftInset();
-        int y = surface.topInset();
-        g.drawImage(image, x, y, null);
-
+        g.setBackground(Color.WHITE);
+        g.clearRect(leftInset, topInset, rootLayer.bufferSize.width(), rootLayer.bufferSize.height());
+        g.drawImage(rootLayer.content.get(), leftInset, topInset, null);
         g.dispose();
         surface.bufferStrategy().show();
     }

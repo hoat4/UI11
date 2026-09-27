@@ -5,13 +5,14 @@ import org.slf4j.LoggerFactory;
 import ui11.animation.Scheduler;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.Scope;
+import ui11.renderer.layer.Layer;
 
 import java.time.Duration;
 import java.util.concurrent.*;
 
 // TODO animációhoz kéne valami időt (becsült present time) előállítani az aktuálisan generált frameről.
 //      System.nanoTime vagy egyéb CPU idő nem jó, mert az ingadozik, nem igazodik a display frameratehez.
-public class SchedulerImpl<D> implements Scheduler {
+public class SchedulerImpl<L extends Layer> implements Scheduler {
 
     static final boolean TRACE_ANIMATION = true;
     private static final Logger logger = LoggerFactory.getLogger(WindowImpl.class);
@@ -22,12 +23,12 @@ public class SchedulerImpl<D> implements Scheduler {
     private final InvalidationPoint animationFrameIP = new InvalidationPoint();
 
     private final Object frameSubmitLock = new Object();
-    private Frame<D> submittedFrame;
+    private Frame<L> submittedFrame;
 
     /**
      * csak UI szálból szabad meghívni
      */
-    void submitFrame(Frame<D> displayList) {
+    void submitFrame(Frame<L> displayList) {
         synchronized (frameSubmitLock) {
             if (submittedFrame != null) {
                 displayList.renderDoneCallbacks.addAll(0, submittedFrame.renderDoneCallbacks);
@@ -41,8 +42,8 @@ public class SchedulerImpl<D> implements Scheduler {
     /**
      * paint szálból van meghívva
      */
-    Frame<D> takeNextSubmittedFrame() throws InterruptedException {
-        Frame<D> frame;
+    Frame<L> takeNextSubmittedFrame() throws InterruptedException {
+        Frame<L> frame;
         synchronized (frameSubmitLock) {
             while (submittedFrame == null)
                 frameSubmitLock.wait();

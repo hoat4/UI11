@@ -51,7 +51,7 @@ public class WindowImpl {
 
     private final CompositorTimingThread compositionTimingThread;
     private final Item.ItemRequest rootContentRequest;
-    private final Layer rootLayer;
+    private final MutableObservable<Layer> rootLayer = MutableObservable.ofNullable();
 
     public WindowImpl(Widget rootWidget) {
         this.rootWidget = rootWidget;
@@ -76,7 +76,6 @@ public class WindowImpl {
         paintThread = new PaintThread<>(renderer, scheduler);
         paintThread.start();
         rootContentRequest = new Item.ItemRequest(rootSurface);
-        rootLayer = renderer.createLayer(null);
 
         Widget rootComponent = new Widget() {
 
@@ -89,7 +88,8 @@ public class WindowImpl {
                 w = new Provider<>(Scheduler.class, scheduler, w);
 
                 return ExposeRequest.requestSingle(w, rootContentRequest, result -> {
-                    rootLayer.setContent(result);
+                    rootLayer.set(renderer.createLayer(rootLayer.get(), rootSurface.clipShape()));
+                    rootLayer.get().setContent(result);
                     repaint();
 
                     return new SubstitutedWidget() {
@@ -118,7 +118,7 @@ public class WindowImpl {
     public void repaint() {
         List<Frame.RenderDoneCallback> callbacks = List.copyOf(executeNextPaintTaskOnPlatformThread);
         executeNextPaintTaskOnPlatformThread.clear();
-        scheduler.submitFrame(new Frame(rootLayer, callbacks, rootSurface.width(), rootSurface.height()));
+        scheduler.submitFrame(new Frame(rootLayer.get(), callbacks, rootSurface.width(), rootSurface.height()));
     }
 
     void submitTask(Runnable task) {

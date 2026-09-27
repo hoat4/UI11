@@ -8,11 +8,15 @@ import ui11.geom.Vec2;
 import ui11.renderer.TextRenderer;
 import ui11.renderer.layer.Layer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 class GLLayerUpdater implements Layer.LayerUpdater {
 
     private final GLLayer layer;
     private final Location.CoordinateSpace coordinateSpace;
     private final BufferPool.GrowableVertexBuffer vertexBuffer;
+    private final List<Layer> sublayers = new ArrayList<>();
 
     public GLLayerUpdater(GLLayer layer, BufferPool.GrowableVertexBuffer growableVertexBuffer) {
         this.layer = layer;
@@ -57,8 +61,9 @@ class GLLayerUpdater implements Layer.LayerUpdater {
     }
 
     @Override
-    public void finish() {
+    public List<Layer> finish() {
         layer.setContent(vertexBuffer.finish());
+        return sublayers;
     }
 
     private void triangulate(Shape shape, Triangle2DConsumer consumer) {
