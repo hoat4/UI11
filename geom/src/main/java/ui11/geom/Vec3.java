@@ -235,6 +235,10 @@ public record Vec3(double x, double y, double z) implements Lerpable<Vec3> {
         return with(axis, 0);
     }
 
+    public Vec3 yxz() {
+        return new Vec3(y, x, z);
+    }
+
     public Vec2 xz() {
         return new Vec2(x, z);
     }

@@ -144,9 +144,11 @@ class TeaVMLocalizedResourceInterfaceProxyGenerator {
 
                 Metaprogramming.exit(() -> {
                     LocalizableTextEditingContext ctx = editingContext.get();
-                    if (ctx == null)
-                        return new LocalizedText.NonEditableLocalizedText(locale.get(), argArray.get(),
-                                formatString.get());
+                    if (ctx == null) {
+                        parser.get().setPattern(formatString.get());
+                        AnnotatedTextToken rootToken = parser.get().evaluate(argArray.get());
+                        return makeLocalizedRichText(rootToken, elementFunctionsVar.get());
+                    }
 
                     MutableObservable<String> obs = ctx.stringFor(name, formatString.get());
 

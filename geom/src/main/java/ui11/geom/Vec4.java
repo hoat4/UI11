@@ -79,11 +79,23 @@ public record Vec4(double x, double y, double z, double w) implements Lerpable<V
         return new Vec2(x, y);
     }
 
+    public Vec2 xw() {
+        return new Vec2(x, w);
+    }
+
     public Vec2 zw() {
         return new Vec2(z, w);
     }
 
+    public Vec2 zy() {
+        return new Vec2(z, y);
+    }
+
     public Vec3 xyz() {
         return new Vec3(x, y, z);
+    }
+
+    public Vec4 xwzy() {
+        return new Vec4(x, w, z, y);
     }
 }

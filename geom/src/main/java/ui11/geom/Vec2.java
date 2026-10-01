@@ -4,7 +4,7 @@ package ui11.geom;
 public record Vec2(double x, double y) implements Lerpable<Vec2> {
 
     public static final Vec2 POSITIVE_INFINITY = new Vec2(Double.POSITIVE_INFINITY);
-    public static final Vec2 NEGATIVE_INFINITY = new Vec2(Double.POSITIVE_INFINITY);
+    public static final Vec2 NEGATIVE_INFINITY = new Vec2(Double.NEGATIVE_INFINITY);
 
     public static final Vec2 ZERO = new Vec2(0);
     public static final Vec2 UNIT = new Vec2(1);
@@ -73,6 +73,14 @@ public record Vec2(double x, double y) implements Lerpable<Vec2> {
         return mul(new Vec2(1 / d.x, 1 / d.y));
     }
 
+    public Vec2 mulX(double mx) {
+        return new Vec2(x * mx, y);
+    }
+
+    public Vec2 mulY(double my) {
+        return new Vec2(x, y * my);
+    }
+
     public double dot(Vec2 v) {
         return x * v.x + y * v.y;
     }
@@ -95,6 +103,18 @@ public record Vec2(double x, double y) implements Lerpable<Vec2> {
 
     public Vec2 withY(double y) {
         return new Vec2(x, y);
+    }
+
+    public Vec3 withZ(double z) {
+        return new Vec3(this, z);
+    }
+
+    public Vec2 min(Vec2 b) {
+        return min(this, b);
+    }
+
+    public Vec2 max(Vec2 b) {
+        return max(this, b);
     }
 
     public static Vec2 min(Vec2 a, Vec2 b) {
@@ -237,6 +257,10 @@ public record Vec2(double x, double y) implements Lerpable<Vec2> {
 
     public Vec2 yy() {
         return new Vec2(y, y);
+    }
+
+    public Vec2 yx() {
+        return new Vec2(y, x);
     }
 
     @Override

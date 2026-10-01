@@ -6,6 +6,7 @@ import ui11.input.pointer.WithCursor.Cursor;
 import ui11.input.pointer.PointerRegion;
 import ui11.provide.Provider.Mergeable;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,29 +38,29 @@ public record CumulatingPropList(Set<String> cssClasses,
         tooltipTags = List.copyOf(tooltipTags);
     }
 
-    public static CumulatingPropList ofCSSClass(String className) {
-        return new CumulatingPropList(Set.of(className),
-                List.of(),List.of(),List.of(),List.of(),List.of(), false);
+    public static CumulatingPropList ofCSSClass(Collection<String> classNames) {
+        return new CumulatingPropList(Set.copyOf(classNames),
+                List.of(), List.of(), List.of(), List.of(), List.of(), false);
     }
 
     public static CumulatingPropList ofOnClick(Runnable onClick) {
         return new CumulatingPropList(Set.of(),
-                List.of(onClick), List.of(),List.of(),List.of(),List.of(), false);
+                List.of(onClick), List.of(), List.of(), List.of(), List.of(), false);
     }
 
     public static CumulatingPropList ofFocus(FocusListener onFocus) {
         return new CumulatingPropList(Set.of(), List.of(),
-                List.of(onFocus),List.of(),List.of(),List.of(), false);
+                List.of(onFocus), List.of(), List.of(), List.of(), false);
     }
 
     public static CumulatingPropList ofPointerRegion(PointerRegion pointerRegion) {
         return new CumulatingPropList(Set.of(), List.of(), List.of(),
-                List.of(pointerRegion),List.of(),List.of(), false);
+                List.of(pointerRegion), List.of(), List.of(), false);
     }
 
     public static CumulatingPropList ofCursor(Cursor cursor) {
         return new CumulatingPropList(Set.of(), List.of(), List.of(), List.of(),
-                List.of(cursor),List.of(), false);
+                List.of(cursor), List.of(), false);
     }
 
     public static CumulatingPropList ofTooltipTag(Tooltip tooltip) {

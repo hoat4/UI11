@@ -107,7 +107,7 @@ public class DOMResolverProvider implements ResolverProvider {
         r.registerForContextType(DOMPeerCreationRequest.class, Flow.class, DOMFlowLayoutPeer::new);
         r.registerForContextType(DOMPeerCreationRequest.class, PassiveSize.class, DOMPassiveSizePeer::new);
         r.registerForContextType(DOMPeerCreationRequest.class, CSSClassTag.class, c -> new Provider<>(CumulatingPropList.class,
-                CumulatingPropList.ofCSSClass(c.className()), c.content()));
+                CumulatingPropList.ofCSSClass(c.classNames()), c.content()));
         r.registerForContextType(DOMPeerCreationRequest.class, WrapWithCSSClassTag.class, w -> cssClass(w.className(), overlay(w.content())));
         r.registerForContextType(DOMPeerCreationRequest.class, Scrollable.class, DOMScrollablePeer::new);
         r.registerForContextType(DOMPeerCreationRequest.class, Hidden.class, h -> new Provider<>(CumulatingPropList.class, CumulatingPropList.ofHidden(), h.content()));

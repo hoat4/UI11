@@ -13,6 +13,7 @@ import ui11.input.pointer.MouseRegion.MouseListener;
 import ui11.input.pointer.Pointer.StandardMouseButton;
 import ui11.observable.SimpleScope;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 public class PopupMenuOpener extends Widget {
@@ -23,6 +24,8 @@ public class PopupMenuOpener extends Widget {
 
     @Inject private Surface surface;
     @Inject private DialogContainerState dialogContainerState;
+
+    @Remember private Location mouseLocation;
 
     // TODO openAt equals?
     //      lehet hogy kéne @Inputba egy boolean, hogy ha megváltozik, akkor maradjuk a régi RSW példánynál,
@@ -46,11 +49,17 @@ public class PopupMenuOpener extends Widget {
     }
 
     @Override
+    protected void onResume() {
+        untilPause().onClose(() -> mouseLocation = null);
+    }
+
+    @Override
     protected Widget build() {
         if (openAt == null)
             return new MouseRegion(content, StandardMouseButton.PRIMARY, new MouseListener() {
 
-                private Location location;
+                // TODO érintőképernyős működést végig kéne gondolni
+                //      vagy az MouseRegion működésében benne van?
 
                 @Override
                 public void hoverMoved(Location location) {
@@ -62,17 +71,18 @@ public class PopupMenuOpener extends Widget {
 
                 @Override
                 public void down(Location location) {
-                    this.location = location;
+                    mouseLocation = location;
                 }
 
                 @Override
                 public void drag(Location location) {
-                    this.location = location;
+                    mouseLocation = location;
                 }
 
                 @Override
                 public void up() {
-                    openMenuAt(location);
+                    Objects.requireNonNull(mouseLocation, "no mouseLocation");
+                    openMenuAt(mouseLocation);
                 }
 
                 @Override
@@ -80,6 +90,8 @@ public class PopupMenuOpener extends Widget {
                 }
             });
         else {
+            mouseLocation = null;
+
             return new ClickListener(
                     content,
                     () -> {
