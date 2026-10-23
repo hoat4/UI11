@@ -13,13 +13,14 @@ import java.util.function.Supplier;
  * An instantiation of a {@linkplain Widget} at a particular location in the tree.
  * <p>
  * Widgets describe how to configure a subtree but the same widget can be used to configure multiple subtrees
- * simultaneously.  An WidgetState represents the use of a widget to configure a specific location in the tree. Over time,
+ * simultaneously.  An Node represents the use of a widget to configure a specific location in the tree. Over time,
  * the widget associated with a given element can change, for example, if the parent widget rebuilds and creates a new
  * widget for this location.
  * <p>
- * WidgetStates form a tree. Many of them have a single child, which is provided by the {@link Widget#build()} method.
+ * Nodes form a {@linkplain WidgetTree directed acyclic graph}. Many of them have a single child,
+ * which is provided by the {@link Widget#build()} method.
  */
-final class WidgetState<W extends Widget> implements ObserverCollection {
+final class Node<W extends Widget> implements ObserverCollection {
 
     static final int FLAG_NEEDS_INIT = 1;
     static final int FLAG_NEEDS_REBUILD = 2;
@@ -74,7 +75,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     final List<Edge> parents = new ArrayList<>();
 
     /**
-     * Ezt csak ezen WidgetState refreshjekor módosítjuk
+     * Ezt csak ezen Node refreshjekor módosítjuk
      * <p>
      * Ha tömb, akkor nem lehet 0 elemű.
      * <p>
@@ -111,7 +112,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     private Map<RelativeKey, GlobalKey> relativeKeysToGlobalKeys;
 
     @SuppressWarnings("unchecked")
-    WidgetState(W modelWidget, WidgetTree tree) {
+    Node(W modelWidget, WidgetTree tree) {
         this.tree = tree;
 
         modelWidget = otherIfSwapped(modelWidget);
@@ -343,7 +344,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     void registerParent(@NonNull Edge wi) {
         assert wi.child() == this;
 
-        WidgetState<?> newParent = wi.parent();
+        Node<?> newParent = wi.parent();
         if (newParent != null && newParent.hasFlag(NEEDS_REFRESH))
             // mert akkor nem lehet iv consumereket bejegyezni
             throw new IllegalArgumentException("Can't add parent which is not fresh\n" +
@@ -376,7 +377,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      * ha már nem a parentünk a megadott widget, akkor nem csinál semmit
      */
     // TODO inkább dobjunk assertiont ha már nem a parentünk?
-    void removeParent(WidgetState<?> parent) {
+    void removeParent(Node<?> parent) {
         for (int i = 0; i < parents.size(); i++) {
             if (parents.get(i).parent() == parent) {
                 parents.remove(i);
@@ -467,12 +468,12 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         if (!hasFlag(FLAG_ACTIVE))
             throw new IllegalStateException("not active, can't invalidate");
         // TODO ez a removeObservers néhány helyen lehet hogy felesleges
-        if (hasFlag(WidgetState.FLAG_NEEDS_REBUILD)) {
+        if (hasFlag(Node.FLAG_NEEDS_REBUILD)) {
             removeObservers(null);
             return;
         }
 
-        addFlag(WidgetState.FLAG_NEEDS_REBUILD);
+        addFlag(Node.FLAG_NEEDS_REBUILD);
 
         if (refreshedAt > tree.finishedRefreshID) {
             List<ObservableBase> observables = new ArrayList<>();
@@ -481,12 +482,12 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         } else
             removeObservers(null);
 
-        Deque<WidgetState<?>> q = new LinkedList<>();
-        Set<WidgetState<?>> visited = new HashSet<>(); // ez HashSet helyett lehetne egy long mező WidgetStateben
+        Deque<Node<?>> q = new LinkedList<>();
+        Set<Node<?>> visited = new HashSet<>(); // ez HashSet helyett lehetne egy long mező WidgetStateben
         q.push(this);
         visited.add(this);
         while (!q.isEmpty()) {
-            WidgetState<?> w = q.pop();
+            Node<?> w = q.pop();
 
             // ha már van FLAG_DESCENDANT_NEEDS_REFRESH beállítva, akkor skippelhetnénk,
             // de beragadnak feleslegesek, amik nem lesznek kitörölve, ezért mégsem.
@@ -706,12 +707,12 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     // (nem fog hibát jelezni ha nem tesszük, csak rejtélyes JS hibák fognak megjelenni)
     static class IVCollector<T> {
 
-        final WidgetState<?> widgetState;
+        final Node<?> widgetState;
         final Class<T> type;
 
         private Object value;
 
-        IVCollector(WidgetState<?> widgetState, Class<T> type) {
+        IVCollector(Node<?> widgetState, Class<T> type) {
             this.widgetState = widgetState;
             this.type = type;
         }

@@ -28,7 +28,7 @@ class InheritedValueMerger<T> extends Widget {
         if (newValue == null)
             return content;
 
-        WidgetState<?> widgetState = widgetState();
+        Node<?> widgetState = widgetState();
         Object prevVal = widgetState.tree.getIVForCurrentWidget(widgetState, type, true);
         T val;
 

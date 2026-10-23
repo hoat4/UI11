@@ -26,7 +26,7 @@ final class RefreshStack {
         return stack.size() == 1;
     }
 
-    @NonNull WidgetState<?> peekWidget() throws NoSuchElementException {
+    @NonNull Node<?> peekWidget() throws NoSuchElementException {
         return stack.element().widgetInstantiation.child();
     }
 
@@ -34,7 +34,7 @@ final class RefreshStack {
         return stack.element().widgetInstantiation;
     }
 
-    void push(@NonNull WidgetState<?> parent, int childIndex, @NonNull Edge child) {
+    void push(@NonNull Node<?> parent, int childIndex, @NonNull Edge child) {
         stack.push(new Item(parent, childIndex, child));
     }
 
@@ -87,15 +87,15 @@ final class RefreshStack {
     static final class Item {
 
         // az itteni parent helyett child.widgetState().parent nem jó,
-        // mert WidgetState.parent lehet hogy még nincs beállítva
+        // mert Node.parent lehet hogy még nincs beállítva
 
-        public final @Nullable WidgetState<?> parent;
+        public final @Nullable Node<?> parent;
         public final int childIndex;
         public final @NonNull Edge widgetInstantiation;
 
         private Boolean needsRebuild;
 
-        Item(@Nullable WidgetState<?> parent,
+        Item(@Nullable Node<?> parent,
              int childIndex,
              @NonNull Edge widgetInstantiation) {
             this.parent = parent;

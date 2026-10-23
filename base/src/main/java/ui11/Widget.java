@@ -65,9 +65,9 @@ public abstract class Widget implements Cloneable {
      * Ennek lehetséges értékei:
      * <ul>
      *     <li>{@code null} vagy {@linkplain WidgetAccessor} detached marker nélkül: nincs attacholva
-     *     {@linkplain WidgetState}hez, és
+     *     {@linkplain Node}hez, és
      *     nem is volt még</li>
-     *     <li>{@linkplain WidgetState}: attacholva van</li>
+     *     <li>{@linkplain Node}: attacholva van</li>
      *     <li>{@linkplain WidgetAccessor} detached markerrel: volt attacholva, de már nincs</li>
      * </ul>
      */
@@ -405,7 +405,7 @@ public abstract class Widget implements Cloneable {
             result = ElementAccessorFactory.accessorFor(getClass());
             stateHolderOrDef = result;
             Objects.requireNonNull(result);
-        } else if (stateHolderOrDef instanceof WidgetState<?> e) {
+        } else if (stateHolderOrDef instanceof Node<?> e) {
             assert e.stateWidget == this;
             result = e.accessor;
             Objects.requireNonNull(result);
@@ -420,8 +420,8 @@ public abstract class Widget implements Cloneable {
         return casted;
     }
 
-    WidgetState<?> widgetState() {
-        if (!(stateHolderOrDef instanceof WidgetState<?> sh))
+    Node<?> widgetState() {
+        if (!(stateHolderOrDef instanceof Node<?> sh))
             // toStringet lehet hogy felülírják egy olyannal ami inherited valuet olvasna (pl. MultiChildLayout)
             // ami nem fog működni ha element() exceptiont dob
             throw new IllegalStateException(Widget.class.getSimpleName() + " not in state role: " +
@@ -434,8 +434,8 @@ public abstract class Widget implements Cloneable {
         return sh;
     }
 
-    WidgetState<?> stateHolderOrNull() {
-        if (stateHolderOrDef instanceof WidgetState<?> sh) {
+    Node<?> stateHolderOrNull() {
+        if (stateHolderOrDef instanceof Node<?> sh) {
             if (sh.stateWidget != this)
                 // elvileg nem lehetséges ilyen
                 throw new RuntimeException("W sHON");
@@ -445,11 +445,11 @@ public abstract class Widget implements Cloneable {
     }
 
     /**
-     * Vagy új modellre váltunk, vagy az egész {@linkplain WidgetState} megszűnik, ezért ez az objektum nem lesz
+     * Vagy új modellre váltunk, vagy az egész {@linkplain Node} megszűnik, ezért ez az objektum nem lesz
      * a state role-ú Widget objektum nem lesz használva többé.
      */
-    final void disposeFromStateRole(WidgetState<?> stateHolder) {
-        if (!(this.stateHolderOrDef instanceof WidgetState<?> prevHolder))
+    final void disposeFromStateRole(Node<?> stateHolder) {
+        if (!(this.stateHolderOrDef instanceof Node<?> prevHolder))
             throw new IllegalStateException("not has state holder: " + this + ", expected: " + stateHolder);
         if (prevHolder != stateHolder)
             throw new IllegalStateException("has different state holder: " + this + ", expected: " + stateHolder + ", " +
@@ -467,12 +467,12 @@ public abstract class Widget implements Cloneable {
     }
 
     boolean roleIsState() {
-        return stateHolderOrDef instanceof WidgetState<?> ||
+        return stateHolderOrDef instanceof Node<?> ||
                 stateHolderOrDef instanceof WidgetAccessor<?> acc &&
                         acc == acc.asDetachedMarker(true);
     }
 
-    Widget makeCloneToBeStateRole(WidgetState<?> e) {
+    Widget makeCloneToBeStateRole(Node<?> e) {
         Widget clone = makeClone();
         clone.stateHolderOrDef = e;
         return clone;

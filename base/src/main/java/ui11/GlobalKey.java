@@ -10,12 +10,12 @@ final class GlobalKey {
     boolean used;
 
     // ennek csak ezért azért nem lehet rögtön értéket adni, mert WidgetTree-t nem ismerjük
-    private WidgetState<GlobalKeyWidgetImpl> widgetState;
+    private Node<GlobalKeyWidgetImpl> widgetState;
 
-    private WidgetState<?> debug_w;
+    private Node<?> debug_w;
     private Object debug_k1, debug_k2;
 
-    GlobalKey(WidgetState<?> debug_w, Object debug_k1, Object debug_k2) {
+    GlobalKey(Node<?> debug_w, Object debug_k1, Object debug_k2) {
         this.debug_w = debug_w;
         this.debug_k1 = debug_k1;
         this.debug_k2 = debug_k2;
@@ -31,9 +31,9 @@ final class GlobalKey {
     // talál, akkor ignorálja a previous WidgetInstantiationt és a KeyWrappereket is
     final class GlobalKeyWidget extends Widget {
 
-        WidgetState<?> replacement(WidgetTree tree) {
+        Node<?> replacement(WidgetTree tree) {
             if (widgetState == null)
-                widgetState = new WidgetState<>(new GlobalKeyWidgetImpl(), tree);
+                widgetState = new Node<>(new GlobalKeyWidgetImpl(), tree);
             else if (widgetState.tree != tree)
                 throw new RuntimeException(ui11.GlobalKey.class.getSimpleName() + " reused for different tree: " +
                         tree);

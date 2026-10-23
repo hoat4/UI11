@@ -6,7 +6,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.Map;
 import java.util.Objects;
 
-// parentet azért kell, mert ezt használjuk akkor WidgetState.parents listában is,
+// parentet azért kell, mert ezt használjuk akkor Node.parents listában is,
 // hogy lehessen ismerni IV-ket RefreshStack.pushIVs-ben.
 // Az eredeti elképzelés az lett volna, hogy RefreshStack.ivs-t másoljuk le,
 // de nem jó, mert annak csak az RRW alatti része kell, ráadásul ezt RRW-nként külön kéne tárolni.
@@ -16,8 +16,8 @@ import java.util.Objects;
  */
 final class Edge {
 
-    private final @Nullable WidgetState<?> parent;
-    private final @NonNull WidgetState<?> child;
+    private final @Nullable Node<?> parent;
+    private final @NonNull Node<?> child;
     private final @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs;
     private final long instantiatedAt;
 
@@ -26,7 +26,7 @@ final class Edge {
      */
     boolean ivRetrieval_visited;
 
-    Edge(@Nullable WidgetState<?> parent, @NonNull WidgetState<?> child, @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs, long instantiatedAt) {
+    Edge(@Nullable Node<?> parent, @NonNull Node<?> child, @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs, long instantiatedAt) {
         Objects.requireNonNull(child);
         Objects.requireNonNull(directIVs);
         this.parent = parent;
@@ -35,11 +35,11 @@ final class Edge {
         this.instantiatedAt = instantiatedAt;
     }
 
-    public @Nullable WidgetState<?> parent() {
+    public @Nullable Node<?> parent() {
         return parent;
     }
 
-    public @NonNull WidgetState<?> child() {
+    public @NonNull Node<?> child() {
         return child;
     }
 

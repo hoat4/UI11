@@ -39,9 +39,9 @@ public final class WidgetTree {
     /**
      * ha egy Slothoz új WidgetStateet rendelünk, akkor szedjük ki ebből a queueból
      */
-    private final SequencedSet<WidgetState<?>> inactivationQueue = new LinkedHashSet<>();
+    private final SequencedSet<Node<?>> inactivationQueue = new LinkedHashSet<>();
 
-    private SequencedMap<WidgetState<?>, List<LaterValidationCheck>> laterValidationChecks;
+    private SequencedMap<Node<?>, List<LaterValidationCheck>> laterValidationChecks;
     private long laterValidationCheckGenerator;
 
     long beganRefreshID, finishedRefreshID = -1;
@@ -93,7 +93,7 @@ public final class WidgetTree {
             refreshStack = new RefreshStack(root);
 
             while (!refreshStack.isEmpty()) {
-                WidgetState<?> w = refreshStack.peekWidget();
+                Node<?> w = refreshStack.peekWidget();
 
                 if (w.tree != this)
                     throw new RuntimeException("widget from other tree");
@@ -105,19 +105,19 @@ public final class WidgetTree {
 
                 // TODO ha lesz a widget feldolgozása közben egy exception,
                 //      akkor nem kéne visszaállítani a flageket?
-                boolean wasActive = w.hasFlag(WidgetState.FLAG_ACTIVE);
-                boolean needsRebuild = w.removeFlagIfPresent(WidgetState.FLAG_NEEDS_REBUILD);
-                boolean needsDescendantRefresh = w.removeFlagIfPresent(WidgetState.FLAG_DESCENDANT_NEEDS_REFRESH);
-                boolean hasStolenChildren = w.removeFlagIfPresent(WidgetState.FLAG_HAS_STOLEN_CHILDREN);
+                boolean wasActive = w.hasFlag(Node.FLAG_ACTIVE);
+                boolean needsRebuild = w.removeFlagIfPresent(Node.FLAG_NEEDS_REBUILD);
+                boolean needsDescendantRefresh = w.removeFlagIfPresent(Node.FLAG_DESCENDANT_NEEDS_REFRESH);
+                boolean hasStolenChildren = w.removeFlagIfPresent(Node.FLAG_HAS_STOLEN_CHILDREN);
 
-                assert !w.hasFlag(WidgetState.FLAG_NEEDS_INIT) || needsRebuild;
+                assert !w.hasFlag(Node.FLAG_NEEDS_INIT) || needsRebuild;
 
                 w.registerParent(refreshStack.peekWidgetInstantiation());
 
                 w.refreshedAt = beganRefreshID;
 
                 if (!wasActive) {
-                    w.addFlag(WidgetState.FLAG_ACTIVE);
+                    w.addFlag(Node.FLAG_ACTIVE);
 
                     // TODO ezt nem inkább a closeUntilNextRebuildScope után kéne?
                     needsRebuild |= w.resumeObservables();
@@ -143,9 +143,9 @@ public final class WidgetTree {
                     w.closeUntilNextRebuildScope();
                     w.copyIVValuesToFields();
                 }
-                if (w.hasFlag(WidgetState.FLAG_NEEDS_INIT)) {
+                if (w.hasFlag(Node.FLAG_NEEDS_INIT)) {
                     w.stateWidget.initState();
-                    w.removeFlag(WidgetState.FLAG_NEEDS_INIT);
+                    w.removeFlag(Node.FLAG_NEEDS_INIT);
                 }
                 if (!wasActive) {
                     w.stateWidget.onResume();
@@ -234,12 +234,12 @@ public final class WidgetTree {
                 // következő widgeteknél ki fog derülni, de nehezen értelmezhető hibaüzenetekkel.
                 // kapjuk el minél előbb, hogy könnyebben lehessen debugolni.
                 // akkor volt ilyen, amikor pl. InheritedPropBase beállított Observable-t új értékre.
-                assert !w.hasFlag(WidgetState.NEEDS_REFRESH) : w;
+                assert !w.hasFlag(Node.NEEDS_REFRESH) : w;
             }
 
             while (!inactivationQueue.isEmpty()) {
-                WidgetState<?> w = inactivationQueue.removeFirst();
-                w.removeFlag(WidgetState.FLAG_IN_INACTIVATION_QUEUE);
+                Node<?> w = inactivationQueue.removeFirst();
+                w.removeFlag(Node.FLAG_IN_INACTIVATION_QUEUE);
                 w.inactivate();
             }
 
@@ -247,9 +247,9 @@ public final class WidgetTree {
                 for (LaterValidationCheck check : checks) {
                     if (w.laterValidationCheckActual < check.required) {
                         // TODO valami értelmesebb kéne a logüzenetbe a w.toString elejére
-                        //      ahelyett hogy "ui11.WidgetState@3dc45957"
+                        //      ahelyett hogy "ui11.Node@3dc45957"
                         logger.error("Missed to refresh " + w + ": " + check.msgIfNotAchieved);
-                        w.removeFlag(WidgetState.FLAG_NEEDS_REBUILD);
+                        w.removeFlag(Node.FLAG_NEEDS_REBUILD);
                         w.restoreObservables(check.toBeRestored);
                     }
                 }
@@ -279,7 +279,7 @@ public final class WidgetTree {
         System.err.println("[TRACE_REFRESH] " + "  ".repeat(indent) + s);
     }
 
-    private boolean ivsMatch(WidgetState<?> w, Map<Class<?>, Object> descendantsInterestedIVs) {
+    private boolean ivsMatch(Node<?> w, Map<Class<?>, Object> descendantsInterestedIVs) {
         for (Map.Entry<Class<?>, Object> entry : descendantsInterestedIVs.entrySet()) {
             if (!Objects.equals(getIVForCurrentWidget(w, entry.getKey(), false), entry.getValue()))
                 return false;
@@ -293,22 +293,22 @@ public final class WidgetTree {
      */
     private static void removeFromParentListFromRemovedChildren(Edge @NonNull [] prevChildren,
                                                                 Edge @Nullable [] newChildren,
-                                                                WidgetState<?> parent) {
+                                                                Node<?> parent) {
         for (Edge prevChild : prevChildren)
-            prevChild.child().removeFlagIfPresent(WidgetState.FLAG_USAGE_CHECK);
+            prevChild.child().removeFlagIfPresent(Node.FLAG_USAGE_CHECK);
         if (newChildren != null)
             for (Edge newChild : newChildren)
-                newChild.child().addFlagIfNotPresent(WidgetState.FLAG_USAGE_CHECK);
+                newChild.child().addFlagIfNotPresent(Node.FLAG_USAGE_CHECK);
         for (Edge prevChild : prevChildren) {
-            if (prevChild.child().hasFlag(WidgetState.FLAG_USAGE_CHECK))
-                prevChild.child().removeFlag(WidgetState.FLAG_USAGE_CHECK);
+            if (prevChild.child().hasFlag(Node.FLAG_USAGE_CHECK))
+                prevChild.child().removeFlag(Node.FLAG_USAGE_CHECK);
             else
                 prevChild.child().removeParent(parent);
         }
     }
 
     private void findNextToRefresh(boolean skipDescendantsOfCurrent) {
-        WidgetState<?> w = refreshStack.peekWidget();
+        Node<?> w = refreshStack.peekWidget();
 
         if (!skipDescendantsOfCurrent && w.hasChildren()) {
             // enter children
@@ -327,7 +327,7 @@ public final class WidgetTree {
 
             // find next sibling of current or next sibling of ancestor
             while (true) {
-                WidgetState<?> peek = refreshStack.peekWidget();
+                Node<?> peek = refreshStack.peekWidget();
                 if (peek.descendantsInterestedIVs == null)
                     assert peek == w;
 
@@ -346,18 +346,18 @@ public final class WidgetTree {
     }
 
     /**
-     * A létrehozott/megtalált majd esetleg módosított WidgetState-et
+     * A létrehozott/megtalált majd esetleg módosított Node-et
      * hozzáadja a parent children listájába, illetve a refreshQueueba is.
-     * Ha parent nem null, akkor feltételezi, hogy {@link WidgetState#FLAG_ACTIVE aktív} állapotban van.
+     * Ha parent nem null, akkor feltételezi, hogy {@link Node#FLAG_ACTIVE aktív} állapotban van.
      *
      * @param parent ez csak akkor null, ha a root widgetről van szó
      */
     Edge findOrCreateWidgetState(@NonNull Widget widget,
-                                 @Nullable WidgetState<?> parent,
+                                 @Nullable Node<?> parent,
                                  @Nullable Edge previous,
                                  @Nullable Set<? extends ResolutionRequest<?>> reqs) {
         Objects.requireNonNull(widget, "widget");
-        if (parent != null && !parent.hasFlag(WidgetState.FLAG_ACTIVE))
+        if (parent != null && !parent.hasFlag(Node.FLAG_ACTIVE))
             throw new IllegalArgumentException("parent not active: " + parent);
 
         Map<Class<?>, Object> ivs = new HashMap<>();
@@ -367,7 +367,7 @@ public final class WidgetTree {
 
         Widget firstWidget = widget;
 
-        WidgetState<?> w = previous == null ? null : previous.child();
+        Node<?> w = previous == null ? null : previous.child();
 
         processProxyWidgets:
         while (true) {
@@ -410,15 +410,15 @@ public final class WidgetTree {
         if (w == null || w.effectiveModel() != widget) {
             widget.initListenerProxyData();
 
-            WidgetState.ChangeModelResult changeModelResult;
+            Node.ChangeModelResult changeModelResult;
             if (w == null)
-                changeModelResult = WidgetState.ChangeModelResult.NEEDS_NEW_STATE;
+                changeModelResult = Node.ChangeModelResult.NEEDS_NEW_STATE;
             else
                 changeModelResult = w.tryChangeModel(widget);
 
             switch (changeModelResult) {
                 case NEEDS_NEW_STATE -> {
-                    w = new WidgetState<>(widget, this);
+                    w = new Node<>(widget, this);
 
                     // TODO mit csináljunk, ha konstruktor exceptiont dob?
                 }
@@ -426,7 +426,7 @@ public final class WidgetTree {
                     // nop
                 }
                 case MODEL_CHANGED -> {
-                    w.addFlagIfNotPresent(WidgetState.FLAG_NEEDS_REBUILD);
+                    w.addFlagIfNotPresent(Node.FLAG_NEEDS_REBUILD);
                 }
             }
         }
@@ -446,11 +446,11 @@ public final class WidgetTree {
     /**
      * @param subscribe descendantokba bejegyzi a típus utáni érdeklődést. Ettől önmagában
      *                  még nem fogunk a jövőben mindenképp rebuildelődni, mert ahhoz
-     *                  {@linkplain WidgetState#retrieveIVValues()}-nak is true-t kell visszaadnia.
+     *                  {@linkplain Node#retrieveIVValues()}-nak is true-t kell visszaadnia.
      * @return {@link #IV_NOT_PROVIDED}, ha nincs
      */
-    Object getIVForCurrentWidget(WidgetState<?> widgetState, Class<?> type, boolean subscribe) {
-        if (!widgetState.hasFlag(WidgetState.FLAG_ACTIVE))
+    Object getIVForCurrentWidget(Node<?> widgetState, Class<?> type, boolean subscribe) {
+        if (!widgetState.hasFlag(Node.FLAG_ACTIVE))
             throw new IllegalStateException("not active");
 
         Deque<IVStackItem> stack = new LinkedList<>();
@@ -523,34 +523,34 @@ public final class WidgetTree {
     }
 
     static class IVStackItem {
-        final WidgetState<?> parent;
+        final Node<?> parent;
         final long edgeCreationTime;
         int parentIndex;
 
-        IVStackItem(WidgetState<?> edgeParent, long edgeCreationTime) {
+        IVStackItem(Node<?> edgeParent, long edgeCreationTime) {
             Objects.requireNonNull(edgeParent);
             this.parent = edgeParent;
             this.edgeCreationTime = edgeCreationTime;
         }
     }
 
-    void addToInactivationQueue(@NonNull WidgetState<?> w) {
+    void addToInactivationQueue(@NonNull Node<?> w) {
         if (w.tree != this)
             throw new IllegalArgumentException("WT aTIQ");
 
-        w.addFlag(WidgetState.FLAG_IN_INACTIVATION_QUEUE);
+        w.addFlag(Node.FLAG_IN_INACTIVATION_QUEUE);
         inactivationQueue.addLast(w);
     }
 
-    void removeFromInactivationQueue(@NonNull WidgetState<?> w) {
+    void removeFromInactivationQueue(@NonNull Node<?> w) {
         if (w.tree != this)
             throw new IllegalArgumentException("WT rTIQ");
 
-        w.removeFlag(WidgetState.FLAG_IN_INACTIVATION_QUEUE);
+        w.removeFlag(Node.FLAG_IN_INACTIVATION_QUEUE);
         inactivationQueue.remove(w);
     }
 
-    void submitForLaterValidationCountCheck(WidgetState<?> w, String msg, List<ObservableBase> toBeRestored) {
+    void submitForLaterValidationCountCheck(Node<?> w, String msg, List<ObservableBase> toBeRestored) {
         if (beganRefreshID == finishedRefreshID)
             throw new IllegalStateException();
 

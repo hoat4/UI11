@@ -3,7 +3,7 @@ package ui11;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-import ui11.WidgetState.InheritedPropBase;
+import ui11.Node.InheritedPropBase;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.lang.constant.ClassDesc;
@@ -31,7 +31,7 @@ class InheritedInterfaceProxyGenerator {
     private static final String GET_DELEGATE_METHOD_DESC = methodType(Object.class,
             InheritedInterfaceProxyBase.Dummy.class).descriptorString();
     private static final String CONSTRUCTOR_DESC =
-            methodType(void.class, WidgetState.class, Class.class, boolean.class, String.class).descriptorString();
+            methodType(void.class, Node.class, Class.class, boolean.class, String.class).descriptorString();
     private static final String FACTORY_METHOD_NAME = "create";
     private static final String TOSTRING_PREFIX = "Inherited value interface proxy for ";
 
@@ -145,7 +145,7 @@ class InheritedInterfaceProxyGenerator {
                 FACTORY_METHOD_NAME,
                 MethodTypeDesc.of(
                         ClassDesc.ofInternalName(interfaceName),
-                        WidgetState.IVCollector.class.describeConstable().get(),
+                        Node.IVCollector.class.describeConstable().get(),
                         boolean.class.describeConstable().get(),
                         String.class.describeConstable().get()
                 )
@@ -162,7 +162,7 @@ class InheritedInterfaceProxyGenerator {
 
     static class InheritedInterfaceProxyBase<T> extends InheritedPropBase<T> {
 
-        public InheritedInterfaceProxyBase(WidgetState.IVCollector<T> ivCollector, boolean optional,
+        public InheritedInterfaceProxyBase(Node.IVCollector<T> ivCollector, boolean optional,
                                            String fieldDebugName) {
             super(ivCollector, optional, fieldDebugName);
         }

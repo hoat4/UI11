@@ -8,7 +8,7 @@ import java.util.*;
 
 final class ResolutionRequest<P> {
 
-    final @Nullable WidgetState<?> container;
+    final @Nullable Node<?> container;
     final @NonNull Widget widget;
     final @NonNull ExposeRequest<P> requestData;
 
@@ -19,7 +19,7 @@ final class ResolutionRequest<P> {
             MutableObservable.ofNullable();
 
     Edge reqWI;
-    @Nullable WidgetState<?> finisherWidget;
+    @Nullable Node<?> finisherWidget;
 
     /**
      * létrehozás után állítsuk be {@link #finisherWidget}-et ha van (rooton kívül mindig van),
@@ -28,7 +28,7 @@ final class ResolutionRequest<P> {
      * @param container root esetén null
      */
     public ResolutionRequest(
-            @Nullable WidgetState<?> container,
+            @Nullable Node<?> container,
             @NonNull ExposeRequest<P> requestData,
             @NonNull Widget widget
     ) {
@@ -58,7 +58,7 @@ final class ResolutionRequest<P> {
     private RuntimeException makeResolutionFailedException() {
         StringBuilder sb = new StringBuilder("Resolution failed for " + this);
         // TODO itt az exception messagenek más formátuma van mint a másiknak
-        WidgetState<?> w = reqWI.child();
+        Node<?> w = reqWI.child();
         while (true) {
             sb.append("\n- ").append(String.valueOf(w.stateWidget).replace("\n", "\n  "));
             if (w.stateWidget instanceof PeerRequestor || w.children == null)

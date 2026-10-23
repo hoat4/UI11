@@ -14,7 +14,7 @@ interface WidgetAccessor<W extends Widget> {
 
     InputFieldChangeDetectionResult areInputFieldsChanged(W oldModel, W newModel);
 
-    void checkStateEmptyAndPrepareState(W newState, WidgetState<W> widgetState, W model);
+    void checkStateEmptyAndPrepareState(W newState, Node<W> widgetState, W model);
 
     void transferState(W fromState, W toState);
 

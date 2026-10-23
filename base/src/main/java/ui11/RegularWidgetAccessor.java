@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.WidgetDefinitionParser.InjectionFieldInfo;
 import ui11.WidgetDefinitionParser.StateFieldInfo;
-import ui11.WidgetState.IVCollector;
-import ui11.WidgetState.InheritedPropBase;
+import ui11.Node.IVCollector;
+import ui11.Node.InheritedPropBase;
 import ui11.observable.MutableObservable;
 import ui11.reflectutil.ReflectionUtil;
 
@@ -95,7 +95,7 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
     }
 
     @Override
-    public void checkStateEmptyAndPrepareState(T newState, WidgetState<T> widgetState, T model) {
+    public void checkStateEmptyAndPrepareState(T newState, Node<T> widgetState, T model) {
         for (StateFieldInfo f : stateFields) {
             Object value = fieldGet(newState, f.field());
             if (!Objects.equals(f.zeroValue(), value))
@@ -140,7 +140,7 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
                 case OBSERVABLE -> {
                     IVCollector<?> collector = ivCollectors[f.collectorIndex()];
                     assert collector.type == f.type();
-                    yield new WidgetState.InheritedPropObservable<>(
+                    yield new Node.InheritedPropObservable<>(
                             collector, f.optional(), f.debugName());
                 }
             };
@@ -350,7 +350,7 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
                 throw new RuntimeException("can't access factory method of proxy class for " +
                         "interface " + interfaceType.getName() + ": " + e, e);
             }
-            return mh.asType(methodType(Object.class, WidgetState.class, Class.class, boolean.class, String.class));
+            return mh.asType(methodType(Object.class, Node.class, Class.class, boolean.class, String.class));
         }
     };
 }
