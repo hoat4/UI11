@@ -198,8 +198,9 @@ public class LocalizedResourceDefinitionReflector {
 
         /**
          * member esetén deklaráló teljes név és a member név lesz benne, class esetén a teljes osztálynév.
-         * This is compatible with with {@link ReflectionUtil#memberToShortString(AnnotatedElement)}.
-         */
+         * <p>
+         * This is compatible with with {@link ReflectionUtil#memberToShortString(AnnotatedElement)},
+         * except parameter names, because in TeaVM we don't know parameter names.         */
         String toShortString();
     }
 

@@ -27,7 +27,7 @@ abstract sealed class PeerRequestor extends Widget {
     /**
      * @return ha null, ha nincs child. üres tömb nem lehet.
      */
-    abstract WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren);
+    abstract Edge[] buildMulti(WidgetState<?> widgetState, Edge @Nullable [] existingChildren);
 
     static final class CreatePeerForSingle<P> extends PeerRequestor {
 
@@ -45,26 +45,26 @@ abstract sealed class PeerRequestor extends Widget {
         }
 
         @Override
-        WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren) {
+        Edge[] buildMulti(WidgetState<?> widgetState, Edge @Nullable [] existingChildren) {
             if (req == null || !Objects.equals(req.requestData, request) ||
                     !Objects.equals(req.widget, widget))
                 req = new ResolutionRequest<>(
                         widgetState, request, widget);
 
-            WidgetInstantiation reqW = widgetState.tree.findOrCreateWidgetState(
+            Edge reqW = widgetState.tree.findOrCreateWidgetState(
                     req.widget,
                     widgetState,
                     existingChildren == null ? null : existingChildren[0],
                     Set.of(req)
             );
-            WidgetInstantiation finisher = widgetState.tree.findOrCreateWidgetState(
+            Edge finisher = widgetState.tree.findOrCreateWidgetState(
                     new SingleRRFinisher<>(req, f),
                     widgetState,
                     existingChildren == null ? null : existingChildren[1],
                     null
             );
             req.finisherWidget = finisher.child();
-            return new WidgetInstantiation[]{reqW, finisher};
+            return new Edge[]{reqW, finisher};
         }
 
         private static class SingleRRFinisher<P> extends FinisherWidget {
@@ -106,7 +106,7 @@ abstract sealed class PeerRequestor extends Widget {
         }
 
         @Override
-        WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren) {
+        Edge[] buildMulti(WidgetState<?> widgetState, Edge @Nullable [] existingChildren) {
             if (reqs == null) {
                 @SuppressWarnings("unchecked")
                 ResolutionRequest<P>[] reqsArray = new ResolutionRequest[widgets.size()];
@@ -114,7 +114,7 @@ abstract sealed class PeerRequestor extends Widget {
             } else if (reqs.length != widgets.size())
                 reqs = Arrays.copyOf(reqs, widgets.size());
 
-            WidgetInstantiation[] children = new WidgetInstantiation[widgets.size() + 1];
+            Edge[] children = new Edge[widgets.size() + 1];
 
             WidgetState<?> finisher = (children[widgets.size()] = widgetState.tree.findOrCreateWidgetState(
                     new ListRRFinisher<>(reqs, f),
@@ -132,7 +132,7 @@ abstract sealed class PeerRequestor extends Widget {
                             this.requests.get(i), widgets.get(i));
                     req.finisherWidget = finisher;
                 }
-                WidgetInstantiation existingWidgetState =
+                Edge existingWidgetState =
                         existingChildren != null && existingChildren.length - 1 > i ?
                                 existingChildren[i] : null;
                 children[i] = widgetState.tree.findOrCreateWidgetState(
@@ -192,7 +192,7 @@ abstract sealed class PeerRequestor extends Widget {
         }
 
         @Override
-        WidgetInstantiation[] buildMulti(WidgetState<?> widgetState, WidgetInstantiation @Nullable [] existingChildren) {
+        Edge[] buildMulti(WidgetState<?> widgetState, Edge @Nullable [] existingChildren) {
             WidgetState<?> thisWidgetState = widgetState();
             int reqCount = widgets.size();
 
@@ -201,7 +201,7 @@ abstract sealed class PeerRequestor extends Widget {
             else
                 this.reqs.keySet().retainAll(widgets.keySet());
 
-            WidgetInstantiation[] children = new WidgetInstantiation[reqCount + 1];
+            Edge[] children = new Edge[reqCount + 1];
 
             WidgetState<?> finisher = (children[reqCount] = thisWidgetState.tree.findOrCreateWidgetState(
                     new MapRRFinisher<>(reqs, f),

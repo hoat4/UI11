@@ -18,7 +18,7 @@ final class ResolutionRequest<P> {
     final @NonNull MutableObservable<@Nullable P> result =
             MutableObservable.ofNullable();
 
-    WidgetInstantiation reqWI;
+    Edge reqWI;
     @Nullable WidgetState<?> finisherWidget;
 
     /**
@@ -64,7 +64,7 @@ final class ResolutionRequest<P> {
             if (w.stateWidget instanceof PeerRequestor || w.children == null)
                 break;
             else
-                w = ((WidgetInstantiation) w.children).child();
+                w = ((Edge) w.children).child();
         }
         return new RuntimeException(sb.toString());
     }

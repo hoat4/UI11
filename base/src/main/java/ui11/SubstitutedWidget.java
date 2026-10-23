@@ -71,6 +71,10 @@ public abstract class SubstitutedWidget extends Widget {
         SubstitutedWidget thiz = forSubstitution();
         Objects.requireNonNull(thiz, "SW.cFS");
 
+        // TODO végig kéne gondolni, hogy nem lesznek-e túl gyakran cserélgetve így a listener proxy-k,
+        //      és hogy van-e ennek érdemi hatása
+        thiz.initListenerProxyData();
+
         ResolverRegistry resolverRegistry = widgetState().tree.resolverRegistry;
         List<ResolverRegistry.Transformer<?>> transformers = resolverRegistry.findTransformers(thiz);
 
@@ -126,7 +130,8 @@ public abstract class SubstitutedWidget extends Widget {
 
         // peer-specifikus resolvereket előbbre vesszük, mint a nem peer-specifikusakat,
         // mert ha peer-specifikusakkal ki elégíteni, akkor lehet hogy a nem peer-specifikus nem is kell
-        Set<ResolutionRequest<?>> handledUsingPeerSpecificResolvers = new HashSet<>();
+        Map<ResolutionRequest<?>, ResolverRegistry.ResolutionRule<?>> handledUsingPeerSpecificResolvers =
+            new HashMap<>();
         for (ResolverRegistry.ResolutionRule<?> rule : resolverRegistry.eagerRules) {
             if (!rule.matches(thiz, allRemainingRequests))
                 continue;
@@ -136,9 +141,12 @@ public abstract class SubstitutedWidget extends Widget {
                 for (ResolutionRequest<?> req : allRemainingRequests) {
                     if (!reqType.isInstance(req.requestData))
                         continue;
-                    if (!handledUsingPeerSpecificResolvers.add(req))
-                        throw new RuntimeException("Multiple resolvers has applicable " +
-                                "tryResolveRequestSpecific for " + thiz + " and " + req + ": " + resolverRegistry);
+                    ResolverRegistry.ResolutionRule<?> prev = handledUsingPeerSpecificResolvers.put(req, rule);
+                    if (prev != null)
+                        throw new RuntimeException("Can't substitute " + getClass().getSimpleName() + " because " +
+                            "multiple resolution rules applicable for " + req + ", at least\n" +
+                            "- " + prev + "\n" +
+                            "- " + rule);
                     m.computeIfAbsent(req.requestData, __ -> new HashSet<>()).add(req);
                 }
             }
@@ -156,7 +164,7 @@ public abstract class SubstitutedWidget extends Widget {
 
         Set<ResolutionRequest<?>> remainedAfterPeerSpecificResolvers =
                 new HashSet<>(allRemainingRequests);
-        remainedAfterPeerSpecificResolvers.removeAll(handledUsingPeerSpecificResolvers);
+        remainedAfterPeerSpecificResolvers.removeAll(handledUsingPeerSpecificResolvers.keySet());
 
         // amelyiknek van default értéke, azt ne adjuk tovább generic resolvereknek.
         // mert ebből az lenne, hogy pl. WeightRequest miatt elkezdené a natív control helyett felépíteni
@@ -176,18 +184,20 @@ public abstract class SubstitutedWidget extends Widget {
                 remainedAfterPeerSpecificResolvers.stream().
                         collect(groupingBy(r -> r.requestData, toSet()));
 
-        boolean[] foundGenericResolver = {false};
+        ResolverRegistry.ResolutionRule<?> foundGenericResolver = null;
 
         // tryResolveGeneric-eket akkor is végrehajtjuk, ha minden req-t lefednek a peer-specifikusok, hogy
         // multiple resolvers applicable hibák kijöjjenek
         for (ResolverRegistry.ResolutionRule<?> r : resolverRegistry.greedyRules) {
             if (!r.matches(thiz, remainedAfterPeerSpecificResolvers))
                 continue;
-            if (foundGenericResolver[0])
+            if (foundGenericResolver != null)
                 // TODO ezt már ResolverRegistrynek kéne detektálnia
-                throw new RuntimeException("Multiple resolvers has applicable tryResolveGeneric for " +
-                        thiz + ": " + resolverRegistry);
-            foundGenericResolver[0] = true;
+                throw new RuntimeException("Can't substitute " + getClass().getSimpleName() + " because " +
+                    "multiple non-request specific resolution rules applicable, at least\n" +
+                    "- " + foundGenericResolver + "\n" +
+                    "- " + r);
+            foundGenericResolver = r;
 
             Widget w = r.invokeUnchecked(thiz);
 
@@ -200,7 +210,7 @@ public abstract class SubstitutedWidget extends Widget {
 
         if (allRemainingRequests.size() != handledUsingPeerSpecificResolvers.size() + removedBecauseDefaultValue[0]) {
             // van olyan req, amit a peer-specifikusok nem fednek le
-            if (!foundGenericResolver[0]) {
+            if (foundGenericResolver == null) {
                 Widget w = thiz.fallbackContent(); // TODO exceptionök
                 if (w != null) {
                     ResolverWidgetKey.OfFallback key = new ResolverWidgetKey.OfFallback();
@@ -229,10 +239,16 @@ public abstract class SubstitutedWidget extends Widget {
     private @NonNull RuntimeException cantFindResolver(
             Set<ResolutionRequest<?>> remainingReqs, SubstitutedWidget thiz) {
         StringBuilder s = new StringBuilder();
-        s.append("No resolver supports and fallbackContent is not overriden on ");
-        s.append(thiz.toString());
-        s.append(": ").append(remainingReqs).append("\n").append("Refresh stack:");
-        s.append(widgetState().tree.refreshStackToString());
+        s.append("No resolver supports ").
+            append(ReflectionUtil.simpleName(getClass())).
+            append(" and it doesn't overrides fallbackContent(). \n");
+        s.append("Widget: ").append(thiz.toString()).append('\n');
+        s.append(ExposeRequest.class.getSimpleName()).append("s: ");
+        s.append(remainingReqs.stream().
+            map(req -> req.requestData.toString()).
+            collect(joining(", ", "", "\n")));
+        s.append("Refresh stack:");
+        s.append(widgetState().tree.refreshStackToString(false));
         s.append("\nAvailable resolvers: ");
         widgetState().tree.resolverRegistry.debug_allResolvers().forEach(entry -> {
             s.append("\n- ").append(entry);
@@ -273,7 +289,7 @@ public abstract class SubstitutedWidget extends Widget {
                     widgetType.getName() + " and " + ReflectionUtil.simpleName(widgetType) +
                     ".fallbackContent() returned null\n" +
                     "Remaining requests: " + requests.requests() + "\n" +
-                    "Refresh stack: " + widgetState().tree.refreshStackToString());
+                    "Refresh stack: " + widgetState().tree.refreshStackToString(false));
         }
     }
 

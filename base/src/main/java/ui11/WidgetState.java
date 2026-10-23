@@ -28,7 +28,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     static final int FLAG_IN_INACTIVATION_QUEUE = 16;
     /**
      * Megtiltja a refresh során a descendantok skippelését, hogy meghívódjon minden gyerekén a
-     * {@link #registerParent(WidgetInstantiation)}.
+     * {@link #registerParent(Edge)}.
      */
     static final int FLAG_HAS_STOLEN_CHILDREN = 32;
 
@@ -71,7 +71,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      * Ha egyszerre vagyunk egy {@link PeerRequestor}-ben és a finishernek egy descendantjában, akkor előbbi
      * ennek a listának az első eleme, az utóbbi pedig a második eleme.
      */
-    final List<WidgetInstantiation> parents = new ArrayList<>();
+    final List<Edge> parents = new ArrayList<>();
 
     /**
      * Ezt csak ezen WidgetState refreshjekor módosítjuk
@@ -80,7 +80,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
      * <p>
      * Lehetne intrusive linked list is, nem tudom hogy melyik a jobb.
      */
-    /* null | WidgetInstantiation | WidgetInstantiation[] */ Object children;
+    /* null | Edge | Edge[] */ Object children;
 
     /**
      * @see WidgetTree#beganRefreshID
@@ -259,7 +259,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
     // reaktiválásra nincs itt külön függvény, hanem a refresh folyamat részeként történik meg
     void inactivate() {
-        System.out.println("inactivate " + stateWidget);
+        // System.out.println("inactivate " + stateWidget);
         if (!hasFlag(FLAG_ACTIVE))
             throw new IllegalStateException("already inactive");
         assert parents.isEmpty();
@@ -276,9 +276,9 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
             case null -> {
                 // nop
             }
-            case WidgetInstantiation child -> child.child().removeParent(this);
+            case Edge child -> child.child().removeParent(this);
             default -> {
-                for (WidgetInstantiation child : (WidgetInstantiation[]) children)
+                for (Edge child : (Edge[]) children)
                     child.child().removeParent(this);
             }
         }
@@ -340,13 +340,17 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     /**
      * Ezt csak akkor lehet meghívni, ha a parent {@linkplain #NEEDS_REFRESH refreshelve lett már}
      */
-    void registerParent(@NonNull WidgetInstantiation wi) {
+    void registerParent(@NonNull Edge wi) {
         assert wi.child() == this;
 
         WidgetState<?> newParent = wi.parent();
         if (newParent != null && newParent.hasFlag(NEEDS_REFRESH))
             // mert akkor nem lehet iv consumereket bejegyezni
-            throw new IllegalArgumentException("Can't add parent which is not fresh");
+            throw new IllegalArgumentException("Can't add parent which is not fresh\n" +
+                "This widget: " + this + "\n" +
+                "Would be parent: " + wi.parent()+"\n" +
+                "Refresh stack:" +
+                tree.refreshStackToString(true));
 
         int parentIndex = 0;
         for (; parentIndex < parents.size(); parentIndex++) {
@@ -410,10 +414,10 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     /**
      * @return {@code null}, ha i nagyobb mint a childek száma
      */
-    @Nullable WidgetInstantiation child(int i) {
+    @Nullable Edge child(int i) {
         return switch (children) {
-            case WidgetInstantiation w -> i == 0 ? w : null;
-            case WidgetInstantiation[] array -> i < array.length ? array[i] : null;
+            case Edge w -> i == 0 ? w : null;
+            case Edge[] array -> i < array.length ? array[i] : null;
             case null -> null;
             default -> throw new RuntimeException("unknown content in children");
         };
@@ -494,7 +498,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                 w.addFlagIfNotPresent(FLAG_DESCENDANT_NEEDS_REFRESH);
                 //System.err.println("FLAG_DESCENDANT_NEEDS_REFRESH: " + w);
             }
-            for (WidgetInstantiation edge : w.parents) {
+            for (Edge edge : w.parents) {
                 if (edge.parent() == null) {
                     // root
                     if (tree.beganRefreshID == tree.finishedRefreshID)
@@ -715,14 +719,13 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         boolean retrieveValue() {
             Object newValue;
 
-            ReflectiveIVFactory reflectiveIVFactory = ReflectiveIVFactory.CV.get(type);
-            if (reflectiveIVFactory != null) {
+            if (IVFactory.isApplicable(type)) {
                 newValue = widgetState.tree.getIVForCurrentWidget(
                         widgetState, ResolutionRequestCollection.class, true);
                 if (newValue != WidgetTree.IV_NOT_PROVIDED) {
                     ResolutionRequestCollection coll =
                             (ResolutionRequestCollection) newValue;
-                    newValue = reflectiveIVFactory.makeValue(coll);
+                    newValue = IVFactory.makeUserValue(type, coll);
                     if (newValue == null)
                         newValue = WidgetTree.IV_NOT_PROVIDED;
                 }
@@ -734,7 +737,13 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                             (ResolutionRequestCollection) newValue;
                     newValue = findResolutionRequest(coll);
                 }
-            } else if (ExposeRequest[].class.isAssignableFrom(type) && ExposeRequest[].class != type) {
+            } else if (
+                // tömbon isAssignableFrom nem működik TeaVM 0.13.0-on, mindig false-t ad vissza.
+                // 0.16.0-ra már javították a hibát, addig workaroundolni kell.
+                type.isArray() &&
+                ExposeRequest.class.isAssignableFrom(type.getComponentType()) &&
+                ExposeRequest[].class != type) {
+
                 newValue = widgetState.tree.getIVForCurrentWidget(
                         widgetState, ResolutionRequestCollection.class, true);
                 if (newValue != WidgetTree.IV_NOT_PROVIDED) {
@@ -801,7 +810,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                     throw new RuntimeException("inherited value for " +
                             type.getName() + " (used by " + fieldOrParameterName + ")" +
                             " not supplied for " + widgetState + "; Ancestors: " +
-                            widgetState.tree.refreshStackToString());
+                            widgetState.tree.refreshStackToString(false));
                 }
             else
                 return type.cast(value);

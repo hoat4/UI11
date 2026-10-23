@@ -197,6 +197,7 @@ public abstract class ExposeRequest<P> {
                 });
     }
 
+    // TODO TeaVM-en ez most nem tudom hogy mit csinál, de valszeg nem működő kódot
     static final class RequestMetadata {
 
         final @NonNull Class<? extends ExposeRequest<?>> type;

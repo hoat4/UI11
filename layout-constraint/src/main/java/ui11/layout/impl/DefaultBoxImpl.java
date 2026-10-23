@@ -10,19 +10,18 @@ import ui11.decoration.Box.BoxShadow;
 import ui11.geom.*;
 import ui11.graphics.Surface;
 import ui11.graphics.VisualContentRequest;
-import ui11.graphics.effect.Overlay;
 import ui11.graphics.fill.LinearGradient;
 import ui11.graphics.fill.LinearGradient.Stop;
 import ui11.graphics.shaper.RoundedCorners;
 import ui11.graphics.shaper.Stroke;
 import ui11.layout.LayoutSize;
+import ui11.layout.multichild.Canvas;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
 import ui11.text.TextStyle;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static ui11.geom.Length.px;
 
@@ -228,25 +227,4 @@ public class DefaultBoxImpl extends Widget {
         }
         return constraints;
     }
-
-
-    // ebből majd lehetne egy publikus osztály.
-    // csak akkor lent a buildbe new FixedSize(Length.zero(), ...) kéne
-    // (most azért nem lehet, mert végtelen rekurziót eredményezne, mivel
-    // FixedSize is Box-szal van implementálva)
-    private static final class Canvas {
-
-        private final List<Widget> widgets = new ArrayList<>();
-
-        public void add(Widget w, Rect bounds) {
-            Objects.requireNonNull(w);
-            Objects.requireNonNull(bounds);
-            widgets.add(DefaultSingleChildLayoutImpl.transformWidgetToBounds(w, bounds));
-        }
-
-        public Widget build() {
-            return new Overlay(widgets);
-        }
-    }
-
 }

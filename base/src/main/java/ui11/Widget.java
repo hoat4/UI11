@@ -4,6 +4,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ui11.observable.MutableObservable;
 import ui11.observable.ObservableBase;
 import ui11.observable.Scope;
 
@@ -546,6 +547,8 @@ public abstract class Widget implements Cloneable {
      * ({@code null} in case of object fields, 0 or {@code false} in case of primitive type fields).
      * <p>
      * If a field is annotated with this, then it can't be annotated with {@linkplain Inject}.
+     * If a field is annotated with this and has type {@linkplain MutableObservable}, then it will be initialized with
+     * a {@code MutableObservable} instance that initially contains null (or zero or false) value.
      * <p>
      * This is similar to the
      * <a href="https://developer.android.com/develop/ui/compose/state#state-in-composables">{@code remember} function

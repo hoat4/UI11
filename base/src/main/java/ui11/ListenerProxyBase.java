@@ -52,7 +52,10 @@ abstract class ListenerProxyBase<L> {
 
     protected L currentValue() {
         if (modelWidget.lpModelData == null || inputField == -1)
-            throw new IllegalStateException("LPB3 " + inputField);
+            // TODO ennek értelmesebb hibaüzenet kéne, mert legálisan is kilyukadhatunk ide
+            //      (user "kiszivárogtathatja" Widget.eventListener() return value-ját és meghívhatja,
+            //       mielőtt bekerülne egy widget fába)
+            throw new IllegalStateException("LPB3 " + inputField + ", " + System.identityHashCode(modelWidget) + ", " + modelWidget);
 
         if (modelWidget.lpModelData.replacement == null)
             return initialValue;

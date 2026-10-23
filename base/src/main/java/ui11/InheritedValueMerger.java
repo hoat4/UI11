@@ -7,6 +7,10 @@ import ui11.provide.Provider.Mergeable;
 
 import java.util.Objects;
 
+// TODO kéne teszt, ami platform-dom cssClass és ClickListener kombinációját utánozza,
+//      tehát egy két mergeable inherited value, a külső megváltozik, és a belsőn belüli widgetnek ezután rebuildelődnie
+//      kell az új mergeölt értékkel
+
 class InheritedValueMerger<T> extends Widget {
 
     private final Class<T> type;

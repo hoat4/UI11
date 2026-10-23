@@ -13,7 +13,7 @@ final class RefreshStack {
 
     private final Deque<Item> stack = new LinkedList<>();
 
-    RefreshStack(@NonNull WidgetInstantiation root) {
+    RefreshStack(@NonNull Edge root) {
         Objects.requireNonNull(root);
         stack.push(new Item(null, -100 /* érvénytelen érték */, root));
     }
@@ -30,11 +30,11 @@ final class RefreshStack {
         return stack.element().widgetInstantiation.child();
     }
 
-    @NonNull WidgetInstantiation peekWidgetInstantiation() {
+    @NonNull Edge peekWidgetInstantiation() {
         return stack.element().widgetInstantiation;
     }
 
-    void push(@NonNull WidgetState<?> parent, int childIndex, @NonNull WidgetInstantiation child) {
+    void push(@NonNull WidgetState<?> parent, int childIndex, @NonNull Edge child) {
         stack.push(new Item(parent, childIndex, child));
     }
 
@@ -42,17 +42,16 @@ final class RefreshStack {
         return stack.pop();
     }
 
-    public String stackToString() {
+    public String stackToString(boolean showInternal) {
         if (stack.isEmpty())
             return "EMPTY";
         StringBuilder sb = new StringBuilder();
+        int i = depth();
         for (Item item : stack) {
             Class<? extends Widget> widgetClass = item.widgetInstantiation.child().stateWidget.getClass();
-            if (widgetClass != InheritedValueMerger.class &&
-                    widgetClass != GlobalKey.GlobalKeyWidgetImpl.class &&
-                    !PeerRequestor.class.isAssignableFrom(widgetClass) &&
-                    !PeerRequestor.FinisherWidget.class.isAssignableFrom(widgetClass)) {
-                sb.append("\n- ").append(widgetClass.getName());
+            --i;
+            if (shouldIncludeInPrint(widgetClass, showInternal)) {
+                sb.append("\n").append(i).append(". ").append(widgetClass.getName());
                 sb.append(" (needsRebuild=").append(item.needsRebuild).append(')');
             }
             item.widgetInstantiation.directIVs().forEach((type, val) -> {
@@ -60,6 +59,15 @@ final class RefreshStack {
             });
         }
         return sb.toString();
+    }
+
+    private static boolean shouldIncludeInPrint(Class<? extends Widget> widgetClass, boolean showInternal) {
+        if (showInternal)
+            return true;
+        return widgetClass != InheritedValueMerger.class &&
+            widgetClass != GlobalKey.GlobalKeyWidgetImpl.class &&
+            !PeerRequestor.class.isAssignableFrom(widgetClass) &&
+            !PeerRequestor.FinisherWidget.class.isAssignableFrom(widgetClass);
     }
 
     void setDebugValuesOfCurrentWidget(boolean needsRebuild) {
@@ -83,13 +91,13 @@ final class RefreshStack {
 
         public final @Nullable WidgetState<?> parent;
         public final int childIndex;
-        public final @NonNull WidgetInstantiation widgetInstantiation;
+        public final @NonNull Edge widgetInstantiation;
 
         private Boolean needsRebuild;
 
         Item(@Nullable WidgetState<?> parent,
              int childIndex,
-             @NonNull WidgetInstantiation widgetInstantiation) {
+             @NonNull Edge widgetInstantiation) {
             this.parent = parent;
             this.childIndex = childIndex;
             this.widgetInstantiation = widgetInstantiation;

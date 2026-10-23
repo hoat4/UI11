@@ -10,6 +10,7 @@ import ui11.geom.Axis;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.layout.helper.LayoutHelper;
+import ui11.layout.multichild.Canvas;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.multichild.LinearLayout.WeightMarker;
 import ui11.layout.multichild.LinearLayout.JustifyContent;
@@ -289,7 +290,7 @@ public final class DefaultLinearLayoutImpl extends Widget {
                     for (int i = 0; i < itemCount; i++) {
                         double w = widths[i];
                         Rect bounds = Rect.of(mainAxis, x, 0, w, height);
-                        o.accept(DefaultSingleChildLayoutImpl.transformWidgetToBounds(placeables[i], bounds));
+                        o.accept(Canvas.transformWidgetToBounds(placeables[i], bounds));
                         x += w;
                     }
                 });

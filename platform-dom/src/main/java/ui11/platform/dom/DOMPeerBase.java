@@ -1,5 +1,6 @@
 package ui11.platform.dom;
 
+import org.jspecify.annotations.NonNull;
 import org.teavm.jso.dom.html.HTMLElement;
 import ui11.Expose;
 import ui11.ExposeRequest;
@@ -8,18 +9,17 @@ import ui11.color.Color;
 import ui11.color.RGBColor;
 import ui11.geom.Length;
 import ui11.graphics.Surface;
+import ui11.graphics.VisualContentRequest;
 import ui11.layout.Insets;
 import ui11.platform.dom.DOMWidgetWrapper.InheritedTextStyle;
 import ui11.platform.dom.DOMWidgetWrapper.ProxySurface;
 import ui11.platform.dom.peers.DOMCoverPeer;
 import ui11.text.TextStyle;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -82,44 +82,30 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
     }
 
     protected Widget makePeer(Widget widget, Function<DOMElementHolder, Widget> f) {
-        return ExposeRequest.requestSingle(new DOMWidgetWrapper(widget), DOMPeerCreationRequest.INSTANCE, f);
+        return new ReqWrapperForSingle(widget, f);
     }
 
     protected Widget makePeers(List<? extends Widget> widgets,
                                Function<List<DOMElementHolder>, Widget> f) {
-        return ExposeRequest.requestOnMultipleWidgets(
-                widgets.stream().map(DOMWidgetWrapper::new).toList(),
-                DOMPeerCreationRequest.INSTANCE,
-                f
-        );
+        return new ReqWrapperForList(widgets, Set.of(),
+            (children, a) -> f.apply(children));
     }
 
     protected final Widget makePeers(List<? extends Widget> widgets,
                                      Set<ExposeRequest<?>> additionalRequests,
                                      BiFunction<List<DOMElementHolder>,
-                                             Map<ExposeRequest<?>, ? extends List<?>>, Widget> f) {
-        Set<ExposeRequest<?>> requests = new HashSet<>(additionalRequests);
-        DOMPeerCreationRequest domPeerCreationRequest = DOMPeerCreationRequest.INSTANCE;
-        requests.add(domPeerCreationRequest);
-        return ExposeRequest.requestMultiple(
-                widgets.stream().map(DOMWidgetWrapper::new).toList(),
-                requests,
-                results -> f.apply((List<DOMElementHolder>) results.get(domPeerCreationRequest), results)
-        );
+                                         Map<ExposeRequest<?>, ? extends List<?>>, Widget> f) {
+        return new ReqWrapperForList(widgets, additionalRequests, f);
     }
 
     protected <K> Widget makePeers(Map<K, ? extends Widget> widgets,
                                    Function<Map<K, ? extends DOMElementHolder>, Widget> f) {
-        widgets = widgets.entrySet().stream().collect(toMap(
-                Map.Entry::getKey,
-                e -> new DOMWidgetWrapper(e.getValue()))
-        );
-        return ExposeRequest.requestOnMultipleWidgets(widgets, DOMPeerCreationRequest.INSTANCE, f::apply);
+        return new ReqWrapperForMap<>(widgets, f);
     }
 
     protected Widget makePeer_sameSurface(Widget widget, Function<DOMElementHolder, Widget> f) {
         // TODO ez most ugyanaz mint a sima makePeer
-        return ExposeRequest.requestSingle(new DOMWidgetWrapper(widget), DOMPeerCreationRequest.INSTANCE, f);
+        return new ReqWrapperForSingle(widget, f);
     }
 
     protected Widget wrapResult(DOMElementHolder h) {
@@ -135,6 +121,8 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
         return (H) elementHolder.element;
     }
 
+    // TODO ehelyett azt kéne, hogy CSSBackgroundImagePeerCreationRequestet is exposeoljunk.
+    //      mert most ez így pl. Cover-ben nem működik.
     protected String asCSSColor() {
         return null;
     }
@@ -211,21 +199,153 @@ public abstract class DOMPeerBase<H extends HTMLElement> extends Widget {
         return !cumulativePropList.onClick().isEmpty();
     }
 
-    public static final class DOMPeerCreationRequest extends ExposeRequest<DOMElementHolder> {
+    public static final class DOMPeerCreationRequest extends VisualContentRequest<DOMElementHolder> {
 
-        public static final DOMPeerCreationRequest INSTANCE = new DOMPeerCreationRequest();
-
-        private DOMPeerCreationRequest() {
-            super(DOMElementHolder.class);
+        public DOMPeerCreationRequest(@NonNull Surface surface) {
+            super(DOMElementHolder.class, surface);
         }
     }
 
-    public static final class CSSBackgroundImagePeerCreationRequest extends ExposeRequest<DOMCoverPeer.CSSBackgroundImage> {
+    public static final class CSSBackgroundImagePeerCreationRequest extends VisualContentRequest<DOMCoverPeer.CSSBackgroundImage> {
 
-        public static final CSSBackgroundImagePeerCreationRequest INSTANCE = new CSSBackgroundImagePeerCreationRequest();
+        public CSSBackgroundImagePeerCreationRequest(Surface surface) {
+            super(DOMCoverPeer.CSSBackgroundImage.class, surface);
+        }
+    }
 
-        private CSSBackgroundImagePeerCreationRequest() {
-            super(DOMCoverPeer.CSSBackgroundImage.class);
+    // TODO ezeket szüntessük meg
+    private static class ReqWrapperForSingle extends Widget {
+
+        private final Widget widget;
+        private final Function<DOMElementHolder, Widget> then;
+
+        @Remember private ProxySurface proxySurface;
+
+        public ReqWrapperForSingle(Widget widget, Function<DOMElementHolder, Widget> then) {
+            this.widget = Objects.requireNonNull(widget);
+            this.then = Objects.requireNonNull(then);
+        }
+
+        @Override
+        protected void initState() {
+            proxySurface = new ProxySurface();
+        }
+
+        @Override
+        protected Widget build() {
+            return ExposeRequest.requestSingle(new DOMWidgetWrapper(widget),
+                new DOMPeerCreationRequest(proxySurface), then);
+        }
+    }
+
+    private static class ReqWrapperForList extends Widget {
+
+        private final List<Widget> widgets;
+        private final BiFunction<List<DOMElementHolder>, Map<ExposeRequest<?>, ? extends List<?>>, Widget> then;
+        private final Set<ExposeRequest<?>> additionalRequests;
+
+        @Remember private List<ProxySurface> proxySurfaces;
+
+        public ReqWrapperForList(List<? extends Widget> widgets,
+                                 Set<ExposeRequest<?>> additionalRequests,
+                                 BiFunction<List<DOMElementHolder>, Map<ExposeRequest<?>, ? extends List<?>>, Widget> then) {
+            this.widgets = List.copyOf(widgets);
+            this.then = Objects.requireNonNull(then);
+            this.additionalRequests = Set.copyOf(additionalRequests);
+        }
+
+        @Override
+        protected void initState() {
+            proxySurfaces = new ArrayList<>();
+        }
+
+        @Override
+        protected Widget build() {
+            Map<Integer, Widget> widgetMap = new TreeMap<>();
+            Map<Integer, Set<ExposeRequest<?>>> requestsMap = new TreeMap<>();
+            List<DOMPeerCreationRequest> elementsRequests = new ArrayList<>();
+            for (int i = 0; i < widgets.size(); i++) {
+                widgetMap.put(i, new DOMWidgetWrapper(widgets.get(i)));
+                Set<ExposeRequest<?>> requests = new HashSet<>(additionalRequests);
+                ProxySurface proxySurface;
+                if (proxySurfaces.size() == i)
+                    proxySurfaces.add(proxySurface = new ProxySurface());
+                else
+                    proxySurface = proxySurfaces.get(i);
+                DOMPeerCreationRequest req = new DOMPeerCreationRequest(proxySurface);
+                elementsRequests.add(req);
+                requests.add(req);
+                requestsMap.put(i, requests);
+            }
+            if (widgets.size() < proxySurfaces.size())
+                proxySurfaces.subList(widgets.size(), proxySurfaces.size()).clear();
+            return ExposeRequest.requestMultiple(
+                widgetMap,
+                requestsMap,
+                resultMap -> {
+                    List<DOMElementHolder> childElements = new ArrayList<>();
+                    for (int i = 0; i < widgets.size(); i++)
+                        childElements.add((DOMElementHolder) resultMap.get(elementsRequests.get(i)).get(i));
+
+                    Map<ExposeRequest<?>, List<?>> additionalResponses = resultMap.entrySet().stream().
+                        filter(e -> additionalRequests.contains(e.getKey())).
+                        collect(toMap(
+                            Map.Entry::getKey,
+                            e -> IntStream.range(0, widgets.size()).
+                                mapToObj((int key) -> {
+                                    Object val = e.getValue().get(key);
+                                    if (val == null)
+                                        throw new RuntimeException("no value for #" + key + ". Available " + resultMap);
+                                    return val;
+                                }).toList()
+                        ));
+
+                    return then.apply(childElements, additionalResponses);
+                }
+            );
+        }
+    }
+
+    private static class ReqWrapperForMap<K> extends Widget {
+
+        private final Map<K, Widget> widgets;
+        private final Function<Map<K, ? extends DOMElementHolder>, Widget> then;
+
+        @Remember private Map<K, ProxySurface> proxySurfaces;
+
+        public ReqWrapperForMap(Map<K, ? extends Widget> widgets,
+                                Function<Map<K, ? extends DOMElementHolder>, Widget> then) {
+            this.widgets = Map.copyOf(widgets);
+            this.then = Objects.requireNonNull(then);
+        }
+
+        @Override
+        protected void initState() {
+            proxySurfaces = new HashMap<>();
+        }
+
+        @Override
+        protected Widget build() {
+            Map<K, Widget> wrappedWidgets = widgets.entrySet().stream().collect(toMap(
+                Map.Entry::getKey,
+                e -> new DOMWidgetWrapper(e.getValue())
+            ));
+            Map<K, ExposeRequest<?>> reqs = new HashMap<>();
+            Map<K, Set<ExposeRequest<?>>> reqSets = new HashMap<>();
+            for (K k : widgets.keySet()) {
+                ProxySurface proxySurface = proxySurfaces.computeIfAbsent(k, __ -> new ProxySurface());
+                DOMPeerCreationRequest req = new DOMPeerCreationRequest(proxySurface);
+                reqs.put(k, req);
+                reqSets.put(k, Set.of(req));
+            }
+            proxySurfaces.keySet().retainAll(widgets.keySet());
+
+            return ExposeRequest.requestMultiple(wrappedWidgets, reqSets, results -> {
+                Map<K, DOMElementHolder> children = new HashMap<>();
+                for (K k : widgets.keySet())
+                    children.put(k, (DOMElementHolder) Objects.requireNonNull(results.get(reqs.get(k)).get(k)));
+                return then.apply(children);
+            });
         }
     }
 }

@@ -19,19 +19,12 @@ public class DOMGridPeer extends DOMLayoutPeerBase {
 
     private final Grid grid;
 
-    @Remember private BitSet goneItems;
-
     public DOMGridPeer(Grid grid) {
         super(false, true);
         this.grid = grid;
     }
 
     private record GridItemKey(int col, int row, int overlayIndex) {
-    }
-
-    @Override
-    protected void initState() {
-        goneItems = new BitSet();
     }
 
     @Override
@@ -64,7 +57,7 @@ public class DOMGridPeer extends DOMLayoutPeerBase {
 
         List<HTMLElement> childrenPeers = new ArrayList<>();
         List<Item> items = e.items();
-        goneItems.clear();
+        BitSet goneItems = new BitSet();
 
         Map<GridPos, Integer> overlayCounts = new HashMap<>();
 

@@ -15,6 +15,8 @@ public record DOMElementHolder(
         @Nullable String asCSSImage
 ) {
     public boolean isHidden() {
+        // TODO ez nem jó, változásokról parent értesítése elmarad.
+        //      inkább egy boolean mezőben kéne lennie hiddennek.
         return "none".equals(element.getStyle().getPropertyValue("display"));
     }
 }

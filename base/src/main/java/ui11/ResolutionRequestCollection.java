@@ -2,6 +2,7 @@ package ui11;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.reflectutil.ReflectionUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,28 +27,6 @@ record ResolutionRequestCollection(@NonNull Set<? extends ResolutionRequest<?>> 
             if (duplicates.size() != 1)
                 throw new RuntimeException("Duplicate " + base.getSimpleName() + " found: " + duplicates);
         }
-    }
-
-    static ResolutionRequestCollection combine(Map<ResolutionRequestCollection, Long> requestCollections) {
-        Map<@Nullable Class<? extends ExposeRequest<?>>, Set<ResolutionRequest<?>>> reqsByBase = new HashMap<>();
-        Map<ResolutionRequest<?>, Long> times = new HashMap<>();
-        requestCollections.forEach((reqColl, time) -> {
-            for (ResolutionRequest<?> req : reqColl.requests) {
-                reqsByBase.computeIfAbsent(req.metadata().baseForAtMostOnce,
-                        __ -> new HashSet<>()).add(req);
-                if (times.put(req, time) != null)
-                    throw new RuntimeException("TODO Req appears in multiple coll");
-            }
-        });
-        Set<ResolutionRequest<?>> combined = new HashSet<>(reqsByBase.remove(null));
-        reqsByBase.forEach((base, reqs) -> {
-            List<ResolutionRequest<?>> sorted = reqs.stream().sorted(Comparator.comparingLong(times::get)).toList();
-            if (sorted.size() > 1 && times.get(sorted.getFirst()).equals(times.get(sorted.get(1))))
-                throw new RuntimeException("Can't determine order for " + sorted);
-            combined.add(sorted.getFirst());
-        });
-        //System.out.println("Combine " + requestCollections + " to " + combined.stream().map(ResolutionRequest::toString).collect(joining("\n")));
-        return new ResolutionRequestCollection(combined);
     }
 
     @Override

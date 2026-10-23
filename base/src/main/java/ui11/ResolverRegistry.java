@@ -1,6 +1,7 @@
 package ui11;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+
+// TODO kéne valami prioritás, mert így most nem lehet a classpathban layout-constraint ha platform-dom is ott van
 
 /**
  * Can be used to control the process of lowering the {@linkplain SubstitutedWidget SubstitutedWidgets} to
@@ -106,6 +109,41 @@ public final class ResolverRegistry {
     Stream<ResolutionRule<?>> debug_allResolvers() {
         return greedyRules.stream();
     }
+
+    /*
+    public static final class Filter {
+
+        /**
+         * null means all requests supported
+         *
+        private final @Nullable Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes;
+
+        private Filter(@Nullable Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes) {
+            this.supportedRequestTypes = supportedRequestTypes;
+        }
+
+        public static Filter unfiltered() {
+            return new Filter(null);
+        }
+
+        public static Filter ofRequestType(Class<? extends ExposeRequest<?>>... requestTypes) {
+            return new Filter(Set.of(requestTypes));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Filter filter = (Filter) o;
+            return Objects.equals(supportedRequestTypes, filter.supportedRequestTypes);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(supportedRequestTypes);
+        }
+    }
+     */
 
     // ennek identity equalsjére SubstitutedWidgetben a keyek dependelnek
     static final class ResolutionRule<W extends SubstitutedWidget> {

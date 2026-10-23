@@ -5,6 +5,7 @@ import org.teavm.jso.dom.html.HTMLElement;
 import ui11.ExposeRequest;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
+import ui11.graphics.Surface;
 import ui11.layout.singlechild.Cover;
 import ui11.platform.dom.DOMPeerBase;
 
@@ -14,6 +15,8 @@ import java.util.Objects;
 public class DOMCoverPeer extends DOMPeerBase<HTMLElement> {
 
     private final Cover cover;
+
+    @Inject private Surface inheritedSurface;
 
     public DOMCoverPeer(Cover cover) {
         this.cover = cover;
@@ -27,14 +30,15 @@ public class DOMCoverPeer extends DOMPeerBase<HTMLElement> {
 
     @Override
     protected Widget doBuild() {
-        CSSBackgroundImagePeerCreationRequest req = CSSBackgroundImagePeerCreationRequest.INSTANCE;
+        // TODO egyelőre az inheritedSurface-t használjuk
+        CSSBackgroundImagePeerCreationRequest req = new CSSBackgroundImagePeerCreationRequest(inheritedSurface);
         return ExposeRequest.requestSingle(cover.content(), req, result -> {
             elem().getStyle().setProperty("background-image", "url(" + result.uri.toString() + ")");
             return endingWidget();
         });
     }
 
-    public static final class CSSBackgroundImage extends SubstitutedWidget {
+    public static final class CSSBackgroundImage {
 
         private final URI uri;
 

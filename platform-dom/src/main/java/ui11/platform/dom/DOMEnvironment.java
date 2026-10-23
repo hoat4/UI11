@@ -41,6 +41,7 @@ public class DOMEnvironment implements Shell, Scheduler {
     public final HTMLDocument document;
     private final DOMEventDispatcher eventDispatcher = new DOMEventDispatcher(this);
     public final CoordinateSpaceRoot clientCoordinateSpace = new CoordinateSpaceRoot();
+    private Runnable onError;
 
     public DOMEnvironment(Window window) {
         this.window = JSWindowWrapper.ofNative(window);
@@ -49,6 +50,12 @@ public class DOMEnvironment implements Shell, Scheduler {
 
     public static void show(Widget widget, HTMLElement element) {
         new DOMEnvironment(Window.current()).doShow(widget, element);
+    }
+
+    public static void show(Widget widget, HTMLElement element, Runnable onError) {
+        DOMEnvironment env = new DOMEnvironment(Window.current());
+        env.onError = onError;
+        env.doShow(widget, element);
     }
 
     public void doShow(Widget widget, HTMLElement element) {
@@ -60,6 +67,9 @@ public class DOMEnvironment implements Shell, Scheduler {
             css.setTextContent(p.cssSnippet());
             document.getHead().appendChild(css);
         }
+
+        DOMPeerBase.DOMPeerCreationRequest rootContentReq =
+            new DOMPeerBase.DOMPeerCreationRequest(new DOMWidgetWrapper.ProxySurface());
 
         class DOMElementRoot extends Widget {
 
@@ -126,7 +136,6 @@ public class DOMEnvironment implements Shell, Scheduler {
                 }
 
                 Widget contentRoot = new RootWidgetWrapper(new DOMWidgetWrapper(widget));
-                final DOMPeerBase.DOMPeerCreationRequest rootContentReq = DOMPeerBase.DOMPeerCreationRequest.INSTANCE;
                 return ExposeRequest.requestSingle(contentRoot, rootContentReq, result -> {
                     element.setInnerHTML("");
                     element.appendChild(result.element());
@@ -137,7 +146,16 @@ public class DOMEnvironment implements Shell, Scheduler {
         }
         element.getClassList().add("fp");
 
-        Executor executor = task -> window.setTimeout(task::run, 0);
+        Executor executor = task -> window.setTimeout(() -> {
+            try {
+                task.run();
+            } catch (Throwable e) {
+                if (onError != null)
+                    onError.run(); // kiírni nem kell, WidgetTree úgyis naplózza
+                else
+                    throw e;
+            }
+        }, 0);
         WidgetTree.create(new DOMElementRoot(), executor);
     }
 

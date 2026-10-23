@@ -1,5 +1,6 @@
 package ui11.platform.dom;
 
+import ui11.Expose;
 import ui11.ResolverProvider;
 import ui11.ResolverRegistry;
 import ui11.control.*;
@@ -30,12 +31,15 @@ import ui11.media.ImageSource;
 import ui11.media.JPEGImageView;
 import ui11.media.SVGImageView;
 import ui11.media.Video;
+import ui11.platform.dom.DOMPeerBase.CSSBackgroundImagePeerCreationRequest;
 import ui11.platform.dom.DOMPeerBase.DOMPeerCreationRequest;
 import ui11.platform.dom.peers.*;
 import ui11.provide.Provider;
 import ui11.text.Text;
 import ui11.text.formatted.OrderedList;
 import ui11.webcontent.WebContentFrame;
+
+import java.util.Set;
 
 import static ui11.css.CSSClassTag.cssClass;
 import static ui11.graphics.Empty.empty;
@@ -50,14 +54,20 @@ public class DOMResolverProvider implements ResolverProvider {
     }
 
     private void addDomResolvers(ResolverRegistry r) {
-        r.registerForContextType(DOMPeerCreationRequest.class, ColorFill.class, ColorFillPeer::new);
+        r.registerForContextTypes(
+            Set.of(DOMPeerCreationRequest.class, CSSBackgroundImagePeerCreationRequest.class),
+            ColorFill.class, ColorFillPeer::new);
         r.registerForContextType(DOMPeerCreationRequest.class, Text.class, TextElementPeer::new);
         r.registerForContextType(DOMPeerCreationRequest.class, RasterImageView.class, rasterImageView -> {
             throw new RuntimeException("TODO");
         });
-        r.registerForContextType(DOMPeerCreationRequest.class, LinearGradient.class, DOMLinearGradientPeer::new);
-        r.registerForContextType(DOMPeerCreationRequest.class, ConicGradient.class, DOMConicGradientPeer::new);
-        r.registerForContextType(DOMPeerCreationRequest.class, Mask.class, DOMMaskPeer::new);
+        r.registerForContextTypes(
+            Set.of(DOMPeerCreationRequest.class, CSSBackgroundImagePeerCreationRequest.class),
+            LinearGradient.class, DOMLinearGradientPeer::new);
+        r.registerForContextTypes(Set.of(DOMPeerCreationRequest.class, CSSBackgroundImagePeerCreationRequest.class),
+            ConicGradient.class, DOMConicGradientPeer::new);
+        r.registerForContextTypes(Set.of(DOMPeerCreationRequest.class, CSSBackgroundImagePeerCreationRequest.class),
+            Mask.class, DOMMaskPeer::new);
         r.registerForContextType(DOMPeerCreationRequest.class, Opacity.class, DOMOpacityPeer::new);
         r.registerForContextType(DOMPeerCreationRequest.class, RoundedCorners.class, DOMRoundedCornersPeer::new);
         r.registerForContextType(DOMPeerCreationRequest.class, WebContentFrame.class, WebContentFramePeer::new);
@@ -132,14 +142,16 @@ public class DOMResolverProvider implements ResolverProvider {
 
     private void addCSSBackgroundResolvers(ResolverRegistry r) {
         // CSS background
-        r.registerForContextType(DOMPeerBase.CSSBackgroundImagePeerCreationRequest.class, SVGImageView.class, svg -> {
+        r.registerPeerResolver(CSSBackgroundImagePeerCreationRequest.class, SVGImageView.class, svg -> {
             if (svg.isInteractive())
                 throw new RuntimeException("interactive SVGImageView inside CSSBackgroundImageContext");
             if (!svg.embeddedWidgets().isEmpty())
                 throw new RuntimeException("embedded widgets in SVG inside CSSBackgroundImageContext");
-            return new DOMCoverPeer.CSSBackgroundImage(svg.source().toURI());
+            return new CSSImageWidget(svg.source().toURI());
         });
-        r.registerForContextType(DOMPeerBase.CSSBackgroundImagePeerCreationRequest.class, SVGImageView.class,
-                jpg -> new DOMCoverPeer.CSSBackgroundImage(jpg.source().toURI()));
+        r.registerPeerResolver(CSSBackgroundImagePeerCreationRequest.class, SVGImageView.class,
+                jpg -> new CSSImageWidget(jpg.source().toURI()));
+        r.registerPeerResolver(CSSBackgroundImagePeerCreationRequest.class, JPEGImageView.class,
+                jpg -> new CSSImageWidget(jpg.source().toURI()));
     }
 }

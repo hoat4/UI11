@@ -4,14 +4,12 @@ import org.jspecify.annotations.NonNull;
 import ui11.Expose;
 import ui11.ExposeRequest;
 import ui11.Widget;
-import ui11.geom.Mat4;
 import ui11.geom.Rect;
 import ui11.geom.Size;
 import ui11.geom.Vec2;
-import ui11.graphics.effect.Transform;
-import ui11.graphics.shaper.RectangleShaped;
 import ui11.layout.helper.LayoutHelper;
 import ui11.layout.helper.SingleChildLayout;
+import ui11.layout.multichild.Canvas;
 import ui11.layout.protocol.BoxConstraints;
 import ui11.layout.protocol.BoxLayoutResult;
 
@@ -83,7 +81,7 @@ public final class DefaultSingleChildLayoutImpl extends Widget {
 
                             Rect childBounds = new Rect(childTopLeft, childSize);
                             childBounds = snapToPixels(childBounds);
-                            yield transformWidgetToBounds(singleChildLayout.child(), childBounds);
+                            yield Canvas.transformWidgetToBounds(singleChildLayout.child(), childBounds);
                         }
                     };
                 });
@@ -97,17 +95,6 @@ public final class DefaultSingleChildLayoutImpl extends Widget {
         return new Rect(
                 childBounds.topLeft().floor(),
                 childBounds.size().ceil()
-        );
-    }
-
-    // TODO ezt ki kéne emelni közös osztályba, mert DefaultLinearLayoutImpl-nek kell
-    static @NonNull Transform transformWidgetToBounds(Widget childWithSlot, Rect bounds) {
-        return new Transform(
-                new RectangleShaped(
-                        childWithSlot,
-                        bounds.size()
-                ),
-                Mat4.ofTranslation(bounds.topLeft())
         );
     }
 }

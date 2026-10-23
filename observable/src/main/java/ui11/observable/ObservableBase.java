@@ -30,6 +30,9 @@ public class ObservableBase {
         if (obs1 == null && obs2 == null && obs3 == null && observers == null)
             return;
 
+        if (debugMessageSupplier == null)
+            debugMessageSupplier = this::toString;
+
         if (observers == null) {
             ObserverCollection obs1 = this.obs1, obs2 = this.obs2, obs3 = this.obs3;
             if (obs1 != null && ObserverHolder.current().obsC != obs1)

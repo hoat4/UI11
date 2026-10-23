@@ -476,6 +476,9 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
         return System.identityHashCode(asDetachedMarker(false));
     }
 
+    // ennek a második paraméterére hivatkozik WidgetAccessorTeaVMPlugin,
+    // ezért ha módosítjuk ennek a metódusnak a nevét vagy a paraméterek sorrendjét, akkor írjuk át ott is.
+    // szólni nem fog ha elromlik, csak hülye hibák fognak keletkezni (pl. NPE Class.getSimpleName-ben).
     private static <T> @NonNull Widget wrapInProvider(@NonNull Widget content, Class<T> type, Object value) {
         return new Provider<>(type, type.cast(value), content);
     }
@@ -683,6 +686,9 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                                     fieldDependency.getValue().propagate(agent.getType(ValueType.object(
                                             interfaceProxyFactories.get(f.type()).getClassName())));
                                 }
+                                default -> {
+                                    throw new RuntimeException("unknown inject field kind");
+                                }
                             }
 
                             DependencyNode ivCollectorConstructorTypeParam =
@@ -707,7 +713,17 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                                                 Class.class, Object.class, Widget.class, void.class)).
                                         getVariable(2 /* value paraméter */);
 
+                        DependencyNode wrapInProvider_typeParam =
+                            agent.linkMethod(new MethodReference(TeaVMWidgetAccessor.class,
+                                    "wrapInProvider", Widget.class, Class.class, Object.class, Widget.class)).
+                                getVariable(2) /* type paraméter */;
+                        // getVariable-nek azért 2 kell, mert vélelmezi azt hogy instance metódusról van szó.
+                        // Ezért a 0. változót receivernek tekinti, hiába nem is létezik itt,
+                        // mivel statikus metódusról van szó.
+
                         for (ProviderMethodInfo<?> p : r.providers) {
+                            wrapInProvider_typeParam.getClassValueNode().propagate(agent.getType(ValueType.parse(p.providedType())));
+
                             switch (p.member()) {
                                 case Method m -> {
                                     MethodReference methodRef = new MethodReference(m.getDeclaringClass(),
@@ -842,7 +858,8 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                         InjectionFieldInfo f = r.injectFields.get(i);
                         if (i != 0)
                             writer.append(", ");
-                        writer.appendClass(f.type());
+
+                        TeaVMUtil.appendClass(f.type(), writer);
 
                         if (f.optional())
                             injectFieldsOptional |= 1 << i;
@@ -878,6 +895,16 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                     writer.append(injectFieldsOptional).append(", // injectFieldsOptional").newLine();
                     writer.append(injectFieldsInherited).append(", // injectFieldsInherited").newLine();
                     writer.append(injectFieldsObservableWrapped).append(", // injectFieldsObservableWrapped").newLine();
+
+                    writer.append('[');
+                    for (int i = 0; i < r.injectFields.size(); i++) {
+                        InjectionFieldInfo f = r.injectFields.get(i);
+                        if (i != 0)
+                            writer.append(", ");
+
+                        writer.append(f.collectorIndex());
+                    }
+                    writer.append("], // injectFieldToCollectorIndex").newLine();
 
                     writer.append('[');
                     for (int i = 0; i < r.stateFields.size(); i++) {
@@ -989,7 +1016,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                         if (i != 0)
                             writer.append(", ");
 
-                        writer.appendClass(t);
+                        TeaVMUtil.appendClass(t, writer);
                     }
                     writer.append("] // providerTypes").newLine();
 

@@ -4,11 +4,8 @@ import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.events.MouseEvent;
 import org.teavm.jso.dom.html.HTMLElement;
 import ui11.control.Tooltip;
+import ui11.geom.*;
 import ui11.geom.Location.CoordinateSpace;
-import ui11.geom.Mat4;
-import ui11.geom.Shape;
-import ui11.geom.Size;
-import ui11.geom.Vec2;
 import ui11.graphics.Surface;
 import ui11.graphics.VisualContentRequest;
 import ui11.input.focus.FocusListener;
@@ -57,7 +54,10 @@ public class DOMSurface implements Surface {
 
     @Override
     public Shape inputShape() {
-        throw new RuntimeException("TODO");
+        // TODO ez így nyilván nem a valós shape, de egyelőre csak nem lényeges hogy pontos legyen, mert
+        //      PointerStateDependent eltérő effektet mutassson ha a widgeten kívül vagy belül van
+        //      lenyomva az egér
+        return Shape.ofRect(Rect.of(size()), coordinateSpace());
     }
 
     @Override

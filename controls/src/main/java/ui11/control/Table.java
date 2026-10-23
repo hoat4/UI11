@@ -60,6 +60,7 @@ public class Table<T> extends SubstitutedWidget {
         return clickHandler;
     }
 
+    // TODO duplicate row-kkal mi legyen?
     private record CellKey<T>(T row, Column<? super T> column) {
     }
 
