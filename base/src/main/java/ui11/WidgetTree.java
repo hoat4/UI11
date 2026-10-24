@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toMap;
 public final class WidgetTree {
 
     private static final boolean TRACE_REFRESH = false;
+    private static final boolean TRACE_CLEANUP_UNUSED_IV = false; // CleanupUnusedIVCollectorTest
 
     static final Object IV_NOT_PROVIDED = new Object();
 
@@ -312,6 +313,14 @@ public final class WidgetTree {
             // find next sibling of current or next sibling of ancestor
             while (true) {
                 RefreshStack.Item current = refreshStack.pop();
+
+                // cleanup unused IV collectors
+                current.widgetInstantiation.child().ivCollectorsByType.values().removeIf(c -> {
+                    if (TRACE_CLEANUP_UNUSED_IV && c.usage == 0)
+                        System.out.println("Remove " + c + " from " + current.widgetInstantiation.child());
+                    return c.usage == 0;
+                });
+
                 assert (current.parent == null) == refreshStack.isEmpty();
                 if (current.parent == null)
                     break;
