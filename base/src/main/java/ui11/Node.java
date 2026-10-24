@@ -5,7 +5,6 @@ import org.jspecify.annotations.Nullable;
 import ui11.observable.*;
 import ui11.observable.Observable;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -91,19 +90,16 @@ final class Node<W extends Widget> implements ObserverCollection {
     private Object observed; // ObservableBase[] vagy Set
     private long[] stateAtPause;
 
+    /**
+     * This array contains only those IV collectors used by {@link ui11.Widget.Inject @Inject} fields.
+     * For all IV collectors, see {@linkplain #ivCollectorsByType}.
+     */
     IVCollector<?>[] ivCollectors;
 
     /**
-     * Azon IV-k vannak benne, amit ezen widget ancestorai providolnak és ezen widget descendantjai fogyasztanak.
-     * Arra van használva, hogy átugorjuk a descendantokat (más feltételekkel együtt, pl.
-     * {@link #FLAG_DESCENDANT_NEEDS_REFRESH}).
-     * Amit ez a widget provideol, azok azért nincsenek benne, mert rebuild után úgyis lesz refresh a childokon.
-     * <p>
-     * Akkor lesz nem-nullra beállítva az értéke, amikor bekerül a refresh stackba az első child.
-     * Ha nincs child, akkor null lesz.
-     * Ha átugorjuk a descendatokat, akkor nem változtatjuk az értékét.
+     * This map contains all IV collectors, in contrast to {@link #ivCollectors}.
      */
-    Map<Class<?>, Object> descendantsInterestedIVs;
+    final Map<Class<?>, IVCollector<?>> ivCollectorsByType;
 
     /**
      * ha ez true, akkor lehet írni relativeKeysToGlobalKeysbe
@@ -127,6 +123,11 @@ final class Node<W extends Widget> implements ObserverCollection {
         assert accessor.clazz() == stateWidget.getClass();
 
         accessor.checkStateEmptyAndPrepareState(stateWidget, this, modelWidget);
+
+        ivCollectorsByType = new HashMap<>();
+        for (IVCollector<?> c : ivCollectors)
+            if (ivCollectorsByType.put(c.type, c) != null)
+                throw new RuntimeException("duplicate IVCollector");
 
         if (modelWidget.lpModelData != null)
             // ez a végére van hagyva azért, hogyha fent exception történik, akkor ne jegyezzünk be usage-et
@@ -582,10 +583,15 @@ final class Node<W extends Widget> implements ObserverCollection {
         observed = s;
     }
 
-    boolean retrieveIVValues() {
-        boolean changed = false;
-        for (IVCollector<?> collector : ivCollectors)
-            changed |= collector.retrieveValue();
+    /**
+     *
+     * @return mask of {@link IVCollector#USED_BY_SELF} and {@link IVCollector#USED_BY_DESCENDANT}
+     */
+    int retrieveIVValues() {
+        int changed = 0;
+        for (IVCollector<?> collector : ivCollectorsByType.values())
+            if (collector.retrieveValue())
+                changed |= collector.usage;
         return changed;
     }
 
@@ -699,122 +705,6 @@ final class Node<W extends Widget> implements ObserverCollection {
                     ", optional=" + optional +
                     ", ivCollector=" + ivCollector +
                     ", of " + ivCollector.widgetState + "}";
-        }
-    }
-
-    // ha ennek a konstruktornak a signaturejét megváltoztatjuk, akkor
-    // változtassuk meg WidgetAccessorTeaVMPluginben a hivatkozást és a getVariable-t is
-    // (nem fog hibát jelezni ha nem tesszük, csak rejtélyes JS hibák fognak megjelenni)
-    static class IVCollector<T> {
-
-        final Node<?> widgetState;
-        final Class<T> type;
-
-        private Object value;
-
-        IVCollector(Node<?> widgetState, Class<T> type) {
-            this.widgetState = widgetState;
-            this.type = type;
-        }
-
-        boolean retrieveValue() {
-            Object newValue;
-
-            if (IVFactory.isApplicable(type)) {
-                newValue = widgetState.tree.getIVForCurrentWidget(
-                        widgetState, ResolutionRequestCollection.class, true);
-                if (newValue != WidgetTree.IV_NOT_PROVIDED) {
-                    ResolutionRequestCollection coll =
-                            (ResolutionRequestCollection) newValue;
-                    newValue = IVFactory.makeUserValue(type, coll);
-                    if (newValue == null)
-                        newValue = WidgetTree.IV_NOT_PROVIDED;
-                }
-            } else if (ExposeRequest.class.isAssignableFrom(type) && ExposeRequest.class != type) {
-                newValue = widgetState.tree.getIVForCurrentWidget(
-                        widgetState, ResolutionRequestCollection.class, true);
-                if (newValue != WidgetTree.IV_NOT_PROVIDED) {
-                    ResolutionRequestCollection coll =
-                            (ResolutionRequestCollection) newValue;
-                    newValue = findResolutionRequest(coll);
-                }
-            } else if (
-                // tömbon isAssignableFrom nem működik TeaVM 0.13.0-on, mindig false-t ad vissza.
-                // 0.16.0-ra már javították a hibát, addig workaroundolni kell.
-                type.isArray() &&
-                ExposeRequest.class.isAssignableFrom(type.getComponentType()) &&
-                ExposeRequest[].class != type) {
-
-                newValue = widgetState.tree.getIVForCurrentWidget(
-                        widgetState, ResolutionRequestCollection.class, true);
-                if (newValue != WidgetTree.IV_NOT_PROVIDED) {
-                    ResolutionRequestCollection coll =
-                            (ResolutionRequestCollection) newValue;
-                    newValue = findResolutionRequests(coll);
-                }
-            } else
-                newValue = widgetState.tree.getIVForCurrentWidget(widgetState, type, true);
-
-            if (!Objects.equals(value, newValue)) {
-                this.value = newValue;
-                return true;
-            } else
-                return false;
-        }
-
-        private @NonNull Object findResolutionRequest(ResolutionRequestCollection coll) {
-            Object newValue;
-            @SuppressWarnings("unchecked") Class<? extends ExposeRequest<?>> castedType =
-                    (Class<? extends ExposeRequest<?>>) type.asSubclass(ExposeRequest.class);
-            List<? extends ResolutionRequest<?>> reqs = coll.byType(castedType);
-            newValue = switch (reqs.size()) {
-                case 0 -> WidgetTree.IV_NOT_PROVIDED;
-                case 1 -> type.cast(reqs.getFirst().requestData);
-                default -> {
-                    // TODO
-                    throw new RuntimeException("Multiple requests corresponds to " + type.getName());
-                }
-            };
-            return newValue;
-        }
-
-        // tömb
-        private @NonNull Object findResolutionRequests(ResolutionRequestCollection coll) {
-            @SuppressWarnings("unchecked")
-            Class<? extends ExposeRequest<?>> pcrType = (Class<? extends ExposeRequest<?>>)
-                    type.getComponentType().asSubclass(ExposeRequest.class);
-
-            List<? extends ResolutionRequest<?>> reqs = coll.byType(pcrType);
-            Object[] result = (Object[]) Array.newInstance(pcrType, reqs.size());
-            for (int i = 0; i < reqs.size(); i++) {
-                result[i] = pcrType.cast(reqs.get(i).requestData);
-            }
-            return result;
-        }
-
-        /**
-         * Csak retrieveValue vagy resume után szabad meghívni, ha a widget előtte
-         * FLAG_NEEDS_IV_RETRIEVE vagy !FLAG_ACTIVE állapotban volt.
-         * Továbbá csak refresh közben, mivel exception messageben kiírhatja a refresh stack tartalmát is.
-         */
-        T currentValue(boolean optional, String fieldOrParameterName) {
-            if (!widgetState.hasFlag(FLAG_ACTIVE))
-                throw new IllegalStateException("can't retrieve value, widget state is inactive: " + this + ", " + widgetState);
-            if (value == null)
-                throw new RuntimeException("should not reach here (IVC.cV)");
-
-            if (value == WidgetTree.IV_NOT_PROVIDED)
-                if (optional)
-                    return null;
-                else {
-                    // TODO hibaüzenet esetén field nevet hogy kéne kiírni? (InjectionFieldInfo::debugName)
-                    throw new RuntimeException("inherited value for " +
-                            type.getName() + " (used by " + fieldOrParameterName + ")" +
-                            " not supplied for " + widgetState + "; Ancestors: " +
-                            widgetState.tree.refreshStackToString(false));
-                }
-            else
-                return type.cast(value);
         }
     }
 }

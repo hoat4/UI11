@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ui11.WidgetDefinitionParser.InjectionFieldInfo;
 import ui11.WidgetDefinitionParser.StateFieldInfo;
-import ui11.Node.IVCollector;
 import ui11.Node.InheritedPropBase;
 import ui11.observable.MutableObservable;
 import ui11.reflectutil.ReflectionUtil;
@@ -114,8 +113,11 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
         if (widgetState.ivCollectors != null)
             throw new IllegalStateException();
         IVCollector<?>[] ivCollectors = new IVCollector[ivTypes.length];
-        for (int i = 0; i < ivCollectors.length; i++)
-            ivCollectors[i] = new IVCollector<>(widgetState, ivTypes[i]);
+        for (int i = 0; i < ivCollectors.length; i++) {
+            IVCollector<?> c = new IVCollector<>(widgetState, ivTypes[i]);
+            c.usage |= IVCollector.USED_BY_SELF;
+            ivCollectors[i] = c;
+        }
         widgetState.ivCollectors = ivCollectors;
 
         for (InjectionFieldInfo f : injectFields) {

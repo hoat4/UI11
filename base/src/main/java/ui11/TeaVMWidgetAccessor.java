@@ -246,9 +246,12 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
 
         if (widgetState.ivCollectors != null)
             throw new IllegalStateException();
-        Node.IVCollector<?>[] ivCollectors = new Node.IVCollector[injectFieldTypes.getLength()];
-        for (int i = 0; i < ivCollectors.length; i++)
-            ivCollectors[i] = new Node.IVCollector<>(widgetState, injectFieldTypes.get(i));
+        IVCollector<?>[] ivCollectors = new IVCollector[injectFieldTypes.getLength()];
+        for (int i = 0; i < ivCollectors.length; i++) {
+            IVCollector<?> c = new IVCollector<>(widgetState, injectFieldTypes.get(i));
+            c.usage |= IVCollector.USED_BY_SELF;
+            ivCollectors[i] = c;
+        }
         widgetState.ivCollectors = ivCollectors;
 
         for (int i = 0; i < injectFieldNames.getLength(); i++) {
@@ -692,7 +695,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                             }
 
                             DependencyNode ivCollectorConstructorTypeParam =
-                                    agent.linkMethod(new MethodReference(Node.IVCollector.class, "<init>",
+                                    agent.linkMethod(new MethodReference(IVCollector.class, "<init>",
                                                     Node.class, Class.class,
                                                     void.class)).
                                             getVariable(2 /* type paraméter */);

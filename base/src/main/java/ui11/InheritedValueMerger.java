@@ -24,12 +24,18 @@ class InheritedValueMerger<T> extends Widget {
     }
 
     @Override
+    protected void initState() {
+        assert widgetState().ivCollectors.length == 0;
+        assert widgetState().ivCollectorsByType.isEmpty();
+        // ha ez nem empty, akkor változtatni kell lenti logikán
+    }
+
+    @Override
     protected Widget build() {
         if (newValue == null)
             return content;
 
-        Node<?> widgetState = widgetState();
-        Object prevVal = widgetState.tree.getIVForCurrentWidget(widgetState, type, true);
+        Object prevVal = ivFromParent().valueIfExists();
         T val;
 
         if (prevVal != WidgetTree.IV_NOT_PROVIDED) {
@@ -59,6 +65,21 @@ class InheritedValueMerger<T> extends Widget {
 
         // returnedProviderShouldNotBeMerged==true miatt ez mert nem lesz IVM-mé átalakítva
         return new Provider<>(type, val, content);
+    }
+
+    private IVCollector<T> ivFromParent() {
+        @SuppressWarnings("unchecked")
+        Node<InheritedValueMerger<T>> node = (Node<InheritedValueMerger<T>>) widgetState();
+        @SuppressWarnings("unchecked")
+        IVCollector<T> current = (IVCollector<T>) node.ivCollectorsByType.get(type);
+        if (current == null) {
+            current = new IVCollector<>(node, type);
+            current.usage |= IVCollector.USED_BY_SELF;
+            current.retrieveValue();
+            node.ivCollectorsByType.clear();
+            node.ivCollectorsByType.put(type, current);
+        }
+        return current;
     }
 
     boolean returnedProviderShouldNotBeMerged() {

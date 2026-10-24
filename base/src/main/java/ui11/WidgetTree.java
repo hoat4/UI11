@@ -123,7 +123,8 @@ public final class WidgetTree {
                     needsRebuild |= w.resumeObservables();
                 }
 
-                needsRebuild |= w.retrieveIVValues();
+                int ivsUpdated = w.retrieveIVValues();
+                needsRebuild |= (ivsUpdated & IVCollector.USED_BY_SELF) != 0;
 
                 if (w.stateWidget instanceof PeerRequestor)
                     // TODO ez már nem elavult?
@@ -156,16 +157,13 @@ public final class WidgetTree {
                 refreshStack.setDebugValuesOfCurrentWidget(needsRebuild);
 
                 if (!needsRebuild) {
-                    if (!needsDescendantRefresh && w.descendantsInterestedIVs != null &&
-                            !ivsMatch(w, w.descendantsInterestedIVs))
-                        needsDescendantRefresh = true;
+                    needsDescendantRefresh |= (ivsUpdated & IVCollector.USED_BY_DESCENDANT) != 0;
 
                     if (TRACE_REFRESH)
                         traceRefresh(w + ": no rebuild, " +
-                                (needsDescendantRefresh ? "but enter children" : "skip children" +
-                                        "; descendant interested IVs: " + w.descendantsInterestedIVs));
+                                (needsDescendantRefresh ? "but enter children" : "skip children"));
 
-                    findNextToRefresh(!needsDescendantRefresh);
+                    findNextToRefresh(needsDescendantRefresh);
                     continue;
                 }
 
@@ -228,7 +226,7 @@ public final class WidgetTree {
                         prevChild.child().removeParent(w);
                 }
 
-                findNextToRefresh(false);
+                findNextToRefresh(true);
 
                 // nem szabad pl. FLAG_NEEDS_REBUILD-nek maradnia.
                 // következő widgeteknél ki fog derülni, de nehezen értelmezhető hibaüzenetekkel.
@@ -279,14 +277,6 @@ public final class WidgetTree {
         System.err.println("[TRACE_REFRESH] " + "  ".repeat(indent) + s);
     }
 
-    private boolean ivsMatch(Node<?> w, Map<Class<?>, Object> descendantsInterestedIVs) {
-        for (Map.Entry<Class<?>, Object> entry : descendantsInterestedIVs.entrySet()) {
-            if (!Objects.equals(getIVForCurrentWidget(w, entry.getKey(), false), entry.getValue()))
-                return false;
-        }
-        return true;
-    }
-
     /**
      * Az új childeket hozzáadjuk a parentjükhöz, az eltűnteket töröljük a parentjükből, valamint az összes esetén
      * berakjuk a refresh queueba, amelyeknek kell refresh.
@@ -307,30 +297,20 @@ public final class WidgetTree {
         }
     }
 
-    private void findNextToRefresh(boolean skipDescendantsOfCurrent) {
+    private void findNextToRefresh(boolean enterDescendants) {
         Node<?> w = refreshStack.peekWidget();
 
-        if (!skipDescendantsOfCurrent && w.hasChildren()) {
+        if (enterDescendants)
+            w.ivCollectorsByType.values().forEach(c -> c.usage &= ~IVCollector.USED_BY_DESCENDANT);
+
+        if (enterDescendants && w.hasChildren()) {
             // enter children
-            w.descendantsInterestedIVs = new HashMap<>();
-            assert w.hasChildren();
             Edge child = w.child(0);
             assert child != null;
             refreshStack.push(w, 0, child);
         } else {
-            if (!skipDescendantsOfCurrent) {
-                // fenti if feltétele miatt ekkor w-nek nincs gyereke.
-                // ha nincs gyereke, akkor viszont elavult információkat tartalmaz a descendantsInterestedIVs map,
-                // ha még létezik, ezért töröljük.
-                w.descendantsInterestedIVs = null;
-            }
-
             // find next sibling of current or next sibling of ancestor
             while (true) {
-                Node<?> peek = refreshStack.peekWidget();
-                if (peek.descendantsInterestedIVs == null)
-                    assert peek == w;
-
                 RefreshStack.Item current = refreshStack.pop();
                 assert (current.parent == null) == refreshStack.isEmpty();
                 if (current.parent == null)
@@ -436,102 +416,6 @@ public final class WidgetTree {
             for (ResolutionRequest<?> req : reqs)
                 req.reqWI = wi;
         return wi;
-    }
-
-    // TODO ezt az IV prioritásos dolgot át kéne gondolni alaposabban.
-    //      Most az lett a működés, hogy a req coll-t adó widgetig menve a legmagasabb a
-    //      seq numberű widget instantiation a prioritás.
-    //      De ez tényleg helyes működés, vagy csak arra elég hogy IDTest lefusson?
-
-    /**
-     * @param subscribe descendantokba bejegyzi a típus utáni érdeklődést. Ettől önmagában
-     *                  még nem fogunk a jövőben mindenképp rebuildelődni, mert ahhoz
-     *                  {@linkplain Node#retrieveIVValues()}-nak is true-t kell visszaadnia.
-     * @return {@link #IV_NOT_PROVIDED}, ha nincs
-     */
-    Object getIVForCurrentWidget(Node<?> widgetState, Class<?> type, boolean subscribe) {
-        if (!widgetState.hasFlag(Node.FLAG_ACTIVE))
-            throw new IllegalStateException("not active");
-
-        Deque<IVStackItem> stack = new LinkedList<>();
-        stack.push(new IVStackItem(widgetState, 0));
-
-        List<Edge> visitedEdges = new ArrayList<>();
-
-        try {
-            boolean foundAnyValue = false;
-            IVCombiner combiner = IVCombiner.forType(type);
-
-            while (!stack.isEmpty()) {
-                IVStackItem current = stack.peek();
-
-                // current.w.parents lehet hogy üres (inaktivációs queueban vár),
-                // ekkor skippeljük
-
-                if (current.parentIndex == current.parent.parents.size()) {
-                    stack.pop();
-                    continue;
-                }
-
-                Edge edge = current.parent.parents.get(current.parentIndex);
-                current.parentIndex++;
-
-                if (edge.ivRetrieval_visited)
-                    continue;
-                edge.ivRetrieval_visited = true;
-                visitedEdges.add(edge);
-
-                Object value = edge.directIVs().getOrDefault(type, IV_NOT_PROVIDED);
-                if (value == IV_NOT_PROVIDED) {
-                    DynamicProvider dynamicProvider = (DynamicProvider) edge.directIVs().get(DynamicProvider.class);
-                    if (dynamicProvider != null) {
-                        // TODO kéne valamit csinálni hogy DynamicProvider ne kavarhasson subscribe-olásokkal
-                        Object dynamicValue = dynamicProvider.provideOrNull(type);
-                        if (dynamicValue != null)
-                            value = type.cast(dynamicValue);
-                    }
-                }
-
-                if (value == IV_NOT_PROVIDED) {
-                    assert (edge == root) == (edge.parent() == null);
-                    if (edge != root)
-                        stack.push(new IVStackItem(edge.parent(), edge.instantiatedAt()));
-                    continue;
-                }
-
-                if (subscribe) {
-                    for (IVStackItem item : stack) {
-                        if (item.parent != widgetState)
-                            item.parent.descendantsInterestedIVs.put(type, value);
-                    }
-                }
-
-                foundAnyValue = true;
-                if (edge != root) // TODO a rootban nem lehetnek IV-k?
-                    // ennek az edge-nek az instantiatedAt-je is lényeges lehet, ezért berakjuk ideiglenesen a stackbe
-                    stack.push(new IVStackItem(edge.parent(), edge.instantiatedAt()));
-                combiner.add(value, stack);
-                if (edge != root)
-                    stack.pop();
-            }
-
-            return foundAnyValue ? combiner.finish() : IV_NOT_PROVIDED;
-        } finally {
-            for (Edge e : visitedEdges)
-                e.ivRetrieval_visited = false;
-        }
-    }
-
-    static class IVStackItem {
-        final Node<?> parent;
-        final long edgeCreationTime;
-        int parentIndex;
-
-        IVStackItem(Node<?> edgeParent, long edgeCreationTime) {
-            Objects.requireNonNull(edgeParent);
-            this.parent = edgeParent;
-            this.edgeCreationTime = edgeCreationTime;
-        }
     }
 
     void addToInactivationQueue(@NonNull Node<?> w) {

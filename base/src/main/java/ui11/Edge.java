@@ -21,11 +21,6 @@ final class Edge {
     private final @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs;
     private final long instantiatedAt;
 
-    /**
-     * used by getIVForCurrentWidget, false after it returns
-     */
-    boolean ivRetrieval_visited;
-
     Edge(@Nullable Node<?> parent, @NonNull Node<?> child, @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs, long instantiatedAt) {
         Objects.requireNonNull(child);
         Objects.requireNonNull(directIVs);
