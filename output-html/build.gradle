@@ -4,16 +4,13 @@ plugins {
 }
 
 dependencies  {
-    api "com.flyordie.ui11:base"
-    /*
-    implementation "com.flyordie.ui11:platform-dom" // ez is JS szerializáláshoz
-     */
-    implementation "com.flyordie.ui11:controls" // mert néhány controlnak natív HTML implementációja van
-    implementation "com.flyordie.ui11:css"
-    implementation "com.flyordie.ui11:media"
+    api project(":base")
+    implementation project(":controls") // because some controls have native HTML implementations
+    implementation project(":css")
+    implementation project(":media")
     testImplementation 'org.openjdk.jmh:jmh-core:1.18';
     testImplementation 'org.openjdk.jmh:jmh-generator-annprocess:1.18';
-    testImplementation "com.flyordie.ui11:controls-defaultlook"
+    testImplementation project(":controls-defaultlook")
 }
 
 jmh {
