@@ -1,9 +1,9 @@
-package ui.platform.glass;
+package ui11.platform.glass;
 
 import com.sun.glass.ui.Application;
 import com.sun.glass.ui.View;
 import com.sun.glass.ui.Window;
-import ui.platform.glass.windows.CompositorTimingThread;
+import ui11.platform.glass.windows.CompositorTimingThread;
 import ui11.ExposeRequest;
 import ui11.SubstitutedWidget;
 import ui11.Widget;

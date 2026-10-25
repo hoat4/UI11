@@ -1,14 +1,11 @@
-package ui.platform.glass.windows;
+package ui11.platform.glass.windows;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ui.platform.glass.SchedulerImpl;
+import ui11.platform.glass.SchedulerImpl;
 import ui11.observable.Scope;
 
-import java.lang.foreign.*;
-import java.lang.invoke.MethodHandle;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.foreign.MemoryLayout.PathElement.groupElement;

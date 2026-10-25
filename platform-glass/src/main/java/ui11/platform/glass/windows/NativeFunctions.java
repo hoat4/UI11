@@ -1,4 +1,4 @@
-package ui.platform.glass.windows;
+package ui11.platform.glass.windows;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;

@@ -1,4 +1,4 @@
-package ui.platform.glass;
+package ui11.platform.glass;
 
 import com.sun.glass.events.WindowEvent;
 import com.sun.glass.ui.Window;

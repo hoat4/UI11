@@ -1,10 +1,8 @@
-package ui.platform.glass.windows;
+package ui11.platform.glass.windows;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
-import java.util.Optional;
 
-import static java.lang.foreign.MemoryLayout.structLayout;
 import static java.lang.foreign.MemorySegment.NULL;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
