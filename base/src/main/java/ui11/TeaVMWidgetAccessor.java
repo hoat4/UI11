@@ -72,6 +72,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
      */
     private final int injectFieldsOptional, injectFieldsInherited, injectFieldsObservableWrapped;
     private final JSArray<JSNumber> injectFieldToCollectorIndex;
+    private final int ivCollectorCount;
     private final JSArray<JSString> stateFieldNames;
     // most ebbe vannak belekódolva az observable-s zero-k is. lehet hogy jobb lenne annak egy külön mező.
     private final JSArray<JSObject> stateFieldZeroes;
@@ -97,6 +98,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                                 int injectFieldsInherited,
                                 int injectFieldsObservableWrapped,
                                 JSArray<JSNumber> injectFieldToCollectorIndex,
+                                int ivCollectorCount,
                                 JSArray<JSString> stateFieldNames,
                                 JSArray<JSObject> stateFieldZeroes,
                                 JSArray<JSString> providerFieldNames,
@@ -113,6 +115,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
         this.injectFieldsInherited = injectFieldsInherited;
         this.injectFieldsObservableWrapped = injectFieldsObservableWrapped;
         this.injectFieldToCollectorIndex = injectFieldToCollectorIndex;
+        this.ivCollectorCount = ivCollectorCount;
         this.stateFieldNames = stateFieldNames;
         this.stateFieldZeroes = stateFieldZeroes;
         this.providerFieldNames = providerFieldNames;
@@ -137,6 +140,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
         this.injectFieldsInherited = other.injectFieldsInherited;
         this.injectFieldsObservableWrapped = other.injectFieldsObservableWrapped;
         this.injectFieldToCollectorIndex = other.injectFieldToCollectorIndex;
+        this.ivCollectorCount = other.ivCollectorCount;
         this.stateFieldNames = other.stateFieldNames;
         this.stateFieldZeroes = other.stateFieldZeroes;
         this.providerFieldNames = other.providerFieldNames;
@@ -163,6 +167,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
             int injectFieldsInherited,
             int injectFieldsObservableWrapped,
             JSArray<JSNumber> injectFieldToCollectorIndex,
+            int ivCollectorCount,
             JSArray<JSString> stateFieldNames,
             JSArray<JSObject> stateFieldZeroes,
             JSArray<JSString> providerFieldNames,
@@ -194,6 +199,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                 injectFieldsInherited,
                 injectFieldsObservableWrapped,
                 injectFieldToCollectorIndex,
+                ivCollectorCount,
                 stateFieldNames,
                 stateFieldZeroes,
                 providerFieldNames,
@@ -246,13 +252,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
 
         if (widgetState.ivCollectors != null)
             throw new IllegalStateException();
-        IVCollector<?>[] ivCollectors = new IVCollector[injectFieldTypes.getLength()];
-        for (int i = 0; i < ivCollectors.length; i++) {
-            IVCollector<?> c = new IVCollector<>(widgetState, injectFieldTypes.get(i));
-            c.usage |= IVCollector.USED_BY_SELF;
-            ivCollectors[i] = c;
-        }
-        widgetState.ivCollectors = ivCollectors;
+        IVCollector<?>[] ivCollectors = new IVCollector[ivCollectorCount];
 
         for (int i = 0; i < injectFieldNames.getLength(); i++) {
             JSString injectFieldName = injectFieldNames.get(i);
@@ -264,6 +264,15 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                         "Refresh stack: \n" + newState.debug_getRefreshStack());
 
             Class<?> type = injectFieldTypes.get(i);
+
+            int collectorIndex = injectFieldToCollectorIndex.get(i).intValue();
+            IVCollector<?> c = ivCollectors[collectorIndex];
+            if (c == null) {
+                c = new IVCollector<>(widgetState, type);
+                c.usage |= IVCollector.USED_BY_SELF;
+                ivCollectors[collectorIndex] = c;
+            }
+
             JSObject interfaceProxyFactory = injectFieldInterfaceProxyFactories.get(i);
             Object wrapper;
             if (interfaceProxyFactory != null)
@@ -276,13 +285,14 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                 if ((injectFieldsObservableWrapped >>> i & 1) != 0)
                     // ha ezt megváltoztatjuk, akkor lent változtassuk meg propagateType-nak átadott classnevet is
                     wrapper = new InheritedPropObservable<>(
-                            widgetState.ivCollectors[injectFieldToCollectorIndex.get(i).intValue()],
+                            c,
                             (injectFieldsOptional & 1 << i) != 0, injectFieldName.stringValue());
                 else
                     continue;
             }
             fieldSet(newState, injectFieldName, wrapper);
         }
+        widgetState.ivCollectors = ivCollectors;
     }
 
     @Override
@@ -577,6 +587,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                 int.class, // injectFieldsInherited
                 int.class, // injectFieldsObservableWrapped
                 JSArray.class, // injectFieldToCollectorIndex
+                int.class, // ivCollectorCount
                 JSArray.class, // stateFieldNames
                 JSArray.class, // stateFieldZeroes
                 JSArray.class, // providerFieldNames
@@ -908,6 +919,8 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
                         writer.append(f.collectorIndex());
                     }
                     writer.append("], // injectFieldToCollectorIndex").newLine();
+
+                    writer.append(r.ivCollectorTypes.length).append(", ").newLine(); // ivCollectorCount
 
                     writer.append('[');
                     for (int i = 0; i < r.stateFields.size(); i++) {

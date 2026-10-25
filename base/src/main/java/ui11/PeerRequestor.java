@@ -1,5 +1,6 @@
 package ui11;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -177,7 +178,7 @@ abstract sealed class PeerRequestor extends Widget {
 
     static final class CreatePeersForMap<P, K> extends PeerRequestor {
 
-        private final Map<K, ? extends Widget> widgets;
+        private final Map<@NonNull K, ? extends Widget> widgets;
         private final Map<K, ? extends Set<ExposeRequest<P>>> requests;
         private final Function<? super Map<ExposeRequest<P>, Map<K, P>>, Widget> f;
 
@@ -216,9 +217,10 @@ abstract sealed class PeerRequestor extends Widget {
             //      nem látszik a "Replace lambda with anonymous class"
             // TODO JDK-nak jelenteni kéne, hogy MapN.forEach feleslegesen vacakol entrySettel, miközben
             //      egy lapos Object[]-ben vannak a key/value párjai
-            for (Map.Entry<K, ? extends Widget> entry : withID("widgets", widgets).entrySet()) {
+            for (Map.Entry<K, ? extends Widget> entry : widgets.entrySet()) {
                 K key = entry.getKey();
-                Widget widget = entry.getValue();
+                // van Map-es withID is, de az lassabb, mert új mapet allokál
+                Widget widget = withID("widgets", key, entry.getValue());
                 Set<ExposeRequest<P>> reqDatas = this.requests.get(key);
 
                 Set<ResolutionRequest<P>> oldSet = reqs.getOrDefault(key, Collections.emptySet());

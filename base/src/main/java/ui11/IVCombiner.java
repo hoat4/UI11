@@ -17,17 +17,20 @@ abstract class IVCombiner<T> {
         if (type == ResolutionRequestCollection.class)
             return (IVCombiner<T>) new ReqCollIVCombiner();
         else
-            return new SelectingIVCombiner<>("inherited value " + ReflectionUtil.simpleName(type));
+            return new SelectingIVCombiner<>() {
+
+                @Override
+                protected String typeDebugName() {
+                    return "inherited value " + ReflectionUtil.simpleName(type);
+                }
+            };
     }
 
-    private static class SelectingIVCombiner<T> extends IVCombiner<T> {
+    private static abstract class SelectingIVCombiner<T> extends IVCombiner<T> {
 
         private final Map<T, List<Long>> differentValues = new IdentityHashMap<>();
-        private final String typeDebugName;
 
-        SelectingIVCombiner(String typeDebugName) {
-            this.typeDebugName = typeDebugName;
-        }
+        protected abstract String typeDebugName();
 
         @Override
         void add(T value, long priority) {
@@ -51,7 +54,7 @@ abstract class IVCombiner<T> {
 
             StringBuilder sb = new StringBuilder();
             sb.append(differentValues.size()).append(" different values for ");
-            sb.append(typeDebugName).append(":");
+            sb.append(typeDebugName()).append(":");
             for (Map.Entry<T, List<Long>> e : differentValues.entrySet()) {
                 sb.append("\n- ").append(e.getKey()).append(" ").append(e.getKey().hashCode()).append(
                         e.getValue().stream().map(String::valueOf).collect(joining(", ", " (priority: ", ")")));
@@ -87,14 +90,17 @@ abstract class IVCombiner<T> {
         @Override
         void add(ResolutionRequestCollection value, long priority) {
             for (ResolutionRequest<?> req : value.requests()) {
-                if (req.metadata().baseForAtMostOnce == null) {
+                Class<? extends ExposeRequest<?>> base = req.metadata().baseForAtMostOnce;
+                if (base == null) {
                     combined.add(req);
                 } else {
-                    String typeDebugName = ReflectionUtil.simpleName(req.metadata().baseForAtMostOnce) +
-                            " based " + ExposeRequest.class.getSimpleName() + "s";
-                    combiners.computeIfAbsent(req.metadata().baseForAtMostOnce,
-                                    __ -> new SelectingIVCombiner<>(typeDebugName)).
-                            add(req, priority);
+                    combiners.computeIfAbsent(base, base2 -> new SelectingIVCombiner<>() {
+                        @Override
+                        protected String typeDebugName() {
+                            return ReflectionUtil.simpleName(base2) +
+                                " based " + ExposeRequest.class.getSimpleName() + "s";
+                        }
+                    }).add(req, priority);
                 }
             }
         }

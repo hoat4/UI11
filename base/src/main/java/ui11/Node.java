@@ -127,7 +127,7 @@ final class Node<W extends Widget> implements ObserverCollection {
         ivCollectorsByType = new HashMap<>();
         for (IVCollector<?> c : ivCollectors)
             if (ivCollectorsByType.put(c.type, c) != null)
-                throw new RuntimeException("duplicate IVCollector");
+                throw new RuntimeException("duplicate IVCollector in " + this);
 
         if (modelWidget.lpModelData != null)
             // ez a végére van hagyva azért, hogyha fent exception történik, akkor ne jegyezzünk be usage-et

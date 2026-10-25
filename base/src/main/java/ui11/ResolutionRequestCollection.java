@@ -17,15 +17,20 @@ record ResolutionRequestCollection(@NonNull Set<? extends ResolutionRequest<?>> 
     ResolutionRequestCollection {
         requests = Set.copyOf(requests);
 
+        Map<Class<? extends ExposeRequest<?>>, ResolutionRequest<?>> byBase = null;
         for (ResolutionRequest<?> req : requests) {
             Class<? extends ExposeRequest<?>> base = req.metadata().baseForAtMostOnce;
             if (base == null)
                 continue;
-            Set<ResolutionRequest<?>> duplicates = requests.stream().
+            if (byBase == null)
+                byBase = new HashMap<>();
+            if (byBase.put(base, req) != null) {
+                List<? extends ResolutionRequest<?>> withSameBase = requests.stream().
                     filter(req2 -> req2.metadata().baseForAtMostOnce == base).
-                    collect(Collectors.toUnmodifiableSet());
-            if (duplicates.size() != 1)
-                throw new RuntimeException("Duplicate " + base.getSimpleName() + " found: " + duplicates);
+                    toList();
+                // TODO print other duplicates as well
+                throw new RuntimeException("Duplicate " + base.getSimpleName() + " found: " + withSameBase);
+            }
         }
     }
 
