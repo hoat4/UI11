@@ -56,7 +56,7 @@ subprojects {
 }
 
 tasks.register('aggregateJavadoc', Javadoc) {
-    group = "Basic"
+    group = "documentation"
     description = "Generates the JavaDoc for all the public API"
     def projectsToDocument = rootProject.subprojects
     source(projectsToDocument.collect({
@@ -75,9 +75,9 @@ tasks.register('aggregateJavadoc', Javadoc) {
 
     options.addBooleanOption("-override-methods=summary").setValue(true);
 
-    options.windowTitle("javadoc title")
-    options.header("javadoc header")
-    options.bottom("javadoc bottom")
+    // options.windowTitle("UI11") // <title> element
+    options.header("UI11") // right corner in blue header
+    // options.bottom("javadoc bottom") footer, probably used usually for copyright
 
     options.locale("en");
     /*
