@@ -54,3 +54,53 @@ subprojects {
         teavmVersion = '0.13.0'
     }
 }
+
+tasks.register('aggregateJavadoc', Javadoc) {
+    group = "Basic"
+    description = "Generates the JavaDoc for all the public API"
+    def projectsToDocument = rootProject.subprojects
+    source(projectsToDocument.collect({
+        [it.sourceSets.main.java]
+    }));
+    projectsToDocument.forEach {
+        classpath += it.sourceSets.main.compileClasspath
+    }
+    setDestinationDir(new File(buildDir, 'javadoc'));
+
+    exclude("module-info.java");
+
+    options.addStringOption("-release", "21")
+    options.addBooleanOption("-enable-preview", true)
+    options.addFileOption("overview").setValue(layout.projectDirectory.file("docs/overview.html").asFile)
+
+    options.addBooleanOption("-override-methods=summary").setValue(true);
+
+    options.windowTitle("javadoc title")
+    options.header("javadoc header")
+    options.bottom("javadoc bottom")
+
+    options.locale("en");
+    /*
+    if (JDK_DOCS_LINK != "") {
+        options.linksOffline(JDK_DOCS, JDK_DOCS_LINK);
+    } else {
+        options.links(JDK_DOCS);
+    }
+     */
+
+
+    doLast {
+        projectsToDocument.each { p ->
+            def destDir = "${layout.buildDirectory}/javadoc/${p.name}"
+            copy {
+                from("$p.projectDir/src/main/docs") {
+                    include "**/*.html"
+                }
+
+                into destDir
+            }
+        }
+    }
+
+    dependsOn(projectsToDocument.collect { project -> project.getTasksByName("classes", true) });
+}
