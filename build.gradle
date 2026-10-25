@@ -5,7 +5,8 @@ allprojects {
 subprojects {
     apply plugin: "java-library"
 
-    javadoc.options.encoding = "UTF-8"
+    project.javadoc.enabled = false // root project has an aggregate javadoc task
+    //javadoc.options.encoding = "UTF-8"
 
     java {
         toolchain {
@@ -55,7 +56,8 @@ subprojects {
     }
 }
 
-tasks.register('aggregateJavadoc', Javadoc) {
+// the name of this task must be "javadoc", because the GitHub action executes "gradle javadoc"
+tasks.register('javadoc', Javadoc) {
     group = "documentation"
     description = "Generates the JavaDoc for all the public API"
     def projectsToDocument = rootProject.subprojects
