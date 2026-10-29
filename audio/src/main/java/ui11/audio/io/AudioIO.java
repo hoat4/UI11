@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ServiceLoader;
 
-public class AudioIO {
+public final class AudioIO {
 
     private AudioIO() {
         throw new Error();
