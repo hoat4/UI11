@@ -3,7 +3,7 @@ ui11.animation
 ui11.animation.lottie.web
 ui11.asset
 ui11.audio
-ui11.audio.buffer
+ui11.audio.effect
 ui11.audio.io
 ui11.audio.spi
 ui11.color
