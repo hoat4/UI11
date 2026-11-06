@@ -40,6 +40,7 @@ ui11.observable
 ui11.output.html
 ui11.output.html.util
 ui11.platform.awt
+ui11.platform.awt.audio
 ui11.platform.dom
 ui11.platform.dom.bindings
 ui11.platform.dom.peers
