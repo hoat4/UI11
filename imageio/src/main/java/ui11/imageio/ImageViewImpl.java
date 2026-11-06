@@ -2,7 +2,7 @@ package ui11.imageio;
 
 import ui11.Widget;
 import ui11.color.Color;
-import ui11.media.ImageSource;
+import ui11.media.MediaSource;
 import ui11.graphics.fill.ColorFill;
 import ui11.graphics.fill.RasterImage;
 import ui11.graphics.fill.RasterImageView;
@@ -13,7 +13,7 @@ import java.net.URI;
 
 public class ImageViewImpl extends Widget {
 
-    private final ImageSource imageSource;
+    private final MediaSource imageSource;
 
     @Inject private URLResolver urlResolver;
 
@@ -21,8 +21,8 @@ public class ImageViewImpl extends Widget {
     @Remember private MutableObservable<Boolean> error;
     @Remember private boolean loadBegan;
 
-    public ImageViewImpl(ImageSource imageSource) {
-        this.imageSource = imageSource;
+    public ImageViewImpl(MediaSource source) {
+        this.imageSource = source;
     }
 
     @Override

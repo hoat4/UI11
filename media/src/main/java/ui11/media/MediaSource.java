@@ -4,13 +4,12 @@ import org.jspecify.annotations.NonNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public sealed interface ImageSource {
+public sealed interface MediaSource {
 
     default URI toURI() {
         return URI.create(toURIString());
@@ -18,21 +17,21 @@ public sealed interface ImageSource {
 
     String toURIString();
 
-    sealed interface TextualImageSource extends ImageSource {}
+    sealed interface TextualMediaSource extends MediaSource {}
 
-    sealed interface BinaryImageSource extends ImageSource {}
+    sealed interface BinaryMediaSource extends MediaSource {}
 
-    record URIImageSource(URI uri) implements TextualImageSource, BinaryImageSource {
+    record URIMediaSource(URI uri) implements TextualMediaSource, BinaryMediaSource {
 
-        public URIImageSource {
+        public URIMediaSource {
             Objects.requireNonNull(uri);
         }
 
-        public URIImageSource(String uri) {
+        public URIMediaSource(String uri) {
             this(URI.create(uri));
         }
 
-        public URIImageSource(URL url) {
+        public URIMediaSource(URL url) {
             this(toURI(url));
         }
 
@@ -60,12 +59,12 @@ public sealed interface ImageSource {
             String urlStr = uri.toString();
             if ("data".equals(uri.getScheme()) && urlStr.length() > 33)
                 urlStr = urlStr.substring(0, 30) + "...";
-            return URIImageSource.class.getSimpleName() + "{" + urlStr + "}";
+            return URIMediaSource.class.getSimpleName() + "{" + urlStr + "}";
         }
     }
 
     // TODO érthetőbb osztálynév
-    record InlineStringSource(String content, String mimeType) implements TextualImageSource {
+    record InlineStringSource(String content, String mimeType) implements TextualMediaSource {
 
         public InlineStringSource {
             Objects.requireNonNull(content);
@@ -88,7 +87,7 @@ public sealed interface ImageSource {
     }
 
     // TODO érthetőbb osztálynév
-    record InlineBinarySource(byte[] bytes, String mimeType) implements BinaryImageSource {
+    record InlineBinarySource(byte[] bytes, String mimeType) implements BinaryMediaSource {
 
         // TODO mime typeot ellenőrizni hogy nem hülyeség-e
 

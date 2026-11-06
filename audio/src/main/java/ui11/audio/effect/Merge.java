@@ -1,20 +1,22 @@
 package ui11.audio.effect;
 
-import ui11.audio.AudioNode;
+import ui11.SubstitutedWidget;
+import ui11.Widget;
 
 import java.util.*;
 
-public final class Merge implements AudioNode {
+public final class Merge extends SubstitutedWidget {
 
-    private final List<AudioNode> inputs = new ArrayList<>();
+    // TODO this should be freezed somehow
+    private final List<Widget> inputs = new ArrayList<>();
 
-    public Merge(AudioNode... inputs) {
-        for (AudioNode input : inputs)
+    public Merge(Widget... inputs) {
+        for (Widget input : inputs)
             Objects.requireNonNull(input);
         this.inputs.addAll(Arrays.asList(inputs));
     }
 
-    public List<AudioNode> inputs() {
+    public List<Widget> inputs() {
         return inputs;
     }
 }

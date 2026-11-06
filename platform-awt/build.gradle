@@ -1,6 +1,7 @@
 dependencies {
     api project(":base")
     api project(":desktop")
+    implementation project(":media")
     implementation project(":renderer-common")
     implementation project(":animation")
     implementation project(":input")

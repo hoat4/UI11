@@ -7,9 +7,8 @@ import org.teavm.jso.json.JSON;
 import ui11.Widget;
 import ui11.animation.PlaybackController;
 import ui11.animation.PlaybackController.AnimationPlaybackPeer;
-import ui11.media.ImageSource.InlineStringSource;
+import ui11.media.MediaSource.InlineStringSource;
 import ui11.media.LottieView;
-import ui11.observable.Observable;
 import ui11.platform.dom.DOMElementWidget;
 import ui11.platform.dom.DOMEnvironment;
 

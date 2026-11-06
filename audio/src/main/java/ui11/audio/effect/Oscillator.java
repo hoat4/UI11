@@ -1,10 +1,10 @@
 package ui11.audio.effect;
 
-import ui11.audio.AudioNode;
+import ui11.SubstitutedWidget;
 
 import java.time.Duration;
 
-public final class Oscillator implements AudioNode {
+public final class Oscillator extends SubstitutedWidget {
 
     public double frequency;
     public Duration length;

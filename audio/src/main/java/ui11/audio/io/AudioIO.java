@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ServiceLoader;
 
+@Deprecated
 public final class AudioIO {
 
     private AudioIO() {

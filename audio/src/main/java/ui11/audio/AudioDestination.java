@@ -4,6 +4,7 @@ import ui11.audio.spi.AudioProvider;
 
 import java.util.ServiceLoader;
 
+@Deprecated
 public interface AudioDestination extends AudioNode {
 
     static AudioDestination getDefaultSpeaker() {

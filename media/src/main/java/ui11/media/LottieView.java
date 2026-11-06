@@ -2,9 +2,9 @@ package ui11.media;
 
 import ui11.SubstitutedWidget;
 import ui11.animation.PlaybackController;
-import ui11.media.ImageSource.InlineStringSource;
-import ui11.media.ImageSource.TextualImageSource;
-import ui11.media.ImageSource.URIImageSource;
+import ui11.media.MediaSource.InlineStringSource;
+import ui11.media.MediaSource.TextualMediaSource;
+import ui11.media.MediaSource.URIMediaSource;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -14,36 +14,36 @@ import java.util.Objects;
 
 public class LottieView extends SubstitutedWidget {
 
-    private final @NonNull TextualImageSource source;
+    private final MediaSource.@NonNull TextualMediaSource source;
     private final @Nullable PlaybackController playbackController;
 
-    private LottieView(@NonNull TextualImageSource source, @Nullable PlaybackController playbackController) {
+    private LottieView(MediaSource.@NonNull TextualMediaSource source, @Nullable PlaybackController playbackController) {
         Objects.requireNonNull(source);
         this.source = source;
         this.playbackController = playbackController;
     }
 
-    public static LottieView from(TextualImageSource source) {
+    public static LottieView from(TextualMediaSource source) {
         return new LottieView(source, null);
     }
 
     public static LottieView fromURI(URI uri) {
-        return from(new URIImageSource(uri));
+        return from(new URIMediaSource(uri));
     }
 
     public static LottieView fromURL(URL uri) {
-        return from(new URIImageSource(uri));
+        return from(new URIMediaSource(uri));
     }
 
     public static LottieView fromURI(String uri) {
-        return from(new URIImageSource(uri));
+        return from(new URIMediaSource(uri));
     }
 
     public static LottieView fromString(String svgSource) {
         return from(new InlineStringSource(svgSource, "video/lottie+json"));
     }
 
-    public @NonNull TextualImageSource source() {
+    public MediaSource.@NonNull TextualMediaSource source() {
         return source;
     }
 

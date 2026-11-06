@@ -4,6 +4,8 @@ import ui11.SubstitutedWidget;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import ui11.media.ResolutionDependent.MediaResolution;
+
 import java.net.URI;
 import java.util.Objects;
 
@@ -35,6 +37,4 @@ public final class Video extends SubstitutedWidget {
     public MediaResolution resolution() {
         return resolution;
     }
-
-    public record MediaResolution(int width, int height) {}
 }

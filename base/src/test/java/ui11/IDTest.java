@@ -13,6 +13,9 @@ public class IDTest extends Widget {
         // 1 és alatta 2 jelenik meg, majd 5 másodperc múlva 2 és alatta 1-nek kell megjelennie.
         // ha az elején 3 és 4 jelenik meg, az már hiba.
 
+        // TODO 2026-11-06-án érdekes jelenség tűnt fel: az esetek kb. felében megcserélődik a szerepe a két számnak,
+        //      tehát először 2 és alatta 1, majd később 1 és alatta 2 jelenik meg, de azon kívül helyes a teszt.
+
         MutableObservable<Boolean> reverse = MutableObservable.withInitial(false);
         Window.open(new IDTest(reverse));
         Thread.sleep(5000);

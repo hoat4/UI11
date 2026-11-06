@@ -3,9 +3,9 @@ package ui11.media;
 import org.jspecify.annotations.NonNull;
 import ui11.SubstitutedWidget;
 import ui11.Widget;
-import ui11.media.ImageSource.InlineStringSource;
-import ui11.media.ImageSource.TextualImageSource;
-import ui11.media.ImageSource.URIImageSource;
+import ui11.media.MediaSource.InlineStringSource;
+import ui11.media.MediaSource.TextualMediaSource;
+import ui11.media.MediaSource.URIMediaSource;
 
 import java.net.URI;
 import java.net.URL;
@@ -14,11 +14,11 @@ import java.util.Objects;
 
 public final class SVGImageView extends SubstitutedWidget {
 
-    private final TextualImageSource source;
+    private final TextualMediaSource source;
     private final boolean interactive;
     private final Map<String, ? extends Widget> embeddedWidgets;
 
-    private SVGImageView(@NonNull TextualImageSource source, boolean interactive,
+    private SVGImageView(MediaSource.@NonNull TextualMediaSource source, boolean interactive,
                          @NonNull Map<@NonNull String, ? extends @NonNull Widget> embeddedWidgets) {
         Objects.requireNonNull(source);
         this.source = source;
@@ -26,20 +26,20 @@ public final class SVGImageView extends SubstitutedWidget {
         this.embeddedWidgets = Map.copyOf(embeddedWidgets);
     }
 
-    public static SVGImageView from(TextualImageSource svgSource) {
+    public static SVGImageView from(TextualMediaSource svgSource) {
         return new SVGImageView(svgSource, false, Map.of());
     }
 
     public static SVGImageView fromURI(URI uri) {
-        return from(new URIImageSource(uri));
+        return from(new URIMediaSource(uri));
     }
 
     public static SVGImageView fromURL(URL uri) {
-        return from(new URIImageSource(uri));
+        return from(new URIMediaSource(uri));
     }
 
     public static SVGImageView fromURI(String uri) {
-        return from(new URIImageSource(uri));
+        return from(new URIMediaSource(uri));
     }
 
     public static SVGImageView fromString(String svgSource) {
@@ -51,7 +51,7 @@ public final class SVGImageView extends SubstitutedWidget {
         return new SVGImageView(source, interactive, withID("embeddedWidgets", embeddedWidgets));
     }
 
-    public TextualImageSource source() {
+    public TextualMediaSource source() {
         return source;
     }
 

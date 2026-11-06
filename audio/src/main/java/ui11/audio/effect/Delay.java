@@ -1,15 +1,16 @@
 package ui11.audio.effect;
 
-import ui11.audio.AudioNode;
+import ui11.SubstitutedWidget;
+import ui11.Widget;
 
 import java.time.Duration;
 
-public final class Delay implements AudioNode {
+public final class Delay extends SubstitutedWidget {
 
-    public AudioNode source;
+    public Widget source;
     public Duration delay;
 
-    public static AudioNode repeat(AudioNode source, Duration delayBetweenRepeats) {
+    public static Widget repeat(Widget source, Duration delayBetweenRepeats) {
         Delay d = new Delay();
         Merge combined = new Merge(source, d);
         d.source = combined;

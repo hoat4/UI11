@@ -1,10 +1,12 @@
 dependencies {
     api project(":base")
     api project(":animation") // PlaybackController
+    api project(":graphics") // AudioPlayer
 
     implementation "org.teavm:teavm-core:${teavmVersion}" // ClasspathResourceImageTeaVMPlugin
 
     testImplementation project(":desktop")
     testImplementation project(":platform-awt")
+    testImplementation project(":renderer-java2d")
     testImplementation "io.github.jycr:java-data-url-handler:0.0.1"
 }

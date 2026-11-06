@@ -6,6 +6,7 @@ import ui11.audio.AudioNode;
 import java.io.IOException;
 import java.io.InputStream;
 
+@Deprecated
 public interface AudioProvider {
 
     /**

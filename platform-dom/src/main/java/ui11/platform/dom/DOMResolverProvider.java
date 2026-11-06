@@ -1,6 +1,5 @@
 package ui11.platform.dom;
 
-import ui11.Expose;
 import ui11.ResolverProvider;
 import ui11.ResolverRegistry;
 import ui11.control.*;
@@ -27,7 +26,7 @@ import ui11.layout.multichild.Grid;
 import ui11.layout.multichild.LinearLayout;
 import ui11.layout.multichild.flow.Flow;
 import ui11.layout.singlechild.*;
-import ui11.media.ImageSource;
+import ui11.media.MediaSource;
 import ui11.media.JPEGImageView;
 import ui11.media.SVGImageView;
 import ui11.media.Video;
@@ -78,7 +77,7 @@ public class DOMResolverProvider implements ResolverProvider {
                 return new DOMImageElement(svg.source().toURIString(), svg.isInteractive());
             else {
                 // TODO ilyenkor isInteractive ignorálva van
-                if (svg.source() instanceof ImageSource.InlineStringSource inlineStringSource)
+                if (svg.source() instanceof MediaSource.InlineStringSource inlineStringSource)
                     return new DOMTemplatedSVGPeer(inlineStringSource.content(), svg.embeddedWidgets());
                 else
                     throw new RuntimeException("TODO templated SVG with non-inline source: " + svg);
