@@ -71,12 +71,18 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="package-signature">package <span class="element-name">ui11.layout</span></div>
 <section class="package-description" id="package-description">
-<div class="block">UI elemek csoportjának elrendezésére szolgáló konténerek, más nével layoutok. Ezek is <a href="../Widget.html" title="class in ui11"><code>Widget</code></a>
- leszármazottak. Elrendezik a kapott elemeket, saját maguk nem adnak hozzá látható grafikát. A gyereket a felhasználói
- program adja hozzá a layout konténerhez.
+<div class="block">Base package for layout containers. Layouts are <a href="../Widget.html" title="class in ui11">widgets</a> that
+ lays out their children, but they don't add additional graphics or behavior. The children are specified
+ at the creation of the layout containers.
  <p>
- Olyan konténerek amelyek feladata nem a layout, hanem egy másik elem látható grafikával való kiegészítése a
- <a href="../decoration/package-summary.html"><code>ui11.decoration</code></a> package-ben vannak.</div>
+ This package only provide provides some utility classes, the layout containers are in the
+ <a href="singlechild/package-summary.html"><code>ui11.layout.singlechild</code></a> <a href="multichild/package-summary.html"><code>ui11.layout.multichild</code></a> subpackages.
+ <p>
+ The layouts can be implemented by the native platform (as in the case in the <code>platform-dom</code>), or can rely on a
+ pure Java implementation e.g. <code>layout-constraint</code>.
+ <p>
+ A related package is <a href="../decoration/package-summary.html"><code>ui11.decoration</code></a>, which contains widget that not only lays out children but also
+ add graphics.</div>
 <dl class="notes">
 <dt>See Also:</dt>
 <dd>
