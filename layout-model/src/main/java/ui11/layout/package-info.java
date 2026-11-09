@@ -1,10 +1,16 @@
 /**
- * UI elemek csoportjának elrendezésére szolgáló konténerek, más nével layoutok. Ezek is {@link ui11.Widget}
- * leszármazottak. Elrendezik a kapott elemeket, saját maguk nem adnak hozzá látható grafikát. A gyereket a felhasználói
- * program adja hozzá a layout konténerhez.
+ * Base package for layout containers. Layouts are {@linkplain ui11.Widget widgets} that
+ * lays out their children, but they don't add additional graphics or behavior. The children are specified
+ * at the creation of the layout containers.
  * <p>
- * Olyan konténerek amelyek feladata nem a layout, hanem egy másik elem látható grafikával való kiegészítése a
- * {@link ui11.decoration} package-ben vannak.
+ * This package only provide provides some utility classes, the layout containers are in the
+ * {@link ui11.layout.singlechild} {@link ui11.layout.multichild} subpackages.
+ * <p>
+ * The layouts can be implemented by the native platform (as in the case in the {@code platform-dom}), or can rely on a
+ * pure Java implementation e.g. {@code layout-constraint}.
+ * <p>
+ * A related package is {@link ui11.decoration}, which contains widget that not only lays out children but also
+ * add graphics.
  *
  * @see ui11.decoration
  */
