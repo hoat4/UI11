@@ -16,9 +16,9 @@ class AudioDecodeThread implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(AudioDecodeThread.class);
 
     private final MediaSource source;
-    private final AudioContentRequest.AudioBuffer buffer;
+    private final AudioBuffer buffer;
 
-    public AudioDecodeThread(MediaSource source, AudioContentRequest.AudioBuffer buffer) {
+    public AudioDecodeThread(MediaSource source, AudioBuffer buffer) {
         this.source = source;
         this.buffer = buffer;
     }
@@ -40,7 +40,6 @@ class AudioDecodeThread implements Runnable {
             for (int readBytes; (readBytes = ain.read(b.array(), 0, buffer.waitUntilWritePermitted())) > 0; )
                 buffer.write(b.limit(readBytes).asFloatBuffer());
             ain.close();
-            System.out.println("finished audio");
         } catch (Throwable e) {
             logger.error("Can't decode audio", e);
         }

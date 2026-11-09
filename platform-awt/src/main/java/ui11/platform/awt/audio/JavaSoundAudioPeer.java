@@ -1,10 +1,8 @@
 package ui11.platform.awt.audio;
 
-import ui11.Expose;
 import ui11.Widget;
 import ui11.media.Audio;
 import ui11.media.MediaSource;
-import ui11.platform.awt.audio.AudioContentRequest.AudioBuffer;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,7 +14,7 @@ public class JavaSoundAudioPeer extends Widget {
 
     private final Audio audio;
 
-    @Inject private AudioContentRequest request;
+    @Inject private AudioOutputContext.Mixer mixer;
 
     @Remember private MediaSource source;
     @Remember private AudioBuffer buffer;
@@ -36,7 +34,10 @@ public class JavaSoundAudioPeer extends Widget {
                     name("Audio decode thread #"+THREAD_NAME_GEN.incrementAndGet()).
                     start(new AudioDecodeThread(source, buffer));
         }
-        return new Expose<>(request, buffer, empty());
+
+        mixer.add(buffer, untilNextRebuild());
+
+        return empty();
     }
 
 }

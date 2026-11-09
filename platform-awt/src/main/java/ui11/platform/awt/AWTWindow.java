@@ -19,6 +19,7 @@ import ui11.input.pointer.PointerRegion.PointerListener;
 import ui11.observable.InvalidationPoint;
 import ui11.observable.MutableObservable;
 import ui11.platform.awt.AWTEnterContentListenerPeer.AWTEnterContentListenerPeerState;
+import ui11.platform.awt.audio.AudioOutputContext;
 import ui11.provide.Provide;
 import ui11.provide.Provider;
 import ui11.renderer.Renderer;
@@ -99,6 +100,7 @@ public class AWTWindow {
             content = new Provider<>(Renderer.class, renderer, content);
             if (renderer instanceof TextRenderer textRenderer) // TODO
                 content = new Provider<>(TextRenderer.class, textRenderer, content);
+            content = new AudioOutputContext(content);
 
             // TODO mi legyen ha a root widget peerjét nem sikerül létrehozni?
             //      most ilyenkor végtelen loopba kezd, mert itt a Rootban még nincs olyan WidgetResolver ami
