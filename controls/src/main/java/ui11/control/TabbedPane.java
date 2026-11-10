@@ -29,8 +29,8 @@ public final class TabbedPane extends SubstitutedWidget {
         for (int i = 0; i < slottedTabs.length; i++) {
             Tab tab = tabs.get(i);
             slottedTabs[i] = new Tab(
-                    withID("tabTitle", tab.title),
-                    withID("tabContent", tab.content),
+                    withID("tabTitle", i, tab.title),
+                    withID("tabContent", i, tab.content),
                     tab.enabled,
                     tab.isInitiallySelected
             );
