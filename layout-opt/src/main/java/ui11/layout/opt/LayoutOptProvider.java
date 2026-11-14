@@ -9,4 +9,9 @@ public class LayoutOptProvider implements ResolverProvider {
     public void configure(ResolverRegistry r) {
         r.registerTransformer(LinearLayout.class, LinearLayoutOpt::new);
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.POLYFILL; // not applicable because no resolvers registered
+    }
 }

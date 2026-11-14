@@ -19,4 +19,9 @@ public class DefaultControlLookProvider implements ResolverProvider {
         r.register(Table.class, DefaultTableImpl::new);
         r.register(TextField.class, DefaultTextFieldImpl::new);
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.POLYFILL;
+    }
 }

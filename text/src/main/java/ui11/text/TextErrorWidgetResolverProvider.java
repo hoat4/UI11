@@ -14,4 +14,9 @@ public class TextErrorWidgetResolverProvider implements ResolverProvider {
             return withLineWrapping(new Text(throwable.toString()));
         });
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.POLYFILL;
+    }
 }

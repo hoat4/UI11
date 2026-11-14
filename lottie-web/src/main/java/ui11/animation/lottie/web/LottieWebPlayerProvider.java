@@ -12,4 +12,9 @@ public class LottieWebPlayerProvider implements ResolverProvider {
         r.registerForContextType(DOMPeerBase.DOMPeerCreationRequest.class,
                 LottieView.class, LottieWebAnimationPeer::new);
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.NATIVE_LIB;
+    }
 }

@@ -16,4 +16,9 @@ public class J2DWidgetResolver implements ResolverProvider {
         // TODO ez inkább platform-awt-be
         r.registerForContextType(Item.ItemRequest.class, Audio.class, JavaSoundAudioPeer::new);
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.NATIVE;
+    }
 }

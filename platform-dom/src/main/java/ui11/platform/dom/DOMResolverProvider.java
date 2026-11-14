@@ -153,4 +153,9 @@ public class DOMResolverProvider implements ResolverProvider {
         r.registerPeerResolver(CSSBackgroundImagePeerCreationRequest.class, JPEGImageView.class,
                 jpg -> new CSSImageWidget(jpg.source().toURI()));
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.NATIVE;
+    }
 }

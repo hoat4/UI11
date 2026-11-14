@@ -4,10 +4,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import ui11.reflectutil.ReflectionUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -30,51 +27,71 @@ public final class ResolverRegistry {
     ResolverRegistry() {
     }
 
+    void add(ResolverRegistry r, ResolverProvider.Priority p) {
+        for (ResolutionRule<?> rule : r.eagerRules)
+            eagerRules.add(rule.withPriority(p));
+        for (ResolutionRule<?> rule : r.greedyRules)
+            greedyRules.add(rule.withPriority(p));
+        transformers.addAll(r.transformers);
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    void sortByPriority() {
+        eagerRules.sort(Comparator.comparingInt(r -> r.priority.ordinal()));
+        greedyRules.sort(Comparator.comparingInt(r -> r.priority.ordinal()));
+    }
+
     /**
      * Adds a new resolver to this resolver registry.
      * It will be applicable if the widget is an instance of the specified type or its subtypes.
      * The widget will be passed to the function, and the widget returned from the function will replace
      * the original widget.
      */
+    @Deprecated
     public <SW extends SubstitutedWidget> void register(
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
-        register(new ResolutionRule<>(widgetType, f, Set.of(), false));
+        register(new ResolutionRule<>(widgetType, f, Set.of(), false, null));
     }
 
+    @Deprecated
     public <SW extends SubstitutedWidget> void registerForContextType(
             @NonNull Class<? extends ExposeRequest<?>> requestType,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
-        register(new ResolutionRule<>(widgetType, f, Set.of(requestType), false));
+        register(new ResolutionRule<>(widgetType, f, Set.of(requestType), false, null));
     }
 
+    @Deprecated
     public <SW extends SubstitutedWidget> void registerForContextTypes(
             @NonNull Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
         if (supportedRequestTypes.isEmpty())
             throw new IllegalArgumentException("Supported request types is empty");
-        register(new ResolutionRule<>(widgetType, f, supportedRequestTypes, false));
+        register(new ResolutionRule<>(widgetType, f, supportedRequestTypes, false, null));
     }
 
+    @Deprecated
     public <SW extends SubstitutedWidget> void registerPeerResolver(
             @NonNull Class<? extends ExposeRequest<?>> requestType,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
-        register(new ResolutionRule<>(widgetType, f, Set.of(requestType), true));
+        register(new ResolutionRule<>(widgetType, f, Set.of(requestType), true, null));
     }
 
+    @Deprecated
     public <SW extends SubstitutedWidget> void registerPeerResolver(
             @NonNull Set<Class<? extends ExposeRequest<?>>> requestTypes,
             @NonNull Class<SW> widgetType,
             @NonNull Function<@NonNull SW, Widget> f) {
         if (requestTypes.isEmpty())
             throw new IllegalArgumentException("Supported request types is empty");
-        register(new ResolutionRule<>(widgetType, f, requestTypes, true));
+        register(new ResolutionRule<>(widgetType, f, requestTypes, true, null));
     }
 
-    private <W extends SubstitutedWidget> void register(ResolutionRule<W> rule) {
+    public <W extends SubstitutedWidget> void register(@NonNull ResolutionRule<W> rule) {
+        Objects.requireNonNull(rule);
         if (rule.coexistWithOtherResolvers)
             eagerRules.add(rule);
         else
@@ -110,43 +127,8 @@ public final class ResolverRegistry {
         return greedyRules.stream();
     }
 
-    /*
-    public static final class Filter {
-
-        /**
-         * null means all requests supported
-         *
-        private final @Nullable Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes;
-
-        private Filter(@Nullable Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes) {
-            this.supportedRequestTypes = supportedRequestTypes;
-        }
-
-        public static Filter unfiltered() {
-            return new Filter(null);
-        }
-
-        public static Filter ofRequestType(Class<? extends ExposeRequest<?>>... requestTypes) {
-            return new Filter(Set.of(requestTypes));
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Filter filter = (Filter) o;
-            return Objects.equals(supportedRequestTypes, filter.supportedRequestTypes);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(supportedRequestTypes);
-        }
-    }
-     */
-
     // ennek identity equalsjére SubstitutedWidgetben a keyek dependelnek
-    static final class ResolutionRule<W extends SubstitutedWidget> {
+    public static final class ResolutionRule<W extends SubstitutedWidget> {
 
         final @NonNull Class<W> widgetType;
         final @NonNull Function<W, Widget> f;
@@ -156,19 +138,30 @@ public final class ResolverRegistry {
          * ha ez true, akkor {@link #supportedRequestTypes} nem üres
          */
         final boolean coexistWithOtherResolvers;
+        /**
+         * ResolverRegistry-k kombinálásakor kap értéket
+         */
+        final ResolverProvider.Priority priority;
+
+        public ResolutionRule(@NonNull Class<W> widgetType,
+                              @NonNull Function<@NonNull W, @NonNull Widget> f) {
+            this(widgetType, f, Set.of(), false, null);
+        }
 
         /**
          * @param supportedRequestTypes a hívónak kell szükség esetén ellenőriznie, hogy ez üres-e
          */
-        public ResolutionRule(@NonNull Class<W> widgetType,
-                              @NonNull Function<W, Widget> f,
-                              @NonNull Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes,
-                              boolean isPeerResolver) {
+        ResolutionRule(@NonNull Class<W> widgetType,
+                       @NonNull Function<W, Widget> f,
+                       @NonNull Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes,
+                       boolean coexistWithOtherResolvers,
+                       ResolverProvider.@Nullable Priority priority) {
             this.widgetType = Objects.requireNonNull(widgetType);
             widgetType.asSubclass(SubstitutedWidget.class);
             if (widgetType == SubstitutedWidget.class)
                 throw new IllegalArgumentException();
             this.f = Objects.requireNonNull(f);
+            this.priority = priority;
 
             Set<Class<? extends ExposeRequest<?>>> set = Set.copyOf(supportedRequestTypes);
             set.forEach(t -> {
@@ -177,7 +170,28 @@ public final class ResolverRegistry {
             });
             this.supportedRequestTypes = set;
 
-            this.coexistWithOtherResolvers = isPeerResolver;
+            this.coexistWithOtherResolvers = coexistWithOtherResolvers;
+        }
+
+        @SafeVarargs
+        public final ResolutionRule<W> onlyOnRequestTypes(@NonNull Class<? extends ExposeRequest<?>> @NonNull ... supportedRequestTypes) {
+            return onlyOnRequestTypes(Set.of(supportedRequestTypes));
+        }
+
+        public ResolutionRule<W> onlyOnRequestTypes(@NonNull Set<Class<? extends ExposeRequest<?>>> supportedRequestTypes) {
+            supportedRequestTypes = Set.copyOf(supportedRequestTypes);
+            if (supportedRequestTypes.isEmpty())
+                throw new IllegalArgumentException("supportedRequestTypes must not be empty");
+            return new ResolutionRule<>(widgetType, f, supportedRequestTypes, coexistWithOtherResolvers, priority);
+        }
+
+        public ResolutionRule<W> parallelWithOtherResolvers() {
+            return new ResolutionRule<>(widgetType, f, supportedRequestTypes, true, priority);
+        }
+
+        ResolutionRule<W> withPriority(ResolverProvider.Priority priority) {
+            assert this.priority == null;
+            return new ResolutionRule<>(widgetType, f, supportedRequestTypes, true, priority);
         }
 
         boolean matches(SubstitutedWidget widget, Set<? extends ResolutionRequest<?>> reqs) {

@@ -38,4 +38,9 @@ public class ItemPeerProvider implements ResolverProvider {
         r.registerForContextTypes(Set.of(ItemRequest.class, SizeRequest.class), Text.class, TextPeer::new);
         r.registerForContextType(ItemRequest.class, Transform.class, TransformPeer::new);
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.NATIVE;
+    }
 }

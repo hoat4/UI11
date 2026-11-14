@@ -60,8 +60,12 @@ public final class WidgetTree {
         // mert thread context class loadert néz, ezért egyelőre WidgetTreenként cacheljük.
         // TODO mi legyen vele? lehessen megadni create-nek ClassLoadert? vagy hajtsuk végre az
         //      első refresht az executorban és akkor az már úgyis a megfelelő threadben történik?
-        for (ResolverProvider d : ServiceLoader.load(ResolverProvider.class))
-            d.configure(resolverRegistry); // TODO exceptionök
+        for (ResolverProvider provider : ServiceLoader.load(ResolverProvider.class)) {
+            ResolverRegistry r = new ResolverRegistry();
+            provider.configure(r); // TODO exceptionök
+            resolverRegistry.add(r, provider.priority());
+        }
+        resolverRegistry.sortByPriority();
         this.resolverRegistry = resolverRegistry;
     }
 

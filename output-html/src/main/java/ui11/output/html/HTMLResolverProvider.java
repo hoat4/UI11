@@ -48,4 +48,9 @@ public class HTMLResolverProvider implements ResolverProvider {
         r.registerForContextType(HtmlPeerCreationRequest.class, Table.class, HtmlTablePeer::new);
         r.registerForContextType(HtmlPeerCreationRequest.class, Text.class, HtmlTextPeer::new);
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.NATIVE;
+    }
 }

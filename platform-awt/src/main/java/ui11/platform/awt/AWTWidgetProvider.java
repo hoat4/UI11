@@ -10,4 +10,9 @@ public class AWTWidgetProvider implements ResolverProvider {
         // TODO r.registerForContextType(J2DVisualContentRequest.class, EnterContentListener.class,
         //            AWTEnterContentListenerPeer::new);
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.NATIVE;
+    }
 }

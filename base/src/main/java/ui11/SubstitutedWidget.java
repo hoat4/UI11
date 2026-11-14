@@ -131,7 +131,8 @@ public abstract class SubstitutedWidget extends Widget {
         // peer-specifikus resolvereket előbbre vesszük, mint a nem peer-specifikusakat,
         // mert ha peer-specifikusakkal ki elégíteni, akkor lehet hogy a nem peer-specifikus nem is kell
         Map<ResolutionRequest<?>, ResolverRegistry.ResolutionRule<?>> handledUsingPeerSpecificResolvers =
-            new HashMap<>();
+                new HashMap<>();
+        rules:
         for (ResolverRegistry.ResolutionRule<?> rule : resolverRegistry.eagerRules) {
             if (!rule.matches(thiz, allRemainingRequests))
                 continue;
@@ -141,12 +142,18 @@ public abstract class SubstitutedWidget extends Widget {
                 for (ResolutionRequest<?> req : allRemainingRequests) {
                     if (!reqType.isInstance(req.requestData))
                         continue;
-                    ResolverRegistry.ResolutionRule<?> prev = handledUsingPeerSpecificResolvers.put(req, rule);
-                    if (prev != null)
-                        throw new RuntimeException("Can't substitute " + getClass().getSimpleName() + " because " +
-                            "multiple resolution rules applicable for " + req + ", at least\n" +
-                            "- " + prev + "\n" +
-                            "- " + rule);
+                    ResolverRegistry.ResolutionRule<?> prev = handledUsingPeerSpecificResolvers.putIfAbsent(req, rule);
+                    if (prev != null) {
+                        if (prev.priority.compareTo(rule.priority) < 0)
+                            continue rules;
+                        else {
+                            assert prev.priority == rule.priority;
+                            throw new RuntimeException("Can't substitute " + getClass().getSimpleName() + " because " +
+                                    "multiple resolution rules applicable for " + req + " (both in priority " + rule.priority + "), at least\n" +
+                                    "- " + prev + "\n" +
+                                    "- " + rule);
+                        }
+                    }
                     m.computeIfAbsent(req.requestData, __ -> new HashSet<>()).add(req);
                 }
             }
@@ -192,12 +199,19 @@ public abstract class SubstitutedWidget extends Widget {
             if (!r.matches(thiz, remainedAfterPeerSpecificResolvers))
                 continue;
             if (foundGenericResolver != null)
-                // TODO ezt már ResolverRegistrynek kéne detektálnia
-                throw new RuntimeException("Can't substitute " + getClass().getSimpleName() + " because " +
-                    "multiple non-request specific resolution rules applicable, at least\n" +
-                    "- " + foundGenericResolver + "\n" +
-                    "- " + r);
-            foundGenericResolver = r;
+                if (foundGenericResolver.priority.compareTo(r.priority) < 0)
+                    continue;
+                else {
+                    assert foundGenericResolver.priority == r.priority;
+                    // TODO ezt már ResolverRegistrynek kéne detektálnia
+                    throw new RuntimeException("Can't substitute " + getClass().getSimpleName() + " because " +
+                            "multiple non-request specific resolution rules applicable, at least\n" +
+                            "- " + foundGenericResolver + "\n" +
+                            "- " + r);
+
+                }
+            else
+                foundGenericResolver = r;
 
             Widget w = r.invokeUnchecked(thiz);
 
@@ -240,13 +254,13 @@ public abstract class SubstitutedWidget extends Widget {
             Set<ResolutionRequest<?>> remainingReqs, SubstitutedWidget thiz) {
         StringBuilder s = new StringBuilder();
         s.append("No resolver supports ").
-            append(ReflectionUtil.simpleName(getClass())).
-            append(" and it doesn't overrides fallbackContent(). \n");
+                append(ReflectionUtil.simpleName(getClass())).
+                append(" and it doesn't overrides fallbackContent(). \n");
         s.append("Widget: ").append(thiz.toString()).append('\n');
         s.append(ExposeRequest.class.getSimpleName()).append("s: ");
         s.append(remainingReqs.stream().
-            map(req -> req.requestData.toString()).
-            collect(joining(", ", "", "\n")));
+                map(req -> req.requestData.toString()).
+                collect(joining(", ", "", "\n")));
         s.append("Refresh stack:");
         s.append(widgetState().tree.refreshStackToString(false));
         s.append("\nAvailable resolvers: ");

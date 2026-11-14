@@ -11,4 +11,9 @@ public class ImageViewResolverProvider implements ResolverProvider {
         r.register(JPEGImageView.class,
                 jpg -> new ImageViewImpl(jpg.source()));
     }
+
+    @Override
+    public Priority priority() {
+        return Priority.POLYFILL;
+    }
 }
