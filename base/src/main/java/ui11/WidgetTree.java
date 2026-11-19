@@ -43,6 +43,7 @@ public final class WidgetTree {
     private final SequencedSet<WidgetState<?>> inactivationQueue = new LinkedHashSet<>();
 
     private SequencedMap<WidgetState<?>, List<LaterValidationCheck>> laterValidationChecks;
+    private List<WidgetState<?>> laterRelativeIDChecks;
     private long laterValidationCheckGenerator;
 
     long beganRefreshID, finishedRefreshID = -1;
@@ -90,6 +91,7 @@ public final class WidgetTree {
                 throw new RuntimeException("refresh stack already exists");
 
             laterValidationChecks = new LinkedHashMap<>();
+            laterRelativeIDChecks = new ArrayList<>();
 
             ObserverHolder observerHolder = ObserverHolder.current();
             observerHolder.ensureNoCurrentObserver();
@@ -179,7 +181,6 @@ public final class WidgetTree {
                     Edge[] prevChildren = (Edge[]) w.children;
                     w.beforeBuild();
                     Edge[] newChildren = rrw.buildMulti(w, prevChildren);
-                    w.removeObsoleteIDs();
                     Objects.requireNonNull(newChildren);
                     w.children = newChildren;
 
@@ -198,7 +199,6 @@ public final class WidgetTree {
                             content = w.stateWidget.build();
                         } finally {
                             observerHolder.clearObserver(w);
-                            w.removeObsoleteIDs();
                         }
 
                         if (content == null && !(w.stateWidget instanceof ChainEnd))
@@ -240,6 +240,10 @@ public final class WidgetTree {
                 assert !w.hasFlag(WidgetState.NEEDS_REFRESH) : w;
             }
 
+            for (WidgetState<?> w : laterRelativeIDChecks) {
+                w.removeObsoleteIDs();
+            }
+
             while (!inactivationQueue.isEmpty()) {
                 WidgetState<?> w = inactivationQueue.removeFirst();
                 w.removeFlag(WidgetState.FLAG_IN_INACTIVATION_QUEUE);
@@ -264,6 +268,7 @@ public final class WidgetTree {
         } finally {
             finishedRefreshID = beganRefreshID;
             refreshStack = null;
+            laterRelativeIDChecks = null;
             laterValidationChecks = null;
             if (TRACE_REFRESH) {
                 traceRefresh("Finished refresh " + beganRefreshID);
@@ -457,6 +462,15 @@ public final class WidgetTree {
         w.laterValidationCheckLast = expected;
         laterValidationChecks.computeIfAbsent(w, __ -> new ArrayList<>()).
                 add(new LaterValidationCheck(expected, msg, toBeRestored));
+    }
+
+    void submitForLaterRelativeIDCleanup(WidgetState<?> w) {
+        if (laterRelativeIDChecks == null)
+            throw new IllegalStateException();
+        if (w.hasFlag(WidgetState.FLAG_QUEUED_FOR_RELATIVE_ID_CLEANUP))
+            return;
+        w.addFlag(WidgetState.FLAG_QUEUED_FOR_RELATIVE_ID_CLEANUP);
+        laterRelativeIDChecks.add(w);
     }
 
     boolean isRefreshScheduled() {

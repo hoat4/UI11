@@ -26,16 +26,23 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     static final int FLAG_DESCENDANT_NEEDS_REFRESH = 4;
     static final int FLAG_ACTIVE = 8;
     static final int FLAG_IN_INACTIVATION_QUEUE = 16;
+
     /**
      * Megtiltja a refresh során a descendantok skippelését, hogy meghívódjon minden gyerekén a
      * {@link #registerParent(Edge)}.
      */
+    // TODO this flag is never set currently, either delete or remove it
     static final int FLAG_HAS_STOLEN_CHILDREN = 32;
 
     /**
      * refresh során ideiglenesen van beállítva, de lehet hogy úgy marad
      */
-    static final int FLAG_USAGE_CHECK = 32;
+    static final int FLAG_USAGE_CHECK = 64;
+
+    /**
+     * managed by {@link WidgetTree}
+     */
+    static final int FLAG_QUEUED_FOR_RELATIVE_ID_CLEANUP = 128;
 
     // flags mezőnek érvénytelen értékek
     static final int DISPOSED = -1;
@@ -599,16 +606,19 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         RelativeKey relativeKey = new RelativeKey(keyPart1, keyPart2);
         Objects.requireNonNull(content);
 
-        //if (!idsCanBeAssigned)
-        //    throw new IllegalStateException(Widget.class.getSimpleName() + ".withID can be only called " +
-        //            "inside " + Widget.class.getSimpleName() + ".build");
-        // Azért nem lehet 2 build között, mert lehetetlenné tenné az obsolete keyek eltávolítását:
-        // ha jön egy következő build, amiben már nem szerepel, akkor nem tudjuk, hogy azért
-        // nem szerepel, mert már nem kell a kérdéses widget, vagy csak mert a build után fog jönni.
-        // Esetleg lehetne megengedni, hogy a build után, de a subtree refreshjében is szabad,
-        // de nem világos, hogy hogyan lehetne a subtree-t definiálni.
-        // mégis megengedjük hogy builden kívül, mert DefaultBoxImplnek kellett layoutPhase2-ben.
-        // TODO akkor azt kéne, hogy a refresh cycle végén töröljük az elavultnak bizonyult keyeket.
+        if (!idsCanBeAssigned)
+            // TODO in the exception message, clarify when this method can be called
+            throw new IllegalStateException(Widget.class.getSimpleName() + ".withID can be only called " +
+                    "when this " + Widget.class.getSimpleName() + " is refreshing: " + this);
+
+        // Between two refreshes, we can't assign keys:
+        // in the build in the second refresh, where a relative key is not used, we don't know that
+        // it is not used because it is not really not needed, or it just will be assigned after the refresh.
+        // So we limit assigning keys to refresh cycles.
+        // An alternative would be to limit to subtrees, but it is hard to define subtrees in the widget tree.
+        // Originally, assigning keys was only possible in build(), but this more complicated
+        // to write widgets that return such a widget which accepts a callback that return a widget
+        // (e.g. DefaultBoxImpl returns an exposereq and only constructs the background fill in the finisher).
 
         if (relativeKeysToGlobalKeys == null)
             relativeKeysToGlobalKeys = new HashMap<>();
