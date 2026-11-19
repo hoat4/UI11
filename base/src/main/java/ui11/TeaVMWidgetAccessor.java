@@ -23,8 +23,8 @@ import org.teavm.vm.spi.TeaVMPlugin;
 import ui11.WidgetDefinitionParser.InjectionFieldInfo;
 import ui11.WidgetDefinitionParser.ProviderMethodInfo;
 import ui11.WidgetDefinitionParser.StateFieldInfo;
-import ui11.Node.InheritedPropObservable;
-import ui11.Node.InheritedPropBase;
+import ui11.WidgetState.InheritedPropObservable;
+import ui11.WidgetState.InheritedPropBase;
 import ui11.observable.MutableObservable;
 import ui11.observable.Observable;
 import ui11.provide.Provider;
@@ -228,7 +228,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
     }
 
     @Override
-    public void checkStateEmptyAndPrepareState(W newState, Node<W> widgetState, W model) {
+    public void checkStateEmptyAndPrepareState(W newState, WidgetState<W> widgetState, W model) {
         for (int i = 0; i < stateFieldNames.getLength(); i++) {
             JSString stateFieldName = stateFieldNames.get(i);
             Object value = getStateFieldValue(newState, stateFieldName);
@@ -707,7 +707,7 @@ class TeaVMWidgetAccessor<W extends Widget> implements WidgetAccessor<W> {
 
                             DependencyNode ivCollectorConstructorTypeParam =
                                     agent.linkMethod(new MethodReference(IVCollector.class, "<init>",
-                                                    Node.class, Class.class,
+                                                    WidgetState.class, Class.class,
                                                     void.class)).
                                             getVariable(2 /* type paraméter */);
                             ivCollectorConstructorTypeParam.getClassValueNode().propagate(type);

@@ -3,7 +3,7 @@ package ui11;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-import ui11.Node.InheritedPropBase;
+import ui11.WidgetState.InheritedPropBase;
 import ui11.reflectutil.ReflectionUtil;
 
 import java.lang.constant.ClassDesc;
@@ -31,7 +31,7 @@ class InheritedInterfaceProxyGenerator {
     private static final String GET_DELEGATE_METHOD_DESC = methodType(Object.class,
             InheritedInterfaceProxyBase.Dummy.class).descriptorString();
     private static final String CONSTRUCTOR_DESC =
-            methodType(void.class, Node.class, Class.class, boolean.class, String.class).descriptorString();
+            methodType(void.class, WidgetState.class, Class.class, boolean.class, String.class).descriptorString();
     private static final String FACTORY_METHOD_NAME = "create";
     private static final String TOSTRING_PREFIX = "Inherited value interface proxy for ";
 

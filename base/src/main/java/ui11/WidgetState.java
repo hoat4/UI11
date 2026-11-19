@@ -19,7 +19,7 @@ import java.util.function.Supplier;
  * Nodes form a {@linkplain WidgetTree directed acyclic graph}. Many of them have a single child,
  * which is provided by the {@link Widget#build()} method.
  */
-final class Node<W extends Widget> implements ObserverCollection {
+final class WidgetState<W extends Widget> implements ObserverCollection {
 
     static final int FLAG_NEEDS_INIT = 1;
     static final int FLAG_NEEDS_REBUILD = 2;
@@ -108,7 +108,7 @@ final class Node<W extends Widget> implements ObserverCollection {
     private Map<RelativeKey, GlobalKey> relativeKeysToGlobalKeys;
 
     @SuppressWarnings("unchecked")
-    Node(W modelWidget, WidgetTree tree) {
+    WidgetState(W modelWidget, WidgetTree tree) {
         this.tree = tree;
 
         modelWidget = otherIfSwapped(modelWidget);
@@ -345,7 +345,7 @@ final class Node<W extends Widget> implements ObserverCollection {
     void registerParent(@NonNull Edge wi) {
         assert wi.child() == this;
 
-        Node<?> newParent = wi.parent();
+        WidgetState<?> newParent = wi.parent();
         if (newParent != null && newParent.hasFlag(NEEDS_REFRESH))
             // mert akkor nem lehet iv consumereket bejegyezni
             throw new IllegalArgumentException("Can't add parent which is not fresh\n" +
@@ -378,7 +378,7 @@ final class Node<W extends Widget> implements ObserverCollection {
      * ha már nem a parentünk a megadott widget, akkor nem csinál semmit
      */
     // TODO inkább dobjunk assertiont ha már nem a parentünk?
-    void removeParent(Node<?> parent) {
+    void removeParent(WidgetState<?> parent) {
         for (int i = 0; i < parents.size(); i++) {
             if (parents.get(i).parent() == parent) {
                 parents.remove(i);
@@ -469,12 +469,12 @@ final class Node<W extends Widget> implements ObserverCollection {
         if (!hasFlag(FLAG_ACTIVE))
             throw new IllegalStateException("not active, can't invalidate");
         // TODO ez a removeObservers néhány helyen lehet hogy felesleges
-        if (hasFlag(Node.FLAG_NEEDS_REBUILD)) {
+        if (hasFlag(WidgetState.FLAG_NEEDS_REBUILD)) {
             removeObservers(null);
             return;
         }
 
-        addFlag(Node.FLAG_NEEDS_REBUILD);
+        addFlag(WidgetState.FLAG_NEEDS_REBUILD);
 
         if (refreshedAt > tree.finishedRefreshID) {
             List<ObservableBase> observables = new ArrayList<>();
@@ -483,12 +483,12 @@ final class Node<W extends Widget> implements ObserverCollection {
         } else
             removeObservers(null);
 
-        Deque<Node<?>> q = new LinkedList<>();
-        Set<Node<?>> visited = new HashSet<>(); // ez HashSet helyett lehetne egy long mező WidgetStateben
+        Deque<WidgetState<?>> q = new LinkedList<>();
+        Set<WidgetState<?>> visited = new HashSet<>(); // ez HashSet helyett lehetne egy long mező WidgetStateben
         q.push(this);
         visited.add(this);
         while (!q.isEmpty()) {
-            Node<?> w = q.pop();
+            WidgetState<?> w = q.pop();
 
             // ha már van FLAG_DESCENDANT_NEEDS_REFRESH beállítva, akkor skippelhetnénk,
             // de beragadnak feleslegesek, amik nem lesznek kitörölve, ezért mégsem.

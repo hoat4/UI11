@@ -69,15 +69,15 @@ class InheritedValueMerger<T> extends Widget {
 
     private IVCollector<T> ivFromParent() {
         @SuppressWarnings("unchecked")
-        Node<InheritedValueMerger<T>> node = (Node<InheritedValueMerger<T>>) widgetState();
+        WidgetState<InheritedValueMerger<T>> widgetState = (WidgetState<InheritedValueMerger<T>>) widgetState();
         @SuppressWarnings("unchecked")
-        IVCollector<T> current = (IVCollector<T>) node.ivCollectorsByType.get(type);
+        IVCollector<T> current = (IVCollector<T>) widgetState.ivCollectorsByType.get(type);
         if (current == null) {
-            current = new IVCollector<>(node, type);
+            current = new IVCollector<>(widgetState, type);
             current.usage |= IVCollector.USED_BY_SELF;
             current.retrieveValue();
-            node.ivCollectorsByType.clear();
-            node.ivCollectorsByType.put(type, current);
+            widgetState.ivCollectorsByType.clear();
+            widgetState.ivCollectorsByType.put(type, current);
         }
         return current;
     }

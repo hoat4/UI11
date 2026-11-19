@@ -16,12 +16,12 @@ import java.util.Objects;
  */
 final class Edge {
 
-    private final @Nullable Node<?> parent;
-    private final @NonNull Node<?> child;
+    private final @Nullable WidgetState<?> parent;
+    private final @NonNull WidgetState<?> child;
     private final @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs;
     private final long instantiatedAt;
 
-    Edge(@Nullable Node<?> parent, @NonNull Node<?> child, @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs, long instantiatedAt) {
+    Edge(@Nullable WidgetState<?> parent, @NonNull WidgetState<?> child, @NonNull Map<@NonNull Class<?>, @Nullable Object> directIVs, long instantiatedAt) {
         Objects.requireNonNull(child);
         Objects.requireNonNull(directIVs);
         this.parent = parent;
@@ -30,11 +30,11 @@ final class Edge {
         this.instantiatedAt = instantiatedAt;
     }
 
-    public @Nullable Node<?> parent() {
+    public @Nullable WidgetState<?> parent() {
         return parent;
     }
 
-    public @NonNull Node<?> child() {
+    public @NonNull WidgetState<?> child() {
         return child;
     }
 

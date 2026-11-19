@@ -14,7 +14,7 @@ class IVCollector<T> {
     static final int USED_BY_SELF = 1;
     static final int USED_BY_DESCENDANT = 2;
 
-    final Node<?> widgetState;
+    final WidgetState<?> widgetState;
     final Class<T> type;
 
     private Object value;
@@ -24,7 +24,7 @@ class IVCollector<T> {
     // ha ennek a konstruktornak a signaturejét megváltoztatjuk, akkor
     // változtassuk meg WidgetAccessorTeaVMPluginben a hivatkozást és a getVariable-t is
     // (nem fog hibát jelezni ha nem tesszük, csak rejtélyes JS hibák fognak megjelenni)
-    IVCollector(Node<?> widgetState, Class<T> type) {
+    IVCollector(WidgetState<?> widgetState, Class<T> type) {
         this.widgetState = widgetState;
         this.type = type;
     }
@@ -92,7 +92,7 @@ class IVCollector<T> {
                 hasAnyValues = true;
                 combiner.add(type.cast(value), edge.instantiatedAt());
             } else {
-                Node<?> parent = edge.parent();
+                WidgetState<?> parent = edge.parent();
                 if (parent == null)
                     continue;
 
@@ -151,7 +151,7 @@ class IVCollector<T> {
      * Továbbá csak refresh közben, mivel exception messageben kiírhatja a refresh stack tartalmát is.
      */
     T currentValue(boolean optional, String fieldOrParameterName) {
-        if (!widgetState.hasFlag(Node.FLAG_ACTIVE))
+        if (!widgetState.hasFlag(WidgetState.FLAG_ACTIVE))
             throw new IllegalStateException("can't retrieve value, widget state is inactive: " + this + ", " + widgetState);
         if (value == null)
             throw new RuntimeException("should not reach here (IVC.cV)");

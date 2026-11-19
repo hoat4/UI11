@@ -28,7 +28,7 @@ abstract sealed class PeerRequestor extends Widget {
     /**
      * @return ha null, ha nincs child. üres tömb nem lehet.
      */
-    abstract Edge[] buildMulti(Node<?> widgetState, Edge @Nullable [] existingChildren);
+    abstract Edge[] buildMulti(WidgetState<?> widgetState, Edge @Nullable [] existingChildren);
 
     static final class CreatePeerForSingle<P> extends PeerRequestor {
 
@@ -46,7 +46,7 @@ abstract sealed class PeerRequestor extends Widget {
         }
 
         @Override
-        Edge[] buildMulti(Node<?> widgetState, Edge @Nullable [] existingChildren) {
+        Edge[] buildMulti(WidgetState<?> widgetState, Edge @Nullable [] existingChildren) {
             if (req == null || !Objects.equals(req.requestData, request) ||
                     !Objects.equals(req.widget, widget))
                 req = new ResolutionRequest<>(
@@ -107,7 +107,7 @@ abstract sealed class PeerRequestor extends Widget {
         }
 
         @Override
-        Edge[] buildMulti(Node<?> widgetState, Edge @Nullable [] existingChildren) {
+        Edge[] buildMulti(WidgetState<?> widgetState, Edge @Nullable [] existingChildren) {
             if (reqs == null) {
                 @SuppressWarnings("unchecked")
                 ResolutionRequest<P>[] reqsArray = new ResolutionRequest[widgets.size()];
@@ -117,7 +117,7 @@ abstract sealed class PeerRequestor extends Widget {
 
             Edge[] children = new Edge[widgets.size() + 1];
 
-            Node<?> finisher = (children[widgets.size()] = widgetState.tree.findOrCreateWidgetState(
+            WidgetState<?> finisher = (children[widgets.size()] = widgetState.tree.findOrCreateWidgetState(
                     new ListRRFinisher<>(reqs, f),
                     widgetState,
                     existingChildren == null ? null : existingChildren[existingChildren.length - 1],
@@ -193,8 +193,8 @@ abstract sealed class PeerRequestor extends Widget {
         }
 
         @Override
-        Edge[] buildMulti(Node<?> widgetState, Edge @Nullable [] existingChildren) {
-            Node<?> thisWidgetState = widgetState();
+        Edge[] buildMulti(WidgetState<?> widgetState, Edge @Nullable [] existingChildren) {
+            WidgetState<?> thisWidgetState = widgetState();
             int reqCount = widgets.size();
 
             if (reqs == null)
@@ -204,7 +204,7 @@ abstract sealed class PeerRequestor extends Widget {
 
             Edge[] children = new Edge[reqCount + 1];
 
-            Node<?> finisher = (children[reqCount] = thisWidgetState.tree.findOrCreateWidgetState(
+            WidgetState<?> finisher = (children[reqCount] = thisWidgetState.tree.findOrCreateWidgetState(
                     new MapRRFinisher<>(reqs, f),
                     thisWidgetState,
                     existingChildren == null ? null : existingChildren[existingChildren.length - 1],

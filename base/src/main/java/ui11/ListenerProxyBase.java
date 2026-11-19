@@ -109,7 +109,7 @@ abstract class ListenerProxyBase<L> {
 
         private final Widget thisModel;
 
-        private final Set<Node<?>> usages = Collections.newSetFromMap(new IdentityHashMap<>()); // TODO weak ref
+        private final Set<WidgetState<?>> usages = Collections.newSetFromMap(new IdentityHashMap<>()); // TODO weak ref
 
         /**
          * model szerepű widget lehet csak, state nem
@@ -120,14 +120,14 @@ abstract class ListenerProxyBase<L> {
             this.thisModel = thisModel;
         }
 
-        void addUsage(Node<?> widgetState) {
+        void addUsage(WidgetState<?> widgetState) {
             verify();
             if (!usages.add(widgetState))
                 throw new RuntimeException("already added to " + this + ": " + widgetState);
             verify();
         }
 
-        void removeUsage(Node<?> widgetState) {
+        void removeUsage(WidgetState<?> widgetState) {
             verify();
             if (!usages.remove(widgetState))
                 throw new RuntimeException("not in usage list of " + this + ": " + widgetState);
@@ -144,7 +144,7 @@ abstract class ListenerProxyBase<L> {
                 throw new RuntimeException();
         }
 
-        boolean trySwapWith(Widget otherModel, Node<?> user) {
+        boolean trySwapWith(Widget otherModel, WidgetState<?> user) {
             verify();
 
             if (!usages.contains(user) || !otherModel.lpModelData.usages.contains(user))
