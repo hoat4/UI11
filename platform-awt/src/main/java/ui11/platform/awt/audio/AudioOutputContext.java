@@ -93,7 +93,7 @@ public class AudioOutputContext extends Widget {
                         while (true) {
                             buffersSnapshot = new ArrayList<>(buffers);
                             if (buffersSnapshot.isEmpty()) {
-                                System.out.println("no audio buffers");
+                                //System.out.println("no audio buffers");
                                 buffersLock.wait();
                             } else
                                 break;
