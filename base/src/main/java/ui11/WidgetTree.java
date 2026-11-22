@@ -103,30 +103,25 @@ public final class WidgetTree {
                 WidgetState<?> w = refreshStack.peekWidget();
 
                 if (w.tree != this)
-                    throw new RuntimeException("widget from other tree");
+                    throw new RuntimeException("Widget from other tree: " + w);
                 if (w.flags < 0)
-                    throw new RuntimeException("disposed or invalid widget state appeared");
-                // TODO FLAG_IN_INACTIVATION_QUEUE-et ellenőrizzük (vagy ha nem itt, akkor findNextToRefreshben)
+                    throw new RuntimeException("Disposed or invalid widget state appeared: " + w);
 
                 w.laterValidationCheckActual = w.laterValidationCheckLast;
 
                 // TODO ha lesz a widget feldolgozása közben egy exception,
                 //      akkor nem kéne visszaállítani a flageket?
-                boolean wasActive = w.hasFlag(WidgetState.FLAG_ACTIVE);
-                assert wasActive == !w.hasFlag(WidgetState.FLAG_NEEDS_INIT);
-
+                boolean needsInit = w.removeFlagIfPresent(WidgetState.FLAG_NEEDS_INIT);
                 boolean needsRebuild = w.removeFlagIfPresent(WidgetState.FLAG_NEEDS_REBUILD);
                 boolean needsDescendantRefresh = w.removeFlagIfPresent(WidgetState.FLAG_DESCENDANT_NEEDS_REFRESH);
                 boolean hasStolenChildren = w.removeFlagIfPresent(WidgetState.FLAG_HAS_STOLEN_CHILDREN);
 
+                boolean wasActive = !needsInit;
                 assert !w.hasFlag(WidgetState.FLAG_NEEDS_INIT) || needsRebuild;
 
                 w.registerParent(refreshStack.peekWidgetInstantiation());
-
+                assert !w.hasFlag(WidgetState.FLAG_QUEUED_FOR_DISPOSE);
                 w.refreshedAt = beganRefreshID;
-
-                if (!wasActive)
-                    w.addFlag(WidgetState.FLAG_ACTIVE);
 
                 int ivsUpdated = w.retrieveIVValues();
                 needsRebuild |= (ivsUpdated & IVCollector.USED_BY_SELF) != 0;
@@ -149,10 +144,10 @@ public final class WidgetTree {
                     w.closeUntilNextRebuildScope();
                     w.copyIVValuesToFields();
                 }
-                if (w.hasFlag(WidgetState.FLAG_NEEDS_INIT)) {
+
+                if (needsInit)
                     w.stateWidget.initState(); // TODO what to do if an exception happens in initState?
-                    w.removeFlag(WidgetState.FLAG_NEEDS_INIT);
-                }
+
                 needsDescendantRefresh |= hasStolenChildren;
 
                 refreshStack.setDebugValuesOfCurrentWidget(needsRebuild);
@@ -340,7 +335,7 @@ public final class WidgetTree {
     /**
      * A létrehozott/megtalált majd esetleg módosított Node-et
      * hozzáadja a parent children listájába, illetve a refreshQueueba is.
-     * Ha parent nem null, akkor feltételezi, hogy {@link WidgetState#FLAG_ACTIVE aktív} állapotban van.
+     * Ha parent nem null, akkor feltételezi, hogy {@link WidgetState#isActive() aktív} állapotban van.
      *
      * @param parent ez csak akkor null, ha a root widgetről van szó
      */
@@ -349,7 +344,7 @@ public final class WidgetTree {
                                  @Nullable Edge previous,
                                  @Nullable Set<? extends ResolutionRequest<?>> reqs) {
         Objects.requireNonNull(widget, "widget");
-        if (parent != null && !parent.hasFlag(WidgetState.FLAG_ACTIVE))
+        if (parent != null && !parent.isActive())
             throw new IllegalArgumentException("parent not active: " + parent);
 
         Map<Class<?>, Object> ivs = new HashMap<>();
@@ -430,7 +425,7 @@ public final class WidgetTree {
         return wi;
     }
 
-    void addToInactivationQueue(@NonNull WidgetState<?> w) {
+    void addToDisposeQueue(@NonNull WidgetState<?> w) {
         if (w.tree != this)
             throw new IllegalArgumentException("WT aTIQ");
 

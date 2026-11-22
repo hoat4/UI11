@@ -151,7 +151,7 @@ class IVCollector<T> {
      * Továbbá csak refresh közben, mivel exception messageben kiírhatja a refresh stack tartalmát is.
      */
     T currentValue(boolean optional, String fieldOrParameterName) {
-        if (!widgetState.hasFlag(WidgetState.FLAG_ACTIVE))
+        if (!widgetState.isActive())
             throw new IllegalStateException("can't retrieve value, widget state is inactive: " + this + ", " + widgetState);
         if (value == null)
             throw new RuntimeException("should not reach here (IVC.cV)");

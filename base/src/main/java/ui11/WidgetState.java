@@ -24,25 +24,24 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     static final int FLAG_NEEDS_INIT = 1;
     static final int FLAG_NEEDS_REBUILD = 2;
     static final int FLAG_DESCENDANT_NEEDS_REFRESH = 4;
-    static final int FLAG_ACTIVE = 8;
-    static final int FLAG_QUEUED_FOR_DISPOSE = 16;
+    static final int FLAG_QUEUED_FOR_DISPOSE = 8;
 
     /**
      * Megtiltja a refresh során a descendantok skippelését, hogy meghívódjon minden gyerekén a
      * {@link #registerParent(Edge)}.
      */
     // TODO this flag is never set currently, either delete or remove it
-    static final int FLAG_HAS_STOLEN_CHILDREN = 32;
+    static final int FLAG_HAS_STOLEN_CHILDREN = 16;
 
     /**
      * refresh során ideiglenesen van beállítva, de lehet hogy úgy marad
      */
-    static final int FLAG_USAGE_CHECK = 64;
+    static final int FLAG_USAGE_CHECK = 32;
 
     /**
      * managed by {@link WidgetTree}
      */
-    static final int FLAG_QUEUED_FOR_RELATIVE_ID_CLEANUP = 128;
+    static final int FLAG_QUEUED_FOR_RELATIVE_ID_CLEANUP = 64;
 
     // flags mezőnek érvénytelen értékek
     static final int DISPOSED = -1;
@@ -249,9 +248,19 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         return untilNextRebuild;
     }
 
+    /**
+     *
+     * @throws IllegalStateException if disposed
+     */
+    boolean isActive() {
+        return !hasFlag(FLAG_NEEDS_INIT);
+    }
+
     void dispose() {
-        System.out.println("Dispose " + this);
-        if (!hasFlag(FLAG_ACTIVE))
+        //System.out.println("Dispose " + this);
+        if (!isActive()) // hasFlag in isActive will throw exception if already disposed.
+            // only {@link #isActive()} widgets can be queued for dispose,
+            // so if not not active, we can't reach reach here
             throw new IllegalStateException("already inactive");
         assert parents.isEmpty();
 
@@ -343,8 +352,8 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         for (int i = 0; i < parents.size(); i++) {
             if (parents.get(i).parent() == parent) {
                 parents.remove(i);
-                if (parents.isEmpty() && hasFlag(FLAG_ACTIVE) && !hasFlag(FLAG_QUEUED_FOR_DISPOSE))
-                    tree.addToInactivationQueue(this);
+                if (parents.isEmpty() && isActive() && !hasFlag(FLAG_QUEUED_FOR_DISPOSE))
+                    tree.addToDisposeQueue(this);
                 break;
             }
         }
@@ -427,7 +436,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
 
     @Override
     public void invalidate(Supplier<String> debugMessageSupplier) {
-        if (!hasFlag(FLAG_ACTIVE))
+        if (!isActive())
             throw new IllegalStateException("not active, can't invalidate");
         // TODO ez a removeObservers néhány helyen lehet hogy felesleges
         if (hasFlag(WidgetState.FLAG_NEEDS_REBUILD)) {
