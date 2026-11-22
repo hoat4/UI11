@@ -25,7 +25,7 @@ public class DOMCloseRequestListenerPeer extends Widget {
     }
 
     @Override
-    protected void onResume() {
+    protected void initState() {
         if (!isSupported()) {
             logger.debug("CloseWatcher not supported");
             // ilyenkor ezt az Elementet se kéne létrehozni

@@ -49,16 +49,6 @@ public abstract class SubstitutedWidget extends Widget {
     }
 
     /**
-     * It is final because there are no {@linkplain Remember state fields} permitted in the subclasses, so it is
-     * not sensible for the subclasses to do anything in this method.
-     * <p>
-     * The implementation in this class also does nothing.
-     */
-    @Override
-    protected final void onResume() {
-    }
-
-    /**
      * Asks the available {@linkplain ResolverProvider resolvers} to create a peer for each
      * {@linkplain ExposeRequest request}. This method is not intended to be called by an application,
      * instead it will be called by the {@linkplain WidgetTree widget tree refresher} as any other widget.

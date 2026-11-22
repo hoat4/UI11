@@ -139,7 +139,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
             // ez a végére van hagyva azért, hogyha fent exception történik, akkor ne jegyezzünk be usage-et
             modelWidget.lpModelData.addUsage(this);
 
-        flags = FLAG_NEEDS_INIT | FLAG_NEEDS_REBUILD;
+        flags = FLAG_NEEDS_INIT | FLAG_NEEDS_REBUILD | FLAG_DESCENDANT_NEEDS_REFRESH;
     }
 
     private @NonNull W otherIfSwapped(W modelWidget) {

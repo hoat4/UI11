@@ -150,12 +150,8 @@ public final class WidgetTree {
                     w.copyIVValuesToFields();
                 }
                 if (w.hasFlag(WidgetState.FLAG_NEEDS_INIT)) {
-                    w.stateWidget.initState(); // TODO what to do if an exception happens in initState or onResume?
+                    w.stateWidget.initState(); // TODO what to do if an exception happens in initState?
                     w.removeFlag(WidgetState.FLAG_NEEDS_INIT);
-                }
-                if (!wasActive) {
-                    w.stateWidget.onResume();
-                    needsDescendantRefresh = true;
                 }
                 needsDescendantRefresh |= hasStolenChildren;
 

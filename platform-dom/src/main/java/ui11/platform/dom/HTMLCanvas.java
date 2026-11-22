@@ -28,10 +28,7 @@ public class HTMLCanvas extends Widget {
                 getDocument().createElement("canvas");
         canvas.setWidth(500);
         canvas.setHeight(500);
-    }
 
-    @Override
-    protected void onResume() {
         Window.requestAnimationFrame(timestamp -> {
             ViewportSize initialViewport = refreshCanvasSizeContinuously();
             listener.canvasReady(canvas, initialViewport);

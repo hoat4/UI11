@@ -73,9 +73,8 @@ public class DOMEnvironment implements Shell, Scheduler {
 
         class DOMElementRoot extends Widget {
 
-
             @Override
-            protected void onResume() {
+            protected void initState() {
                 // TODO ez is lehet hogy inkább az update után kéne
                 eventDispatcher.start();
                 untilPause().onClose(eventDispatcher::stop);

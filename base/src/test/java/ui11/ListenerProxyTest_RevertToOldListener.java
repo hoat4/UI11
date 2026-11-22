@@ -60,7 +60,7 @@ public class ListenerProxyTest_RevertToOldListener {
         }
 
         @Override
-        protected void onResume() {
+        protected void initState() {
             Timer t = new Timer();
             t.schedule(new TimerTask() {
                 @Override

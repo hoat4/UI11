@@ -23,10 +23,6 @@ public class PeriodicallyRefreshed extends Widget {
     @Override
     protected void initState() {
         ip = new InvalidationPoint();
-    }
-
-    @Override
-    protected void onResume() {
         requestLaterRefresh();
     }
 

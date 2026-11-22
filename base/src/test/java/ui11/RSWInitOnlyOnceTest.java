@@ -20,11 +20,6 @@ public class RSWInitOnlyOnceTest extends Widget {
     }
 
     @Override
-    protected void onResume() {
-        System.out.println("onResume");
-    }
-
-    @Override
     protected Widget build() {
         System.out.println("build (" + i + ")");
         return new Text(i);

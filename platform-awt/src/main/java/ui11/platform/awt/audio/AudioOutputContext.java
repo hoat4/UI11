@@ -29,10 +29,6 @@ public class AudioOutputContext extends Widget {
     @Override
     protected void initState() {
         mixer = new Mixer();
-    }
-
-    @Override
-    protected void onResume() {
         mixer.start();
         // TODO stop?
     }

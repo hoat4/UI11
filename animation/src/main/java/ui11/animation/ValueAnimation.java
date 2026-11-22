@@ -47,10 +47,6 @@ public class ValueAnimation<T> extends Widget {
     @Override
     protected void initState() {
         beginTime = MutableObservable.ofNullable();
-    }
-
-    @Override
-    protected void onResume() {
         startAnimation();
     }
 

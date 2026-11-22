@@ -95,9 +95,9 @@ public abstract class Widget implements Cloneable {
     //      ez nem jó.
 
     /**
-     * Called when the widget is added to the tree and no previous state is available.
+     * Called when the widget is added to the tree so new state is created.
      * <p>
-     * After calling this method, {@link #onResume()} then {@linkplain #build()} will be called. Then
+     * After calling this method, {@linkplain #build()} will be called. Then
      * {@linkplain #build()} will be called again and again whenever an input property or an
      * {@link ui11.observable.Observable observable value} changes.
      * <p>
@@ -108,25 +108,11 @@ public abstract class Widget implements Cloneable {
     // azért lett default üres implementációja (eredetileg abstract volt),
     // hogy késztessük a usert arra build scopeján kívül is csináljon dolgokat,
     // mert pl. lambdák nem működnek rendesen (this-t captureölik, miközben változni fog az objektum)
-    protected void initState() {
-    }
-
-    /**
-     * Called when the widget is added to the tree.
-     * <p>
-     * Before calling this method, {@link #initState()} is called if no previous state is available. After calling this
-     * method then {@linkplain #build()} will be called. Then {@linkplain #build()} will be called again and again
-     * whenever an input property or a subscribed {@link ui11.observable.Observable observable value} changes.
-     * <p>
-     * Note: Don't pass a reference to {@code this} value to other objects which last longer than this
-     * {@linkplain Widget} instance, because while the same conceptual widget appears on the screen and shares the same
-     * state, the actual instances may be recreated whoever instantiates this widget.$
-     */
-    // alternatív név: onShow, onMount
+    // alternative names: init, onShow, onMount
     // TODO végig kéne menni ennek a felülírásain, és ellenőrizni, hogy nem olvas-e input fieldet,
     //      aminek a megváltozása esetén újra végre kéne hajtani valamit.
     //      ha igen, akkor át kell rakni build()-be
-    protected void onResume() {
+    protected void initState() {
     }
 
     // TODO input values fogalmat linkeljük valahonnan

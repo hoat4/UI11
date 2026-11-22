@@ -49,7 +49,7 @@ public class PopupMenuOpener extends Widget {
     }
 
     @Override
-    protected void onResume() {
+    protected void initState() {
         untilPause().onClose(() -> mouseLocation = null);
     }
 

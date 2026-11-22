@@ -31,8 +31,9 @@ public class BackgroundTask<T> extends Widget {
     // TODO ez így fura hogy Callable-nek csak az első értékét vesszük figyelembe, de nem tudom hogy mit kéne vele
     //      kezdeni
 
+
     @Override
-    protected void onResume() {
+    protected void initState() {
         status.set(new TaskStatus.InProgress<>());
         Future<?> future = executor.submit(() -> {
             try {
