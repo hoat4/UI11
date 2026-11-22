@@ -38,9 +38,9 @@ public final class WidgetTree {
     private RefreshStack refreshStack;
 
     /**
-     * ha egy Slothoz új WidgetStateet rendelünk, akkor szedjük ki ebből a queueból
+     * if a WidgetState gots a new parent in the safe refresh cycle, then it will be removed from this queue
      */
-    private final SequencedSet<WidgetState<?>> inactivationQueue = new LinkedHashSet<>();
+    private final SequencedSet<WidgetState<?>> disposeQueue = new LinkedHashSet<>();
 
     private SequencedMap<WidgetState<?>, List<LaterValidationCheck>> laterValidationChecks;
     private List<WidgetState<?>> laterRelativeIDChecks;
@@ -113,6 +113,8 @@ public final class WidgetTree {
                 // TODO ha lesz a widget feldolgozása közben egy exception,
                 //      akkor nem kéne visszaállítani a flageket?
                 boolean wasActive = w.hasFlag(WidgetState.FLAG_ACTIVE);
+                assert wasActive == !w.hasFlag(WidgetState.FLAG_NEEDS_INIT);
+
                 boolean needsRebuild = w.removeFlagIfPresent(WidgetState.FLAG_NEEDS_REBUILD);
                 boolean needsDescendantRefresh = w.removeFlagIfPresent(WidgetState.FLAG_DESCENDANT_NEEDS_REFRESH);
                 boolean hasStolenChildren = w.removeFlagIfPresent(WidgetState.FLAG_HAS_STOLEN_CHILDREN);
@@ -123,12 +125,8 @@ public final class WidgetTree {
 
                 w.refreshedAt = beganRefreshID;
 
-                if (!wasActive) {
+                if (!wasActive)
                     w.addFlag(WidgetState.FLAG_ACTIVE);
-
-                    // TODO ezt nem inkább a closeUntilNextRebuildScope után kéne?
-                    needsRebuild |= w.resumeObservables();
-                }
 
                 int ivsUpdated = w.retrieveIVValues();
                 needsRebuild |= (ivsUpdated & IVCollector.USED_BY_SELF) != 0;
@@ -152,7 +150,7 @@ public final class WidgetTree {
                     w.copyIVValuesToFields();
                 }
                 if (w.hasFlag(WidgetState.FLAG_NEEDS_INIT)) {
-                    w.stateWidget.initState();
+                    w.stateWidget.initState(); // TODO what to do if an exception happens in initState or onResume?
                     w.removeFlag(WidgetState.FLAG_NEEDS_INIT);
                 }
                 if (!wasActive) {
@@ -244,10 +242,10 @@ public final class WidgetTree {
                 w.removeObsoleteIDs();
             }
 
-            while (!inactivationQueue.isEmpty()) {
-                WidgetState<?> w = inactivationQueue.removeFirst();
-                w.removeFlag(WidgetState.FLAG_IN_INACTIVATION_QUEUE);
-                w.inactivate();
+            while (!disposeQueue.isEmpty()) {
+                WidgetState<?> w = disposeQueue.removeFirst();
+                w.removeFlag(WidgetState.FLAG_QUEUED_FOR_DISPOSE);
+                w.dispose();
             }
 
             laterValidationChecks.forEach((w, checks) -> {
@@ -440,16 +438,16 @@ public final class WidgetTree {
         if (w.tree != this)
             throw new IllegalArgumentException("WT aTIQ");
 
-        w.addFlag(WidgetState.FLAG_IN_INACTIVATION_QUEUE);
-        inactivationQueue.addLast(w);
+        w.addFlag(WidgetState.FLAG_QUEUED_FOR_DISPOSE);
+        disposeQueue.addLast(w);
     }
 
-    void removeFromInactivationQueue(@NonNull WidgetState<?> w) {
+    void removeFromDisposeQueue(@NonNull WidgetState<?> w) {
         if (w.tree != this)
             throw new IllegalArgumentException("WT rTIQ");
 
-        w.removeFlag(WidgetState.FLAG_IN_INACTIVATION_QUEUE);
-        inactivationQueue.remove(w);
+        w.removeFlag(WidgetState.FLAG_QUEUED_FOR_DISPOSE);
+        disposeQueue.remove(w);
     }
 
     void submitForLaterValidationCountCheck(WidgetState<?> w, String msg, List<ObservableBase> toBeRestored) {

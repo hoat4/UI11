@@ -25,7 +25,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     static final int FLAG_NEEDS_REBUILD = 2;
     static final int FLAG_DESCENDANT_NEEDS_REFRESH = 4;
     static final int FLAG_ACTIVE = 8;
-    static final int FLAG_IN_INACTIVATION_QUEUE = 16;
+    static final int FLAG_QUEUED_FOR_DISPOSE = 16;
 
     /**
      * Megtiltja a refresh során a descendantok skippelését, hogy meghívódjon minden gyerekén a
@@ -95,7 +95,6 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     long refreshedAt;
     long laterValidationCheckLast, laterValidationCheckActual; // ez a kettő mehetne egy külön objektumba, mert ritkák
     private Object observed; // ObservableBase[] vagy Set
-    private long[] stateAtPause;
 
     /**
      * This array contains only those IV collectors used by {@link ui11.Widget.Inject @Inject} fields.
@@ -251,31 +250,12 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
     }
 
     void dispose() {
-        inactivate();
-
-        stateWidget.disposeFromStateRole(this);
-        stateWidget = null; // nem lényeges, csak hogy könnyebben kiderüljön ha valami nem stimmel
-
-        if (modelWidget.lpModelData != null)
-            modelWidget.lpModelData.removeUsage(this);
-        if (alsoLockedModelWidget != null) {
-            alsoLockedModelWidget.lpModelData.removeUsage(this);
-            alsoLockedModelWidget = null;
-        }
-
-        flags = DISPOSED;
-    }
-
-    // reaktiválásra nincs itt külön függvény, hanem a refresh folyamat részeként történik meg
-    void inactivate() {
-        // System.out.println("inactivate " + stateWidget);
+        System.out.println("Dispose " + this);
         if (!hasFlag(FLAG_ACTIVE))
             throw new IllegalStateException("already inactive");
         assert parents.isEmpty();
-        removeFlag(FLAG_ACTIVE);
 
-        // reaktiváláskor úgyis az egész részfán végigmegyünk
-        removeFlagIfPresent(FLAG_DESCENDANT_NEEDS_REFRESH);
+        flags = DISPOSED;
 
         pauseObservables();
         closeUntilPauseScope();
@@ -291,59 +271,33 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
                     child.child().removeParent(this);
             }
         }
+
+        stateWidget.disposeFromStateRole(this);
+        stateWidget = null; // nem lényeges, csak hogy könnyebben kiderüljön ha valami nem stimmel
+
+        if (modelWidget.lpModelData != null)
+            modelWidget.lpModelData.removeUsage(this);
+        if (alsoLockedModelWidget != null) {
+            alsoLockedModelWidget.lpModelData.removeUsage(this);
+            alsoLockedModelWidget = null;
+        }
     }
 
     @SuppressWarnings("unchecked")
     private void pauseObservables() {
         if (observed instanceof Set<?>) {
             Set<ObservableBase> s = (Set<ObservableBase>) observed;
-            stateAtPause = new long[s.size()];
-            int i = 0;
             for (ObservableBase obs : s) {
-                stateAtPause[i] = obs.invalidationCount;
                 obs.removeObserver(this, -1);
             }
         } else if (observed != null) {
             ObservableBase[] arr = (ObservableBase[]) observed;
-            stateAtPause = new long[arr.length];
-            for (int i = 0; i < arr.length; i++) {
-                ObservableBase obs = arr[i];
+            for (ObservableBase obs : arr) {
                 if (obs == null)
                     continue;
-                stateAtPause[i] = obs.invalidationCount;
                 obs.removeObserver(this, -1);
             }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    boolean resumeObservables() {
-        if (observed == null)
-            return false;
-
-        boolean needsRebuild = false;
-        if (observed instanceof Set<?>) {
-            Set<ObservableBase> s = (Set<ObservableBase>) observed;
-            int i = 0;
-            for (ObservableBase obs : s) {
-                needsRebuild |= obs.invalidationCount != stateAtPause[i];
-                obs.addObserver(this);
-                i++;
-            }
-        } else {
-            ObservableBase[] arr = (ObservableBase[]) observed;
-            stateAtPause = new long[arr.length];
-            for (int i = 0; i < arr.length; i++) {
-                ObservableBase obs = arr[i];
-                if (obs == null)
-                    continue;
-                needsRebuild |= obs.invalidationCount != stateAtPause[i];
-                obs.addObserver(this);
-            }
-        }
-
-        stateAtPause = null;
-        return needsRebuild;
     }
 
     /**
@@ -373,10 +327,10 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
             assert parents.stream().noneMatch(wi2 -> wi2.parent() == this);
             parents.add(wi);
 
-            if (hasFlag(FLAG_IN_INACTIVATION_QUEUE))
-                tree.removeFromInactivationQueue(this);
+            if (hasFlag(FLAG_QUEUED_FOR_DISPOSE))
+                tree.removeFromDisposeQueue(this);
         } else
-            assert !hasFlag(FLAG_IN_INACTIVATION_QUEUE);
+            assert !hasFlag(FLAG_QUEUED_FOR_DISPOSE);
 
         assert parents.get(parentIndex).parent() == wi.parent();
     }
@@ -389,7 +343,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         for (int i = 0; i < parents.size(); i++) {
             if (parents.get(i).parent() == parent) {
                 parents.remove(i);
-                if (parents.isEmpty() && hasFlag(FLAG_ACTIVE) && !hasFlag(FLAG_IN_INACTIVATION_QUEUE))
+                if (parents.isEmpty() && hasFlag(FLAG_ACTIVE) && !hasFlag(FLAG_QUEUED_FOR_DISPOSE))
                     tree.addToInactivationQueue(this);
                 break;
             }
