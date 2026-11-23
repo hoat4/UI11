@@ -18,6 +18,7 @@ import java.util.stream.IntStream;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.reducing;
 
 // TODO most nem adható meg Provider-nek egy használatban lévő Widget, mert ha lecseréljük egy másik példányra
 //      azonos input mező értékekkel, akkor előfordulhat, hogy beragad az IV-kben a régi, míg a hozzá
@@ -440,9 +441,9 @@ public abstract class Widget implements Cloneable {
         //      inject fieldet akar olvasni ha nem null, így IllegalStateExceptionre lyukad
     }
 
-    /*protected*/ String debug_getRefreshStack() {
-        //return widgetState().refreshStackToString(Map.of());
-        return "TODO debug_getRefreshStack";
+    // for *WidgetAccessor
+    String debug_getRefreshStack() {
+        return widgetState().tree.refreshStackToString(false);
     }
 
     boolean roleIsState() {

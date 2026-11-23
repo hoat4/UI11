@@ -95,6 +95,15 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
 
     @Override
     public void checkStateEmptyAndPrepareState(T newState, WidgetState<T> widgetState, T model) {
+        // TODO if model's inherited or state fields are not empty, then we will throw
+        //      exception because the initial state object's inherited or state fields are also not empty.
+        //      This is OK but the exception messages are confusing because not the state role widgets
+        //      are changing the values, rather they are initially set to non-zero values when
+        //      the object is constructed. See TestUseStateRoleWidget.
+        //      Alternatives:
+        //      - permit non-zero values in these fields if the model is also a state-role widget
+        //      - disallow widgets that are both model and state role
+
         for (StateFieldInfo f : stateFields) {
             Object value = fieldGet(newState, f.field());
             if (!Objects.equals(f.zeroValue(), value))
@@ -121,7 +130,7 @@ final class RegularWidgetAccessor<T extends Widget> implements WidgetAccessor<T>
         widgetState.ivCollectors = ivCollectors;
 
         for (InjectionFieldInfo f : injectFields) {
-            // primitív típus nem lehet egy @Inject mező típusa
+            // primitive types can not be the type of a @Inject field
             if (fieldGet(newState, f.field()) != null)
                 throw new RuntimeException("The value of field " + ReflectionUtil.memberToShortString(f.field()) +
                         " was modified instead of leaving it as null in " + newState + "\n" +
