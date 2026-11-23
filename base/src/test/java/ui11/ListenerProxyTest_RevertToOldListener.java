@@ -70,7 +70,7 @@ public class ListenerProxyTest_RevertToOldListener {
                     System.out.println(result);
                 }
             }, 0, 1000);
-            untilPause().onClose(t::cancel);
+            lifetime().onClose(t::cancel);
         }
 
         @Override

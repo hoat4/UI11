@@ -32,7 +32,7 @@ public class LottieWebAnimationPeer extends Widget implements AnimationPlaybackP
 
     @Override
     protected void initState() {
-        untilPause().onClose(() -> {
+        lifetime().onClose(() -> {
             if (lastContext != null) {
                 lastContext.removePeer(this);
                 lastContext = null;

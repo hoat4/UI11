@@ -31,7 +31,7 @@ public class PeriodicallyRefreshed extends Widget {
         scheduler.scheduleOneTime(interval, () -> {
             ip.invalidate();
             requestLaterRefresh();
-        }, untilPause());
+        }, lifetime());
     }
 
     @Override

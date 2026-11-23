@@ -77,7 +77,7 @@ public class DOMEnvironment implements Shell, Scheduler {
             protected void initState() {
                 // TODO ez is lehet hogy inkább az update után kéne
                 eventDispatcher.start();
-                untilPause().onClose(eventDispatcher::stop);
+                lifetime().onClose(eventDispatcher::stop);
             }
 
             @Provide

@@ -53,7 +53,7 @@ public class BackgroundTask<T> extends Widget {
                 status.set(new TaskStatus.Failure<>(e));
             }
         });
-        untilPause().onClose(() -> {
+        lifetime().onClose(() -> {
             future.cancel(true);
             status = null;
         });

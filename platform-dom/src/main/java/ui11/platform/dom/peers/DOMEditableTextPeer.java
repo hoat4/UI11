@@ -52,7 +52,7 @@ public class DOMEditableTextPeer extends DOMPeerBase<HTMLInputElement> {
         // TODO focus-t normálisan. most nem is nagyon működik
         if (!focusRequested && plainTextEditor.focusHolder() != null && plainTextEditor.focusHolder().autofocus) {
             env().window.setTimeout(elem()::focus, 0);
-            untilPause().onClose(() -> focusRequested = false);
+            lifetime().onClose(() -> focusRequested = false);
             focusRequested = true;
         }
         return endingWidget();

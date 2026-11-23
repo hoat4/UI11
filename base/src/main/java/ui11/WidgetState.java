@@ -236,7 +236,7 @@ final class WidgetState<W extends Widget> implements ObserverCollection {
         return accessor.decorate(stateWidget, content);
     }
 
-    public Scope untilPause() {
+    public Scope untilDestroy() {
         if (untilPause == null)
             untilPause = new SimpleScope(Scope.global());
         return untilPause;

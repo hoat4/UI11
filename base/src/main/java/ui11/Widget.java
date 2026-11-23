@@ -147,7 +147,7 @@ public abstract class Widget implements Cloneable {
     /**
      * Returns a {@linkplain Scope} that will be open until this widget is removed from the widget tree.
      * <p>
-     * This method can be only called after the widget is added to the tree and {@link #initState()} has been finished.
+     * This method can be only called in the state role instance of the widget.
      * <p>
      * At the moment when this scope is closed, the inherited value observables obtained via {@linkplain Inject @Inject}
      * can still be seen, but their values might be obsolete.
@@ -155,9 +155,8 @@ public abstract class Widget implements Cloneable {
      * @throws IllegalStateException if called when this widget is not in the widget tree, or {@linkplain #build()}
      *                               hasn't ran yet
      */
-    // init()-ben lehetne engedni, de nem tudok rá use-caset
-    protected final Scope untilPause() throws IllegalStateException {
-        return widgetState().untilPause();
+    protected final Scope lifetime() throws IllegalStateException {
+        return widgetState().untilDestroy();
     }
 
     // @Listenernél volt egy komment:

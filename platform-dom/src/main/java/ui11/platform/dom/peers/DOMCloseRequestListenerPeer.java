@@ -38,7 +38,7 @@ public class DOMCloseRequestListenerPeer extends Widget {
         debugPrefix = "[CloseWatcher #" + (++closeWatcherDebugCounter) + "]";
         logger.debug(debugPrefix + " Created");
         closeWatcher = CloseWatcher.create();
-        untilPause().onClose(() -> {
+        lifetime().onClose(() -> {
             logger.debug(debugPrefix + " Destroy");
             closeWatcher.destroy();
             closeWatcher = null;

@@ -50,7 +50,7 @@ public class PopupMenuOpener extends Widget {
 
     @Override
     protected void initState() {
-        untilPause().onClose(() -> mouseLocation = null);
+        lifetime().onClose(() -> mouseLocation = null);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class PopupMenuOpener extends Widget {
     }
 
     private void openMenuAt(Location pos) {
-        SimpleScope scope = new SimpleScope(untilPause());
+        SimpleScope scope = new SimpleScope(lifetime());
         dialogContainerState.open(new MenuOverlay(pos, scope::close,
                 menuSupplier.apply(scope)), scope);
     }
