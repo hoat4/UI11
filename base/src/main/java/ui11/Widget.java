@@ -38,13 +38,6 @@ import static java.util.stream.Collectors.joining;
 // bele fog számítani. ez akkor nem nyilvánvaló, ha van öröklődési hierarchia, lásd pl. DOMLayoutPeerBase és ott a két
 // boolean mezőt.
 
-// TODO talán mégis meg kéne próbálni cloneozást, mert így nem lehet pl. Collections.nCopiest se használni
-//      (GameClock timeUpMark)
-//      meg Adorján is nemrég elrakott volna egy ikont egy lokális változóba, amit két helyet akart kijelezni.
-//      A klónozás legutolsó revertjekor valami olyasmi volt írva, hogy azért lett, mert nehéz átlátni hogy
-//      kétféle szerepben vannak a widgetek. De azóta eltelt sok idő, és most már megszoktam hogy nincs
-//      létrehozás utáni API-juk a widgeteknek.
-
 /**
  * This class represents the basic building block for user interface components. A widget can be for example a simple
  * geometric shape, a layout which arranges other widgets, a control, or a region an application.
