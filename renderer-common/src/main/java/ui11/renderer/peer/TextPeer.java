@@ -10,6 +10,7 @@ import ui11.renderer.layer.TextItem;
 import ui11.text.Text;
 import ui11.text.TextStyle;
 
+// TODO missing HiDPI
 public class TextPeer extends Widget {
 
     private final Text text;
@@ -42,6 +43,7 @@ public class TextPeer extends Widget {
 
         for (BoxLayoutResult.SizeRequest sizeRequest : sizeRequests) {
             Size size = sizeRequest.constraints().clamp(textLayout.size());
+            System.out.println("text size "+size);
             if (result == null)
                 result = new Expose<>(sizeRequest, new BoxLayoutResult.OfChosenSize(size));
             else

@@ -72,8 +72,8 @@ public class DefaultBoxImpl extends Widget {
 
         if (containerSize == null) {
             Size allPadding = new Size(
-                    borderSizeSum(Axis.HORIZONTAL) * 2,
-                    borderSizeSum(Axis.VERTICAL) * 2
+                    borderSizeSum(Axis.HORIZONTAL),
+                    borderSizeSum(Axis.VERTICAL)
             );
             BoxConstraints childConstraints = constraints.subtract(allPadding);
             BoxLayoutResult.SizeRequest sizeReq = new BoxLayoutResult.SizeRequest(childConstraints);
