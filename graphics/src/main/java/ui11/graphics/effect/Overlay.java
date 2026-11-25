@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.joining;
 import static ui11.graphics.Empty.empty;
 
-// TODO valahol dokumentálni kéne, hogy ui-layout-constraints ad ehhez BoxLayoutProtocol implementációt.
+// TODO valahol dokumentálni kéne, hogy ui-layout-algo ad ehhez BoxLayoutProtocol implementációt.
 //      meg ColorFillnél is.
 
 /**
@@ -30,7 +30,7 @@ public final class Overlay extends SubstitutedWidget {
 
     public Overlay(List<? extends Widget> items) {
         // TODO items = items.stream().map(Gone::goneIfNull).toList();
-        //      de itt nem a layout-model modulban vagyunk, tehát nincsen Gone
+        //      de itt nem a layout modulban vagyunk, tehát nincsen Gone
         this.items = items.stream().
                 map(w -> w == null ? empty() : w).
                 collect(Collectors.toUnmodifiableList());

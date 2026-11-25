@@ -1,7 +1,7 @@
 dependencies {
     api project(":graphics")
 
-    testImplementation project(":layout-constraint")
+    testImplementation project(":layout-algo")
     testImplementation project(":platform-awt")
     testImplementation project(":renderer-java2d")
 }

@@ -12,8 +12,6 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
-// TODO kéne valami prioritás, mert így most nem lehet a classpathban layout-constraint ha platform-dom is ott van
-
 /**
  * Can be used to control the process of lowering the {@linkplain SubstitutedWidget SubstitutedWidgets} to
  * more concrete widgets.

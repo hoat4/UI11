@@ -4,7 +4,7 @@ dependencies {
     api project(":color")
 
     testImplementation project(":platform-awt")
-    testImplementation project(":layout-constraint")
+    testImplementation project(":layout-algo")
     testImplementation project(":renderer-java2d")
     testImplementation project(":text")
 }

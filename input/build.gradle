@@ -5,6 +5,6 @@ dependencies {
     testImplementation project(":desktop")
     testImplementation project(":platform-awt")
     testImplementation project(":text")
-    testImplementation project(":layout-model")
-    testImplementation project(":layout-constraint")
+    testImplementation project(":layout")
+    testImplementation project(":layout-algo")
 }

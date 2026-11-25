@@ -1,6 +1,6 @@
 dependencies {
     implementation project(":graphics")
-    implementation project(":layout-model")
+    implementation project(":layout")
     api project(":i18n")
     implementation project(":controls")
     implementation project(":text")

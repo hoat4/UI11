@@ -1,5 +1,5 @@
 dependencies {
-    api project(":layout-model")
+    api project(":layout")
 
     testImplementation project(":platform-awt")
 }

@@ -13,7 +13,7 @@ dependencies {
     implementation project(":animation")
     implementation project(":desktop")
     implementation project(":graphics")
-    implementation project(":layout-model") // TODO testImplementation
-    testImplementation project(":layout-constraint") // TODO testImplementation
+    implementation project(":layout") // TODO testImplementation
+    testImplementation project(":layout-algo") // TODO testImplementation
     implementation project(":text")
 }

@@ -7,7 +7,7 @@
  * {@link ui11.layout.singlechild} {@link ui11.layout.multichild} subpackages.
  * <p>
  * The layouts can be implemented by the native platform (as in the case in the {@code platform-dom}), or can rely on a
- * pure Java implementation e.g. {@code layout-constraint}.
+ * pure Java implementation e.g. {@code layout-algo}.
  * <p>
  * A related package is {@link ui11.decoration}, which contains widget that not only lays out children but also
  * add graphics.

@@ -6,11 +6,10 @@ dependencies {
     // LocalizedRichTextWidget
     api project(":base")
     implementation project(":text")
-    implementation project(":layout-model")
+    implementation project(":layout")
     implementation project(":css") // ResidBubble-höz ideiglenesen
     implementation "org.teavm:teavm-interop:${teavmVersion}" // PlatformMarker miatt
 
 
     testImplementation project(":platform-awt")
-    testImplementation project(":layout-model")
 }

@@ -12,8 +12,8 @@ document/build
 geom/build
 graphics/build
 input/build
-layout-constraint/build
-layout-model/build
+layout/build
+layout-algo/build
 lottie/build
 media/build
 platform/awt/build

@@ -9,7 +9,7 @@ dependencies {
     implementation project(":imageio")
     //implementation project(":renderer-common")
 
-    implementation project(":layout-constraint") // azért hogy TextPeer tudjon preferredsizeot megadni
+    implementation project(":layout-algo") // azért hogy TextPeer tudjon preferredsizeot megadni
 
     // for SVG implementation
     implementation "com.github.weisj:jsvg:2.1.0"

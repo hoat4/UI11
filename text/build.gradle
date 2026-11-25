@@ -3,5 +3,5 @@ dependencies {
     api project(":graphics")
 
     // TextDecorator.verticalAlign miatt. majd ezt valahogy meg kell szüntetni.
-    implementation project(":layout-model")
+    implementation project(":layout")
 }

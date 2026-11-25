@@ -6,5 +6,5 @@ dependencies {
 
     testImplementation project(":platform-awt")
     testImplementation project(":renderer-java2d")
-    testImplementation project(":layout-constraint")
+    testImplementation project(":layout-algo")
 }
