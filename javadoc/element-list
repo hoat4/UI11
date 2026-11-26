@@ -37,6 +37,7 @@ ui11.layout.protocol
 ui11.layout.singlechild
 ui11.media
 ui11.observable
+ui11.observable.collections
 ui11.output.html
 ui11.output.html.util
 ui11.platform.awt
