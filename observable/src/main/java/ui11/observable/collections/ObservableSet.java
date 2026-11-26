@@ -1,4 +1,6 @@
-package ui11.observable;
+package ui11.observable.collections;
+
+import ui11.observable.ObservableBase;
 
 import java.util.*;
 import java.util.function.Consumer;

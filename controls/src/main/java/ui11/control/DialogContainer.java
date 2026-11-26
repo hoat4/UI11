@@ -3,7 +3,7 @@ package ui11.control;
 import ui11.Widget;
 import ui11.animation.Scheduler;
 import ui11.input.gesture.CloseRequestListener;
-import ui11.observable.ObservableMap;
+import ui11.observable.collections.ObservableMap;
 import ui11.observable.SimpleScope;
 import ui11.provide.Provide;
 

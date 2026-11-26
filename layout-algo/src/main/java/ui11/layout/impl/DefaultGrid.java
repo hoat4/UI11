@@ -1,8 +1,8 @@
 /*
 package ui11.layout.impl;
 
-import ui11.observable.ObservableList;
-import ui11.observable.ObservableMap;
+import ui11.observable.collections.ObservableList;
+import ui11.observable.collections.ObservableMap;
 import ui11.observable.ReadableObservable;
 import ui11.Node;
 import ui11.Peer;

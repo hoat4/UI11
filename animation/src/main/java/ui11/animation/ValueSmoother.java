@@ -1,7 +1,7 @@
 package ui11.animation;
 
 import ui11.Widget;
-import ui11.observable.ObservableList;
+import ui11.observable.collections.ObservableList;
 
 import java.time.Duration;
 import java.time.Instant;

@@ -2,7 +2,7 @@ package ui11.platform.dom;
 
 import ui11.geom.Vec2;
 import ui11.observable.MutableObservable;
-import ui11.observable.ObservableSet;
+import ui11.observable.collections.ObservableSet;
 import ui11.geom.Location;
 import ui11.input.pointer.Pointer;
 import ui11.input.pointer.Pointer.MouseCursor;

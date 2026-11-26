@@ -1,12 +1,8 @@
 package ui11.i18n;
 
 import ui11.observable.MutableObservable;
-import ui11.observable.Observable;
-import ui11.observable.ObservableMap;
+import ui11.observable.collections.ObservableMap;
 import ui11.observable.ObserverHolder;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class LocalizableTextEditingContext {
 

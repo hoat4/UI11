@@ -1,11 +1,12 @@
-package ui11.observable;
+package ui11.observable.collections;
+
+import ui11.observable.ObservableBase;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ObservableList<E> extends ObservableBase implements List<E> {
